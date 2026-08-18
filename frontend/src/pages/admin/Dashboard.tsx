@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { DollarSign, Package, Users, AlertTriangle } from 'lucide-react'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { adminApi } from '@/api/adminApi'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { Spinner } from '@/components/ui/Spinner'
@@ -22,11 +22,11 @@ export function Dashboard() {
 
   const s = stats.data!
 
-  const cards = [
-    { label: 'Revenue', value: formatCurrency(s.revenue), icon: DollarSign },
-    { label: 'Orders', value: String(s.orderCount), icon: Package },
-    { label: 'Customers', value: String(s.customerCount), icon: Users },
-    { label: 'Low stock', value: String(s.lowStock), icon: AlertTriangle },
+  const cards: { label: string; value: string; icon: SiteIconName }[] = [
+    { label: 'Revenue', value: formatCurrency(s.revenue), icon: 'banknote' },
+    { label: 'Orders', value: String(s.orderCount), icon: 'package' },
+    { label: 'Customers', value: String(s.customerCount), icon: 'users' },
+    { label: 'Low stock', value: String(s.lowStock), icon: 'alert' },
   ]
 
   return (
@@ -44,7 +44,7 @@ export function Dashboard() {
           >
             <div className="flex items-center justify-between">
               <p className="text-sm text-[var(--fg-muted)]">{c.label}</p>
-              <c.icon className="h-4 w-4 text-[var(--brand)]" />
+              <SiteIcon name={c.icon} size={20} className="text-[var(--brand)]" />
             </div>
             <p className="mt-2 font-display text-2xl font-semibold">{c.value}</p>
           </div>

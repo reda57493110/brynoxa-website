@@ -13,6 +13,8 @@ interface ThemeState {
 function applyTheme(theme: Theme) {
   const root = document.documentElement
   root.classList.toggle('dark', theme === 'dark')
+  root.style.colorScheme = theme
+  root.setAttribute('data-theme', theme)
 }
 
 export const useThemeStore = create<ThemeState>()(

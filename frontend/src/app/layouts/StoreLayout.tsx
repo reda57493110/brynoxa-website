@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 export function StoreLayout() {
   const location = useLocation()
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--fg)]">
+    <div className="flex min-h-screen flex-col text-[var(--fg)]">
       <Navbar />
       <AnimatePresence mode="wait">
         <motion.main

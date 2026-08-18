@@ -9,9 +9,11 @@ import { connectDB } from './config/db';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { runSeed } from './seed/seed';
+import { migrateCurrencyToMad } from './config/migrateCurrency';
 
 async function bootstrap() {
   await connectDB();
+  await migrateCurrencyToMad();
 
   if (env.MONGODB_URI === 'memory' || process.env.USE_MEMORY_DB === 'true') {
     await runSeed(false);

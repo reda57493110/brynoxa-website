@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { SlidersHorizontal } from 'lucide-react'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
@@ -11,7 +11,8 @@ import { FilterSidebar, type FilterValues } from '@/components/product/FilterSid
 import { SortSelect } from '@/components/product/SortSelect'
 import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
-import { Button } from '@/components/ui/Button'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { cn } from '@/lib/cn'
 
 export function Shop() {
   const [params, setParams] = useSearchParams()
@@ -73,54 +74,235 @@ export function Shop() {
     })
   }
 
-  const sidebar = (
+  const clearFilters = () => {
+    const next = new URLSearchParams()
+    if (filters.q) next.set('q', filters.q)
+    if (filters.sort && filters.sort !== 'newest') next.set('sort', filters.sort)
+    setParams(next)
+  }
+
+  const hasNarrowing =
+    Boolean(filters.category || filters.brand || filters.minPrice || filters.maxPrice || filters.q)
+
+  const categoryList = categories.data ?? []
+  const brandList = brands.data ?? []
+  const activeCategory = categoryList.find((c) => c.slug === filters.category)
+  const activeBrand = brandList.find((b) => b.slug === filters.brand)
+  const total = products.data?.meta?.total ?? 0
+  const pages = products.data?.meta?.pages || 1
+  const from = total === 0 ? 0 : (filters.page - 1) * filters.limit + 1
+  const to = Math.min(filters.page * filters.limit, total)
+  const sidebarFilterCount = [
+    filters.category,
+    filters.brand,
+    filters.minPrice,
+    filters.maxPrice,
+  ].filter(Boolean).length
+
+  useEffect(() => {
+    const previous = document.title
+    document.title = activeCategory
+      ? `${activeCategory.name} — Shop · Brynoxa`
+      : filters.q
+        ? `Search “${filters.q}” — Shop · Brynoxa`
+        : 'Shop — Brynoxa'
+    return () => {
+      document.title = previous
+    }
+  }, [activeCategory, filters.q])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [filters.page])
+
+  const sidebar = (plain: boolean) => (
     <FilterSidebar
-      categories={categories.data || []}
-      brands={brands.data || []}
+      categories={categoryList}
+      brands={brandList}
       values={filterValues}
       onChange={onFilterChange}
-      onClear={() => {
-        const next = new URLSearchParams()
-        if (filters.q) next.set('q', filters.q)
-        if (filters.sort) next.set('sort', filters.sort)
-        setParams(next)
-      }}
+      onClear={clearFilters}
+      plain={plain}
     />
   )
 
-  return (
-    <Container className="py-10">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold">Shop</h1>
-          <p className="mt-1 text-sm text-[var(--fg-muted)]">
-            {products.data?.meta?.total ?? 0} products
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}>
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </Button>
-          <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} />
-        </div>
-      </div>
+  const chip = (active: boolean) =>
+    cn(
+      'inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-sm font-medium transition',
+      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+      active
+        ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+    )
 
-      <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
-        <div className="hidden lg:block">{sidebar}</div>
-        <div>
-          <ProductGrid products={products.data?.items} loading={products.isLoading} />
-          <Pagination
-            page={filters.page}
-            pages={products.data?.meta?.pages || 1}
-            onChange={(page) => update({ page: String(page) })}
-          />
+  return (
+    <>
+      <section aria-labelledby="shop-heading" className="page-hero">
+        <Container className="relative z-10 py-10 sm:py-12">
+          <p className="kicker">Shop</p>
+          <h1
+            id="shop-heading"
+            className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
+          >
+            {activeCategory?.name ?? (filters.q ? 'Search' : 'Shop')}
+          </h1>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+            {filters.q ? (
+              <>
+                Results for <span className="font-medium text-[var(--fg)]">“{filters.q}”</span>
+                {activeCategory ? ` in ${activeCategory.name}` : null}.
+              </>
+            ) : activeCategory?.description ? (
+              activeCategory.description
+            ) : (
+              'Laptops, gaming PCs, and components — prices in DH, paid when they arrive.'
+            )}
+          </p>
+        </Container>
+      </section>
+
+      <Container className="py-8 sm:py-10">
+        <div
+          className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+          aria-label="Shop by category"
+        >
+          <button type="button" className={chip(!filters.category)} onClick={() => update({ category: undefined })}>
+            All
+          </button>
+          {categoryList.map((c) => (
+            <button
+              key={c._id}
+              type="button"
+              className={chip(filters.category === c.slug)}
+              onClick={() =>
+                update({ category: filters.category === c.slug ? undefined : c.slug })
+              }
+            >
+              {c.name}
+            </button>
+          ))}
         </div>
-      </div>
+
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[var(--fg-muted)]">
+            {products.isLoading ? (
+              'Loading catalog…'
+            ) : (
+              <>
+                <span className="font-medium text-[var(--fg)]">
+                  {total === 0 ? '0 products' : `${from}–${to} of ${total}`}
+                </span>
+                {activeBrand ? ` · ${activeBrand.name}` : null}
+              </>
+            )}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="relative inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] lg:hidden"
+              onClick={() => setFiltersOpen(true)}
+            >
+              <SiteIcon name="sliders" size={16} />
+              Filters
+              {sidebarFilterCount > 0 ? (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[11px] font-bold text-[var(--brand-fg)]">
+                  {sidebarFilterCount}
+                </span>
+              ) : null}
+            </button>
+            <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} />
+          </div>
+        </div>
+
+        {hasNarrowing ? (
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            {filters.q ? (
+              <ActiveChip label={`“${filters.q}”`} onRemove={() => update({ q: undefined })} />
+            ) : null}
+            {activeCategory ? (
+              <ActiveChip
+                label={activeCategory.name}
+                onRemove={() => update({ category: undefined })}
+              />
+            ) : null}
+            {activeBrand ? (
+              <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} />
+            ) : null}
+            {filters.minPrice || filters.maxPrice ? (
+              <ActiveChip
+                label={`${filters.minPrice ?? 0}–${filters.maxPrice ?? '∞'} DH`}
+                onRemove={() => update({ minPrice: undefined, maxPrice: undefined })}
+              />
+            ) : null}
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-xs font-medium text-[var(--brand-text)] hover:underline"
+            >
+              Clear all
+            </button>
+          </div>
+        ) : null}
+
+        <div className="grid gap-8 lg:grid-cols-[16.5rem_minmax(0,1fr)]">
+          <div className="hidden lg:block">
+            <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto">
+              {sidebar(false)}
+            </div>
+          </div>
+          <div>
+            {products.isError ? (
+              <EmptyState
+                title="Couldn’t load the shop"
+                description="Check your connection and try again."
+                actionLabel="Retry"
+                onAction={() => products.refetch()}
+              />
+            ) : (
+              <>
+                <ProductGrid
+                  products={products.data?.items}
+                  loading={products.isLoading}
+                  className="lg:grid-cols-2 xl:grid-cols-3"
+                  emptyTitle={hasNarrowing ? 'No matching products' : 'No products yet'}
+                  emptyDescription={
+                    hasNarrowing
+                      ? 'Clear a filter or pick another category.'
+                      : 'New arrivals will appear here soon.'
+                  }
+                  emptyActionLabel={hasNarrowing ? 'Clear filters' : undefined}
+                  onEmptyAction={hasNarrowing ? clearFilters : undefined}
+                />
+                <Pagination
+                  page={filters.page}
+                  pages={pages}
+                  onChange={(page) => update({ page: String(page) })}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </Container>
 
       <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters" side="left">
-        {sidebar}
+        {sidebar(true)}
       </Drawer>
-    </Container>
+    </>
+  )
+}
+
+function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pl-3 pr-1 text-xs font-medium text-[var(--fg)]">
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
+        aria-label={`Remove ${label}`}
+      >
+        <SiteIcon name="close" size={12} />
+      </button>
+    </span>
   )
 }

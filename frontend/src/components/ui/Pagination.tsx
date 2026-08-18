@@ -1,5 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from './Button'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 
 export function Pagination({
   page,
@@ -12,29 +11,20 @@ export function Pagination({
 }) {
   if (pages <= 1) return null
 
+  const btn =
+    'inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
+
   return (
-    <div className="flex items-center justify-center gap-3 pt-8">
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={page <= 1}
-        onClick={() => onChange(page - 1)}
-        aria-label="Previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      <span className="text-sm text-[var(--fg-muted)]">
+    <nav className="flex items-center justify-center gap-3 pt-10" aria-label="Pagination">
+      <button type="button" className={btn} disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Previous page">
+        <SiteIcon name="chevron-left" size={16} />
+      </button>
+      <p className="min-w-[7rem] text-center text-sm text-[var(--fg-muted)]">
         Page <span className="font-semibold text-[var(--fg)]">{page}</span> of {pages}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={page >= pages}
-        onClick={() => onChange(page + 1)}
-        aria-label="Next page"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-    </div>
+      </p>
+      <button type="button" className={btn} disabled={page >= pages} onClick={() => onChange(page + 1)} aria-label="Next page">
+        <SiteIcon name="chevron-right" size={16} />
+      </button>
+    </nav>
   )
 }

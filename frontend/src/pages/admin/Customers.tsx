@@ -36,7 +36,7 @@ export function Customers() {
       {customers.isLoading ? (
         <Spinner />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
               <tr>

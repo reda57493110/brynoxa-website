@@ -1,13 +1,17 @@
-import { Link } from 'react-router-dom'
-import { Trash2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Container } from '@/components/ui/Container'
-import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
+import { PageHero } from '@/components/layout/PageHero'
+import { pillGhost, pillPrimary, surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { formatCurrency } from '@/lib/format'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Cart() {
+  usePageTitle('Cart — Brynoxa')
+  const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const updateQty = useCartStore((s) => s.updateQty)
   const removeItem = useCartStore((s) => s.removeItem)
@@ -15,76 +19,103 @@ export function Cart() {
 
   if (!items.length) {
     return (
-      <Container className="py-16">
-        <EmptyState
-          title="Your cart is empty"
-          description="Browse the shop and add something you love."
-          actionLabel="Shop now"
-          onAction={() => {
-            window.location.href = '/shop'
-          }}
+      <>
+        <PageHero
+          kicker="Cart"
+          title="Cart"
+          description="Your cart is empty."
         />
-      </Container>
+        <Container className="py-10">
+          <EmptyState
+            title="Your cart is empty"
+            description="Open the shop and add a product."
+            actionLabel="Shop now"
+            onAction={() => navigate('/shop')}
+          />
+        </Container>
+      </>
     )
   }
 
   return (
-    <Container className="py-10">
-      <h1 className="font-display text-3xl font-semibold">Cart</h1>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-4">
-          {items.map((item) => (
-            <div
-              key={item.productId}
-              className="flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:flex-row sm:items-center"
-            >
-              <Link to={`/product/${item.slug}`} className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)]">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
-                ) : null}
-              </Link>
-              <div className="min-w-0 flex-1">
-                <Link to={`/product/${item.slug}`} className="font-semibold hover:text-[var(--brand)]">
-                  {item.name}
+    <>
+      <PageHero
+        kicker="Cart"
+        title="Cart"
+        description={`${items.length} item${items.length === 1 ? '' : 's'} · cash on delivery at checkout.`}
+      />
+      <Container className="py-8 sm:py-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div key={item.productId} className={`${surfaceCard} flex flex-col gap-4 p-4 sm:flex-row sm:items-center`}>
+                <Link
+                  to={`/product/${item.slug}`}
+                  className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-[var(--bg-muted)]"
+                >
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                  ) : null}
                 </Link>
-                <p className="mt-1 text-sm text-[var(--fg-muted)]">{formatCurrency(item.price)}</p>
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <QuantityStepper
-                    value={item.qty}
-                    max={item.stock}
-                    onChange={(qty) => updateQty(item.productId, qty)}
-                  />
-                  <Button variant="ghost" size="sm" onClick={() => removeItem(item.productId)}>
-                    <Trash2 className="h-4 w-4" />
-                    Remove
-                  </Button>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/product/${item.slug}`}
+                    className="font-display font-semibold hover:text-[var(--brand-text)]"
+                  >
+                    {item.name}
+                  </Link>
+                  <p className="mt-1 text-sm text-[var(--fg-muted)]">{formatCurrency(item.price)}</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <QuantityStepper
+                      value={item.qty}
+                      max={item.stock}
+                      onChange={(qty) => updateQty(item.productId, qty)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeItem(item.productId)}
+                      className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm text-[var(--fg-muted)] transition hover:text-[var(--danger)]"
+                    >
+                      <SiteIcon name="trash" size={16} />
+                      Remove
+                    </button>
+                  </div>
                 </div>
+                <p className="font-display font-semibold sm:text-right">
+                  {formatCurrency(item.price * item.qty)}
+                </p>
               </div>
-              <p className="font-display font-semibold sm:text-right">
-                {formatCurrency(item.price * item.qty)}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft">
-          <h2 className="font-display text-lg font-semibold">Summary</h2>
-          <div className="mt-4 flex justify-between text-sm">
-            <span className="text-[var(--fg-muted)]">Subtotal</span>
-            <span className="font-semibold">{formatCurrency(subtotal)}</span>
+            ))}
           </div>
-          <p className="mt-2 text-xs text-[var(--fg-muted)]">Shipping & tax calculated at checkout.</p>
-          <Link
-            to="/checkout"
-            className="mt-6 flex h-11 items-center justify-center rounded-xl bg-[var(--brand)] font-semibold text-[var(--brand-fg)]"
-          >
-            Checkout (COD)
-          </Link>
-          <Link to="/shop" className="mt-3 block text-center text-sm text-[var(--brand)]">
-            Continue shopping
-          </Link>
-        </aside>
-      </div>
-    </Container>
+
+          <aside className={`${surfaceCard} h-fit p-6 lg:sticky lg:top-[calc(var(--nav-height)+0.75rem)]`}>
+            <h2 className="font-display text-lg font-semibold">Summary</h2>
+            <div className="mt-4 flex justify-between text-sm">
+              <span className="text-[var(--fg-muted)]">Subtotal</span>
+              <span className="font-semibold">{formatCurrency(subtotal)}</span>
+            </div>
+            <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
+              <li className="flex items-center gap-2">
+                <SiteIcon name="package-check" size={14} className="text-[var(--brand)]" />
+                Pay the courier — no card
+              </li>
+              <li className="flex items-center gap-2">
+                <SiteIcon name="shield" size={14} className="text-[var(--brand)]" />
+                6-month warranty from delivery
+              </li>
+            </ul>
+            <p className="mt-3 text-xs text-[var(--fg-muted)]">
+              Shipping is 150 DH, free from 2,000 DH — set at checkout.
+            </p>
+            <Link to="/checkout" className={`${pillPrimary} mt-6 w-full`}>
+              Checkout
+            </Link>
+            <Link to="/shop" className={`${pillGhost} mt-3 w-full bg-[var(--bg)] text-sm dark:bg-white/5`}>
+              Continue shopping
+            </Link>
+          </aside>
+        </div>
+      </Container>
+    </>
   )
 }

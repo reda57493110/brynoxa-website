@@ -1,16 +1,18 @@
-import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Heart } from 'lucide-react'
+import { useEffect } from 'react'
 import { wishlistApi } from '@/api/wishlistApi'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHero } from '@/components/layout/PageHero'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
-import { useNavigate } from 'react-router-dom'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Wishlist() {
+  usePageTitle('Wishlist — Brynoxa')
   const navigate = useNavigate()
   const isAuth = useAuthStore((s) => s.isAuthenticated())
   const bootstrapped = useAuthStore((s) => s.bootstrapped)
@@ -42,24 +44,29 @@ export function Wishlist() {
   const loading = isAuth ? remote.isLoading : localProducts.isLoading
 
   return (
-    <Container className="py-10">
-      <h1 className="font-display text-3xl font-semibold">Wishlist</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">
-        {isAuth ? 'Synced to your account' : 'Saved on this device — sign in to sync'}
-      </p>
-      <div className="mt-8">
+    <>
+      <PageHero
+        kicker="Wishlist"
+        title="Wishlist"
+        description={
+          isAuth
+            ? 'Saved to your account.'
+            : 'Saved on this device. Sign in to keep the list on other phones.'
+        }
+      />
+      <Container className="py-8 sm:py-10">
         {!loading && !products?.length ? (
           <EmptyState
-            icon={Heart}
+            icon="heart"
             title="No saved items"
-            description="Tap the heart on products you love."
+            description="Tap the heart on a product to save it here."
             actionLabel="Browse shop"
             onAction={() => navigate('/shop')}
           />
         ) : (
           <ProductGrid products={products} loading={loading} />
         )}
-      </div>
-    </Container>
+      </Container>
+    </>
   )
 }

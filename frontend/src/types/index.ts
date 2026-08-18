@@ -20,8 +20,8 @@ export interface Address {
   line2?: string
   city: string
   state?: string
-  postalCode: string
-  country: string
+  postalCode?: string
+  country?: string
   phone: string
   isDefault?: boolean
 }
@@ -42,6 +42,11 @@ export interface User {
 export interface AuthPayload {
   user: User
   accessToken: string
+}
+
+export interface SessionPayload {
+  user: User | null
+  accessToken: string | null
 }
 
 export interface Category {

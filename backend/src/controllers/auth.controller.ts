@@ -20,9 +20,18 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
 export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const token = req.cookies?.[authService.REFRESH_COOKIE];
-  const result = await authService.refreshSession(token);
-  authService.setRefreshCookie(res, result.refreshToken);
-  sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Token refreshed');
+  if (!token) {
+    sendSuccess(res, { user: null, accessToken: null }, 'No session');
+    return;
+  }
+  try {
+    const result = await authService.refreshSession(token);
+    authService.setRefreshCookie(res, result.refreshToken);
+    sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Token refreshed');
+  } catch (err) {
+    authService.clearRefreshCookie(res);
+    throw err;
+  }
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {

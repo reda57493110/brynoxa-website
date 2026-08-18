@@ -128,7 +128,7 @@ export function ProductForm() {
         <h1 className="font-display text-2xl font-semibold">
           {isEdit ? 'Edit product' : 'New product'}
         </h1>
-        <Link to="/admin/products" className="text-sm text-[var(--brand)]">
+        <Link to="/admin/products" className="text-sm text-[var(--brand-text)]">
           Back to products
         </Link>
       </div>
@@ -154,7 +154,7 @@ export function ProductForm() {
           required
         />
         <Input
-          label="Price"
+          label="Price (DH)"
           type="number"
           min={0}
           step="0.01"
@@ -163,7 +163,7 @@ export function ProductForm() {
           required
         />
         <Input
-          label="Compare at"
+          label="Compare at (DH)"
           type="number"
           min={0}
           step="0.01"

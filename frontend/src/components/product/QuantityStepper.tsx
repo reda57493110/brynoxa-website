@@ -1,5 +1,4 @@
-import { Minus, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 
 export function QuantityStepper({
   value,
@@ -12,31 +11,30 @@ export function QuantityStepper({
   min?: number
   max?: number
 }) {
+  const btn =
+    'inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] transition hover:bg-[var(--bg-muted)] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
+
   return (
-    <div className="inline-flex items-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <Button
+    <div className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-input)] p-0.5">
+      <button
         type="button"
-        variant="ghost"
-        size="sm"
-        className="rounded-xl"
+        className={btn}
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
         aria-label="Decrease quantity"
       >
-        <Minus className="h-4 w-4" />
-      </Button>
-      <span className="min-w-10 text-center text-sm font-semibold">{value}</span>
-      <Button
+        <SiteIcon name="minus" size={14} />
+      </button>
+      <span className="min-w-10 text-center text-sm font-semibold tabular-nums">{value}</span>
+      <button
         type="button"
-        variant="ghost"
-        size="sm"
-        className="rounded-xl"
+        className={btn}
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
         aria-label="Increase quantity"
       >
-        <Plus className="h-4 w-4" />
-      </Button>
+        <SiteIcon name="plus" size={14} />
+      </button>
     </div>
   )
 }

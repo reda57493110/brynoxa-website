@@ -1,12 +1,18 @@
-import { useSearchParams, Link } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { ProductGrid } from '@/components/product/ProductGrid'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHero } from '@/components/layout/PageHero'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Search() {
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   const q = params.get('q') || ''
+
+  usePageTitle(q ? `Search “${q}” — Brynoxa` : 'Search — Brynoxa')
 
   const products = useQuery({
     queryKey: ['products', 'search', q],
@@ -15,26 +21,47 @@ export function Search() {
   })
 
   return (
-    <Container className="py-10">
-      <h1 className="font-display text-3xl font-semibold">Search</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">
-        {q ? (
-          <>
-            Results for <span className="text-[var(--fg)]">“{q}”</span>
-          </>
+    <>
+      <PageHero
+        kicker="Search"
+        title="Search"
+        description={
+          q ? (
+            <>
+              Results for <span className="font-medium text-[var(--fg)]">“{q}”</span>
+            </>
+          ) : (
+            'Use the search field in the nav, or open the shop.'
+          )
+        }
+      />
+      <Container className="py-8 sm:py-10">
+        {!q ? (
+          <EmptyState
+            icon="search"
+            title="Nothing to search yet"
+            description="Use the search field in the nav, or open the shop."
+            actionLabel="Browse shop"
+            onAction={() => navigate('/shop')}
+          />
         ) : (
-          'Enter a query in the search bar'
+          <>
+            <p className="mb-5 text-sm text-[var(--fg-muted)]">
+              {products.isLoading
+                ? 'Searching…'
+                : `${products.data?.length ?? 0} result${(products.data?.length ?? 0) === 1 ? '' : 's'}`}
+            </p>
+            <ProductGrid
+              products={products.data}
+              loading={products.isLoading}
+              emptyTitle="No matches"
+              emptyDescription="Try a shorter query or browse by category."
+              emptyActionLabel="Browse shop"
+              emptyActionTo="/shop"
+            />
+          </>
         )}
-      </p>
-      {!q ? (
-        <Link to="/shop" className="mt-6 inline-block text-[var(--brand)]">
-          Browse shop
-        </Link>
-      ) : (
-        <div className="mt-8">
-          <ProductGrid products={products.data} loading={products.isLoading} />
-        </div>
-      )}
-    </Container>
+      </Container>
+    </>
   )
 }

@@ -11,7 +11,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
 
   return (
     <div className="space-y-3">
-      <div className="aspect-square overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]">
+      <div className="aspect-square overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-muted)]">
         <img
           src={current.url}
           alt={current.alt || name}

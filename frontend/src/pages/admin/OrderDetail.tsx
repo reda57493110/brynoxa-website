@@ -62,7 +62,7 @@ export function OrderDetail() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/admin/orders" className="text-sm text-[var(--brand)]">
+        <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
           Back to orders
         </Link>
         <h1 className="mt-2 font-display text-2xl font-semibold">#{o.orderNumber}</h1>

@@ -21,7 +21,6 @@ const Checkout = lazy(() => import('@/pages/store/Checkout').then((m) => ({ defa
 const Wishlist = lazy(() =>
   import('@/pages/store/Wishlist').then((m) => ({ default: m.Wishlist }))
 )
-const Compare = lazy(() => import('@/pages/store/Compare').then((m) => ({ default: m.Compare })))
 const Login = lazy(() => import('@/pages/store/Login').then((m) => ({ default: m.Login })))
 const Register = lazy(() =>
   import('@/pages/store/Register').then((m) => ({ default: m.Register }))
@@ -40,6 +39,8 @@ const AccountSettings = lazy(() =>
 const OrderConfirmation = lazy(() =>
   import('@/pages/store/OrderConfirmation').then((m) => ({ default: m.OrderConfirmation }))
 )
+const Contact = lazy(() => import('@/pages/store/Contact').then((m) => ({ default: m.Contact })))
+const Services = lazy(() => import('@/pages/store/Services').then((m) => ({ default: m.Services })))
 
 const AdminDashboard = lazy(() =>
   import('@/pages/admin/Dashboard').then((m) => ({ default: m.Dashboard }))
@@ -101,7 +102,8 @@ export function AppRouter() {
           }
         />
         <Route path="wishlist" element={<S><Wishlist /></S>} />
-        <Route path="compare" element={<S><Compare /></S>} />
+        <Route path="contact" element={<S><Contact /></S>} />
+        <Route path="services" element={<S><Services /></S>} />
         <Route
           path="account"
           element={

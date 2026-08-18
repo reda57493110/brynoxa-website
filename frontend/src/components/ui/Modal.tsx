@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { SiteIcon } from './SiteIcon'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
 
@@ -40,7 +40,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
       <button
         type="button"
         aria-label="Close modal backdrop"
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
         onClick={onClose}
       />
       <div
@@ -55,7 +55,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h3 className="font-display text-lg font-semibold">{title}</h3>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
-            <X className="h-4 w-4" />
+            <SiteIcon name="close" size={16} />
           </Button>
         </div>
         <div className="p-5">{children}</div>

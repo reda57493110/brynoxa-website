@@ -1,5 +1,4 @@
-import { Star } from 'lucide-react'
-import { cn } from '@/lib/cn'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 
 export function RatingStars({
   rating,
@@ -10,19 +9,19 @@ export function RatingStars({
   count?: number
   size?: 'sm' | 'md'
 }) {
-  const starSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4'
+  const px = size === 'sm' ? 13 : 15
   return (
     <div className="flex items-center gap-1.5">
       <div className="flex items-center gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => {
           const filled = i + 1 <= Math.round(rating)
           return (
-            <Star
+            <SiteIcon
               key={i}
-              className={cn(
-                starSize,
-                filled ? 'fill-[var(--brand)] text-[var(--brand)]' : 'text-[var(--border)]'
-              )}
+              name="star"
+              size={px}
+              solid={filled}
+              className={filled ? 'text-[var(--brand)]' : 'text-[var(--border)]'}
             />
           )
         })}

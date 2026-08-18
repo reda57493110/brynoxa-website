@@ -5,7 +5,7 @@ export function SpecTable({ specs }: { specs: Record<string, string> }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)]">
+    <div className="overflow-hidden rounded-[1.35rem] border border-[var(--border)]">
       <table className="w-full text-sm">
         <tbody>
           {entries.map(([key, value], i) => (

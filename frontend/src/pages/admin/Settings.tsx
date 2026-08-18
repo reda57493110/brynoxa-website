@@ -19,9 +19,9 @@ export function Settings() {
 
   const [form, setForm] = useState({
     storeName: 'Brynoxa',
-    currency: 'USD',
-    shippingFlatRate: 15,
-    freeShippingMin: 200,
+    currency: 'MAD',
+    shippingFlatRate: 150,
+    freeShippingMin: 2000,
     taxRate: 0,
     supportEmail: 'support@brynoxa.com',
     codEnabled: true,
@@ -81,16 +81,17 @@ export function Settings() {
           label="Currency"
           value={form.currency}
           onChange={(e) => setForm({ ...form, currency: e.target.value })}
+          disabled
         />
         <Input
-          label="Flat shipping rate"
+          label="Flat shipping rate (DH)"
           type="number"
           min={0}
           value={form.shippingFlatRate}
           onChange={(e) => setForm({ ...form, shippingFlatRate: Number(e.target.value) })}
         />
         <Input
-          label="Free shipping minimum"
+          label="Free shipping minimum (DH)"
           type="number"
           min={0}
           value={form.freeShippingMin}

@@ -24,8 +24,8 @@ export const addressSchema = z.object({
   line2: z.string().optional(),
   city: z.string().min(2),
   state: z.string().optional(),
-  postalCode: z.string().min(2),
-  country: z.string().min(2).default('US'),
+  postalCode: z.string().optional().default('00000'),
+  country: z.string().optional().default('MA'),
   phone: z.string().min(5),
   isDefault: z.boolean().optional(),
 });
@@ -127,6 +127,17 @@ export const settingsSchema = z.object({
 
 export const inventorySchema = z.object({
   stock: z.number().int().min(0),
+});
+
+export const contactSchema = z.object({
+  name: z.string().min(2).max(80),
+  email: z.string().email(),
+  subject: z.string().min(3).max(120),
+  message: z.string().min(10).max(5000),
+});
+
+export const newsletterSchema = z.object({
+  email: z.string().email(),
 });
 
 export const paginationQuerySchema = z.object({

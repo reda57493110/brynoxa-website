@@ -5,7 +5,7 @@ type BadgeVariant = 'default' | 'brand' | 'success' | 'warning' | 'danger' | 'mu
 
 const styles: Record<BadgeVariant, string> = {
   default: 'bg-[var(--bg-muted)] text-[var(--fg)]',
-  brand: 'bg-[color-mix(in_srgb,var(--brand)_18%,transparent)] text-[var(--brand)]',
+  brand: 'bg-[color-mix(in_srgb,var(--brand)_18%,transparent)] text-[var(--brand-text)]',
   success: 'bg-[color-mix(in_srgb,var(--success)_18%,transparent)] text-[var(--success)]',
   warning: 'bg-[color-mix(in_srgb,var(--warning)_18%,transparent)] text-[var(--warning)]',
   danger: 'bg-[color-mix(in_srgb,var(--danger)_18%,transparent)] text-[var(--danger)]',
@@ -24,7 +24,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-semibold tracking-wide',
+        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide capitalize',
         styles[variant],
         className
       )}

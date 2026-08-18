@@ -11,8 +11,19 @@ import {
   reviewSchema,
   couponSchema,
   settingsSchema,
+  contactSchema,
+  newsletterSchema,
 } from '../validators/schemas';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
+
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many messages, try again later' },
+});
 
 const router = Router();
 
@@ -86,5 +97,8 @@ router.patch(
   validate(settingsSchema),
   misc.updateStoreSettings
 );
+
+router.post('/contact', contactLimiter, validate(contactSchema), misc.submitContact);
+router.post('/newsletter', contactLimiter, validate(newsletterSchema), misc.subscribeNewsletter);
 
 export default router;

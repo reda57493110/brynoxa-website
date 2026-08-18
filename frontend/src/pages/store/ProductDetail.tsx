@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { GitCompareArrows, Heart, ShoppingBag } from 'lucide-react'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { reviewsApi } from '@/api/reviewsApi'
 import { wishlistApi } from '@/api/wishlistApi'
@@ -11,18 +11,20 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { ImageGallery } from '@/components/product/ImageGallery'
 import { Price } from '@/components/product/Price'
 import { RatingStars } from '@/components/product/RatingStars'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { SpecTable } from '@/components/product/SpecTable'
 import { StockBadge } from '@/components/product/StockBadge'
+import { surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
-import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import type { Brand, Category, Product, Review, User } from '@/types'
 
 function primaryImage(product: Product) {
@@ -31,6 +33,7 @@ function primaryImage(product: Product) {
 
 export function ProductDetail() {
   const { slug = '' } = useParams()
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const [qty, setQty] = useState(1)
   const [rating, setRating] = useState(5)
@@ -42,15 +45,14 @@ export function ProductDetail() {
   const isWish = useWishlistStore((s) => s.isWishlisted)
   const toggleLocal = useWishlistStore((s) => s.toggleLocal)
   const setFromServer = useWishlistStore((s) => s.setFromServer)
-  const compareHas = useCompareStore((s) => s.has)
-  const compareAdd = useCompareStore((s) => s.add)
-  const compareRemove = useCompareStore((s) => s.remove)
 
   const product = useQuery({
     queryKey: ['product', slug],
     queryFn: async () => (await productsApi.getBySlug(slug)).data.data,
     enabled: Boolean(slug),
   })
+
+  usePageTitle(product.data ? `${product.data.name} — Brynoxa` : 'Product — Brynoxa')
 
   const reviews = useQuery({
     queryKey: ['reviews', product.data?._id],
@@ -87,11 +89,13 @@ export function ProductDetail() {
 
   if (!product.data) {
     return (
-      <Container className="py-16 text-center">
-        <h1 className="font-display text-2xl">Product not found</h1>
-        <Link to="/shop" className="mt-4 inline-block text-[var(--brand)]">
-          Back to shop
-        </Link>
+      <Container className="py-16">
+        <EmptyState
+          title="Product not found"
+          description="It may have been removed from the catalog."
+          actionLabel="Back to shop"
+          onAction={() => navigate('/shop')}
+        />
       </Container>
     )
   }
@@ -135,6 +139,21 @@ export function ProductDetail() {
 
   return (
     <Container className="py-10">
+      <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[var(--fg-muted)]">
+        <Link to="/shop" className="hover:text-[var(--brand-text)]">
+          Shop
+        </Link>
+        {category ? (
+          <>
+            <span aria-hidden="true">/</span>
+            <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
+              {category.name}
+            </Link>
+          </>
+        ) : null}
+        <span aria-hidden="true">/</span>
+        <span className="text-[var(--fg)]">{p.name}</span>
+      </nav>
       <div className="grid gap-10 lg:grid-cols-2">
         <ImageGallery images={p.images || []} name={p.name} />
         <div>
@@ -143,13 +162,13 @@ export function ProductDetail() {
             {category ? (
               <>
                 <span>·</span>
-                <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand)]">
+                <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
                   {category.name}
                 </Link>
               </>
             ) : null}
           </div>
-          <h1 className="mt-2 font-display text-3xl font-semibold sm:text-4xl">{p.name}</h1>
+          <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">{p.name}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
             <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
@@ -161,31 +180,41 @@ export function ProductDetail() {
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
-            <Button onClick={onAddCart} disabled={p.stock <= 0}>
-              <ShoppingBag className="h-4 w-4" />
+            <Button onClick={onAddCart} disabled={p.stock <= 0} className="rounded-full">
+              <SiteIcon name="cart" size={16} />
               Add to cart
             </Button>
-            <Button variant={isWish(p._id) ? 'primary' : 'outline'} onClick={onWishlist}>
-              <Heart className={`h-4 w-4 ${isWish(p._id) ? 'fill-current' : ''}`} />
-            </Button>
             <Button
-              variant={compareHas(p._id) ? 'primary' : 'outline'}
-              onClick={() => {
-                if (compareHas(p._id)) {
-                  compareRemove(p._id)
-                  toast.info('Removed from compare')
-                } else {
-                  const ok = compareAdd(p)
-                  toast[ok ? 'success' : 'error'](ok ? 'Added to compare' : 'Compare list full (max 4)')
-                }
-              }}
+              variant={isWish(p._id) ? 'primary' : 'outline'}
+              onClick={onWishlist}
+              className="rounded-full"
+              aria-label={isWish(p._id) ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <GitCompareArrows className="h-4 w-4" />
+              <SiteIcon name="heart" size={16} />
             </Button>
           </div>
 
+          <ul className="mt-6 flex flex-wrap gap-2">
+            {[
+              { icon: 'package-check' as const, label: 'Cash on delivery' },
+              { icon: 'shield' as const, label: '6-month warranty' },
+              { icon: 'truck' as const, label: 'Ships across Morocco' },
+            ].map(({ icon, label }) => (
+              <li
+                key={label}
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--fg)]"
+              >
+                <SiteIcon name={icon} size={14} className="text-[var(--brand)]" />
+                {label}
+              </li>
+            ))}
+          </ul>
+
           <div className="mt-10">
-            <h2 className="font-display text-xl font-semibold">Description</h2>
+            <p className="kicker">
+              Specs
+            </p>
+            <h2 className="mt-2 font-display text-xl font-semibold">Description</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg-muted)]">
               {p.description}
             </p>
@@ -198,20 +227,20 @@ export function ProductDetail() {
       </div>
 
       <section className="mt-16 border-t border-[var(--border)] pt-10">
-        <h2 className="font-display text-2xl font-semibold">Reviews</h2>
-        <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <p className="kicker">
+          Reviews
+        </p>
+        <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Reviews</h2>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
           <div className="space-y-4">
             {reviews.isLoading ? <Spinner /> : null}
             {!reviews.isLoading && !reviews.data?.length ? (
-              <p className="text-sm text-[var(--fg-muted)]">No reviews yet.</p>
+              <p className="text-sm text-[var(--fg-muted)]">No reviews yet — be the first after delivery.</p>
             ) : null}
             {reviews.data?.map((r: Review) => {
               const user = typeof r.user === 'object' ? (r.user as User) : null
               return (
-                <article
-                  key={r._id}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4"
-                >
+                <article key={r._id} className={`${surfaceCard} p-5`}>
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-semibold">{user?.name || 'Customer'}</p>
                     <span className="text-xs text-[var(--fg-muted)]">{formatDate(r.createdAt)}</span>
@@ -226,11 +255,11 @@ export function ProductDetail() {
             })}
           </div>
 
-          <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft">
+          <div className={`${surfaceCard} p-6`}>
             <h3 className="font-display text-lg font-semibold">Write a review</h3>
             {!isAuth ? (
               <p className="mt-3 text-sm text-[var(--fg-muted)]">
-                <Link to="/login" className="text-[var(--brand)]">
+                <Link to="/login" className="font-medium text-[var(--brand-text)]">
                   Sign in
                 </Link>{' '}
                 to leave a review.
@@ -248,7 +277,7 @@ export function ProductDetail() {
                   <select
                     value={rating}
                     onChange={(e) => setRating(Number(e.target.value))}
-                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3"
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand"
                   >
                     {[5, 4, 3, 2, 1].map((n) => (
                       <option key={n} value={n}>
@@ -265,7 +294,7 @@ export function ProductDetail() {
                   required
                   minLength={10}
                 />
-                <Button type="submit" loading={reviewMutation.isPending} className="w-full">
+                <Button type="submit" loading={reviewMutation.isPending} className="w-full rounded-full">
                   Submit review
                 </Button>
               </form>

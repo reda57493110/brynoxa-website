@@ -1,6 +1,6 @@
 import { useToastStore } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
-import { X } from 'lucide-react'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 
 export function Toaster() {
   const { toasts, dismiss } = useToastStore()
@@ -19,7 +19,7 @@ export function Toaster() {
         >
           <p className="flex-1 text-sm">{t.message}</p>
           <button type="button" onClick={() => dismiss(t.id)} className="text-[var(--fg-muted)]">
-            <X className="h-4 w-4" />
+            <SiteIcon name="close" size={16} />
           </button>
         </div>
       ))}

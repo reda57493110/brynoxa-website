@@ -13,9 +13,9 @@ export interface ISettings extends Document {
 const settingsSchema = new Schema<ISettings>(
   {
     storeName: { type: String, default: 'Brynoxa' },
-    currency: { type: String, default: 'USD' },
-    shippingFlatRate: { type: Number, default: 15 },
-    freeShippingMin: { type: Number, default: 200 },
+    currency: { type: String, default: 'MAD' },
+    shippingFlatRate: { type: Number, default: 150 },
+    freeShippingMin: { type: Number, default: 2000 },
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: 'support@brynoxa.com' },
     codEnabled: { type: Boolean, default: true },

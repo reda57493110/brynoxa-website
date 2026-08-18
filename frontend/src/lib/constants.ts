@@ -17,6 +17,5 @@ export const ORDER_STATUSES = [
   'cancelled',
 ] as const
 
-export const COMPARE_MAX = 4
-
 export const DEFAULT_PAGE_SIZE = 12
+export const COMPARE_MAX = 4

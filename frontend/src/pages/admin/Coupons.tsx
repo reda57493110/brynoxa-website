@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { Badge } from '@/components/ui/Badge'
 import { useToastStore } from '@/store/toastStore'
+import { formatCurrency } from '@/lib/format'
 
 export function Coupons() {
   const qc = useQueryClient()
@@ -74,14 +75,14 @@ export function Coupons() {
           ]}
         />
         <Input
-          label="Value"
+          label="Value (% or DH)"
           type="number"
           min={0}
           value={form.value}
           onChange={(e) => setForm({ ...form, value: Number(e.target.value) })}
         />
         <Input
-          label="Min order"
+          label="Min order (DH)"
           type="number"
           min={0}
           value={form.minOrder}
@@ -106,7 +107,7 @@ export function Coupons() {
               <div>
                 <p className="font-semibold tracking-wide">{c.code}</p>
                 <p className="text-sm text-[var(--fg-muted)]">
-                  {c.type === 'percent' ? `${c.value}%` : `$${c.value}`} · used {c.usedCount}/
+                  {c.type === 'percent' ? `${c.value}%` : formatCurrency(c.value)} · used {c.usedCount}/
                   {c.maxUses || '∞'}
                 </p>
               </div>

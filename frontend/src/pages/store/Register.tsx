@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Register() {
+  usePageTitle('Create account — Brynoxa')
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
   const localIds = useWishlistStore((s) => s.ids)
@@ -45,8 +47,9 @@ export function Register() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-semibold">Create account</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">Join Brynoxa in under a minute</p>
+      <p className="kicker">Account</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">Create account</h1>
+      <p className="mt-1 text-sm text-[var(--fg-muted)]">Track orders and pay on delivery.</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -59,13 +62,13 @@ export function Register() {
           required
           minLength={6}
         />
-        <Button type="submit" className="w-full" loading={loading}>
+        <Button type="submit" className="w-full rounded-full" loading={loading}>
           Create account
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-[var(--brand)]">
+        <Link to="/login" className="font-medium text-[var(--brand-text)]">
           Sign in
         </Link>
       </p>

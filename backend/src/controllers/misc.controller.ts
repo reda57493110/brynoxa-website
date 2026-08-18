@@ -7,6 +7,7 @@ import * as notificationService from '../services/notification.service';
 import * as couponService from '../services/coupon.service';
 import * as adminService from '../services/admin.service';
 import { getSettings, Settings } from '../models/Settings';
+import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { param } from '../utils/params';
 
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
@@ -144,6 +145,26 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   Object.assign(settings, req.body);
   await settings.save();
   sendSuccess(res, settings, 'Settings updated');
+});
+
+export const submitContact = asyncHandler(async (req: Request, res: Response) => {
+  const doc = await ContactMessage.create(req.body);
+  sendSuccess(res, { id: doc._id }, 'Message received', 201);
+});
+
+export const subscribeNewsletter = asyncHandler(async (req: Request, res: Response) => {
+  const email = String(req.body.email).toLowerCase();
+  const existing = await NewsletterSubscriber.findOne({ email });
+  if (existing) {
+    if (!existing.isActive) {
+      existing.isActive = true;
+      await existing.save();
+    }
+    sendSuccess(res, { email }, 'Already subscribed');
+    return;
+  }
+  await NewsletterSubscriber.create({ email });
+  sendSuccess(res, { email }, 'Subscribed', 201);
 });
 
 void Settings;

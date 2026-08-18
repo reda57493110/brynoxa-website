@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Login() {
+  usePageTitle('Sign in — Brynoxa')
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from || '/account'
@@ -47,8 +49,9 @@ export function Login() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-semibold">Sign in</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">Access your Brynoxa account</p>
+      <p className="kicker">Account</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">Sign in</h1>
+      <p className="mt-1 text-sm text-[var(--fg-muted)]">Orders, wishlist, and cash on delivery.</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <Input
           label="Email"
@@ -66,13 +69,13 @@ export function Login() {
           required
           autoComplete="current-password"
         />
-        <Button type="submit" className="w-full" loading={loading}>
+        <Button type="submit" className="w-full rounded-full" loading={loading}>
           Sign in
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
-        New here?{' '}
-        <Link to="/register" className="font-medium text-[var(--brand)]">
+        No account yet?{' '}
+        <Link to="/register" className="font-medium text-[var(--brand-text)]">
           Create an account
         </Link>
       </p>

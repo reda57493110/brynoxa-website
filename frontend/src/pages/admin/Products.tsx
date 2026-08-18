@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -38,7 +38,7 @@ export function Products() {
         </div>
         <Link to="/admin/products/new">
           <Button>
-            <Plus className="h-4 w-4" /> Add product
+            <SiteIcon name="plus" size={16} /> Add product
           </Button>
         </Link>
       </div>
@@ -48,7 +48,7 @@ export function Products() {
           <Spinner size="lg" />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
               <tr>
@@ -76,7 +76,7 @@ export function Products() {
                     <div className="flex justify-end gap-2">
                       <Link to={`/admin/products/${p._id}/edit`}>
                         <Button variant="ghost" size="sm">
-                          <Pencil className="h-4 w-4" />
+                          <SiteIcon name="pencil" size={16} />
                         </Button>
                       </Link>
                       <Button
@@ -86,7 +86,7 @@ export function Products() {
                           if (confirm('Delete this product?')) remove.mutate(p._id)
                         }}
                       >
-                        <Trash2 className="h-4 w-4 text-[var(--danger)]" />
+                        <SiteIcon name="trash" size={16} />
                       </Button>
                     </div>
                   </td>

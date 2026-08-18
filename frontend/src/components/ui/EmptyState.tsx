@@ -1,19 +1,18 @@
-import type { LucideIcon } from 'lucide-react'
-import { Inbox } from 'lucide-react'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
 
 export function EmptyState({
   title,
   description,
-  icon: Icon = Inbox,
+  icon = 'inbox',
   actionLabel,
   onAction,
   className,
 }: {
   title: string
   description?: string
-  icon?: LucideIcon
+  icon?: SiteIconName
   actionLabel?: string
   onAction?: () => void
   className?: string
@@ -21,17 +20,17 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-16 text-center',
+        'flex flex-col items-center justify-center rounded-[var(--radius-card)] border border-dashed border-[var(--border)] bg-[var(--bg-elevated)] px-6 py-16 text-center',
         className
       )}
     >
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand)]">
-        <Icon className="h-6 w-6" />
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
+        <SiteIcon name={icon} size={22} />
       </div>
       <h3 className="font-display text-lg font-semibold">{title}</h3>
       {description ? <p className="mt-2 max-w-sm text-sm text-[var(--fg-muted)]">{description}</p> : null}
       {actionLabel && onAction ? (
-        <Button className="mt-6" onClick={onAction}>
+        <Button className="mt-6 rounded-full" onClick={onAction}>
           {actionLabel}
         </Button>
       ) : null}

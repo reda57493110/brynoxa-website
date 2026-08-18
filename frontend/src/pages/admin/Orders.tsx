@@ -22,7 +22,7 @@ export function Orders() {
       {orders.isLoading ? (
         <Spinner />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">
+        <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           <table className="w-full min-w-[700px] text-left text-sm">
             <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
               <tr>
@@ -39,7 +39,7 @@ export function Orders() {
                 return (
                   <tr key={o._id} className="border-t border-[var(--border)]">
                     <td className="px-4 py-3">
-                      <Link to={`/admin/orders/${o._id}`} className="font-medium text-[var(--brand)]">
+                      <Link to={`/admin/orders/${o._id}`} className="font-medium text-[var(--brand-text)]">
                         #{o.orderNumber}
                       </Link>
                     </td>

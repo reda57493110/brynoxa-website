@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
-import type { ApiResponse, AuthPayload } from '@/types'
+import type { ApiResponse, SessionPayload } from '@/types'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -18,15 +18,20 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 })
 
 let refreshPromise: Promise<string | null> | null = null
+let sessionChecked = false
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = api
-      .post<ApiResponse<AuthPayload>>('/auth/refresh')
+      .post<ApiResponse<SessionPayload>>('/auth/refresh')
       .then((res) => {
-        const { user, accessToken } = res.data.data
-        useAuthStore.getState().setAuth(user, accessToken)
-        return accessToken
+        const payload = res.data.data
+        if (!payload?.user || !payload.accessToken) {
+          useAuthStore.getState().logout()
+          return null
+        }
+        useAuthStore.getState().setAuth(payload.user, payload.accessToken)
+        return payload.accessToken
       })
       .catch(() => {
         useAuthStore.getState().logout()
@@ -37,6 +42,15 @@ async function refreshAccessToken() {
       })
   }
   return refreshPromise
+}
+
+export async function restoreSession() {
+  if (sessionChecked && !refreshPromise) {
+    return useAuthStore.getState().accessToken
+  }
+  const token = await refreshAccessToken()
+  sessionChecked = true
+  return token
 }
 
 api.interceptors.response.use(
@@ -50,6 +64,7 @@ api.interceptors.response.use(
       status === 401 &&
       original &&
       !original._retry &&
+      Boolean(useAuthStore.getState().accessToken) &&
       !url.includes('/auth/login') &&
       !url.includes('/auth/register') &&
       !url.includes('/auth/refresh')

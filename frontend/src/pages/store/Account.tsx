@@ -1,52 +1,59 @@
 import { Link } from 'react-router-dom'
-import { Package, Heart, Settings, Star, ChevronRight } from 'lucide-react'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Container } from '@/components/ui/Container'
+import { PageHero } from '@/components/layout/PageHero'
+import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
-const links = [
-  { to: '/account/orders', label: 'Orders', desc: 'Track COD shipments', icon: Package },
-  { to: '/wishlist', label: 'Wishlist', desc: 'Saved products', icon: Heart },
-  { to: '/account/reviews', label: 'Reviews', desc: 'Your product feedback', icon: Star },
-  { to: '/account/settings', label: 'Settings', desc: 'Profile & addresses', icon: Settings },
+const links: { to: string; label: string; desc: string; icon: SiteIconName }[] = [
+  { to: '/account/orders', label: 'Orders', desc: 'Track COD shipments', icon: 'package' },
+  { to: '/wishlist', label: 'Wishlist', desc: 'Saved products', icon: 'heart' },
+  { to: '/account/reviews', label: 'Reviews', desc: 'Your product feedback', icon: 'star' },
+  { to: '/account/settings', label: 'Settings', desc: 'Profile & addresses', icon: 'settings' },
 ]
 
 export function Account() {
+  usePageTitle('Account — Brynoxa')
   const user = useAuthStore((s) => s.user)
 
   return (
-    <Container className="py-10">
-      <h1 className="font-display text-3xl font-semibold">Account</h1>
-      <p className="mt-1 text-[var(--fg-muted)]">
-        Welcome back{user?.name ? `, ${user.name}` : ''}
-      </p>
+    <>
+      <PageHero
+        kicker="Account"
+        title="Account"
+        description={`Signed in${user?.name ? ` as ${user.name}` : ''}. Orders, wishlist, and delivery details.`}
+      />
+      <Container className="py-8 sm:py-10">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {links.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`${surfaceCard} group flex items-center gap-4 p-5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg`}
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] dark:text-[var(--brand)]">
+                <SiteIcon name={item.icon} size={20} />
+              </span>
+              <span className="flex-1">
+                <span className="block font-display font-semibold">{item.label}</span>
+                <span className="text-sm text-[var(--fg-muted)]">{item.desc}</span>
+              </span>
+              <SiteIcon name="chevron-right" size={16} className="text-[var(--fg-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--brand-text)]" />
+            </Link>
+          ))}
+        </div>
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        {links.map((item) => (
+        {user?.role === 'admin' ? (
           <Link
-            key={item.to}
-            to={item.to}
-            className="group flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 transition hover:border-[var(--brand)]"
+            to="/admin"
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm font-medium text-[var(--brand-text)] transition hover:border-[var(--brand)]"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--bg-muted)] text-[var(--brand)]">
-              <item.icon className="h-5 w-5" />
-            </span>
-            <span className="flex-1">
-              <span className="block font-semibold">{item.label}</span>
-              <span className="text-sm text-[var(--fg-muted)]">{item.desc}</span>
-            </span>
-            <ChevronRight className="h-4 w-4 text-[var(--fg-muted)] transition group-hover:text-[var(--brand)]" />
+            <SiteIcon name="dashboard" size={16} />
+            Open admin dashboard
           </Link>
-        ))}
-      </div>
-
-      {user?.role === 'admin' && (
-        <Link
-          to="/admin"
-          className="mt-6 inline-flex rounded-xl border border-[var(--brand)] px-4 py-2 text-sm font-medium text-[var(--brand)] hover:bg-[var(--brand)] hover:text-[var(--brand-fg)]"
-        >
-          Open admin dashboard
-        </Link>
-      )}
-    </Container>
+        ) : null}
+      </Container>
+    </>
   )
 }

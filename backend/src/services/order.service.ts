@@ -24,7 +24,7 @@ export async function validateCoupon(code: string, subtotal: number) {
     throw new ApiError(400, 'Coupon usage limit reached');
   }
   if (subtotal < coupon.minOrder) {
-    throw new ApiError(400, `Minimum order of $${coupon.minOrder} required`);
+    throw new ApiError(400, `Minimum order of ${coupon.minOrder} DH required`);
   }
 
   let discount = 0;

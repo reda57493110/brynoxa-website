@@ -7,6 +7,7 @@ import { Product } from '../models/Product';
 import { Coupon } from '../models/Coupon';
 import { getSettings } from '../models/Settings';
 import { slugify } from '../utils/slugify';
+import { migrateCurrencyToMad } from '../config/migrateCurrency';
 
 const placeholders = [
   'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&q=80',
@@ -87,8 +88,8 @@ export async function runSeed(force = false) {
       sku: 'BRX-LAP-001',
       category: cat('Laptops'),
       brand: brand('Brynoxa'),
-      price: 1899,
-      compareAtPrice: 2199,
+      price: 18990,
+      compareAtPrice: 21990,
       stock: 24,
       isFeatured: true,
       shortDescription: 'Ultra-thin performance laptop for creators.',
@@ -108,8 +109,8 @@ export async function runSeed(force = false) {
       sku: 'BRX-PC-001',
       category: cat('Gaming PCs'),
       brand: brand('Brynoxa'),
-      price: 2499,
-      compareAtPrice: 2799,
+      price: 24990,
+      compareAtPrice: 27990,
       stock: 12,
       isFeatured: true,
       shortDescription: 'Liquid-cooled tower ready for 4K gaming.',
@@ -129,8 +130,8 @@ export async function runSeed(force = false) {
       sku: 'BRX-MON-001',
       category: cat('Monitors'),
       brand: brand('Samsung'),
-      price: 799,
-      compareAtPrice: 899,
+      price: 7990,
+      compareAtPrice: 8990,
       stock: 40,
       isFeatured: true,
       shortDescription: '27-inch OLED with near-instant response.',
@@ -144,7 +145,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-KB-001',
       category: cat('Keyboards'),
       brand: brand('Razer'),
-      price: 149,
+      price: 1490,
       stock: 80,
       isFeatured: true,
       shortDescription: 'Hot-swap switches with aluminum frame.',
@@ -158,7 +159,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-MS-001',
       category: cat('Mice'),
       brand: brand('Logitech'),
-      price: 99,
+      price: 990,
       stock: 120,
       isFeatured: false,
       shortDescription: 'Lightweight sensor for competitive play.',
@@ -172,7 +173,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-HP-001',
       category: cat('Headphones'),
       brand: brand('Razer'),
-      price: 179,
+      price: 1790,
       stock: 55,
       isFeatured: true,
       shortDescription: 'Studio-tuned drivers with detachable mic.',
@@ -185,7 +186,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-GPU-001',
       category: cat('Components'),
       brand: brand('NVIDIA'),
-      price: 1199,
+      price: 11990,
       stock: 18,
       isFeatured: true,
       shortDescription: 'Flagship graphics for creators and gamers.',
@@ -198,7 +199,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-NET-001',
       category: cat('Networking'),
       brand: brand('ASUS'),
-      price: 229,
+      price: 2290,
       stock: 35,
       isFeatured: false,
       shortDescription: 'Whole-home coverage with Wi-Fi 6E.',
@@ -211,12 +212,12 @@ export async function runSeed(force = false) {
       sku: 'BRX-OFF-001',
       category: cat('Office'),
       brand: brand('Dell'),
-      price: 449,
+      price: 4490,
       stock: 22,
       isFeatured: false,
       shortDescription: 'Ergonomic support for long workdays.',
       description: 'Adjustable lumbar, breathable mesh, and 4D armrests.',
-      specs: { Material: 'Mesh', WeightCapacity: '150kg', Warranty: '5 years' },
+      specs: { Material: 'Mesh', WeightCapacity: '150kg', Warranty: '6 months' },
       tags: ['office', 'chair'],
     },
     {
@@ -224,7 +225,7 @@ export async function runSeed(force = false) {
       sku: 'BRX-ACC-001',
       category: cat('Accessories'),
       brand: brand('Brynoxa'),
-      price: 69,
+      price: 690,
       stock: 200,
       isFeatured: false,
       shortDescription: '8-in-1 hub with 100W pass-through.',
@@ -237,7 +238,7 @@ export async function runSeed(force = false) {
       sku: 'MSI-LAP-016',
       category: cat('Laptops'),
       brand: brand('MSI'),
-      price: 2099,
+      price: 20990,
       stock: 15,
       isFeatured: true,
       shortDescription: 'Creator laptop with mini-LED display.',
@@ -250,7 +251,7 @@ export async function runSeed(force = false) {
       sku: 'ASUS-MON-032',
       category: cat('Monitors'),
       brand: brand('ASUS'),
-      price: 1299,
+      price: 12990,
       stock: 10,
       isFeatured: false,
       shortDescription: '32-inch 4K gaming monitor.',
@@ -285,7 +286,7 @@ export async function runSeed(force = false) {
       code: 'BRYNOXA10',
       type: 'percent',
       value: 10,
-      minOrder: 100,
+      minOrder: 1000,
       maxUses: 1000,
       isActive: true,
     });
@@ -296,6 +297,7 @@ export async function runSeed(force = false) {
 
 async function cli() {
   await connectDB();
+  await migrateCurrencyToMad();
   await runSeed(true);
   process.exit(0);
 }

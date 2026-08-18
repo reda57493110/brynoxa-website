@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
+import { SiteIcon } from './SiteIcon'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
 
@@ -41,7 +41,7 @@ export function Drawer({
       <button
         type="button"
         aria-label="Close drawer backdrop"
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
         onClick={onClose}
       />
       <aside
@@ -54,7 +54,7 @@ export function Drawer({
         <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-4">
           <h3 className="font-display text-lg font-semibold">{title}</h3>
           <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
-            <X className="h-4 w-4" />
+            <SiteIcon name="close" size={16} />
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">{children}</div>

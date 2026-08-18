@@ -1,10 +1,10 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { GitCompareArrows, X } from 'lucide-react'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Price } from '@/components/product/Price'
 import { RatingStars } from '@/components/product/RatingStars'
 import { useCompareStore } from '@/store/compareStore'
@@ -29,7 +29,7 @@ export function Compare() {
     return (
       <Container className="py-16">
         <EmptyState
-          icon={GitCompareArrows}
+          icon="refresh"
           title="Nothing to compare"
           description={`Add up to ${COMPARE_MAX} products from the shop.`}
           actionLabel="Shop now"
@@ -71,7 +71,7 @@ export function Compare() {
                       onClick={() => remove(p._id)}
                       aria-label="Remove"
                     >
-                      <X className="h-4 w-4" />
+                      <SiteIcon name="close" size={16} />
                     </button>
                     <Link to={`/product/${p.slug}`} className="block pr-6 font-display font-semibold hover:text-[var(--brand)]">
                       {p.name}

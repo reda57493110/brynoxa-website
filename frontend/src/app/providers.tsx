@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
-import { authApi } from '@/api/authApi'
+import { restoreSession } from '@/api/client'
 import { wishlistApi } from '@/api/wishlistApi'
 import { Toaster } from '@/components/ui/Toaster'
 
@@ -20,8 +20,6 @@ const queryClient = new QueryClient({
 
 function BootstrapAuth({ children }: { children: ReactNode }) {
   const hydrateTheme = useThemeStore((s) => s.hydrateTheme)
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const logout = useAuthStore((s) => s.logout)
   const setBootstrapped = useAuthStore((s) => s.setBootstrapped)
   const localIds = useWishlistStore((s) => s.ids)
   const setFromServer = useWishlistStore((s) => s.setFromServer)
@@ -31,11 +29,9 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
     let cancelled = false
 
     ;(async () => {
-      try {
-        const res = await authApi.refresh()
-        if (cancelled) return
-        const { user, accessToken } = res.data.data
-        setAuth(user, accessToken)
+      const token = await restoreSession()
+      if (cancelled) return
+      if (token) {
         try {
           if (localIds.length) {
             const synced = await wishlistApi.sync(localIds)
@@ -47,11 +43,8 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
         } catch {
           /* wishlist optional */
         }
-      } catch {
-        if (!cancelled) logout()
-      } finally {
-        if (!cancelled) setBootstrapped(true)
       }
+      if (!cancelled) setBootstrapped(true)
     })()
 
     return () => {

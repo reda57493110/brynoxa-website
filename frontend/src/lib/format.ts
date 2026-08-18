@@ -1,9 +1,9 @@
-export function formatCurrency(amount: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
+export function formatCurrency(amount: number) {
+  const formatted = new Intl.NumberFormat('en', {
+    minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount)
+  return `${formatted} DH`
 }
 
 export function formatDate(value: string | Date) {

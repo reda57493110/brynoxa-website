@@ -1,10 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('brynoxa-theme')
+          var theme = 'dark'
+          if (stored) {
+            var parsed = JSON.parse(stored)
+            if (parsed && parsed.state && parsed.state.theme) theme = parsed.state.theme
+          }
+          var root = document.documentElement
+          root.classList.toggle('dark', theme === 'dark')
+          root.style.colorScheme = theme
+          root.setAttribute('data-theme', theme)
+        } catch (e) {
+          document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = 'dark'
+        }
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Brynoxa — premium tech & lifestyle store" />
+    <meta name="description" content="Brynoxa — PCs, laptops, and components. Cash on delivery across Morocco." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

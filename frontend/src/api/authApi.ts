@@ -1,5 +1,5 @@
 import api from './client'
-import type { Address, ApiResponse, AuthPayload, User } from '@/types'
+import type { Address, ApiResponse, AuthPayload, SessionPayload, User } from '@/types'
 
 export const authApi = {
   register: (payload: { name: string; email: string; password: string; phone?: string }) =>
@@ -8,7 +8,7 @@ export const authApi = {
   login: (payload: { email: string; password: string }) =>
     api.post<ApiResponse<AuthPayload>>('/auth/login', payload),
 
-  refresh: () => api.post<ApiResponse<AuthPayload>>('/auth/refresh'),
+  refresh: () => api.post<ApiResponse<SessionPayload>>('/auth/refresh'),
 
   logout: () => api.post<ApiResponse<null>>('/auth/logout'),
 
