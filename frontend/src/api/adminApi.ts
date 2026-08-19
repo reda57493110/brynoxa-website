@@ -3,8 +3,10 @@ import type {
   ApiResponse,
   Brand,
   Category,
+  ContactInboxMessage,
   Coupon,
   DashboardStats,
+  NewsletterSub,
   Order,
   OrderStatus,
   Product,
@@ -28,7 +30,7 @@ export const adminApi = {
       api.patch<ApiResponse<Product>>(`/admin/products/${id}/inventory`, { stock }),
     list: (filters?: ProductFilters) =>
       api.get<ApiResponse<Product[]>>('/products', {
-        params: { ...filters, limit: filters?.limit ?? 50 },
+        params: { admin: true, ...filters, limit: filters?.limit ?? 20 },
       }),
   },
 
@@ -49,7 +51,7 @@ export const adminApi = {
   },
 
   orders: {
-    list: (params?: { page?: number; limit?: number; status?: string }) =>
+    list: (params?: { page?: number; limit?: number; status?: string; q?: string }) =>
       api.get<ApiResponse<Order[]>>('/admin/orders', { params }),
     get: (id: string) => api.get<ApiResponse<Order>>(`/admin/orders/${id}`),
     updateStatus: (
@@ -59,7 +61,7 @@ export const adminApi = {
   },
 
   customers: {
-    list: (params?: { page?: number; limit?: number }) =>
+    list: (params?: { page?: number; limit?: number; q?: string }) =>
       api.get<ApiResponse<User[]>>('/admin/customers', { params }),
     setActive: (id: string, isActive: boolean) =>
       api.patch<ApiResponse<User>>(`/admin/customers/${id}`, { isActive }),
@@ -80,6 +82,17 @@ export const adminApi = {
     update: (id: string, payload: Partial<Coupon>) =>
       api.patch<ApiResponse<Coupon>>(`/admin/coupons/${id}`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/coupons/${id}`),
+  },
+
+  messages: {
+    list: (params?: { page?: number; limit?: number; status?: string }) =>
+      api.get<ApiResponse<ContactInboxMessage[]>>('/admin/messages', { params }),
+    update: (id: string, status: ContactInboxMessage['status']) =>
+      api.patch<ApiResponse<ContactInboxMessage>>(`/admin/messages/${id}`, { status }),
+  },
+
+  subscribers: {
+    list: () => api.get<ApiResponse<NewsletterSub[]>>('/admin/subscribers'),
   },
 
   settings: {

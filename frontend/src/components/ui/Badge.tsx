@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
-type BadgeVariant = 'default' | 'brand' | 'success' | 'warning' | 'danger' | 'muted'
+export type BadgeVariant = 'default' | 'brand' | 'success' | 'warning' | 'danger' | 'muted'
 
 const styles: Record<BadgeVariant, string> = {
   default: 'bg-[var(--bg-muted)] text-[var(--fg)]',

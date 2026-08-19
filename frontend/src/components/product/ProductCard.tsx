@@ -12,6 +12,7 @@ import { toast } from '@/store/toastStore'
 import { Button } from '@/components/ui/Button'
 import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 function primaryImage(product: Product) {
   return (
@@ -38,12 +39,13 @@ export function ProductCard({
   const toggleLocal = useWishlistStore((s) => s.toggleLocal)
   const setFromServer = useWishlistStore((s) => s.setFromServer)
   const isAuth = useAuthStore((s) => s.isAuthenticated())
+  const t = useT()
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
 
   const onAddCart = () => {
     if (product.stock <= 0) {
-      toast.error('Out of stock')
+      toast.error(t('product.outOfStock'))
       return
     }
     addItem({
@@ -55,7 +57,7 @@ export function ProductCard({
       stock: product.stock,
       sku: product.sku,
     })
-    toast.success('Added to cart')
+    toast.success(t('product.addedToCart'))
   }
 
   const onWishlist = async () => {
@@ -64,15 +66,15 @@ export function ProductCard({
         if (wishlisted) {
           const res = await wishlistApi.remove(product._id)
           setFromServer(res.data.data)
-          toast.info('Removed from wishlist')
+          toast.info(t('product.removedWishlist'))
         } else {
           const res = await wishlistApi.add(product._id)
           setFromServer(res.data.data)
-          toast.success('Saved to wishlist')
+          toast.success(t('product.savedWishlist'))
         }
       } else {
         toggleLocal(product._id)
-        toast.info(wishlisted ? 'Removed from wishlist' : 'Saved locally — sign in to sync')
+        toast.info(wishlisted ? t('product.removedWishlist') : t('product.savedLocal'))
       }
     } catch (e) {
       toast.error(getErrorMessage(e))
@@ -100,10 +102,10 @@ export function ProductCard({
             loading={spotlight ? 'eager' : 'lazy'}
           />
         </Link>
-        <div className="pointer-events-none absolute left-3 top-3 flex flex-wrap gap-2">
+        <div className="pointer-events-none absolute start-3 top-3 z-10 flex flex-wrap gap-2">
           {spotlight ? (
             <span className="rounded-full bg-[var(--brand)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-fg)]">
-              Featured pick
+              {t('product.featuredPick')}
             </span>
           ) : null}
           {off ? (
@@ -117,12 +119,12 @@ export function ProductCard({
           type="button"
           onClick={onWishlist}
           className={cn(
-            'absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition',
+            'absolute end-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition',
             wishlisted
               ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
           )}
-          aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+          aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
         >
           <SiteIcon name="heart" size={16} solid={wishlisted} />
         </button>
@@ -162,7 +164,7 @@ export function ProductCard({
             disabled={product.stock <= 0}
           >
             <SiteIcon name="cart" size={16} />
-            {spotlight ? 'Add to cart' : 'Add'}
+            {spotlight ? t('common.addToCart') : t('common.add')}
           </Button>
         </div>
       </div>

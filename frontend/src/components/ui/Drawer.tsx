@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { SiteIcon } from './SiteIcon'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
+import { useT } from '@/hooks/useT'
 
 interface DrawerProps {
   open: boolean
@@ -21,6 +22,7 @@ export function Drawer({
   side = 'right',
   className,
 }: DrawerProps) {
+  const t = useT()
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -40,20 +42,20 @@ export function Drawer({
     <div className="fixed inset-0 z-[80]">
       <button
         type="button"
-        aria-label="Close drawer backdrop"
+        aria-label={t('ui.closeDrawer')}
         className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
         onClick={onClose}
       />
       <aside
         className={cn(
           'absolute top-0 flex h-full w-full max-w-sm flex-col border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft-lg',
-          side === 'right' ? 'right-0 border-l' : 'left-0 border-r',
+          side === 'right' ? 'end-0 border-s' : 'start-0 border-e',
           className
         )}
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-4">
           <h3 className="font-display text-lg font-semibold">{title}</h3>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('ui.close')}>
             <SiteIcon name="close" size={16} />
           </Button>
         </div>

@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { useThemeStore } from '@/store/themeStore'
+import { useLocaleStore } from '@/store/localeStore'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { restoreSession } from '@/api/client'
@@ -26,6 +27,7 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     hydrateTheme()
+    useLocaleStore.getState().hydrateLocale()
     let cancelled = false
 
     ;(async () => {

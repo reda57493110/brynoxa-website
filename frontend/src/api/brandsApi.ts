@@ -2,5 +2,6 @@ import api from './client'
 import type { ApiResponse, Brand } from '@/types'
 
 export const brandsApi = {
-  list: () => api.get<ApiResponse<Brand[]>>('/brands'),
+  list: (all = false) =>
+    api.get<ApiResponse<Brand[]>>('/brands', { params: all ? { all: true } : undefined }),
 }

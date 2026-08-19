@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { Badge } from '@/components/ui/Badge'
 import { useToastStore } from '@/store/toastStore'
 
 export function Brands() {
@@ -14,8 +15,8 @@ export function Brands() {
   const [name, setName] = useState('')
 
   const list = useQuery({
-    queryKey: ['brands'],
-    queryFn: async () => (await brandsApi.list()).data.data,
+    queryKey: ['brands', 'all'],
+    queryFn: async () => (await brandsApi.list(true)).data.data,
   })
 
   const create = useMutation({
@@ -33,6 +34,16 @@ export function Brands() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['brands'] })
       toast('Brand deleted', 'success')
+    },
+    onError: (e) => toast(getErrorMessage(e), 'error'),
+  })
+
+  const toggle = useMutation({
+    mutationFn: (b: { _id: string; isActive: boolean }) =>
+      adminApi.brands.update(b._id, { isActive: !b.isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['brands'] })
+      toast('Brand updated', 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
@@ -66,14 +77,24 @@ export function Brands() {
               key={b._id}
               className="flex items-center justify-between rounded-xl border border-[var(--border)] px-4 py-3"
             >
-              <span className="font-medium">{b.name}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => confirm('Delete?') && remove.mutate(b._id)}
-              >
-                Delete
-              </Button>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{b.name}</span>
+                <Badge variant={b.isActive ? 'success' : 'danger'}>
+                  {b.isActive ? 'On' : 'Off'}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => toggle.mutate(b)}>
+                  {b.isActive ? 'Hide' : 'Show'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => confirm('Delete?') && remove.mutate(b._id)}
+                >
+                  Delete
+                </Button>
+              </div>
             </li>
           ))}
         </ul>

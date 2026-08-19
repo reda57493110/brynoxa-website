@@ -10,4 +10,7 @@ export const ordersApi = {
 
   getByNumber: (orderNumber: string) =>
     api.get<ApiResponse<Order>>(`/orders/${orderNumber}`),
+
+  cancel: (orderNumber: string) =>
+    api.post<ApiResponse<Order>>(`/orders/${orderNumber}/cancel`),
 }

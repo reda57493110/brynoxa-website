@@ -56,7 +56,9 @@ export const deleteBrand = asyncHandler(async (req: Request, res: Response) => {
 export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   const query = paginationQuerySchema.parse(req.query);
   const admin = req.user?.role === 'admin' && req.query.admin === 'true';
-  const result = await catalog.listProducts({ ...query, admin });
+  const isActive =
+    req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+  const result = await catalog.listProducts({ ...query, admin, isActive });
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,

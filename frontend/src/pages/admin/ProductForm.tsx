@@ -21,12 +21,12 @@ export function ProductForm() {
   const toast = useToastStore((s) => s.push)
 
   const categories = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => (await categoriesApi.list()).data.data,
+    queryKey: ['categories', 'all'],
+    queryFn: async () => (await categoriesApi.list(true)).data.data,
   })
   const brands = useQuery({
-    queryKey: ['brands'],
-    queryFn: async () => (await brandsApi.list()).data.data,
+    queryKey: ['brands', 'all'],
+    queryFn: async () => (await brandsApi.list(true)).data.data,
   })
   const existing = useQuery({
     queryKey: ['admin-product', id],

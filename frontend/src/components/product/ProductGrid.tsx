@@ -4,13 +4,14 @@ import { ProductCard } from './ProductCard'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 export function ProductGrid({
   products,
   loading,
   className,
-  emptyTitle = 'No products found',
-  emptyDescription = 'Try adjusting filters or search terms.',
+  emptyTitle,
+  emptyDescription,
   emptyActionLabel,
   emptyActionTo,
   onEmptyAction,
@@ -24,6 +25,7 @@ export function ProductGrid({
   emptyActionTo?: string
   onEmptyAction?: () => void
 }) {
+  const t = useT()
   const navigate = useNavigate()
   const gridClass = cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', className)
 
@@ -40,8 +42,8 @@ export function ProductGrid({
   if (!products?.length) {
     return (
       <EmptyState
-        title={emptyTitle}
-        description={emptyDescription}
+        title={emptyTitle ?? t('shop.gridEmpty')}
+        description={emptyDescription ?? t('shop.gridEmptyBody')}
         actionLabel={emptyActionLabel}
         onAction={onEmptyAction ?? (emptyActionTo ? () => navigate(emptyActionTo) : undefined)}
       />

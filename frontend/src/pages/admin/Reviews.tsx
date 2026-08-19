@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -11,6 +12,7 @@ import type { Product, User } from '@/types'
 export function Reviews() {
   const qc = useQueryClient()
   const toast = useToastStore((s) => s.push)
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all')
 
   const reviews = useQuery({
     queryKey: ['admin-reviews'],
@@ -43,11 +45,32 @@ export function Reviews() {
         <p className="text-sm text-[var(--fg-muted)]">Moderate customer feedback</p>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {(['all', 'pending', 'approved'] as const).map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setFilter(id)}
+            className={`h-9 rounded-full border px-3 text-sm ${
+              filter === id
+                ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+                : 'border-[var(--border)]'
+            }`}
+          >
+            {id === 'all' ? 'All' : id === 'pending' ? 'Hidden' : 'Approved'}
+          </button>
+        ))}
+      </div>
+
       {reviews.isLoading ? (
         <Spinner />
       ) : (
         <div className="space-y-3">
-          {reviews.data?.map((r) => {
+          {reviews.data
+            ?.filter((r) =>
+              filter === 'all' ? true : filter === 'approved' ? r.isApproved : !r.isApproved
+            )
+            .map((r) => {
             const product = r.product as Product
             const user = r.user as User
             return (

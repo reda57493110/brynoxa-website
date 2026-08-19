@@ -18,19 +18,42 @@ const placeholders = [
   'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
 ];
 
+const RETIRED_CATEGORY_SLUGS = ['office', 'networking'];
+
+export async function removeRetiredCategories() {
+  const cats = await Category.find({ slug: { $in: RETIRED_CATEGORY_SLUGS } });
+  const ids = cats.map((c) => c._id);
+  if (!ids.length) return;
+  await Product.deleteMany({ category: { $in: ids } });
+  await Category.deleteMany({ _id: { $in: ids } });
+}
+
+export async function ensureAdmin() {
+  const existing = await User.findOne({ email: env.ADMIN_EMAIL });
+  if (existing) {
+    if (existing.role !== 'admin') {
+      existing.role = 'admin';
+      await existing.save();
+      console.log(`Promoted ${env.ADMIN_EMAIL} to admin`);
+    }
+    return existing;
+  }
+
+  const admin = await User.create({
+    name: 'Brynoxa Admin',
+    email: env.ADMIN_EMAIL,
+    password: env.ADMIN_PASSWORD,
+    role: 'admin',
+  });
+  console.log(`Admin created: ${env.ADMIN_EMAIL}`);
+  return admin;
+}
+
 export async function runSeed(force = false) {
   await getSettings();
+  await ensureAdmin();
 
-  let admin = await User.findOne({ email: env.ADMIN_EMAIL });
-  if (!admin) {
-    admin = await User.create({
-      name: 'Brynoxa Admin',
-      email: env.ADMIN_EMAIL,
-      password: env.ADMIN_PASSWORD,
-      role: 'admin',
-    });
-    console.log(`Admin created: ${env.ADMIN_EMAIL}`);
-  }
+  await removeRetiredCategories();
 
   const productCount = await Product.countDocuments();
   if (productCount > 0 && !force) {
@@ -55,8 +78,6 @@ export async function runSeed(force = false) {
     'Mice',
     'Headphones',
     'Components',
-    'Networking',
-    'Office',
     'Accessories',
   ];
 
@@ -193,32 +214,6 @@ export async function runSeed(force = false) {
       description: 'Ray tracing, DLSS, and massive VRAM for future-proof performance.',
       specs: { VRAM: '16GB GDDR6X', Interface: 'PCIe 4.0', TGP: '320W' },
       tags: ['gpu', 'rtx', 'component'],
-    },
-    {
-      name: 'Mesh Wi-Fi 6E Hub',
-      sku: 'BRX-NET-001',
-      category: cat('Networking'),
-      brand: brand('ASUS'),
-      price: 2290,
-      stock: 35,
-      isFeatured: false,
-      shortDescription: 'Whole-home coverage with Wi-Fi 6E.',
-      description: 'Tri-band mesh node with parental controls and low-latency gaming ports.',
-      specs: { Standard: 'Wi-Fi 6E', Bands: 'Tri-band', Coverage: 'Up to 2000 sq ft' },
-      tags: ['wifi', 'router', 'mesh'],
-    },
-    {
-      name: 'ErgoSit Pro Chair',
-      sku: 'BRX-OFF-001',
-      category: cat('Office'),
-      brand: brand('Dell'),
-      price: 4490,
-      stock: 22,
-      isFeatured: false,
-      shortDescription: 'Ergonomic support for long workdays.',
-      description: 'Adjustable lumbar, breathable mesh, and 4D armrests.',
-      specs: { Material: 'Mesh', WeightCapacity: '150kg', Warranty: '6 months' },
-      tags: ['office', 'chair'],
     },
     {
       name: 'ChargeDock USB-C Hub',

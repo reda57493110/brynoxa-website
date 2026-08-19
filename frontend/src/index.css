@@ -22,13 +22,18 @@
   --radius-2xl: 1rem;
 }
 
+html[lang="ar"] {
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cairo", ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
   --bg: #eef2f5;
   --bg-elevated: #ffffff;
   --bg-muted: #e3e9ee;
   --bg-input: #ffffff;
   --fg: #0c1218;
-  --fg-muted: #5a6a7a;
+  --fg-muted: #3f4f5c;
   --border: #cdd6de;
   --brand: #00c2ff;
   --brand-text: #0077a8;
@@ -114,6 +119,10 @@
     opacity: 0.05;
     mix-blend-mode: overlay;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  html:not(.dark) body::after {
+    display: none;
   }
 
   html:not(.dark) body,

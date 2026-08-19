@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { SiteIcon } from './SiteIcon'
 import { cn } from '@/lib/cn'
 import { Button } from './Button'
+import { useT } from '@/hooks/useT'
 
 interface ModalProps {
   open: boolean
@@ -20,6 +21,7 @@ const sizes = {
 }
 
 export function Modal({ open, onClose, title, children, className, size = 'md' }: ModalProps) {
+  const t = useT()
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -39,7 +41,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
       <button
         type="button"
-        aria-label="Close modal backdrop"
+        aria-label={t('ui.closeModal')}
         className="absolute inset-0 bg-[var(--overlay)] backdrop-blur-sm"
         onClick={onClose}
       />
@@ -54,7 +56,7 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
       >
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
           <h3 className="font-display text-lg font-semibold">{title}</h3>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close">
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('ui.close')}>
             <SiteIcon name="close" size={16} />
           </Button>
         </div>

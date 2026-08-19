@@ -9,9 +9,11 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
 import { Spinner } from '@/components/ui/Spinner'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
 
 export function CategoryPage() {
+  const t = useT()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const category = useQuery({
@@ -29,7 +31,7 @@ export function CategoryPage() {
     queryFn: async () => (await categoriesApi.list()).data.data,
   })
 
-  usePageTitle(category.data ? `${category.data.name} — Shop · Brynoxa` : 'Shop — Brynoxa')
+  usePageTitle(category.data ? `${category.data.name} — ${t('shop.title')} · Brynoxa` : `${t('shop.title')} — Brynoxa`)
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -45,11 +47,11 @@ export function CategoryPage() {
 
   if (!category.data) {
     return (
-      <Container className="py-16">
+      <Container className="py-8 sm:py-10">
         <EmptyState
-          title="Category not found"
-          description="That category is not in the shop."
-          actionLabel="Back to shop"
+          title={t('shop.categoryMissing')}
+          description={t('shop.categoryMissingBody')}
+          actionLabel={t('shop.backToShop')}
           onAction={() => navigate('/shop')}
         />
       </Container>
@@ -65,25 +67,26 @@ export function CategoryPage() {
         : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
     )
 
+  const productCount = products.data?.length ?? 0
+
   return (
     <>
       <PageHero
-        kicker="Category"
+        kicker={t('shop.categoryKicker')}
         title={category.data.name}
-        description={
-          category.data.description ||
-          'Prices in DH. Cash on delivery across Morocco.'
-        }
+        description={category.data.description || t('shop.categoryFallback')}
       />
       <Container className="py-8 sm:py-10">
         <div
           className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-          aria-label="Shop by category"
+          aria-label={t('shop.shopByCategory')}
         >
           <Link to="/shop" className={chip(false)}>
-            All
+            {t('shop.all')}
           </Link>
-          {(categories.data ?? []).map((c) => (
+          {(categories.data ?? [])
+            .filter((c) => c.slug !== 'office' && c.slug !== 'networking')
+            .map((c) => (
             <Link key={c._id} to={`/category/${c.slug}`} className={chip(c.slug === slug)}>
               {c.name}
             </Link>
@@ -91,15 +94,17 @@ export function CategoryPage() {
         </div>
         <p className="mb-5 text-sm text-[var(--fg-muted)]">
           {products.isLoading
-            ? 'Loading catalog…'
-            : `${products.data?.length ?? 0} product${(products.data?.length ?? 0) === 1 ? '' : 's'}`}
+            ? t('ui.loading')
+            : productCount === 1
+              ? t('shop.productCountOne', { count: productCount })
+              : t('shop.productCount', { count: productCount })}
         </p>
         <ProductGrid
           products={products.data}
           loading={products.isLoading}
-          emptyTitle="Nothing in this category yet"
-          emptyDescription="Try another category or browse the full shop."
-          emptyActionLabel="All products"
+          emptyTitle={t('shop.categoryEmpty')}
+          emptyDescription={t('shop.categoryEmptyBody')}
+          emptyActionLabel={t('common.allProducts')}
           emptyActionTo="/shop"
         />
       </Container>

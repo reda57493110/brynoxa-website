@@ -9,8 +9,10 @@ import { Price } from '@/components/product/Price'
 import { RatingStars } from '@/components/product/RatingStars'
 import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
+import { useT } from '@/hooks/useT'
 
 export function Compare() {
+  const t = useT()
   const navigate = useNavigate()
   const items = useCompareStore((s) => s.items)
   const remove = useCompareStore((s) => s.remove)
@@ -27,12 +29,12 @@ export function Compare() {
 
   if (!list.length) {
     return (
-      <Container className="py-16">
+      <Container className="py-8 sm:py-10">
         <EmptyState
           icon="refresh"
-          title="Nothing to compare"
-          description={`Add up to ${COMPARE_MAX} products from the shop.`}
-          actionLabel="Shop now"
+          title={t('compare.emptyTitle')}
+          description={t('compare.emptyBody', { max: COMPARE_MAX })}
+          actionLabel={t('common.shopNow')}
           onAction={() => navigate('/shop')}
         />
       </Container>
@@ -47,13 +49,13 @@ export function Compare() {
     <Container className="py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold">Compare</h1>
+          <h1 className="font-display text-3xl font-semibold">{t('compare.heading')}</h1>
           <p className="text-sm text-[var(--fg-muted)]">
-            {list.length} / {COMPARE_MAX} products
+            {t('compare.count', { count: list.length, max: COMPARE_MAX })}
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={clear}>
-          Clear all
+          {t('ui.clearAll')}
         </Button>
       </div>
 
@@ -61,7 +63,7 @@ export function Compare() {
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="p-4 text-left text-[var(--fg-muted)]">Product</th>
+              <th className="p-4 text-left text-[var(--fg-muted)]">{t('ui.product')}</th>
               {list.map((p) => (
                 <th key={p._id} className="min-w-[180px] p-4 text-left align-top">
                   <div className="relative">
@@ -69,7 +71,7 @@ export function Compare() {
                       type="button"
                       className="absolute right-0 top-0 rounded-lg p-1 hover:bg-[var(--bg-muted)]"
                       onClick={() => remove(p._id)}
-                      aria-label="Remove"
+                      aria-label={t('ui.remove')}
                     >
                       <SiteIcon name="close" size={16} />
                     </button>
@@ -83,7 +85,7 @@ export function Compare() {
           </thead>
           <tbody>
             <tr className="border-b border-[var(--border)]">
-              <td className="p-4 text-[var(--fg-muted)]">Price</td>
+              <td className="p-4 text-[var(--fg-muted)]">{t('ui.price')}</td>
               {list.map((p) => (
                 <td key={p._id} className="p-4">
                   <Price price={p.price} compareAt={p.compareAtPrice} />
@@ -91,7 +93,7 @@ export function Compare() {
               ))}
             </tr>
             <tr className="border-b border-[var(--border)]">
-              <td className="p-4 text-[var(--fg-muted)]">Rating</td>
+              <td className="p-4 text-[var(--fg-muted)]">{t('ui.rating')}</td>
               {list.map((p) => (
                 <td key={p._id} className="p-4">
                   <RatingStars rating={p.averageRating} count={p.reviewCount} />
@@ -99,7 +101,7 @@ export function Compare() {
               ))}
             </tr>
             <tr className="border-b border-[var(--border)]">
-              <td className="p-4 text-[var(--fg-muted)]">Stock</td>
+              <td className="p-4 text-[var(--fg-muted)]">{t('ui.stock')}</td>
               {list.map((p) => (
                 <td key={p._id} className="p-4">
                   {p.stock}

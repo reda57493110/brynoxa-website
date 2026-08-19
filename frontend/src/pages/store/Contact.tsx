@@ -10,17 +10,10 @@ import { SocialGlyph } from '@/components/contact/BrandIcons'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { contactApi } from '@/api/contactApi'
 import { getErrorMessage } from '@/api/client'
-import { CONTACT, CONTACT_FAQS, SOCIAL_LINKS } from '@/lib/site'
+import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
+import { useMessages, useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
-
-const SUBJECT_PRESETS = ['Order help', 'Warranty', 'Return', 'Product advice', 'Bulk / business'] as const
-
-const HERO_PROOF = [
-  { icon: 'chat', label: 'WhatsApp first' },
-  { icon: 'clock', label: 'Same business day' },
-  { icon: 'truck', label: 'Ships across Morocco' },
-] as const
 
 const pillPrimary =
   'inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
@@ -41,7 +34,23 @@ function fadeIn(reduce: boolean | null, delay = 0) {
 
 export function Contact() {
   const reduceMotion = useReducedMotion()
+  const { contact } = useMessages()
+  const t = useT()
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+
+  const SUBJECT_PRESETS = [
+    t('contact.subjectOrder'),
+    t('contact.subjectWarranty'),
+    t('contact.subjectReturn'),
+    t('contact.subjectAdvice'),
+    t('contact.subjectBulk'),
+  ]
+
+  const HERO_PROOF = [
+    { icon: 'chat' as const, label: t('contact.proofWhatsapp') },
+    { icon: 'clock' as const, label: t('contact.proofSameDay') },
+    { icon: 'truck' as const, label: t('home.proofShip') },
+  ]
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -59,18 +68,18 @@ export function Contact() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Contact — Brynoxa'
+    document.title = t('meta.contactTitle')
     return () => {
       document.title = prev
     }
-  }, [])
+  }, [t])
 
   const validate = (): boolean => {
     const next: FormErrors = {}
-    if (name.trim().length < 2) next.name = 'Please enter your full name'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = 'Enter a valid email'
-    if (subject.trim().length < 3) next.subject = 'Subject is required'
-    if (message.trim().length < 10) next.message = 'Message should be at least 10 characters'
+    if (name.trim().length < 2) next.name = t('contact.errName')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = t('contact.errEmail')
+    if (subject.trim().length < 3) next.subject = t('contact.errSubject')
+    if (message.trim().length < 10) next.message = t('contact.errMessage')
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -95,9 +104,9 @@ export function Contact() {
       setSubject('')
       setMessage('')
       setErrors({})
-      toast.success('Message sent — we will reply soon')
+      toast.success(t('contact.sentToast'))
     } catch (err) {
-      const msg = getErrorMessage(err, 'Could not send your message')
+      const msg = getErrorMessage(err, t('contact.sendFail'))
       setFormError(msg)
       toast.error(msg)
     } finally {
@@ -109,7 +118,7 @@ export function Contact() {
     e.preventDefault()
     setNewsError('')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newsEmail.trim())) {
-      setNewsError('Enter a valid email address')
+      setNewsError(t('contact.errNewsEmail'))
       return
     }
     setNewsLoading(true)
@@ -117,9 +126,9 @@ export function Contact() {
       await contactApi.subscribe(newsEmail.trim())
       setNewsDone(true)
       setNewsEmail('')
-      toast.success('You are subscribed')
+      toast.success(t('contact.subscribeToast'))
     } catch (err) {
-      const msg = getErrorMessage(err, 'Subscription failed')
+      const msg = getErrorMessage(err, t('contact.subscribeFail'))
       setNewsError(msg)
       toast.error(msg)
     } finally {
@@ -130,25 +139,25 @@ export function Contact() {
   return (
     <>
       <section aria-labelledby="contact-hero-title" className="page-hero">
-        <Container className="relative py-12 sm:py-16">
+        <Container className="relative py-8 sm:py-10">
           <motion.div {...fadeIn(reduceMotion)}>
-            <p className="kicker">Contact</p>
+            <p className="kicker">{t('contact.heroKicker')}</p>
             <h1
               id="contact-hero-title"
               className="mt-2 max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl"
             >
-              Contact us
+              {t('contact.heroTitle')}
             </h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-[var(--fg-muted)] sm:text-lg">
-              Orders, warranty, or a product question — WhatsApp is fastest. The form reaches the same team.
+              {t('contact.heroBody')}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a href={CONTACT.whatsapp.href} target="_blank" rel="noopener noreferrer" className={pillPrimary}>
-                WhatsApp
+                {t('contact.whatsapp')}
                 <SiteIcon name="arrow-right" size={16} />
               </a>
               <a href="#message" className={pillGhost}>
-                Send a message
+                {t('contact.sendMessage')}
               </a>
             </div>
             <ul className="mt-8 flex flex-wrap gap-2">
@@ -166,46 +175,46 @@ export function Contact() {
         </Container>
       </section>
 
-      <section aria-labelledby="contact-info-heading" className="py-14 sm:py-16">
+      <section aria-labelledby="contact-info-heading" className="py-8 sm:py-10">
         <Container>
           <div className="mb-8 max-w-xl">
             <p className="kicker">
-              Hours & channels
+              {t('contact.hoursChannels')}
             </p>
             <h2
               id="contact-info-heading"
               className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              WhatsApp, phone, or email
+              {t('contact.channelsTitle')}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-              We deliver across Morocco. There is no walk-in shop.
+              {t('contact.noShop')}
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <ContactInfoCard
               icon={<SiteIcon name="chat" size={20} />}
-              label={CONTACT.whatsapp.label}
+              label={t('contact.whatsapp')}
               value={CONTACT.whatsapp.value}
               href={CONTACT.whatsapp.href}
             />
             <ContactInfoCard
               icon={<SiteIcon name="phone" size={20} />}
-              label={CONTACT.phone.label}
+              label={t('contact.phone')}
               value={CONTACT.phone.value}
               href={CONTACT.phone.href}
             />
             <ContactInfoCard
               icon={<SiteIcon name="mail" size={20} />}
-              label={CONTACT.email.label}
+              label={t('contact.email')}
               value={CONTACT.email.value}
               href={CONTACT.email.href}
             />
             <ContactInfoCard
               icon={<SiteIcon name="clock" size={20} />}
-              label={CONTACT.hours.label}
-              value={CONTACT.hours.value}
+              label={t('contact.hours')}
+              value={t('contact.hoursValue')}
             />
           </div>
         </Container>
@@ -214,22 +223,22 @@ export function Contact() {
       <section
         id="message"
         aria-labelledby="contact-form-heading"
-        className="scroll-mt-[calc(var(--nav-height)+1rem)] border-t border-[var(--border)] bg-[var(--bg-elevated)] py-14 sm:py-16"
+        className="scroll-mt-[calc(var(--nav-height)+1rem)] bg-[var(--bg-elevated)] py-8 sm:py-10"
       >
         <Container>
           <div className="grid gap-10 lg:grid-cols-5 lg:gap-14">
             <div className="lg:col-span-3">
               <p className="kicker">
-                Message
+                {t('contact.messageKicker')}
               </p>
               <h2
                 id="contact-form-heading"
                 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
               >
-                Send a message
+                {t('contact.sendMessage')}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                Include your order number if you have one. We usually reply within one business day.
+                {t('contact.formBody')}
               </p>
 
               {sent ? (
@@ -241,9 +250,9 @@ export function Contact() {
                 >
                   <SiteIcon name="check" size={18} className="mt-0.5 shrink-0 text-[var(--success)]" />
                   <div>
-                    <p className="font-semibold">Message received</p>
+                    <p className="font-semibold">{t('contact.received')}</p>
                     <p className="mt-1 text-sm text-[var(--fg-muted)]">
-                      Thanks for writing. Support will get back to you shortly.
+                      {t('contact.receivedBody')}
                     </p>
                     <Button
                       variant="outline"
@@ -251,7 +260,7 @@ export function Contact() {
                       className="mt-4 rounded-full"
                       onClick={() => setSent(false)}
                     >
-                      Send another message
+                      {t('contact.sendAnother')}
                     </Button>
                   </div>
                 </motion.div>
@@ -276,7 +285,7 @@ export function Contact() {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Input
-                      label="Full name"
+                      label={t('contact.fullName')}
                       name="name"
                       autoComplete="name"
                       value={name}
@@ -286,7 +295,7 @@ export function Contact() {
                       aria-invalid={Boolean(errors.name)}
                     />
                     <Input
-                      label="Email"
+                      label={t('contact.email')}
                       name="email"
                       type="email"
                       autoComplete="email"
@@ -298,7 +307,7 @@ export function Contact() {
                     />
                   </div>
                   <Input
-                    label="Subject"
+                    label={t('contact.subject')}
                     name="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
@@ -307,7 +316,7 @@ export function Contact() {
                     aria-invalid={Boolean(errors.subject)}
                   />
                   <Textarea
-                    label="Message"
+                    label={t('contact.message')}
                     name="message"
                     rows={6}
                     value={message}
@@ -323,7 +332,7 @@ export function Contact() {
                   ) : null}
                   <Button type="submit" size="lg" loading={sending} className="min-w-[10rem] rounded-full">
                     <SiteIcon name="send" size={16} />
-                    Send message
+                    {t('contact.send')}
                   </Button>
                 </form>
               )}
@@ -331,18 +340,18 @@ export function Contact() {
 
             <aside className="lg:col-span-2">
               <p className="kicker">
-                Links
+                {t('contact.linksKicker')}
               </p>
-              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">Orders and policies</h2>
+              <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('contact.policiesTitle')}</h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-                Track a shipment or read the policy first.
+                {t('contact.policiesBody')}
               </p>
               <ul className="mt-6 space-y-2">
                 {[
-                  { to: '/account/orders', label: 'Track my order' },
-                  { to: '/services#warranty', label: 'Warranty' },
-                  { to: '/services#returns', label: 'Returns' },
-                  { to: '/shop', label: 'Browse the shop' },
+                  { to: '/account/orders', label: t('contact.trackOrder') },
+                  { to: '/services#warranty', label: t('footer.warranty') },
+                  { to: '/services#returns', label: t('footer.returns') },
+                  { to: '/shop', label: t('contact.browseShop') },
                 ].map((item) => (
                   <li key={item.to}>
                     <Link
@@ -356,7 +365,7 @@ export function Contact() {
                 ))}
               </ul>
 
-              <p className="mt-8 text-sm font-semibold text-[var(--fg)]">Social</p>
+              <p className="mt-8 text-sm font-semibold text-[var(--fg)]">{t('contact.social')}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {SOCIAL_LINKS.map((s) => (
                     <a
@@ -364,7 +373,7 @@ export function Contact() {
                       href={s.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label={`${s.name} — opens in a new tab`}
+                      aria-label={t('nav.socialOpens', { name: s.name })}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     >
                       <SocialGlyph id={s.id} size={16} />
@@ -378,22 +387,22 @@ export function Contact() {
 
       <section
         aria-labelledby="contact-faq-heading"
-        className="border-t border-[var(--border)] py-14 sm:py-16"
+        className="py-8 sm:py-10"
       >
         <Container>
           <div className="mx-auto max-w-3xl">
             <p className="kicker">
-              FAQ
+              {t('ui.faq')}
             </p>
             <h2
               id="contact-faq-heading"
               className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              Common questions
+              {t('ui.commonQuestions')}
             </h2>
-            <p className="mt-2 text-sm text-[var(--fg-muted)]">COD, returns, and cancellations.</p>
+            <p className="mt-2 text-sm text-[var(--fg-muted)]">{t('contact.faqBody')}</p>
             <ul className="mt-8 space-y-3">
-              {CONTACT_FAQS.map((item, i) => {
+              {contact.faqs.map((item, i) => {
                 const open = openFaq === i
                 const panelId = `contact-faq-${i}`
                 return (
@@ -441,7 +450,7 @@ export function Contact() {
 
       <section
         aria-labelledby="newsletter-heading"
-        className="border-t border-[var(--border)] py-16 sm:py-20"
+        className="pb-12 pt-8 sm:pb-14 sm:pt-10"
       >
         <Container>
           <motion.div
@@ -459,28 +468,28 @@ export function Contact() {
             <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_min(22rem,100%)] lg:gap-16">
               <div>
                 <p className="kicker">
-                  Newsletter
+                  {t('contact.newsletter')}
                 </p>
                 <h2
                   id="newsletter-heading"
                   className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
                 >
-                  New stock and restocks
+                  {t('contact.newsTitle')}
                 </h2>
                 <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                  Occasional emails when hardware lands. No daily noise.
+                  {t('contact.newsBody')}
                 </p>
               </div>
               <div>
                 {newsDone ? (
                   <p className="text-sm font-medium text-[var(--brand-text)]" role="status">
-                    You’re subscribed.
+                    {t('contact.subscribed')}
                   </p>
                 ) : (
                   <form onSubmit={onNewsletter} className="flex flex-col gap-3 sm:flex-row sm:items-start" noValidate>
                     <div className="flex-1 text-left">
                       <label htmlFor="newsletter-email" className="sr-only">
-                        Email for newsletter
+                        {t('contact.newsEmail')}
                       </label>
                       <input
                         id="newsletter-email"
@@ -502,7 +511,7 @@ export function Contact() {
                       ) : null}
                     </div>
                     <Button type="submit" size="lg" loading={newsLoading} className="rounded-full sm:min-w-[8.5rem]">
-                      Subscribe
+                      {t('contact.subscribe')}
                     </Button>
                   </form>
                 )}

@@ -1,4 +1,5 @@
 import { SiteIcon } from '@/components/ui/SiteIcon'
+import { useT } from '@/hooks/useT'
 
 export function QuantityStepper({
   value,
@@ -11,6 +12,7 @@ export function QuantityStepper({
   min?: number
   max?: number
 }) {
+  const t = useT()
   const btn =
     'inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] transition hover:bg-[var(--bg-muted)] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
 
@@ -21,7 +23,7 @@ export function QuantityStepper({
         className={btn}
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        aria-label="Decrease quantity"
+        aria-label={t('ui.decreaseQty')}
       >
         <SiteIcon name="minus" size={14} />
       </button>
@@ -31,7 +33,7 @@ export function QuantityStepper({
         className={btn}
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        aria-label="Increase quantity"
+        aria-label={t('ui.increaseQty')}
       >
         <SiteIcon name="plus" size={14} />
       </button>

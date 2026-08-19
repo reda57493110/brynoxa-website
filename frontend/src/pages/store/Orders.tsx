@@ -9,6 +9,8 @@ import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
+import { orderStatusKey } from '@/i18n'
 
 function statusVariant(status: string) {
   if (status === 'delivered') return 'success' as const
@@ -18,7 +20,8 @@ function statusVariant(status: string) {
 }
 
 export function Orders() {
-  usePageTitle('Orders — Brynoxa')
+  const t = useT()
+  usePageTitle(t('orders.title'))
   const navigate = useNavigate()
   const orders = useQuery({
     queryKey: ['orders'],
@@ -28,15 +31,15 @@ export function Orders() {
   return (
     <>
       <PageHero
-        kicker="Account"
-        title="Orders"
-        description="Track every cash-on-delivery purchase from confirmation to the door."
+        kicker={t('orders.kicker')}
+        title={t('orders.heading')}
+        description={t('orders.listBody')}
       >
         <Link
           to="/account"
           className="text-sm font-medium text-[var(--brand-text)] hover:underline"
         >
-          Back to account
+          {t('orders.backToAccount')}
         </Link>
       </PageHero>
       <Container className="py-8 sm:py-10">
@@ -47,9 +50,9 @@ export function Orders() {
         ) : !orders.data?.length ? (
           <EmptyState
             icon="package"
-            title="No orders yet"
-            description="When you place a COD order, it will show up here."
-            actionLabel="Start shopping"
+            title={t('orders.emptyTitle')}
+            description={t('orders.emptyBody')}
+            actionLabel={t('orders.startShopping')}
             onAction={() => navigate('/shop')}
           />
         ) : (
@@ -65,7 +68,7 @@ export function Orders() {
                   <p className="mt-1 text-sm text-[var(--fg-muted)]">{formatDate(order.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Badge variant={statusVariant(order.orderStatus)}>{order.orderStatus}</Badge>
+                  <Badge variant={statusVariant(order.orderStatus)}>{t(orderStatusKey(order.orderStatus))}</Badge>
                   <span className="font-display font-semibold">
                     {formatCurrency(order.pricing.total)}
                   </span>

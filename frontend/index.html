@@ -11,10 +11,19 @@
             var parsed = JSON.parse(stored)
             if (parsed && parsed.state && parsed.state.theme) theme = parsed.state.theme
           }
+          var locale = 'en'
+          var locStored = localStorage.getItem('brynoxa-locale')
+          if (locStored) {
+            var locParsed = JSON.parse(locStored)
+            if (locParsed && locParsed.state && locParsed.state.locale) locale = locParsed.state.locale
+          }
           var root = document.documentElement
           root.classList.toggle('dark', theme === 'dark')
           root.style.colorScheme = theme
           root.setAttribute('data-theme', theme)
+          root.lang = locale
+          root.dir = locale === 'ar' ? 'rtl' : 'ltr'
+          root.setAttribute('data-locale', locale)
         } catch (e) {
           document.documentElement.classList.add('dark')
           document.documentElement.style.colorScheme = 'dark'
@@ -27,7 +36,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>Brynoxa</title>

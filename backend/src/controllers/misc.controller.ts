@@ -122,7 +122,8 @@ export const dashboard = asyncHandler(async (_req: Request, res: Response) => {
 export const customers = asyncHandler(async (req: Request, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
-  const result = await adminService.listCustomers(page, limit);
+  const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+  const result = await adminService.listCustomers(page, limit, q);
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,
@@ -133,6 +134,31 @@ export const customers = asyncHandler(async (req: Request, res: Response) => {
 export const setCustomerActive = asyncHandler(async (req: Request, res: Response) => {
   const user = await adminService.setCustomerActive(param(req, 'id'), Boolean(req.body.isActive));
   sendSuccess(res, user, 'Customer updated');
+});
+
+export const listMessages = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const status = typeof req.query.status === 'string' ? req.query.status : undefined;
+  const result = await adminService.listMessages(page, limit, status);
+  sendPaginated(res, result.items, {
+    page: result.page,
+    limit: result.limit,
+    total: result.total,
+  });
+});
+
+export const updateMessage = asyncHandler(async (req: Request, res: Response) => {
+  const item = await adminService.updateMessageStatus(
+    param(req, 'id'),
+    req.body.status as 'new' | 'read' | 'archived'
+  );
+  sendSuccess(res, item, 'Message updated');
+});
+
+export const listSubscribers = asyncHandler(async (_req: Request, res: Response) => {
+  const items = await adminService.listSubscribers();
+  sendSuccess(res, items);
 });
 
 export const getStoreSettings = asyncHandler(async (_req: Request, res: Response) => {

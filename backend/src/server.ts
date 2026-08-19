@@ -8,12 +8,14 @@ import { env } from './config/env';
 import { connectDB } from './config/db';
 import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler';
-import { runSeed } from './seed/seed';
+import { runSeed, removeRetiredCategories, ensureAdmin } from './seed/seed';
 import { migrateCurrencyToMad } from './config/migrateCurrency';
 
 async function bootstrap() {
   await connectDB();
   await migrateCurrencyToMad();
+  await removeRetiredCategories();
+  await ensureAdmin();
 
   if (env.MONGODB_URI === 'memory' || process.env.USE_MEMORY_DB === 'true') {
     await runSeed(false);

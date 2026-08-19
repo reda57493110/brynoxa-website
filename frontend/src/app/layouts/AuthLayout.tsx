@@ -1,7 +1,9 @@
 import { Link, Outlet } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useT } from '@/hooks/useT'
 
 export function AuthLayout() {
+  const t = useT()
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg)] px-4 py-10">
       <div
@@ -26,7 +28,7 @@ export function AuthLayout() {
           <Outlet />
         </div>
         <p className="mt-6 text-center text-xs text-[var(--fg-muted)]">
-          Morocco · cash on delivery · 6-month warranty
+          {t('auth.layoutHint')}
         </p>
       </motion.div>
     </div>

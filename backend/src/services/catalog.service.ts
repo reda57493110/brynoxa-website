@@ -5,11 +5,15 @@ import { ApiError } from '../utils/ApiError';
 import { slugify, uniqueSlug } from '../utils/slugify';
 
 export async function listCategories(activeOnly = true) {
-  const filter = activeOnly ? { isActive: true } : {};
+  const filter: Record<string, unknown> = {
+    slug: { $nin: ['office', 'networking'] },
+  };
+  if (activeOnly) filter.isActive = true;
   return Category.find(filter).sort({ sortOrder: 1, name: 1 }).populate('parent', 'name slug');
 }
 
 export async function getCategoryBySlug(slug: string) {
+  if (slug === 'office' || slug === 'networking') throw new ApiError(404, 'Category not found');
   const category = await Category.findOne({ slug, isActive: true });
   if (!category) throw new ApiError(404, 'Category not found');
   return category;
@@ -120,7 +124,10 @@ export async function listProducts(query: ProductQuery) {
   if (!query.admin) filter.isActive = true;
   else if (query.isActive !== undefined) filter.isActive = query.isActive;
 
-  if (query.q) filter.$text = { $search: query.q };
+  if (query.q?.trim()) {
+    const rx = new RegExp(query.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    filter.$or = [{ name: rx }, { sku: rx }, { tags: rx }];
+  }
   if (query.category) filter.category = query.category;
   if (query.brand) filter.brand = query.brand;
   if (query.featured) filter.isFeatured = true;

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Container } from '@/components/ui/Container'
-import { cn } from '@/lib/cn'
 
 export function PageHero({
   kicker,
@@ -8,18 +7,16 @@ export function PageHero({
   description,
   children,
   titleId = 'page-heading',
-  compact = false,
 }: {
   kicker: string
   title: ReactNode
   description?: ReactNode
   children?: ReactNode
   titleId?: string
-  compact?: boolean
 }) {
   return (
     <section aria-labelledby={titleId} className="page-hero">
-      <Container className={cn('relative z-10', compact ? 'py-8 sm:py-10' : 'py-10 sm:py-12')}>
+      <Container className="relative z-10 py-8 sm:py-10">
         <p className="kicker">{kicker}</p>
         <h1
           id={titleId}

@@ -8,9 +8,11 @@ import { pillGhost, pillPrimary, surfaceCard } from '@/components/layout/pageSty
 import { useCartStore } from '@/store/cartStore'
 import { formatCurrency } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 
 export function Cart() {
-  usePageTitle('Cart — Brynoxa')
+  const t = useT()
+  usePageTitle(t('cart.title'))
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const updateQty = useCartStore((s) => s.updateQty)
@@ -21,15 +23,15 @@ export function Cart() {
     return (
       <>
         <PageHero
-          kicker="Cart"
-          title="Cart"
-          description="Your cart is empty."
+          kicker={t('cart.kicker')}
+          title={t('cart.heading')}
+          description={t('cart.emptyHero')}
         />
         <Container className="py-10">
           <EmptyState
-            title="Your cart is empty"
-            description="Open the shop and add a product."
-            actionLabel="Shop now"
+            title={t('cart.emptyTitle')}
+            description={t('cart.emptyBody')}
+            actionLabel={t('common.shopNow')}
             onAction={() => navigate('/shop')}
           />
         </Container>
@@ -40,9 +42,13 @@ export function Cart() {
   return (
     <>
       <PageHero
-        kicker="Cart"
-        title="Cart"
-        description={`${items.length} item${items.length === 1 ? '' : 's'} · cash on delivery at checkout.`}
+        kicker={t('cart.kicker')}
+        title={t('cart.heading')}
+        description={
+          items.length === 1
+            ? t('cart.itemCod', { count: items.length })
+            : t('cart.itemsCod', { count: items.length })
+        }
       />
       <Container className="py-8 sm:py-10">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_19rem]">
@@ -77,7 +83,7 @@ export function Cart() {
                       className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-sm text-[var(--fg-muted)] transition hover:text-[var(--danger)]"
                     >
                       <SiteIcon name="trash" size={16} />
-                      Remove
+                      {t('ui.remove')}
                     </button>
                   </div>
                 </div>
@@ -89,29 +95,29 @@ export function Cart() {
           </div>
 
           <aside className={`${surfaceCard} h-fit p-6 lg:sticky lg:top-[calc(var(--nav-height)+0.75rem)]`}>
-            <h2 className="font-display text-lg font-semibold">Summary</h2>
+            <h2 className="font-display text-lg font-semibold">{t('cart.summary')}</h2>
             <div className="mt-4 flex justify-between text-sm">
-              <span className="text-[var(--fg-muted)]">Subtotal</span>
+              <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
               <span className="font-semibold">{formatCurrency(subtotal)}</span>
             </div>
             <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
               <li className="flex items-center gap-2">
                 <SiteIcon name="package-check" size={14} className="text-[var(--brand)]" />
-                Pay the courier — no card
+                {t('cart.payCourier')}
               </li>
               <li className="flex items-center gap-2">
                 <SiteIcon name="shield" size={14} className="text-[var(--brand)]" />
-                6-month warranty from delivery
+                {t('cart.warrantyFromDelivery')}
               </li>
             </ul>
             <p className="mt-3 text-xs text-[var(--fg-muted)]">
-              Shipping is 150 DH, free from 2,000 DH — set at checkout.
+              {t('cart.shippingHint')}
             </p>
             <Link to="/checkout" className={`${pillPrimary} mt-6 w-full`}>
-              Checkout
+              {t('cart.checkout')}
             </Link>
             <Link to="/shop" className={`${pillGhost} mt-3 w-full bg-[var(--bg)] text-sm dark:bg-white/5`}>
-              Continue shopping
+              {t('cart.continueShopping')}
             </Link>
           </aside>
         </div>

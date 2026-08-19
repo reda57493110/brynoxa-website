@@ -12,25 +12,27 @@ import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 import type { Address } from '@/types'
 
-const emptyAddress: Omit<Address, '_id'> = {
-  label: 'Home',
-  fullName: '',
-  line1: '',
-  city: '',
-  phone: '',
-  country: 'MA',
-  postalCode: '00000',
-  isDefault: true,
-}
-
 export function AccountSettings() {
-  usePageTitle('Settings — Brynoxa')
+  const t = useT()
+  usePageTitle(t('account.settingsTitle'))
   const qc = useQueryClient()
   const setAuth = useAuthStore((s) => s.setAuth)
   const accessToken = useAuthStore((s) => s.accessToken)
   const toast = useToastStore((s) => s.push)
+
+  const emptyAddress: Omit<Address, '_id'> = {
+    label: t('account.homeLabel'),
+    fullName: '',
+    line1: '',
+    city: '',
+    phone: '',
+    country: 'MA',
+    postalCode: '00000',
+    isDefault: true,
+  }
 
   const me = useQuery({
     queryKey: ['me'],
@@ -53,7 +55,7 @@ export function AccountSettings() {
     onSuccess: (res) => {
       if (accessToken) setAuth(res.data.data, accessToken)
       qc.invalidateQueries({ queryKey: ['me'] })
-      toast('Profile updated', 'success')
+      toast(t('account.profileUpdated'), 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
@@ -64,7 +66,7 @@ export function AccountSettings() {
       if (accessToken) setAuth(res.data.data, accessToken)
       qc.invalidateQueries({ queryKey: ['me'] })
       setAddress(emptyAddress)
-      toast('Address added', 'success')
+      toast(t('account.addressAdded'), 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
@@ -74,7 +76,7 @@ export function AccountSettings() {
     onSuccess: (res) => {
       if (accessToken) setAuth(res.data.data, accessToken)
       qc.invalidateQueries({ queryKey: ['me'] })
-      toast('Address removed', 'success')
+      toast(t('account.addressRemoved'), 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
@@ -87,15 +89,23 @@ export function AccountSettings() {
     )
   }
 
+  const addressFields = [
+    ['label', t('account.label')],
+    ['fullName', t('checkout.fullName')],
+    ['line1', t('checkout.address')],
+    ['city', t('checkout.city')],
+    ['phone', t('ui.phone')],
+  ] as const
+
   return (
     <>
       <PageHero
-        kicker="Account"
-        title="Settings"
-        description="Profile and Morocco delivery addresses for cash on delivery."
+        kicker={t('account.kicker')}
+        title={t('account.settingsHeading')}
+        description={t('account.settingsBody')}
       >
         <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-          Back to account
+          {t('orders.backToAccount')}
         </Link>
       </PageHero>
       <Container className="py-8 sm:py-10">
@@ -106,17 +116,17 @@ export function AccountSettings() {
           saveProfile.mutate()
         }}
       >
-        <h2 className="font-display text-lg font-semibold">Profile</h2>
-        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <Input label="Email" value={me.data?.email || ''} disabled />
-        <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <h2 className="font-display text-lg font-semibold">{t('account.profile')}</h2>
+        <Input label={t('ui.name')} value={name} onChange={(e) => setName(e.target.value)} required />
+        <Input label={t('ui.email')} value={me.data?.email || ''} disabled />
+        <Input label={t('ui.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} />
         <Button type="submit" className="rounded-full" loading={saveProfile.isPending}>
-          Save profile
+          {t('account.saveProfile')}
         </Button>
       </form>
 
       <div className="mt-8 max-w-2xl">
-        <h2 className="font-display text-lg font-semibold">Addresses</h2>
+        <h2 className="font-display text-lg font-semibold">{t('account.addresses')}</h2>
         <div className="mt-3 space-y-3">
           {me.data?.addresses?.map((a) => (
             <div
@@ -127,7 +137,7 @@ export function AccountSettings() {
                 <p className="font-medium">
                   {a.label}{' '}
                   {a.isDefault ? (
-                    <span className="text-[var(--brand-text)]">(default)</span>
+                    <span className="text-[var(--brand-text)]">({t('account.default')})</span>
                   ) : null}
                 </p>
                 <p className="text-[var(--fg-muted)]">
@@ -142,7 +152,7 @@ export function AccountSettings() {
                   onClick={() => removeAddress.mutate(a._id!)}
                   loading={removeAddress.isPending}
                 >
-                  Remove
+                  {t('ui.remove')}
                 </Button>
               ) : null}
             </div>
@@ -156,16 +166,8 @@ export function AccountSettings() {
             addAddress.mutate()
           }}
         >
-          <h3 className="font-display font-semibold sm:col-span-2">Add address</h3>
-          {(
-            [
-              ['label', 'Label'],
-              ['fullName', 'Full name'],
-              ['line1', 'Address'],
-              ['city', 'City'],
-              ['phone', 'Phone'],
-            ] as const
-          ).map(([key, label]) => (
+          <h3 className="font-display font-semibold sm:col-span-2">{t('account.addAddress')}</h3>
+          {addressFields.map(([key, label]) => (
             <Input
               key={key}
               label={label}
@@ -176,7 +178,7 @@ export function AccountSettings() {
           ))}
           <div className="sm:col-span-2">
             <Button type="submit" className="rounded-full" loading={addAddress.isPending}>
-              Add address
+              {t('account.addAddress')}
             </Button>
           </div>
         </form>

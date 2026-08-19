@@ -2,6 +2,7 @@ import type { Brand, Category } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 export interface FilterValues {
   category?: string
@@ -25,6 +26,7 @@ export function FilterSidebar({
   onClear: () => void
   plain?: boolean
 }) {
+  const t = useT()
   const hasActive = Boolean(values.category || values.brand || values.minPrice || values.maxPrice)
 
   const optionClass = (active: boolean) =>
@@ -45,20 +47,20 @@ export function FilterSidebar({
     >
       {!plain ? (
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-base font-semibold">Filters</h2>
+          <h2 className="font-display text-base font-semibold">{t('shop.filters')}</h2>
           <Button variant="ghost" size="sm" onClick={onClear} disabled={!hasActive}>
-            Clear
+            {t('ui.clear')}
           </Button>
         </div>
       ) : hasActive ? (
         <Button variant="ghost" size="sm" className="-mt-1 self-start" onClick={onClear}>
-          Clear all
+          {t('ui.clearAll')}
         </Button>
       ) : null}
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-          Category
+          {t('shop.category')}
         </p>
         <div className="flex max-h-52 flex-col gap-0.5 overflow-y-auto">
           <button
@@ -66,7 +68,7 @@ export function FilterSidebar({
             onClick={() => onChange({ ...values, category: undefined })}
             className={optionClass(!values.category)}
           >
-            All categories
+            {t('shop.allCategories')}
           </button>
           {categories.map((c) => (
             <button
@@ -85,7 +87,7 @@ export function FilterSidebar({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-          Brand
+          {t('shop.brand')}
         </p>
         <div className="flex max-h-52 flex-col gap-0.5 overflow-y-auto">
           {brands.map((b) => (
@@ -105,11 +107,11 @@ export function FilterSidebar({
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-          Price (DH)
+          {t('shop.priceDh')}
         </p>
         <div className="grid grid-cols-2 gap-2">
           <Input
-            label="Min"
+            label={t('shop.min')}
             type="number"
             min={0}
             value={values.minPrice || ''}
@@ -118,19 +120,19 @@ export function FilterSidebar({
             className="h-10"
           />
           <Input
-            label="Max"
+            label={t('shop.max')}
             type="number"
             min={0}
             value={values.maxPrice || ''}
             onChange={(e) => onChange({ ...values, maxPrice: e.target.value || undefined })}
-            placeholder="Any"
+            placeholder={t('shop.any')}
             className="h-10"
           />
         </div>
       </div>
 
       <p className="text-xs leading-relaxed text-[var(--fg-muted)]">
-        Cash on delivery · prices in DH · 6-month warranty
+        {t('shop.filterNote')}
       </p>
     </aside>
   )

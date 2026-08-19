@@ -13,8 +13,10 @@ import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 export function Shop() {
+  const t = useT()
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -84,7 +86,9 @@ export function Shop() {
   const hasNarrowing =
     Boolean(filters.category || filters.brand || filters.minPrice || filters.maxPrice || filters.q)
 
-  const categoryList = categories.data ?? []
+  const categoryList = (categories.data ?? []).filter(
+    (c) => c.slug !== 'office' && c.slug !== 'networking'
+  )
   const brandList = brands.data ?? []
   const activeCategory = categoryList.find((c) => c.slug === filters.category)
   const activeBrand = brandList.find((b) => b.slug === filters.brand)
@@ -102,14 +106,14 @@ export function Shop() {
   useEffect(() => {
     const previous = document.title
     document.title = activeCategory
-      ? `${activeCategory.name} — Shop · Brynoxa`
+      ? `${activeCategory.name} — ${t('shop.title')} · Brynoxa`
       : filters.q
-        ? `Search “${filters.q}” — Shop · Brynoxa`
-        : 'Shop — Brynoxa'
+        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
+        : `${t('shop.title')} — Brynoxa`
     return () => {
       document.title = previous
     }
-  }, [activeCategory, filters.q])
+  }, [activeCategory, filters.q, t])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -138,24 +142,24 @@ export function Shop() {
   return (
     <>
       <section aria-labelledby="shop-heading" className="page-hero">
-        <Container className="relative z-10 py-10 sm:py-12">
-          <p className="kicker">Shop</p>
+        <Container className="relative z-10 py-8 sm:py-10">
+          <p className="kicker">{t('shop.kicker')}</p>
           <h1
             id="shop-heading"
             className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
           >
-            {activeCategory?.name ?? (filters.q ? 'Search' : 'Shop')}
+            {activeCategory?.name ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
             {filters.q ? (
               <>
-                Results for <span className="font-medium text-[var(--fg)]">“{filters.q}”</span>
-                {activeCategory ? ` in ${activeCategory.name}` : null}.
+                {t('shop.resultsFor', { q: filters.q })}
+                {activeCategory ? t('shop.resultsIn', { name: activeCategory.name }) : null}
               </>
             ) : activeCategory?.description ? (
               activeCategory.description
             ) : (
-              'Laptops, gaming PCs, and components — prices in DH, paid when they arrive.'
+              t('shop.body')
             )}
           </p>
         </Container>
@@ -164,10 +168,10 @@ export function Shop() {
       <Container className="py-8 sm:py-10">
         <div
           className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-          aria-label="Shop by category"
+          aria-label={t('shop.shopByCategory')}
         >
           <button type="button" className={chip(!filters.category)} onClick={() => update({ category: undefined })}>
-            All
+            {t('shop.all')}
           </button>
           {categoryList.map((c) => (
             <button
@@ -186,11 +190,13 @@ export function Shop() {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[var(--fg-muted)]">
             {products.isLoading ? (
-              'Loading catalog…'
+              t('ui.loading')
             ) : (
               <>
                 <span className="font-medium text-[var(--fg)]">
-                  {total === 0 ? '0 products' : `${from}–${to} of ${total}`}
+                  {total === 0
+                    ? t('shop.zeroProducts')
+                    : t('shop.productsCount', { from, to, total })}
                 </span>
                 {activeBrand ? ` · ${activeBrand.name}` : null}
               </>
@@ -203,7 +209,7 @@ export function Shop() {
               onClick={() => setFiltersOpen(true)}
             >
               <SiteIcon name="sliders" size={16} />
-              Filters
+              {t('shop.filters')}
               {sidebarFilterCount > 0 ? (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[11px] font-bold text-[var(--brand-fg)]">
                   {sidebarFilterCount}
@@ -239,7 +245,7 @@ export function Shop() {
               onClick={clearFilters}
               className="text-xs font-medium text-[var(--brand-text)] hover:underline"
             >
-              Clear all
+              {t('ui.clearAll')}
             </button>
           </div>
         ) : null}
@@ -253,9 +259,9 @@ export function Shop() {
           <div>
             {products.isError ? (
               <EmptyState
-                title="Couldn’t load the shop"
-                description="Check your connection and try again."
-                actionLabel="Retry"
+                title={t('shop.loadError')}
+                description={t('shop.loadErrorBody')}
+                actionLabel={t('common.retry')}
                 onAction={() => products.refetch()}
               />
             ) : (
@@ -264,13 +270,11 @@ export function Shop() {
                   products={products.data?.items}
                   loading={products.isLoading}
                   className="lg:grid-cols-2 xl:grid-cols-3"
-                  emptyTitle={hasNarrowing ? 'No matching products' : 'No products yet'}
+                  emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
-                    hasNarrowing
-                      ? 'Clear a filter or pick another category.'
-                      : 'New arrivals will appear here soon.'
+                    hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')
                   }
-                  emptyActionLabel={hasNarrowing ? 'Clear filters' : undefined}
+                  emptyActionLabel={hasNarrowing ? t('shop.clearFilters') : undefined}
                   onEmptyAction={hasNarrowing ? clearFilters : undefined}
                 />
                 <Pagination
@@ -284,7 +288,7 @@ export function Shop() {
         </div>
       </Container>
 
-      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title="Filters" side="left">
+      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('shop.filters')} side="left">
         {sidebar(true)}
       </Drawer>
     </>
@@ -292,6 +296,7 @@ export function Shop() {
 }
 
 function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  const t = useT()
   return (
     <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pl-3 pr-1 text-xs font-medium text-[var(--fg)]">
       {label}
@@ -299,7 +304,7 @@ function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }
         type="button"
         onClick={onRemove}
         className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
-        aria-label={`Remove ${label}`}
+        aria-label={t('ui.removeNamed', { label })}
       >
         <SiteIcon name="close" size={12} />
       </button>

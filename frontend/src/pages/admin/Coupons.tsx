@@ -45,6 +45,16 @@ export function Coupons() {
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
 
+  const toggle = useMutation({
+    mutationFn: (c: { _id: string; isActive: boolean }) =>
+      adminApi.coupons.update(c._id, { isActive: !c.isActive }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-coupons'] })
+      toast('Coupon updated', 'success')
+    },
+    onError: (e) => toast(getErrorMessage(e), 'error'),
+  })
+
   return (
     <div className="space-y-6">
       <div>
@@ -115,6 +125,9 @@ export function Coupons() {
                 <Badge variant={c.isActive ? 'success' : 'danger'}>
                   {c.isActive ? 'Active' : 'Off'}
                 </Badge>
+                <Button variant="outline" size="sm" onClick={() => toggle.mutate(c)}>
+                  {c.isActive ? 'Turn off' : 'Turn on'}
+                </Button>
                 <Button variant="ghost" size="sm" onClick={() => remove.mutate(c._id)}>
                   Delete
                 </Button>

@@ -18,25 +18,27 @@ import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatCurrency } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 import type { Address } from '@/types'
 
-const emptyAddress: Address = {
-  label: 'Home',
-  fullName: '',
-  line1: '',
-  city: '',
-  phone: '',
-  country: 'MA',
-  postalCode: '00000',
-}
-
 export function Checkout() {
-  usePageTitle('Checkout — Brynoxa')
+  const t = useT()
+  usePageTitle(t('checkout.title'))
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const clear = useCartStore((s) => s.clear)
   const subtotal = useCartStore((s) => s.subtotal())
   const user = useAuthStore((s) => s.user)
+
+  const emptyAddress: Address = {
+    label: t('account.homeLabel'),
+    fullName: '',
+    line1: '',
+    city: '',
+    phone: '',
+    country: 'MA',
+    postalCode: '00000',
+  }
 
   const defaultAddr = user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0]
   const [address, setAddress] = useState<Address>({
@@ -45,7 +47,7 @@ export function Checkout() {
     line1: defaultAddr?.line1 || '',
     city: defaultAddr?.city || '',
     phone: defaultAddr?.phone || user?.phone || '',
-    label: defaultAddr?.label || 'Home',
+    label: defaultAddr?.label || t('account.homeLabel'),
     country: 'MA',
     postalCode: '00000',
   })
@@ -88,7 +90,7 @@ export function Checkout() {
       }),
     onSuccess: (res) => {
       clear()
-      toast.success('Order placed')
+      toast.success(t('checkout.orderPlaced'))
       navigate(`/order-confirmation/${res.data.data.orderNumber}`)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -100,10 +102,10 @@ export function Checkout() {
     try {
       const res = await couponsApi.validate(couponCode.trim(), subtotal)
       setDiscount(res.data.data.discount || 0)
-      toast.success(res.data.message || 'Coupon applied')
+      toast.success(res.data.message || t('checkout.couponApplied'))
     } catch (e) {
       setDiscount(0)
-      toast.error(getErrorMessage(e, 'Invalid coupon'))
+      toast.error(getErrorMessage(e, t('checkout.invalidCoupon')))
     } finally {
       setValidating(false)
     }
@@ -112,12 +114,12 @@ export function Checkout() {
   if (!items.length) {
     return (
       <>
-        <PageHero kicker="Checkout" title="Checkout" description="Your cart is empty." />
+        <PageHero kicker={t('checkout.kicker')} title={t('checkout.heading')} description={t('checkout.emptyHero')} />
         <Container className="py-10">
           <EmptyState
-            title="Nothing to checkout"
-            description="Add a product first, then come back to pay on delivery."
-            actionLabel="Go to shop"
+            title={t('checkout.emptyTitle')}
+            description={t('checkout.emptyBody')}
+            actionLabel={t('checkout.goShop')}
             onAction={() => navigate('/shop')}
           />
         </Container>
@@ -131,9 +133,9 @@ export function Checkout() {
   return (
     <>
       <PageHero
-        kicker="Cash on delivery"
-        title="Checkout"
-        description="Name, phone, address, city — inspect the box, then pay the courier."
+        kicker={t('checkout.heroKicker')}
+        title={t('checkout.heading')}
+        description={t('checkout.heroBody')}
       />
       <Container className="py-8 sm:py-10">
         <form
@@ -145,31 +147,31 @@ export function Checkout() {
         >
           <div className="space-y-6">
             <section className={`${surfaceCard} p-6`}>
-              <h2 className="font-display text-lg font-semibold">Shipping in Morocco</h2>
-              <p className="mt-1 text-sm text-[var(--fg-muted)]">We only deliver inside the country.</p>
+              <h2 className="font-display text-lg font-semibold">{t('checkout.shippingTitle')}</h2>
+              <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('checkout.shippingBody')}</p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <Input
-                  label="Full name"
+                  label={t('checkout.fullName')}
                   value={address.fullName}
                   onChange={(e) => set('fullName', e.target.value)}
                   required
                 />
                 <Input
-                  label="Phone"
+                  label={t('ui.phone')}
                   value={address.phone}
                   onChange={(e) => set('phone', e.target.value)}
                   required
                 />
                 <Input
                   className="sm:col-span-2"
-                  label="Address"
+                  label={t('checkout.address')}
                   value={address.line1}
                   onChange={(e) => set('line1', e.target.value)}
                   required
                 />
                 <Input
                   className="sm:col-span-2"
-                  label="City"
+                  label={t('checkout.city')}
                   value={address.city}
                   onChange={(e) => set('city', e.target.value)}
                   required
@@ -178,13 +180,13 @@ export function Checkout() {
             </section>
 
             <section className={`${surfaceCard} p-6`}>
-              <h2 className="font-display text-lg font-semibold">Coupon & note</h2>
+              <h2 className="font-display text-lg font-semibold">{t('checkout.couponTitle')}</h2>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="CODE"
-                  aria-label="Coupon code"
+                  aria-label={t('checkout.couponCode')}
                 />
                 <Button
                   type="button"
@@ -193,21 +195,21 @@ export function Checkout() {
                   onClick={validateCoupon}
                   className="rounded-full sm:shrink-0"
                 >
-                  Apply
+                  {t('checkout.apply')}
                 </Button>
               </div>
               <Textarea
                 className="mt-4"
-                label="Order note"
+                label={t('checkout.orderNote')}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Optional delivery instructions"
+                placeholder={t('checkout.notePlaceholder')}
               />
             </section>
           </div>
 
           <aside className={`${surfaceCard} h-fit p-6 lg:sticky lg:top-[calc(var(--nav-height)+0.75rem)]`}>
-            <h2 className="font-display text-lg font-semibold">Order summary</h2>
+            <h2 className="font-display text-lg font-semibold">{t('checkout.orderSummary')}</h2>
             <ul className="mt-4 space-y-2 text-sm">
               {items.map((i) => (
                 <li key={i.productId} className="flex justify-between gap-3">
@@ -220,49 +222,49 @@ export function Checkout() {
             </ul>
             <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-[var(--fg-muted)]">Subtotal</span>
+                <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
                 <span>{formatCurrency(subtotal)}</span>
               </div>
               {discount > 0 ? (
                 <div className="flex justify-between">
-                  <span className="text-[var(--fg-muted)]">Discount</span>
+                  <span className="text-[var(--fg-muted)]">{t('checkout.discount')}</span>
                   <span>-{formatCurrency(discount)}</span>
                 </div>
               ) : null}
               <div className="flex justify-between">
-                <span className="text-[var(--fg-muted)]">Shipping</span>
-                <span>{shipping === 0 ? 'Free' : formatCurrency(shipping)}</span>
+                <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
+                <span>{shipping === 0 ? t('checkout.free') : formatCurrency(shipping)}</span>
               </div>
               {taxRate > 0 ? (
                 <div className="flex justify-between">
-                  <span className="text-[var(--fg-muted)]">Tax</span>
+                  <span className="text-[var(--fg-muted)]">{t('checkout.tax')}</span>
                   <span>{formatCurrency(tax)}</span>
                 </div>
               ) : null}
               <div className="flex justify-between font-display text-base font-semibold">
-                <span>Total (COD)</span>
+                <span>{t('checkout.totalCod')}</span>
                 <span>{formatCurrency(total)}</span>
               </div>
             </div>
             <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
               <li className="flex items-center gap-2">
                 <SiteIcon name="package-check" size={14} className="text-[var(--brand)]" />
-                Pay on arrival
+                {t('checkout.payOnArrival')}
               </li>
               <li className="flex items-center gap-2">
                 <SiteIcon name="truck" size={14} className="text-[var(--brand)]" />
-                Packed after confirmation
+                {t('checkout.packedAfter')}
               </li>
               <li className="flex items-center gap-2">
                 <SiteIcon name="shield" size={14} className="text-[var(--brand)]" />
-                6-month warranty
+                {t('checkout.warranty6')}
               </li>
             </ul>
             <Button type="submit" className="mt-6 w-full rounded-full" loading={placeOrder.isPending}>
-              Place COD order
+              {t('checkout.placeOrder')}
             </Button>
             <Link to="/cart" className="mt-3 block text-center text-sm font-medium text-[var(--brand-text)]">
-              Back to cart
+              {t('checkout.backToCart')}
             </Link>
           </aside>
         </form>

@@ -170,6 +170,13 @@ export async function updateOrderStatus(
     order.paymentStatus = 'failed';
   }
 
+  if (orderStatus === 'cancelled' && prev !== 'cancelled' && order.coupon?.couponId) {
+    await Coupon.updateOne(
+      { _id: order.coupon.couponId, usedCount: { $gt: 0 } },
+      { $inc: { usedCount: -1 } }
+    );
+  }
+
   order.orderStatus = orderStatus;
   order.timeline.push({
     status: orderStatus,
@@ -205,9 +212,26 @@ export async function getUserOrder(userId: string, orderNumber: string) {
   return order;
 }
 
-export async function listAllOrders(page = 1, limit = 20, status?: string) {
+export async function cancelUserOrder(userId: string, orderNumber: string) {
+  const order = await Order.findOne({ orderNumber, user: userId });
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (order.orderStatus !== 'pending') {
+    throw new ApiError(400, 'Only pending orders can be cancelled');
+  }
+  return updateOrderStatus(
+    String(order._id),
+    'cancelled',
+    'Cancelled by customer'
+  );
+}
+
+export async function listAllOrders(page = 1, limit = 20, status?: string, q?: string) {
   const filter: Record<string, unknown> = {};
   if (status) filter.orderStatus = status;
+  if (q?.trim()) {
+    const rx = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    filter.orderNumber = rx;
+  }
   const [items, total] = await Promise.all([
     Order.find(filter)
       .sort({ createdAt: -1 })

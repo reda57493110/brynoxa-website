@@ -25,6 +25,7 @@ import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 import type { Brand, Category, Product, Review, User } from '@/types'
 
 function primaryImage(product: Product) {
@@ -32,6 +33,7 @@ function primaryImage(product: Product) {
 }
 
 export function ProductDetail() {
+  const t = useT()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -52,7 +54,7 @@ export function ProductDetail() {
     enabled: Boolean(slug),
   })
 
-  usePageTitle(product.data ? `${product.data.name} — Brynoxa` : 'Product — Brynoxa')
+  usePageTitle(product.data ? `${product.data.name} — Brynoxa` : t('productPage.titleFallback'))
 
   const reviews = useQuery({
     queryKey: ['reviews', product.data?._id],
@@ -70,7 +72,7 @@ export function ProductDetail() {
         comment,
       }),
     onSuccess: () => {
-      toast.success('Review submitted')
+      toast.success(t('productPage.reviewSubmitted'))
       setTitle('')
       setComment('')
       qc.invalidateQueries({ queryKey: ['reviews', product.data?._id] })
@@ -89,11 +91,11 @@ export function ProductDetail() {
 
   if (!product.data) {
     return (
-      <Container className="py-16">
+      <Container className="py-8 sm:py-10">
         <EmptyState
-          title="Product not found"
-          description="It may have been removed from the catalog."
-          actionLabel="Back to shop"
+          title={t('productPage.notFound')}
+          description={t('productPage.notFoundBody')}
+          actionLabel={t('shop.backToShop')}
           onAction={() => navigate('/shop')}
         />
       </Container>
@@ -115,7 +117,7 @@ export function ProductDetail() {
       sku: p.sku,
       qty,
     })
-    toast.success('Added to cart')
+    toast.success(t('product.addedToCart'))
   }
 
   const onWishlist = async () => {
@@ -123,25 +125,31 @@ export function ProductDetail() {
       if (isAuth) {
         if (isWish(p._id)) {
           setFromServer((await wishlistApi.remove(p._id)).data.data)
-          toast.info('Removed from wishlist')
+          toast.info(t('product.removedWishlist'))
         } else {
           setFromServer((await wishlistApi.add(p._id)).data.data)
-          toast.success('Saved to wishlist')
+          toast.success(t('product.savedWishlist'))
         }
       } else {
         toggleLocal(p._id)
-        toast.info(isWish(p._id) ? 'Removed from wishlist' : 'Saved locally — sign in to sync')
+        toast.info(isWish(p._id) ? t('product.removedWishlist') : t('product.savedLocal'))
       }
     } catch (e) {
       toast.error(getErrorMessage(e))
     }
   }
 
+  const proofChips = [
+    { icon: 'package-check' as const, label: t('home.proofCod') },
+    { icon: 'shield' as const, label: t('home.proofWarranty') },
+    { icon: 'truck' as const, label: t('home.proofShip') },
+  ]
+
   return (
     <Container className="py-10">
       <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[var(--fg-muted)]">
         <Link to="/shop" className="hover:text-[var(--brand-text)]">
-          Shop
+          {t('common.shop')}
         </Link>
         {category ? (
           <>
@@ -182,24 +190,20 @@ export function ProductDetail() {
             <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
             <Button onClick={onAddCart} disabled={p.stock <= 0} className="rounded-full">
               <SiteIcon name="cart" size={16} />
-              Add to cart
+              {t('common.addToCart')}
             </Button>
             <Button
               variant={isWish(p._id) ? 'primary' : 'outline'}
               onClick={onWishlist}
               className="rounded-full"
-              aria-label={isWish(p._id) ? 'Remove from wishlist' : 'Add to wishlist'}
+              aria-label={isWish(p._id) ? t('product.removeWishlist') : t('product.addWishlist')}
             >
               <SiteIcon name="heart" size={16} />
             </Button>
           </div>
 
           <ul className="mt-6 flex flex-wrap gap-2">
-            {[
-              { icon: 'package-check' as const, label: 'Cash on delivery' },
-              { icon: 'shield' as const, label: '6-month warranty' },
-              { icon: 'truck' as const, label: 'Ships across Morocco' },
-            ].map(({ icon, label }) => (
+            {proofChips.map(({ icon, label }) => (
               <li
                 key={label}
                 className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--fg)]"
@@ -212,37 +216,37 @@ export function ProductDetail() {
 
           <div className="mt-10">
             <p className="kicker">
-              Specs
+              {t('productPage.specs')}
             </p>
-            <h2 className="mt-2 font-display text-xl font-semibold">Description</h2>
+            <h2 className="mt-2 font-display text-xl font-semibold">{t('productPage.description')}</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg-muted)]">
               {p.description}
             </p>
           </div>
           <div className="mt-8">
-            <h2 className="mb-3 font-display text-xl font-semibold">Specifications</h2>
+            <h2 className="mb-3 font-display text-xl font-semibold">{t('productPage.specifications')}</h2>
             <SpecTable specs={(p.specs as Record<string, string>) || {}} />
           </div>
         </div>
       </div>
 
-      <section className="mt-16 border-t border-[var(--border)] pt-10">
+      <section className="mt-8 pt-8">
         <p className="kicker">
-          Reviews
+          {t('productPage.reviews')}
         </p>
-        <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Reviews</h2>
+        <h2 className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl">{t('productPage.reviews')}</h2>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_22rem]">
           <div className="space-y-4">
             {reviews.isLoading ? <Spinner /> : null}
             {!reviews.isLoading && !reviews.data?.length ? (
-              <p className="text-sm text-[var(--fg-muted)]">No reviews yet — be the first after delivery.</p>
+              <p className="text-sm text-[var(--fg-muted)]">{t('productPage.noReviews')}</p>
             ) : null}
             {reviews.data?.map((r: Review) => {
               const user = typeof r.user === 'object' ? (r.user as User) : null
               return (
                 <article key={r._id} className={`${surfaceCard} p-5`}>
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold">{user?.name || 'Customer'}</p>
+                    <p className="font-semibold">{user?.name || t('ui.customer')}</p>
                     <span className="text-xs text-[var(--fg-muted)]">{formatDate(r.createdAt)}</span>
                   </div>
                   <div className="mt-1">
@@ -256,13 +260,13 @@ export function ProductDetail() {
           </div>
 
           <div className={`${surfaceCard} p-6`}>
-            <h3 className="font-display text-lg font-semibold">Write a review</h3>
+            <h3 className="font-display text-lg font-semibold">{t('productPage.writeReview')}</h3>
             {!isAuth ? (
               <p className="mt-3 text-sm text-[var(--fg-muted)]">
                 <Link to="/login" className="font-medium text-[var(--brand-text)]">
-                  Sign in
+                  {t('common.signIn')}
                 </Link>{' '}
-                to leave a review.
+                {t('productPage.signInToReview')}
               </p>
             ) : (
               <form
@@ -273,7 +277,7 @@ export function ProductDetail() {
                 }}
               >
                 <label className="flex flex-col gap-1.5 text-sm">
-                  <span className="font-medium">Rating</span>
+                  <span className="font-medium">{t('productPage.rating')}</span>
                   <select
                     value={rating}
                     onChange={(e) => setRating(Number(e.target.value))}
@@ -281,21 +285,21 @@ export function ProductDetail() {
                   >
                     {[5, 4, 3, 2, 1].map((n) => (
                       <option key={n} value={n}>
-                        {n} stars
+                        {t('productPage.stars', { n })}
                       </option>
                     ))}
                   </select>
                 </label>
-                <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required minLength={3} />
+                <Input label={t('ui.title')} value={title} onChange={(e) => setTitle(e.target.value)} required minLength={3} />
                 <Textarea
-                  label="Comment"
+                  label={t('ui.comment')}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   required
                   minLength={10}
                 />
                 <Button type="submit" loading={reviewMutation.isPending} className="w-full rounded-full">
-                  Submit review
+                  {t('productPage.submitReview')}
                 </Button>
               </form>
             )}

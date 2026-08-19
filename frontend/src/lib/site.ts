@@ -56,7 +56,7 @@ export const CONTACT_FAQS = [
   },
   {
     q: 'Can I change or cancel my order?',
-    a: 'Yes — contact us as soon as possible with your order number. We can usually adjust orders that have not yet been confirmed or packed.',
+    a: 'Yes — while an order is still pending, open it from your account and choose Cancel order. Once it is confirmed or packed, contact support with your order number.',
   },
   {
     q: 'What is your return policy?',

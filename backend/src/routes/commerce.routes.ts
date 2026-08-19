@@ -35,6 +35,7 @@ router.post(
   order.createOrder
 );
 router.get('/orders', requireAuth, order.myOrders);
+router.post('/orders/:orderNumber/cancel', requireAuth, order.cancelMyOrder);
 router.get('/orders/:orderNumber', requireAuth, order.myOrder);
 router.post('/coupons/validate', requireAuth, validate(validateCouponSchema), order.validateCoupon);
 
@@ -88,6 +89,9 @@ router.delete('/admin/coupons/:id', requireAuth, requireAdmin, misc.deleteCoupon
 router.get('/admin/dashboard', requireAuth, requireAdmin, misc.dashboard);
 router.get('/admin/customers', requireAuth, requireAdmin, misc.customers);
 router.patch('/admin/customers/:id', requireAuth, requireAdmin, misc.setCustomerActive);
+router.get('/admin/messages', requireAuth, requireAdmin, misc.listMessages);
+router.patch('/admin/messages/:id', requireAuth, requireAdmin, misc.updateMessage);
+router.get('/admin/subscribers', requireAuth, requireAdmin, misc.listSubscribers);
 
 router.get('/settings', misc.getStoreSettings);
 router.patch(

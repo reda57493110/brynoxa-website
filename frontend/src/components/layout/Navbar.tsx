@@ -6,13 +6,9 @@ import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
 import { MobileNav } from './MobileNav'
+import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '@/lib/cn'
-
-const links = [
-  { to: '/shop', label: 'Shop' },
-  { to: '/services', label: 'Services' },
-  { to: '/contact', label: 'Contact' },
-]
+import { useT } from '@/hooks/useT'
 
 const iconBtn =
   'inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] transition hover:bg-[var(--bg-muted)] ring-brand'
@@ -34,6 +30,12 @@ export function Navbar() {
   const cartCount = useCartStore((s) => s.itemCount())
   const wishCount = useWishlistStore((s) => s.ids.length)
   const user = useAuthStore((s) => s.user)
+  const t = useT()
+  const links = [
+    { to: '/shop', label: t('common.shop') },
+    { to: '/services', label: t('common.services') },
+    { to: '/contact', label: t('common.contact') },
+  ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16)
@@ -83,7 +85,7 @@ export function Navbar() {
           className={cn(
             'mx-auto flex w-full max-w-5xl flex-col rounded-2xl border transition-all duration-300',
             atTop
-              ? 'border-[var(--border)] bg-[color-mix(in_srgb,var(--bg-elevated)_80%,transparent)] shadow-soft backdrop-blur-xl dark:border-white/10 dark:bg-black/25'
+              ? 'border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft dark:border-white/10 dark:bg-black/25 dark:backdrop-blur-xl'
               : 'border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-xl'
           )}
         >
@@ -92,7 +94,7 @@ export function Navbar() {
               type="button"
               className={cn(iconBtn, 'lg:hidden')}
               onClick={() => setMenuOpen(true)}
-              aria-label="Open menu"
+              aria-label={t('nav.openMenu')}
             >
               <SiteIcon name="menu" size={18} />
             </button>
@@ -104,7 +106,7 @@ export function Navbar() {
               Brynox<span className="text-[var(--brand)]">a</span>
             </Link>
 
-            <nav className="ml-1 hidden items-center gap-0.5 lg:flex" aria-label="Primary">
+            <nav className="ml-1 hidden items-center gap-0.5 lg:flex" aria-label={t('nav.primary')}>
               {links.map((l) => (
                 <NavLink
                   key={l.to}
@@ -125,16 +127,16 @@ export function Navbar() {
 
             <form onSubmit={onSearch} className="hidden min-w-0 max-w-md flex-1 md:block md:ml-4">
               <label className="relative block">
-                <span className="sr-only">Search products</span>
-                <SiteIcon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+                <span className="sr-only">{t('common.search')}</span>
+                <SiteIcon name="search" size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
                 <input
                   ref={searchRef}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search laptops, PCs, gear..."
-                  className="h-9 w-full rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pl-9 pr-12 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand dark:bg-[var(--bg-input)]"
+                  placeholder={t('common.searchPlaceholder')}
+                  className="h-9 w-full rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] ps-9 pe-12 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand dark:bg-[var(--bg-input)]"
                 />
-                <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded-md border border-[var(--border)] bg-[var(--bg-muted)] px-1.5 py-px text-[10px] font-medium text-[var(--fg-muted)] lg:inline">
+                <kbd className="pointer-events-none absolute end-2.5 top-1/2 hidden -translate-y-1/2 rounded-md border border-[var(--border)] bg-[var(--bg-muted)] px-1.5 py-px text-[10px] font-medium text-[var(--fg-muted)] lg:inline">
                   /
                 </kbd>
               </label>
@@ -145,7 +147,7 @@ export function Navbar() {
                 type="button"
                 className={cn(iconBtn, 'md:hidden')}
                 onClick={() => setSearchOpen((open) => !open)}
-                aria-label={searchOpen ? 'Close search' : 'Open search'}
+                aria-label={searchOpen ? t('nav.closeSearch') : t('nav.openSearch')}
                 aria-expanded={searchOpen}
               >
                 {searchOpen ? <SiteIcon name="close" size={18} /> : <SiteIcon name="search" size={18} />}
@@ -155,12 +157,14 @@ export function Navbar() {
                 type="button"
                 className={iconBtn}
                 onClick={toggleTheme}
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
               >
                 {theme === 'dark' ? <SiteIcon name="sun" size={17} /> : <SiteIcon name="moon" size={17} />}
               </button>
 
-              <Link to="/wishlist" className={cn(iconBtn, 'relative')} aria-label="Wishlist">
+              <LanguageSwitcher />
+
+              <Link to="/wishlist" className={cn(iconBtn, 'relative')} aria-label={t('common.wishlist')}>
                 <SiteIcon name="heart" size={17} />
                 {wishCount > 0 ? (
                   <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold text-[var(--brand-fg)]">
@@ -177,7 +181,7 @@ export function Navbar() {
                     ? 'bg-[var(--brand)] text-[var(--brand-fg)] hover:brightness-110'
                     : 'text-[var(--fg)] hover:bg-[var(--bg-muted)]'
                 )}
-                aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : 'Cart'}
+                aria-label={cartCount > 0 ? t('nav.cartItems', { count: cartCount }) : t('common.cart')}
               >
                 <SiteIcon name="cart" size={17} />
                 {cartCount > 0 ? (
@@ -186,19 +190,19 @@ export function Navbar() {
               </Link>
 
               {user ? (
-                <Link to="/account" className={iconBtn} aria-label="Account">
+                <Link to="/account" className={iconBtn} aria-label={t('common.account')}>
                   <SiteIcon name="user" size={17} />
                 </Link>
               ) : (
                 <>
-                  <Link to="/login" className={cn(iconBtn, 'sm:hidden')} aria-label="Sign in">
+                  <Link to="/login" className={cn(iconBtn, 'sm:hidden')} aria-label={t('common.signIn')}>
                     <SiteIcon name="user" size={17} />
                   </Link>
                   <Link
                     to="/login"
                     className="ml-0.5 hidden h-9 items-center rounded-full bg-[var(--brand)] px-3.5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:inline-flex"
                   >
-                    Sign in
+                    {t('common.signIn')}
                   </Link>
                 </>
               )}
@@ -208,14 +212,14 @@ export function Navbar() {
           {searchOpen ? (
             <form onSubmit={onSearch} className="border-t border-[var(--border)] px-3 py-2.5 md:hidden">
               <label className="relative block">
-                <span className="sr-only">Search products</span>
-                <SiteIcon name="search" size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+                <span className="sr-only">{t('common.search')}</span>
+                <SiteIcon name="search" size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
                 <input
                   ref={mobileSearchRef}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search laptops, PCs, gear..."
-                  className="h-10 w-full rounded-full border border-[var(--border)] bg-[var(--bg-input)] pl-9 pr-3 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand"
+                  placeholder={t('common.searchPlaceholder')}
+                  className="h-10 w-full rounded-full border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand"
                 />
               </label>
             </form>

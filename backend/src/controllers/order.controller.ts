@@ -31,6 +31,11 @@ export const myOrder = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, order);
 });
 
+export const cancelMyOrder = asyncHandler(async (req: Request, res: Response) => {
+  const order = await orderService.cancelUserOrder(req.user!.userId, param(req, 'orderNumber'));
+  sendSuccess(res, order, 'Order cancelled');
+});
+
 export const validateCoupon = asyncHandler(async (req: Request, res: Response) => {
   const { coupon, discount } = await orderService.validateCoupon(req.body.code, req.body.subtotal);
   sendSuccess(res, {
@@ -45,7 +50,8 @@ export const adminOrders = asyncHandler(async (req: Request, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
   const status = req.query.status as string | undefined;
-  const result = await orderService.listAllOrders(page, limit, status);
+  const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+  const result = await orderService.listAllOrders(page, limit, status, q);
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,

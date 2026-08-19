@@ -9,9 +9,11 @@ import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 
 export function Login() {
-  usePageTitle('Sign in — Brynoxa')
+  const t = useT()
+  usePageTitle(t('auth.titleSignIn'))
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from || '/account'
@@ -38,10 +40,19 @@ export function Login() {
       } catch {
         /* ignore */
       }
-      toast.success('Welcome back')
-      navigate(from, { replace: true })
+      toast.success(t('auth.welcomeBack'))
+      const user = res.data.data.user
+      const dest =
+        user.role === 'admin'
+          ? from.startsWith('/admin')
+            ? from
+            : '/admin'
+          : from.startsWith('/admin')
+            ? '/account'
+            : from
+      navigate(dest, { replace: true })
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Login failed'))
+      toast.error(getErrorMessage(err, t('auth.loginFailed')))
     } finally {
       setLoading(false)
     }
@@ -49,12 +60,12 @@ export function Login() {
 
   return (
     <div>
-      <p className="kicker">Account</p>
-      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">Orders, wishlist, and cash on delivery.</p>
+      <p className="kicker">{t('auth.kicker')}</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.signInTitle')}</h1>
+      <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.signInBody')}</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <Input
-          label="Email"
+          label={t('ui.email')}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -62,7 +73,7 @@ export function Login() {
           autoComplete="email"
         />
         <Input
-          label="Password"
+          label={t('ui.password')}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -70,13 +81,13 @@ export function Login() {
           autoComplete="current-password"
         />
         <Button type="submit" className="w-full rounded-full" loading={loading}>
-          Sign in
+          {t('common.signIn')}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
-        No account yet?{' '}
+        {t('auth.noAccount')}{' '}
         <Link to="/register" className="font-medium text-[var(--brand-text)]">
-          Create an account
+          {t('auth.createAccount')}
         </Link>
       </p>
     </div>

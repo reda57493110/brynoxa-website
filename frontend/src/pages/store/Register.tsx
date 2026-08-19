@@ -9,9 +9,11 @@ import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 
 export function Register() {
-  usePageTitle('Create account — Brynoxa')
+  const t = useT()
+  usePageTitle(t('auth.titleRegister'))
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
   const localIds = useWishlistStore((s) => s.ids)
@@ -36,10 +38,10 @@ export function Register() {
       } catch {
         /* ignore */
       }
-      toast.success('Account created')
+      toast.success(t('auth.registerSuccess'))
       navigate('/account', { replace: true })
     } catch (err) {
-      toast.error(getErrorMessage(err, 'Registration failed'))
+      toast.error(getErrorMessage(err, t('auth.registerFailed')))
     } finally {
       setLoading(false)
     }
@@ -47,15 +49,15 @@ export function Register() {
 
   return (
     <div>
-      <p className="kicker">Account</p>
-      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">Create account</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">Track orders and pay on delivery.</p>
+      <p className="kicker">{t('auth.kicker')}</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.registerTitle')}</h1>
+      <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.registerBody')}</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-        <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
-        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input label="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Input label={t('ui.name')} value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
+        <Input label={t('ui.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input label={t('ui.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} />
         <Input
-          label="Password"
+          label={t('ui.password')}
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -63,13 +65,13 @@ export function Register() {
           minLength={6}
         />
         <Button type="submit" className="w-full rounded-full" loading={loading}>
-          Create account
+          {t('auth.createAccount')}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
-        Already have an account?{' '}
+        {t('auth.hasAccount')}{' '}
         <Link to="/login" className="font-medium text-[var(--brand-text)]">
-          Sign in
+          {t('common.signIn')}
         </Link>
       </p>
     </div>

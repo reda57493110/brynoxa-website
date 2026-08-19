@@ -69,6 +69,9 @@ const AdminOrderDetail = lazy(() =>
 const AdminCustomers = lazy(() =>
   import('@/pages/admin/Customers').then((m) => ({ default: m.Customers }))
 )
+const AdminMessages = lazy(() =>
+  import('@/pages/admin/Messages').then((m) => ({ default: m.Messages }))
+)
 const AdminReviews = lazy(() =>
   import('@/pages/admin/Reviews').then((m) => ({ default: m.Reviews }))
 )
@@ -177,6 +180,7 @@ export function AppRouter() {
         <Route path="orders" element={<S><AdminOrders /></S>} />
         <Route path="orders/:id" element={<S><AdminOrderDetail /></S>} />
         <Route path="customers" element={<S><AdminCustomers /></S>} />
+        <Route path="messages" element={<S><AdminMessages /></S>} />
         <Route path="reviews" element={<S><AdminReviews /></S>} />
         <Route path="coupons" element={<S><AdminCoupons /></S>} />
         <Route path="settings" element={<S><AdminSettings /></S>} />

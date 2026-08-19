@@ -116,6 +116,7 @@ export interface ProductFilters {
   featured?: boolean
   inStock?: boolean
   isActive?: boolean
+  admin?: boolean
 }
 
 export type OrderStatus =
@@ -247,14 +248,37 @@ export interface Notification {
 
 export interface DashboardStats {
   revenue: number
+  todayRevenue: number
+  todayOrders: number
+  avgOrderValue: number
   orderCount: number
   pendingOrders: number
   customerCount: number
   productCount: number
   lowStock: number
   reviewCount: number
+  unreadMessages: number
   recentOrders: Order[]
   salesByDay: { _id: string; revenue: number; orders: number }[]
+  ordersByStatus: Record<string, number>
+  lowStockProducts: Pick<Product, '_id' | 'name' | 'sku' | 'stock' | 'slug' | 'images'>[]
+}
+
+export interface ContactInboxMessage {
+  _id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  status: 'new' | 'read' | 'archived'
+  createdAt: string
+}
+
+export interface NewsletterSub {
+  _id: string
+  email: string
+  isActive: boolean
+  createdAt: string
 }
 
 export interface CartItem {

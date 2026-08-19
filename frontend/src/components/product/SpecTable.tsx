@@ -1,7 +1,10 @@
+import { useT } from '@/hooks/useT'
+
 export function SpecTable({ specs }: { specs: Record<string, string> }) {
+  const t = useT()
   const entries = Object.entries(specs || {})
   if (!entries.length) {
-    return <p className="text-sm text-[var(--fg-muted)]">No specifications listed.</p>
+    return <p className="text-sm text-[var(--fg-muted)]">{t('productPage.noSpecs')}</p>
   }
 
   return (

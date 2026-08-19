@@ -5,24 +5,28 @@ import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
-
-const links: { to: string; label: string; desc: string; icon: SiteIconName }[] = [
-  { to: '/account/orders', label: 'Orders', desc: 'Track COD shipments', icon: 'package' },
-  { to: '/wishlist', label: 'Wishlist', desc: 'Saved products', icon: 'heart' },
-  { to: '/account/reviews', label: 'Reviews', desc: 'Your product feedback', icon: 'star' },
-  { to: '/account/settings', label: 'Settings', desc: 'Profile & addresses', icon: 'settings' },
-]
+import { useT } from '@/hooks/useT'
 
 export function Account() {
-  usePageTitle('Account — Brynoxa')
+  const t = useT()
+  usePageTitle(t('account.title'))
   const user = useAuthStore((s) => s.user)
+
+  const links: { to: string; label: string; desc: string; icon: SiteIconName }[] = [
+    { to: '/account/orders', label: t('account.orders'), desc: t('account.ordersDesc'), icon: 'package' },
+    { to: '/wishlist', label: t('account.wishlist'), desc: t('account.wishlistDesc'), icon: 'heart' },
+    { to: '/account/reviews', label: t('account.reviews'), desc: t('account.reviewsDesc'), icon: 'star' },
+    { to: '/account/settings', label: t('account.settings'), desc: t('account.settingsDesc'), icon: 'settings' },
+  ]
 
   return (
     <>
       <PageHero
-        kicker="Account"
-        title="Account"
-        description={`Signed in${user?.name ? ` as ${user.name}` : ''}. Orders, wishlist, and delivery details.`}
+        kicker={t('account.kicker')}
+        title={t('account.heading')}
+        description={
+          user?.name ? t('account.signedIn', { name: user.name }) : t('account.signedInGeneric')
+        }
       />
       <Container className="py-8 sm:py-10">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -50,7 +54,7 @@ export function Account() {
             className="mt-6 inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm font-medium text-[var(--brand-text)] transition hover:border-[var(--brand)]"
           >
             <SiteIcon name="dashboard" size={16} />
-            Open admin dashboard
+            {t('account.openAdmin')}
           </Link>
         ) : null}
       </Container>

@@ -9,10 +9,12 @@ import { surfaceCard } from '@/components/layout/pageStyles'
 import { RatingStars } from '@/components/product/RatingStars'
 import { formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 import type { Product } from '@/types'
 
 export function AccountReviews() {
-  usePageTitle('My reviews — Brynoxa')
+  const t = useT()
+  usePageTitle(t('account.reviewsTitle'))
   const navigate = useNavigate()
   const reviews = useQuery({
     queryKey: ['my-reviews'],
@@ -22,12 +24,12 @@ export function AccountReviews() {
   return (
     <>
       <PageHero
-        kicker="Account"
-        title="My reviews"
-        description="Feedback you have shared on products."
+        kicker={t('account.kicker')}
+        title={t('account.reviewsHeading')}
+        description={t('account.reviewsBody')}
       >
         <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-          Back to account
+          {t('orders.backToAccount')}
         </Link>
       </PageHero>
       <Container className="py-8 sm:py-10">
@@ -38,9 +40,9 @@ export function AccountReviews() {
         ) : !reviews.data?.length ? (
           <EmptyState
             icon="star"
-            title="No reviews yet"
-            description="After a delivery, you can review from the product page."
-            actionLabel="Browse shop"
+            title={t('account.noReviews')}
+            description={t('account.noReviewsBody')}
+            actionLabel={t('home.browseShop')}
             onAction={() => navigate('/shop')}
           />
         ) : (
@@ -54,7 +56,7 @@ export function AccountReviews() {
                       to={`/product/${product?.slug || ''}`}
                       className="font-display font-semibold hover:text-[var(--brand-text)]"
                     >
-                      {product?.name || 'Product'}
+                      {product?.name || t('ui.product')}
                     </Link>
                     <span className="text-xs text-[var(--fg-muted)]">{formatDate(review.createdAt)}</span>
                   </div>

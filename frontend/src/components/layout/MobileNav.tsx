@@ -5,29 +5,31 @@ import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const user = useAuthStore((s) => s.user)
   const cartCount = useCartStore((s) => s.itemCount())
   const wishCount = useWishlistStore((s) => s.ids.length)
+  const t = useT()
 
   const links: { to: string; label: string; icon: SiteIconName; end?: boolean; count?: number }[] = [
-    { to: '/', label: 'Home', icon: 'home', end: true },
-    { to: '/shop', label: 'Shop', icon: 'search' },
-    { to: '/services', label: 'Services', icon: 'shield' },
-    { to: '/contact', label: 'Contact', icon: 'mail' },
-    { to: '/wishlist', label: 'Wishlist', icon: 'heart', count: wishCount },
-    { to: '/cart', label: 'Cart', icon: 'cart', count: cartCount },
+    { to: '/', label: t('common.home'), icon: 'home', end: true },
+    { to: '/shop', label: t('common.shop'), icon: 'search' },
+    { to: '/services', label: t('common.services'), icon: 'shield' },
+    { to: '/contact', label: t('common.contact'), icon: 'mail' },
+    { to: '/wishlist', label: t('common.wishlist'), icon: 'heart', count: wishCount },
+    { to: '/cart', label: t('common.cart'), icon: 'cart', count: cartCount },
     {
       to: user ? '/account' : '/login',
-      label: user ? 'Account' : 'Sign in',
+      label: user ? t('common.account') : t('common.signIn'),
       icon: 'user',
     },
   ]
 
   return (
     <Drawer open={open} onClose={onClose} title="Brynoxa" side="left">
-      <nav className="flex flex-col gap-1" aria-label="Mobile">
+      <nav className="flex flex-col gap-1" aria-label={t('nav.mobile')}>
         {links.map(({ to, label, icon, end, count }) => (
           <NavLink
             key={to}
@@ -58,7 +60,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
             onClick={onClose}
             className="mt-4 rounded-xl bg-[var(--brand)] px-3 py-3 text-center text-sm font-semibold text-[var(--brand-fg)]"
           >
-            Admin dashboard
+            {t('common.adminDashboard')}
           </NavLink>
         ) : null}
       </nav>

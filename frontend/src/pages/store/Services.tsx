@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { CONTACT, CUSTOMER_SERVICES, SERVICE_FAQS, SERVICE_STEPS } from '@/lib/site'
+import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
+import { useMessages, useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
 
 const SERVICE_PHOTOS: Record<(typeof CUSTOMER_SERVICES)[number]['id'], string> = {
@@ -29,18 +30,6 @@ const photoOverlay =
 
 const POLICY_IDS = ['warranty', 'returns', 'cod'] as const
 
-const HERO_PROOF = [
-  { icon: 'shield', label: '6-month warranty' },
-  { icon: 'refresh', label: '14-day returns' },
-  { icon: 'package-check', label: 'Pay on arrival' },
-] as const
-
-const CTA_FACTS = [
-  { icon: 'chat', label: 'WhatsApp', hint: CONTACT.whatsapp.value, href: CONTACT.whatsapp.href },
-  { icon: 'mail', label: 'Email', hint: CONTACT.email.value, href: CONTACT.email.href },
-  { icon: 'package-check', label: 'Have an order?', hint: 'Find it in your account', href: '/account/orders' },
-] as const
-
 const pillPrimary =
   'inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
 
@@ -62,44 +51,62 @@ const jumpChip =
 export function Services() {
   const reduceMotion = useReducedMotion()
   const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const copy = useMessages()
+  const t = useT()
+  const catalog = CUSTOMER_SERVICES.map((s) => ({
+    ...s,
+    ...copy.services.items[s.id],
+  }))
+
+  const HERO_PROOF = [
+    { icon: 'shield' as const, label: t('home.proofWarranty') },
+    { icon: 'refresh' as const, label: t('services.proofReturns') },
+    { icon: 'package-check' as const, label: t('services.proofPay') },
+  ]
+
+  const CTA_FACTS = [
+    { icon: 'chat' as const, label: t('contact.whatsapp'), hint: CONTACT.whatsapp.value, href: CONTACT.whatsapp.href },
+    { icon: 'mail' as const, label: t('ui.email'), hint: CONTACT.email.value, href: CONTACT.email.href },
+    { icon: 'package-check' as const, label: t('services.haveOrder'), hint: t('services.findInAccount'), href: '/account/orders' },
+  ]
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Warranty, returns & delivery — Brynoxa'
+    document.title = t('meta.servicesTitle')
     return () => {
       document.title = prev
     }
-  }, [])
+  }, [t])
 
-  const policies = CUSTOMER_SERVICES.filter((s) =>
+  const policies = catalog.filter((s) =>
     POLICY_IDS.includes(s.id as (typeof POLICY_IDS)[number])
   )
-  const extras = CUSTOMER_SERVICES.filter(
+  const extras = catalog.filter(
     (s) => !POLICY_IDS.includes(s.id as (typeof POLICY_IDS)[number])
   )
 
   return (
     <>
       <section aria-labelledby="services-hero-title" className="page-hero">
-        <Container className="relative py-12 sm:py-16">
+        <Container className="relative py-8 sm:py-10">
           <motion.div {...fadeIn(reduceMotion)}>
-            <p className="kicker">Services</p>
+            <p className="kicker">{copy.services.heroKicker}</p>
             <h1
               id="services-hero-title"
               className="mt-2 max-w-2xl font-display text-4xl font-semibold tracking-tight sm:text-5xl"
             >
-              Warranty, returns, delivery
+              {copy.services.heroTitle}
             </h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-[var(--fg-muted)] sm:text-lg">
-              Six months of coverage, 14 days to send it back, cash on delivery across Morocco.
+              {copy.services.heroBody}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link to="/shop" className={pillPrimary}>
-                Shop now
+                {t('common.shopNow')}
                 <SiteIcon name="arrow-right" size={16} />
               </Link>
               <Link to="/contact" className={pillGhost}>
-                Contact
+                {t('common.contact')}
               </Link>
             </div>
             <ul className="mt-8 flex flex-wrap gap-2">
@@ -117,30 +124,30 @@ export function Services() {
         </Container>
       </section>
 
-      <section aria-labelledby="services-grid-heading" className="py-14 sm:py-16">
+      <section aria-labelledby="services-grid-heading" className="py-8 sm:py-10">
         <Container>
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-xl">
               <p className="kicker">
-                Policies
+                {t('services.policies')}
               </p>
               <h2
                 id="services-grid-heading"
                 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
               >
-                How orders are handled
+                {t('services.howHandled')}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                Warranty, returns, COD, delivery, support, and repair.
+                {t('services.howHandledBody')}
               </p>
             </div>
           </div>
 
           <div
             className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-            aria-label="Jump to a policy"
+            aria-label={t('services.jump')}
           >
-            {CUSTOMER_SERVICES.map((s) => (
+            {catalog.map((s) => (
               <a key={s.id} href={`#${s.id}`} className={jumpChip}>
                 {s.title}
               </a>
@@ -148,7 +155,7 @@ export function Services() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {CUSTOMER_SERVICES.map((service, i) => {
+            {catalog.map((service, i) => {
               const photo = SERVICE_PHOTOS[service.id]
               return (
                 <motion.a
@@ -181,7 +188,7 @@ export function Services() {
                       {service.summary}
                     </p>
                     <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)]">
-                      Read policy
+                      {t('services.readPolicy')}
                       <SiteIcon name="arrow-right" size={16} className="transition duration-300 group-hover:translate-x-0.5" />
                     </span>
                   </div>
@@ -195,8 +202,8 @@ export function Services() {
       {policies.map((service, i) => {
         const photo = SERVICE_PHOTOS[service.id]
         const steps =
-          service.id in SERVICE_STEPS
-            ? SERVICE_STEPS[service.id as keyof typeof SERVICE_STEPS]
+          service.id === 'warranty' || service.id === 'returns' || service.id === 'cod'
+            ? copy.services.steps[service.id]
             : []
         const elevated = i % 2 === 0
         return (
@@ -205,7 +212,7 @@ export function Services() {
             id={service.id}
             aria-labelledby={`${service.id}-heading`}
             className={cn(
-              'scroll-mt-[calc(var(--nav-height)+1rem)] border-t border-[var(--border)] py-14 sm:py-16',
+              'scroll-mt-[calc(var(--nav-height)+1rem)] py-8 sm:py-10',
               elevated && 'bg-[var(--bg-elevated)]'
             )}
           >
@@ -228,7 +235,7 @@ export function Services() {
                     to={service.id === 'cod' ? '/shop' : '/contact'}
                     className={cn('mt-8', pillGhost, 'h-10 px-4 text-sm')}
                   >
-                    {service.id === 'cod' ? 'Shop now' : 'Open a request'}
+                    {service.id === 'cod' ? t('common.shopNow') : t('services.openRequest')}
                     <SiteIcon name="arrow-right" size={16} />
                   </Link>
                 </div>
@@ -241,7 +248,7 @@ export function Services() {
                   />
                   <div className="pointer-events-none absolute inset-0 bg-[var(--bg)]/55 dark:bg-[var(--bg-muted)]/65" aria-hidden="true" />
                   <p className="relative px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
-                    How it works
+                    {t('services.howItWorks')}
                   </p>
                   <ol className="relative space-y-2">
                     {steps.map((step, index) => (
@@ -262,21 +269,21 @@ export function Services() {
 
       <section
         aria-labelledby="more-services-heading"
-        className="border-t border-[var(--border)] py-14 sm:py-16"
+        className="py-8 sm:py-10"
       >
         <Container>
           <div className="max-w-xl">
             <p className="kicker">
-              Delivery & repair
+              {t('services.moreKicker')}
             </p>
             <h2
               id="more-services-heading"
               className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              Shipping, support, and RMA
+              {t('services.moreTitle')}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-              What happens after you place a COD order.
+              {t('services.moreBody')}
             </p>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -316,21 +323,21 @@ export function Services() {
 
       <section
         aria-labelledby="services-faq-heading"
-        className="border-t border-[var(--border)] bg-[var(--bg-elevated)] py-14 sm:py-16"
+        className="bg-[var(--bg-elevated)] py-8 sm:py-10"
       >
         <Container>
           <div className="mx-auto max-w-3xl">
             <p className="kicker">
-              FAQ
+              {t('ui.faq')}
             </p>
             <h2
               id="services-faq-heading"
               className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
             >
-              Common questions
+              {t('ui.commonQuestions')}
             </h2>
             <ul className="mt-8 space-y-3">
-              {SERVICE_FAQS.map((item, i) => {
+              {copy.services.faqs.map((item, i) => {
                 const open = openFaq === i
                 const panelId = `services-faq-${i}`
                 return (
@@ -376,7 +383,7 @@ export function Services() {
         </Container>
       </section>
 
-      <section aria-labelledby="services-cta-heading" className="border-t border-[var(--border)] py-16 sm:py-20">
+      <section aria-labelledby="services-cta-heading" className="pb-12 pt-8 sm:pb-14 sm:pt-10">
         <Container>
           <motion.div
             className="cta-band relative overflow-hidden rounded-[1.75rem] px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14"
@@ -393,24 +400,24 @@ export function Services() {
             <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:gap-16">
               <div>
                 <p className="kicker">
-                  Support
+                  {t('services.ctaKicker')}
                 </p>
                 <h2
                   id="services-cta-heading"
                   className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
                 >
-                  Need a return or a claim?
+                  {t('services.ctaTitle')}
                 </h2>
                 <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                  Send your order number on WhatsApp or the contact form. Same business day when we can.
+                  {t('services.ctaBody')}
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link to="/contact" className={pillPrimary}>
-                    Contact
+                    {t('common.contact')}
                     <SiteIcon name="arrow-right" size={16} />
                   </Link>
                   <Link to="/account/orders" className={cn(pillGhost, 'bg-[var(--bg)] dark:bg-white/5')}>
-                    Find my order
+                    {t('services.findOrder')}
                   </Link>
                 </div>
               </div>

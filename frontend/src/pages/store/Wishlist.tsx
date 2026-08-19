@@ -10,9 +10,11 @@ import { PageHero } from '@/components/layout/PageHero'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { useT } from '@/hooks/useT'
 
 export function Wishlist() {
-  usePageTitle('Wishlist — Brynoxa')
+  const t = useT()
+  usePageTitle(t('wishlist.title'))
   const navigate = useNavigate()
   const isAuth = useAuthStore((s) => s.isAuthenticated())
   const bootstrapped = useAuthStore((s) => s.bootstrapped)
@@ -46,21 +48,17 @@ export function Wishlist() {
   return (
     <>
       <PageHero
-        kicker="Wishlist"
-        title="Wishlist"
-        description={
-          isAuth
-            ? 'Saved to your account.'
-            : 'Saved on this device. Sign in to keep the list on other phones.'
-        }
+        kicker={t('wishlist.kicker')}
+        title={t('wishlist.heading')}
+        description={isAuth ? t('wishlist.signedIn') : t('wishlist.guest')}
       />
       <Container className="py-8 sm:py-10">
         {!loading && !products?.length ? (
           <EmptyState
             icon="heart"
-            title="No saved items"
-            description="Tap the heart on a product to save it here."
-            actionLabel="Browse shop"
+            title={t('wishlist.emptyTitle')}
+            description={t('wishlist.emptyBody')}
+            actionLabel={t('home.browseShop')}
             onAction={() => navigate('/shop')}
           />
         ) : (
