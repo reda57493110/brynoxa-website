@@ -96,6 +96,7 @@ export interface Product {
   specs: Record<string, string>
   tags: string[]
   isFeatured: boolean
+  isCarousel?: boolean
   isActive: boolean
   averageRating: number
   reviewCount: number
@@ -114,6 +115,7 @@ export interface ProductFilters {
   minPrice?: number
   maxPrice?: number
   featured?: boolean
+  carousel?: boolean
   inStock?: boolean
   isActive?: boolean
   admin?: boolean

@@ -8,8 +8,6 @@ const items: { to: string; label: string; icon: SiteIconName; end?: boolean; bad
   { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending' },
   { to: '/admin/products', label: 'Products', icon: 'package' },
   { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock' },
-  { to: '/admin/categories', label: 'Categories', icon: 'layers' },
-  { to: '/admin/brands', label: 'Brands', icon: 'boxes' },
   { to: '/admin/customers', label: 'Customers', icon: 'users' },
   { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'star' },

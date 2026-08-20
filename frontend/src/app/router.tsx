@@ -51,12 +51,6 @@ const AdminProducts = lazy(() =>
 const AdminProductForm = lazy(() =>
   import('@/pages/admin/ProductForm').then((m) => ({ default: m.ProductForm }))
 )
-const AdminCategories = lazy(() =>
-  import('@/pages/admin/Categories').then((m) => ({ default: m.Categories }))
-)
-const AdminBrands = lazy(() =>
-  import('@/pages/admin/Brands').then((m) => ({ default: m.Brands }))
-)
 const AdminInventory = lazy(() =>
   import('@/pages/admin/Inventory').then((m) => ({ default: m.Inventory }))
 )
@@ -174,8 +168,6 @@ export function AppRouter() {
         <Route path="products" element={<S><AdminProducts /></S>} />
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />
-        <Route path="categories" element={<S><AdminCategories /></S>} />
-        <Route path="brands" element={<S><AdminBrands /></S>} />
         <Route path="inventory" element={<S><AdminInventory /></S>} />
         <Route path="orders" element={<S><AdminOrders /></S>} />
         <Route path="orders/:id" element={<S><AdminOrderDetail /></S>} />

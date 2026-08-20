@@ -23,6 +23,9 @@ export interface IProduct extends Document {
   specs: Map<string, string> | Record<string, string>;
   tags: string[];
   isFeatured: boolean;
+  featuredAt?: Date | null;
+  isCarousel: boolean;
+  carouselAt?: Date | null;
   isActive: boolean;
   averageRating: number;
   reviewCount: number;
@@ -58,6 +61,9 @@ const productSchema = new Schema<IProduct>(
     specs: { type: Map, of: String, default: {} },
     tags: [{ type: String }],
     isFeatured: { type: Boolean, default: false },
+    featuredAt: { type: Date, default: null },
+    isCarousel: { type: Boolean, default: false },
+    carouselAt: { type: Date, default: null },
     isActive: { type: Boolean, default: true },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0 },
@@ -68,6 +74,7 @@ const productSchema = new Schema<IProduct>(
 
 productSchema.index({ name: 'text', description: 'text', tags: 'text' });
 productSchema.index({ category: 1, brand: 1, price: 1, isActive: 1 });
-productSchema.index({ isFeatured: 1, isActive: 1 });
+productSchema.index({ isFeatured: 1, isActive: 1, featuredAt: -1 });
+productSchema.index({ isCarousel: 1, isActive: 1, carouselAt: -1 });
 
 export const Product = mongoose.model<IProduct>('Product', productSchema);

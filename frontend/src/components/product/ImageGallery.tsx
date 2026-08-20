@@ -15,6 +15,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
         <img
           src={current.url}
           alt={current.alt || name}
+          referrerPolicy="no-referrer"
           className="h-full w-full object-cover transition duration-500"
         />
       </div>
@@ -30,7 +31,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
                 i === active ? 'border-[var(--brand)]' : 'border-transparent opacity-70 hover:opacity-100'
               )}
             >
-              <img src={img.url} alt={img.alt || `${name} ${i + 1}`} className="h-full w-full object-cover" />
+              <img src={img.url} alt={img.alt || `${name} ${i + 1}`} referrerPolicy="no-referrer" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

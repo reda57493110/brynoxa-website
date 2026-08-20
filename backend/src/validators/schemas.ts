@@ -69,6 +69,7 @@ export const productSchema = z.object({
   specs: z.record(z.string(), z.string()).optional(),
   tags: z.array(z.string()).optional(),
   isFeatured: z.boolean().optional(),
+  isCarousel: z.boolean().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -127,6 +128,7 @@ export const settingsSchema = z.object({
 
 export const inventorySchema = z.object({
   stock: z.number().int().min(0),
+  lowStockThreshold: z.number().int().min(0).optional(),
 });
 
 export const contactSchema = z.object({
@@ -150,6 +152,7 @@ export const paginationQuerySchema = z.object({
   minPrice: z.coerce.number().optional(),
   maxPrice: z.coerce.number().optional(),
   featured: z.coerce.boolean().optional(),
+  carousel: z.coerce.boolean().optional(),
   inStock: z.coerce.boolean().optional(),
   isActive: z.coerce.boolean().optional(),
 });

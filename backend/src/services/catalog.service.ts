@@ -1,8 +1,25 @@
+import mongoose from 'mongoose';
 import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
 import { slugify, uniqueSlug } from '../utils/slugify';
+
+function looksLikeObjectId(value: string) {
+  return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
+}
+
+async function resolveCategoryId(category: string) {
+  if (looksLikeObjectId(category)) return category;
+  const doc = await Category.findOne({ slug: category }).select('_id');
+  return doc?._id?.toString() || null;
+}
+
+async function resolveBrandId(brand: string) {
+  if (looksLikeObjectId(brand)) return brand;
+  const doc = await Brand.findOne({ slug: brand }).select('_id');
+  return doc?._id?.toString() || null;
+}
 
 export async function listCategories(activeOnly = true) {
   const filter: Record<string, unknown> = {
@@ -114,6 +131,7 @@ type ProductQuery = {
   minPrice?: number;
   maxPrice?: number;
   featured?: boolean;
+  carousel?: boolean;
   inStock?: boolean;
   isActive?: boolean;
   admin?: boolean;
@@ -128,9 +146,22 @@ export async function listProducts(query: ProductQuery) {
     const rx = new RegExp(query.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     filter.$or = [{ name: rx }, { sku: rx }, { tags: rx }];
   }
-  if (query.category) filter.category = query.category;
-  if (query.brand) filter.brand = query.brand;
+  if (query.category) {
+    const categoryId = await resolveCategoryId(query.category);
+    if (!categoryId) {
+      return { items: [], total: 0, page: query.page, limit: query.limit };
+    }
+    filter.category = categoryId;
+  }
+  if (query.brand) {
+    const brandId = await resolveBrandId(query.brand);
+    if (!brandId) {
+      return { items: [], total: 0, page: query.page, limit: query.limit };
+    }
+    filter.brand = brandId;
+  }
   if (query.featured) filter.isFeatured = true;
+  if (query.carousel) filter.isCarousel = true;
   if (query.inStock) filter.stock = { $gt: 0 };
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
     filter.price = {};
@@ -139,24 +170,30 @@ export async function listProducts(query: ProductQuery) {
   }
 
   let sort: Record<string, 1 | -1> = { createdAt: -1 };
-  switch (query.sort) {
-    case 'price_asc':
-      sort = { price: 1 };
-      break;
-    case 'price_desc':
-      sort = { price: -1 };
-      break;
-    case 'rating':
-      sort = { averageRating: -1 };
-      break;
-    case 'popular':
-      sort = { soldCount: -1 };
-      break;
-    case 'name':
-      sort = { name: 1 };
-      break;
-    default:
-      sort = { createdAt: -1 };
+  if (query.featured) {
+    sort = { featuredAt: -1, createdAt: -1 };
+  } else if (query.carousel) {
+    sort = { carouselAt: -1, createdAt: -1 };
+  } else {
+    switch (query.sort) {
+      case 'price_asc':
+        sort = { price: 1 };
+        break;
+      case 'price_desc':
+        sort = { price: -1 };
+        break;
+      case 'rating':
+        sort = { averageRating: -1 };
+        break;
+      case 'popular':
+        sort = { soldCount: -1 };
+        break;
+      case 'name':
+        sort = { name: 1 };
+        break;
+      default:
+        sort = { createdAt: -1 };
+    }
   }
 
   const skip = (query.page - 1) * query.limit;
@@ -197,7 +234,17 @@ export async function createProduct(data: Record<string, unknown>) {
   const sku = String(data.sku).toUpperCase();
   if (await Product.findOne({ sku })) throw new ApiError(409, 'SKU already exists');
 
-  return Product.create({ ...data, slug, sku });
+  const isFeatured = Boolean(data.isFeatured);
+  const isCarousel = Boolean(data.isCarousel);
+  return Product.create({
+    ...data,
+    slug,
+    sku,
+    isFeatured,
+    featuredAt: isFeatured ? new Date() : null,
+    isCarousel,
+    carouselAt: isCarousel ? new Date() : null,
+  });
 }
 
 export async function updateProduct(id: string, data: Record<string, unknown>) {
@@ -220,7 +267,6 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     'lowStockThreshold',
     'specs',
     'tags',
-    'isFeatured',
     'isActive',
   ] as const;
 
@@ -229,6 +275,21 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
       (product as unknown as Record<string, unknown>)[key] = data[key];
     }
   }
+
+  if (data.isFeatured !== undefined) {
+    const next = Boolean(data.isFeatured);
+    if (next) product.featuredAt = new Date();
+    else product.featuredAt = null;
+    product.isFeatured = next;
+  }
+
+  if (data.isCarousel !== undefined) {
+    const next = Boolean(data.isCarousel);
+    if (next) product.carouselAt = new Date();
+    else product.carouselAt = null;
+    product.isCarousel = next;
+  }
+
   if (data.sku) {
     const sku = String(data.sku).toUpperCase();
     const clash = await Product.findOne({ sku, _id: { $ne: id } });
@@ -246,8 +307,14 @@ export async function deleteProduct(id: string) {
   return product;
 }
 
-export async function updateInventory(id: string, stock: number) {
-  const product = await Product.findByIdAndUpdate(id, { stock }, { new: true });
+export async function updateInventory(
+  id: string,
+  stock: number,
+  lowStockThreshold?: number
+) {
+  const update: { stock: number; lowStockThreshold?: number } = { stock };
+  if (lowStockThreshold !== undefined) update.lowStockThreshold = lowStockThreshold;
+  const product = await Product.findByIdAndUpdate(id, update, { new: true });
   if (!product) throw new ApiError(404, 'Product not found');
   return product;
 }

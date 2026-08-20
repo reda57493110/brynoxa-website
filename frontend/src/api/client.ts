@@ -83,7 +83,16 @@ api.interceptors.response.use(
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong') {
   if (axios.isAxiosError(error)) {
-    return (error.response?.data as ApiResponse<unknown> | undefined)?.message || fallback
+    const data = error.response?.data as
+      | { message?: string; errors?: Record<string, string[] | undefined> }
+      | undefined
+    if (data?.errors && typeof data.errors === 'object') {
+      const parts = Object.entries(data.errors)
+        .flatMap(([field, msgs]) => (msgs || []).map((m) => `${field}: ${m}`))
+        .filter(Boolean)
+      if (parts.length) return parts.join(' · ')
+    }
+    return data?.message || fallback
   }
   if (error instanceof Error) return error.message
   return fallback

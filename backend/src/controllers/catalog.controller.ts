@@ -92,7 +92,11 @@ export const deleteProduct = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const updateInventory = asyncHandler(async (req: Request, res: Response) => {
-  const item = await catalog.updateInventory(param(req, 'id'), req.body.stock);
+  const item = await catalog.updateInventory(
+    param(req, 'id'),
+    req.body.stock,
+    req.body.lowStockThreshold
+  );
   sendSuccess(res, item, 'Inventory updated');
 });
 

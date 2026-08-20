@@ -73,7 +73,12 @@ export function Home() {
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
-    queryFn: async () => (await productsApi.list({ featured: true, limit: 8 })).data.data,
+    queryFn: async () => (await productsApi.list({ featured: true, limit: 4 })).data.data,
+  })
+
+  const carousel = useQuery({
+    queryKey: ['products', 'carousel'],
+    queryFn: async () => (await productsApi.list({ carousel: true, limit: 12 })).data.data,
   })
 
   const categories = useQuery({
@@ -206,15 +211,18 @@ export function Home() {
             </Link>
           </div>
 
-          {featured.isError ? (
+          {featured.isError || carousel.isError ? (
             <EmptyState
               icon="package-open"
               title={t('home.featuredErrorTitle')}
               description={t('home.featuredErrorBody')}
               actionLabel={t('common.retry')}
-              onAction={() => featured.refetch()}
+              onAction={() => {
+                featured.refetch()
+                carousel.refetch()
+              }}
             />
-          ) : featured.isLoading ? (
+          ) : featured.isLoading || carousel.isLoading ? (
             <div className="space-y-5">
               <Skeleton className="h-72 rounded-[1.35rem] lg:h-[26rem]" />
               <div className="flex gap-4 overflow-hidden">
@@ -223,7 +231,7 @@ export function Home() {
                 ))}
               </div>
             </div>
-          ) : !featured.data?.length ? (
+          ) : !featured.data?.length && !carousel.data?.length ? (
             <EmptyState
               title={t('home.featuredEmptyTitle')}
               description={t('home.featuredEmptyBody')}
@@ -232,9 +240,11 @@ export function Home() {
             />
           ) : (
             <div className="space-y-5">
-              <ProductCard product={featured.data[0]} variant="spotlight" />
-              {featured.data.length > 1 ? (
-                <ProductCarousel products={featured.data.slice(1)} />
+              {featured.data?.[0] ? (
+                <ProductCard product={featured.data[0]} variant="spotlight" />
+              ) : null}
+              {carousel.data?.length ? (
+                <ProductCarousel products={carousel.data} />
               ) : null}
             </div>
           )}

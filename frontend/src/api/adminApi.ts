@@ -26,8 +26,11 @@ export const adminApi = {
     update: (id: string, payload: Partial<Product>) =>
       api.patch<ApiResponse<Product>>(`/admin/products/${id}`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/products/${id}`),
-    inventory: (id: string, stock: number) =>
-      api.patch<ApiResponse<Product>>(`/admin/products/${id}/inventory`, { stock }),
+    inventory: (id: string, stock: number, lowStockThreshold?: number) =>
+      api.patch<ApiResponse<Product>>(`/admin/products/${id}/inventory`, {
+        stock,
+        ...(lowStockThreshold !== undefined ? { lowStockThreshold } : {}),
+      }),
     list: (filters?: ProductFilters) =>
       api.get<ApiResponse<Product[]>>('/products', {
         params: { admin: true, ...filters, limit: filters?.limit ?? 20 },

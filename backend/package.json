@@ -7,7 +7,11 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "tsx src/seed/seed.ts"
+    "seed": "tsx src/seed/seed.ts",
+    "clear:products": "tsx src/seed/clearProducts.ts",
+    "clear:orders": "tsx src/seed/clearOrders.ts",
+    "clear:brands": "tsx src/seed/clearBrands.ts",
+    "clear:customers": "tsx src/seed/clearCustomers.ts"
   },
   "keywords": [
     "brynoxa",

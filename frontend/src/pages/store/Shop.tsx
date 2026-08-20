@@ -30,6 +30,7 @@ export function Shop() {
       brand: params.get('brand') || undefined,
       minPrice: params.get('minPrice') ? Number(params.get('minPrice')) : undefined,
       maxPrice: params.get('maxPrice') ? Number(params.get('maxPrice')) : undefined,
+      inStock: params.get('inStock') === 'true' ? true : undefined,
     }),
     [params]
   )
@@ -65,6 +66,7 @@ export function Shop() {
     brand: filters.brand,
     minPrice: params.get('minPrice') || undefined,
     maxPrice: params.get('maxPrice') || undefined,
+    inStock: filters.inStock,
   }
 
   const onFilterChange = (next: FilterValues) => {
@@ -73,18 +75,24 @@ export function Shop() {
       brand: next.brand,
       minPrice: next.minPrice,
       maxPrice: next.maxPrice,
+      inStock: next.inStock ? 'true' : undefined,
     })
   }
 
   const clearFilters = () => {
     const next = new URLSearchParams()
-    if (filters.q) next.set('q', filters.q)
     if (filters.sort && filters.sort !== 'newest') next.set('sort', filters.sort)
     setParams(next)
   }
 
-  const hasNarrowing =
-    Boolean(filters.category || filters.brand || filters.minPrice || filters.maxPrice || filters.q)
+  const hasNarrowing = Boolean(
+    filters.category ||
+      filters.brand ||
+      filters.minPrice ||
+      filters.maxPrice ||
+      filters.q ||
+      filters.inStock
+  )
 
   const categoryList = (categories.data ?? []).filter(
     (c) => c.slug !== 'office' && c.slug !== 'networking'
@@ -101,6 +109,7 @@ export function Shop() {
     filters.brand,
     filters.minPrice,
     filters.maxPrice,
+    filters.inStock,
   ].filter(Boolean).length
 
   useEffect(() => {
@@ -117,15 +126,21 @@ export function Shop() {
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [filters.page])
+  }, [filters.page, filters.category, filters.brand, filters.q])
 
   const sidebar = (plain: boolean) => (
     <FilterSidebar
       categories={categoryList}
       brands={brandList}
       values={filterValues}
-      onChange={onFilterChange}
-      onClear={clearFilters}
+      onChange={(next) => {
+        onFilterChange(next)
+        if (plain) setFiltersOpen(false)
+      }}
+      onClear={() => {
+        clearFilters()
+        if (plain) setFiltersOpen(false)
+      }}
       plain={plain}
     />
   )
@@ -142,15 +157,15 @@ export function Shop() {
   return (
     <>
       <section aria-labelledby="shop-heading" className="page-hero">
-        <Container className="relative z-10 py-8 sm:py-10">
+        <Container className="relative z-10 py-10 sm:py-12">
           <p className="kicker">{t('shop.kicker')}</p>
           <h1
             id="shop-heading"
-            className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl"
+            className="mt-3 max-w-3xl font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-[3.25rem]"
           >
             {activeCategory?.name ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--fg-muted)] sm:text-lg">
             {filters.q ? (
               <>
                 {t('shop.resultsFor', { q: filters.q })}
@@ -162,15 +177,37 @@ export function Shop() {
               t('shop.body')
             )}
           </p>
+
+          <ul className="mt-6 flex flex-wrap gap-2" aria-label={t('shop.filterNote')}>
+            {(
+              [
+                { icon: 'banknote' as const, label: t('shop.heroProofCod') },
+                { icon: 'tag' as const, label: t('shop.heroProofDh') },
+                { icon: 'shield' as const, label: t('shop.heroProofWarranty') },
+              ] as const
+            ).map((item) => (
+              <li
+                key={item.label}
+                className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--fg)]"
+              >
+                <SiteIcon name={item.icon} size={14} className="text-[var(--brand-text)]" />
+                {item.label}
+              </li>
+            ))}
+          </ul>
         </Container>
       </section>
 
       <Container className="py-8 sm:py-10">
         <div
-          className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+          className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
           aria-label={t('shop.shopByCategory')}
         >
-          <button type="button" className={chip(!filters.category)} onClick={() => update({ category: undefined })}>
+          <button
+            type="button"
+            className={chip(!filters.category)}
+            onClick={() => update({ category: undefined })}
+          >
             {t('shop.all')}
           </button>
           {categoryList.map((c) => (
@@ -187,25 +224,43 @@ export function Shop() {
           ))}
         </div>
 
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 shadow-soft">
           <p className="text-sm text-[var(--fg-muted)]">
             {products.isLoading ? (
               t('ui.loading')
             ) : (
               <>
+                <span className="text-[var(--fg-muted)]">{t('shop.showing')} </span>
                 <span className="font-medium text-[var(--fg)]">
                   {total === 0
                     ? t('shop.zeroProducts')
                     : t('shop.productsCount', { from, to, total })}
                 </span>
-                {activeBrand ? ` · ${activeBrand.name}` : null}
+                {sidebarFilterCount > 0 ? (
+                  <span className="ms-2 text-xs text-[var(--brand-text)]">
+                    · {t('shop.refined', { count: sidebarFilterCount })}
+                  </span>
+                ) : null}
               </>
             )}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              className="relative inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] lg:hidden"
+              className={cn(
+                'inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition',
+                filters.inStock
+                  ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+                  : 'border-[var(--border)] hover:border-[var(--brand)]'
+              )}
+              onClick={() => update({ inStock: filters.inStock ? undefined : 'true' })}
+            >
+              <SiteIcon name="package-check" size={14} />
+              {t('shop.inStockOnly')}
+            </button>
+            <button
+              type="button"
+              className="relative inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] lg:hidden"
               onClick={() => setFiltersOpen(true)}
             >
               <SiteIcon name="sliders" size={16} />
@@ -234,6 +289,12 @@ export function Shop() {
             {activeBrand ? (
               <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} />
             ) : null}
+            {filters.inStock ? (
+              <ActiveChip
+                label={t('shop.inStockOnly')}
+                onRemove={() => update({ inStock: undefined })}
+              />
+            ) : null}
             {filters.minPrice || filters.maxPrice ? (
               <ActiveChip
                 label={`${filters.minPrice ?? 0}–${filters.maxPrice ?? '∞'} DH`}
@@ -250,7 +311,7 @@ export function Shop() {
           </div>
         ) : null}
 
-        <div className="grid gap-8 lg:grid-cols-[16.5rem_minmax(0,1fr)]">
+        <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
           <div className="hidden lg:block">
             <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto">
               {sidebar(false)}
@@ -288,7 +349,12 @@ export function Shop() {
         </div>
       </Container>
 
-      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('shop.filters')} side="left">
+      <Drawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title={t('shop.filters')}
+        side="left"
+      >
         {sidebar(true)}
       </Drawer>
     </>

@@ -98,6 +98,7 @@ export function ProductCard({
           <img
             src={primaryImage(product)}
             alt={product.name}
+            referrerPolicy="no-referrer"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             loading={spotlight ? 'eager' : 'lazy'}
           />

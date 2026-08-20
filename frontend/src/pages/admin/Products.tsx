@@ -149,7 +149,16 @@ export function Products() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[var(--fg-muted)]">{p.sku}</td>
-                      <td className="px-4 py-3">{formatCurrency(p.price)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-baseline gap-1.5">
+                          <span className="font-medium">{formatCurrency(p.price)}</span>
+                          {p.compareAtPrice && p.compareAtPrice > p.price ? (
+                            <span className="text-xs text-[var(--fg-muted)] line-through">
+                              {formatCurrency(p.compareAtPrice)}
+                            </span>
+                          ) : null}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         {p.stock <= p.lowStockThreshold ? (
                           <Badge variant="warning">{p.stock}</Badge>
@@ -163,6 +172,7 @@ export function Products() {
                             {p.isActive ? 'Active' : 'Hidden'}
                           </Badge>
                           {p.isFeatured ? <Badge variant="brand">Featured</Badge> : null}
+                          {p.isCarousel ? <Badge variant="brand">Carousel</Badge> : null}
                         </div>
                       </td>
                       <td className="px-4 py-3">
