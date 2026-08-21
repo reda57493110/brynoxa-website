@@ -6,6 +6,7 @@ import type { ApiResponse, SessionPayload } from '@/types'
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 20_000,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -83,7 +84,11 @@ api.interceptors.response.use(
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong') {
   if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
+    if (!error.response) {
+      if (error.code === 'ECONNABORTED') return 'Request timed out — try again'
+      return 'Cannot reach the server — check that the API is running'
+    }
+    const data = error.response.data as
       | { message?: string; errors?: Record<string, string[] | undefined> }
       | undefined
     if (data?.errors && typeof data.errors === 'object') {

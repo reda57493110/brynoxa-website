@@ -57,9 +57,8 @@ export function getMessages(locale: Locale): Messages {
 export function orderStatusKey(status: string): MessageKey {
   switch (status) {
     case 'confirmed':
-      return 'orders.confirmed'
     case 'processing':
-      return 'orders.processing'
+      return 'orders.confirmed'
     case 'shipped':
       return 'orders.shipped'
     case 'delivered':

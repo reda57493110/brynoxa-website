@@ -45,7 +45,7 @@ function FilterSection({
   return (
     <section className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)]">
           <SiteIcon name={icon} size={14} />
         </span>
         <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
@@ -122,12 +122,9 @@ export function FilterSidebar({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-semibold tracking-tight">{t('shop.filters')}</h2>
-            {hasActive ? <Badge variant="brand">{activeCount}</Badge> : null}
-          </div>
-          <p className="mt-1 text-xs text-[var(--fg-muted)]">{t('shop.filterNote')}</p>
+        <div className="flex items-center gap-2">
+          <h2 className="font-display text-lg font-semibold tracking-tight">{t('shop.filters')}</h2>
+          {hasActive ? <Badge variant="brand">{activeCount}</Badge> : null}
         </div>
         <Button
           variant="ghost"

@@ -78,9 +78,7 @@ export function Navbar() {
 
   return (
     <>
-      <header
-        className="sticky top-0 z-50 px-4 pt-3 sm:px-8 lg:px-12"
-      >
+      <header className="sticky top-0 z-50 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-8 sm:pt-3 lg:px-12">
         <div
           className={cn(
             'mx-auto flex w-full max-w-5xl flex-col rounded-2xl border transition-all duration-300',
@@ -89,7 +87,7 @@ export function Navbar() {
               : 'border-[var(--glass-border)] bg-[var(--glass)] backdrop-blur-xl'
           )}
         >
-          <div className="flex h-14 items-center gap-2 px-2 sm:gap-3 sm:px-3">
+          <div className="flex h-12 items-center gap-1 px-1.5 sm:h-14 sm:gap-3 sm:px-3">
             <button
               type="button"
               className={cn(iconBtn, 'lg:hidden')}
@@ -101,7 +99,7 @@ export function Navbar() {
 
             <Link
               to="/"
-              className="shrink-0 px-1.5 font-display text-lg font-bold tracking-tight sm:text-xl"
+              className="min-w-0 shrink truncate px-1 font-display text-base font-bold tracking-tight sm:px-1.5 sm:text-xl"
             >
               Brynox<span className="text-[var(--brand)]">a</span>
             </Link>
@@ -142,7 +140,7 @@ export function Navbar() {
               </label>
             </form>
 
-            <div className="ml-auto flex items-center gap-0.5 md:ml-1">
+            <div className="ml-auto flex items-center gap-0 md:ml-1">
               <button
                 type="button"
                 className={cn(iconBtn, 'md:hidden')}
@@ -155,16 +153,20 @@ export function Navbar() {
 
               <button
                 type="button"
-                className={iconBtn}
+                className={cn(iconBtn, 'hidden sm:inline-flex')}
                 onClick={toggleTheme}
                 aria-label={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
               >
                 {theme === 'dark' ? <SiteIcon name="sun" size={17} /> : <SiteIcon name="moon" size={17} />}
               </button>
 
-              <LanguageSwitcher />
+              <LanguageSwitcher className="hidden sm:inline-flex" />
 
-              <Link to="/wishlist" className={cn(iconBtn, 'relative')} aria-label={t('common.wishlist')}>
+              <Link
+                to="/wishlist"
+                className={cn(iconBtn, 'relative hidden sm:inline-flex')}
+                aria-label={t('common.wishlist')}
+              >
                 <SiteIcon name="heart" size={17} />
                 {wishCount > 0 ? (
                   <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold text-[var(--brand-fg)]">
@@ -176,7 +178,7 @@ export function Navbar() {
               <Link
                 to="/cart"
                 className={cn(
-                  'relative inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-2.5 transition ring-brand',
+                  'relative inline-flex h-9 items-center justify-center gap-1 rounded-full px-2 transition ring-brand sm:gap-1.5 sm:px-2.5',
                   cartCount > 0
                     ? 'bg-[var(--brand)] text-[var(--brand-fg)] hover:brightness-110'
                     : 'text-[var(--fg)] hover:bg-[var(--bg-muted)]'
@@ -190,21 +192,16 @@ export function Navbar() {
               </Link>
 
               {user ? (
-                <Link to="/account" className={iconBtn} aria-label={t('common.account')}>
+                <Link to="/account" className={cn(iconBtn, 'hidden sm:inline-flex')} aria-label={t('common.account')}>
                   <SiteIcon name="user" size={17} />
                 </Link>
               ) : (
-                <>
-                  <Link to="/login" className={cn(iconBtn, 'sm:hidden')} aria-label={t('common.signIn')}>
-                    <SiteIcon name="user" size={17} />
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="ml-0.5 hidden h-9 items-center rounded-full bg-[var(--brand)] px-3.5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:inline-flex"
-                  >
-                    {t('common.signIn')}
-                  </Link>
-                </>
+                <Link
+                  to="/login"
+                  className="ml-0.5 hidden h-9 items-center rounded-full bg-[var(--brand)] px-3.5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:inline-flex"
+                >
+                  {t('common.signIn')}
+                </Link>
               )}
             </div>
           </div>

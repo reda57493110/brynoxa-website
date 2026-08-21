@@ -27,7 +27,7 @@ export function RatingStars({
         })}
       </div>
       {count != null ? (
-        <span className="text-xs text-[var(--fg-muted)]">
+        <span className="text-xs font-medium text-[var(--fg-muted)]">
           {rating.toFixed(1)} ({count})
         </span>
       ) : null}

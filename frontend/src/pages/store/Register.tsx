@@ -24,24 +24,57 @@ export function Register() {
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setFormError('')
+
+    const trimmedName = name.trim()
+    const trimmedEmail = email.trim()
+    const trimmedPhone = phone.trim()
+
+    if (trimmedName.length < 2) {
+      setFormError(t('auth.nameTooShort'))
+      return
+    }
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setFormError(t('auth.emailInvalid'))
+      return
+    }
+    if (password.length < 6) {
+      setFormError(t('auth.passwordTooShort'))
+      return
+    }
+
     setLoading(true)
     try {
-      const res = await authApi.register({ name, email, password, phone: phone || undefined })
-      setAuth(res.data.data.user, res.data.data.accessToken)
-      try {
-        if (localIds.length) {
-          setFromServer((await wishlistApi.sync(localIds)).data.data)
-        }
-      } catch {
-        /* ignore */
+      const res = await authApi.register({
+        name: trimmedName,
+        email: trimmedEmail,
+        password,
+        phone: trimmedPhone || undefined,
+      })
+      const payload = res.data?.data
+      if (!payload?.user || !payload.accessToken) {
+        throw new Error(t('auth.registerFailed'))
       }
+      setAuth(payload.user, payload.accessToken)
       toast.success(t('auth.registerSuccess'))
-      navigate('/account', { replace: true })
+      navigate('/', { replace: true })
+
+      if (localIds.length) {
+        void wishlistApi
+          .sync(localIds)
+          .then((r) => setFromServer(r.data.data))
+          .catch(() => {
+            /* ignore */
+          })
+      }
     } catch (err) {
-      toast.error(getErrorMessage(err, t('auth.registerFailed')))
+      const message = getErrorMessage(err, t('auth.registerFailed'))
+      setFormError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -52,18 +85,56 @@ export function Register() {
       <p className="kicker">{t('auth.kicker')}</p>
       <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.registerTitle')}</h1>
       <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.registerBody')}</p>
-      <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-        <Input label={t('ui.name')} value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
-        <Input label={t('ui.email')} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input label={t('ui.phone')} value={phone} onChange={(e) => setPhone(e.target.value)} />
+      <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
+        <Input
+          label={t('ui.name')}
+          name="name"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value)
+            if (formError) setFormError('')
+          }}
+          required
+        />
+        <Input
+          label={t('ui.email')}
+          name="email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (formError) setFormError('')
+          }}
+          required
+        />
+        <Input
+          label={t('ui.phone')}
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
         <Input
           label={t('ui.password')}
+          name="password"
           type="password"
+          autoComplete="new-password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            if (formError) setFormError('')
+          }}
           required
           minLength={6}
         />
+        {formError ? (
+          <p className="rounded-xl border border-[var(--danger)]/40 bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] px-3.5 py-2.5 text-sm text-[var(--danger)]" role="alert">
+            {formError}
+          </p>
+        ) : null}
         <Button type="submit" className="w-full rounded-full" loading={loading}>
           {t('auth.createAccount')}
         </Button>

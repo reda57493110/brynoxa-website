@@ -2,12 +2,14 @@ import { Router } from 'express';
 import * as order from '../controllers/order.controller';
 import * as misc from '../controllers/misc.controller';
 import { validate } from '../middleware/validate';
-import { requireAuth, requireAdmin } from '../middleware/auth';
+import { requireAuth, requireAdmin, optionalAuth } from '../middleware/auth';
 import { orderLimiter } from '../middleware/rateLimit';
 import {
   createOrderSchema,
+  updateOrderItemsSchema,
   updateOrderStatusSchema,
   validateCouponSchema,
+  guestOrderReceiptSchema,
   reviewSchema,
   couponSchema,
   settingsSchema,
@@ -29,15 +31,27 @@ const router = Router();
 
 router.post(
   '/orders',
-  requireAuth,
+  optionalAuth,
   orderLimiter,
   validate(createOrderSchema),
   order.createOrder
 );
 router.get('/orders', requireAuth, order.myOrders);
+router.get(
+  '/orders/:orderNumber/receipt',
+  orderLimiter,
+  validate(guestOrderReceiptSchema, 'query'),
+  order.guestOrderReceipt
+);
 router.post('/orders/:orderNumber/cancel', requireAuth, order.cancelMyOrder);
+router.patch(
+  '/orders/:orderNumber/items',
+  requireAuth,
+  validate(updateOrderItemsSchema),
+  order.updateMyOrderItems
+);
 router.get('/orders/:orderNumber', requireAuth, order.myOrder);
-router.post('/coupons/validate', requireAuth, validate(validateCouponSchema), order.validateCoupon);
+router.post('/coupons/validate', optionalAuth, validate(validateCouponSchema), order.validateCoupon);
 
 router.get('/admin/orders', requireAuth, requireAdmin, order.adminOrders);
 router.get('/admin/orders/:id', requireAuth, requireAdmin, order.adminOrder);

@@ -147,7 +147,7 @@ export function Shop() {
 
   const chip = (active: boolean) =>
     cn(
-      'inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-sm font-medium transition',
+      'inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:h-9 sm:px-3.5 sm:text-sm',
       'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
       active
         ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
@@ -157,15 +157,15 @@ export function Shop() {
   return (
     <>
       <section aria-labelledby="shop-heading" className="page-hero">
-        <Container className="relative z-10 py-10 sm:py-12">
+        <Container className="relative z-10 py-5 sm:py-10">
           <p className="kicker">{t('shop.kicker')}</p>
           <h1
             id="shop-heading"
-            className="mt-3 max-w-3xl font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl md:text-[3.25rem]"
+            className="mt-2 max-w-3xl font-display text-3xl font-semibold tracking-tight text-balance sm:mt-3 sm:text-5xl md:text-[3.25rem]"
           >
             {activeCategory?.name ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--fg-muted)] sm:text-lg">
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-lg">
             {filters.q ? (
               <>
                 {t('shop.resultsFor', { q: filters.q })}
@@ -178,17 +178,16 @@ export function Shop() {
             )}
           </p>
 
-          <ul className="mt-6 flex flex-wrap gap-2" aria-label={t('shop.filterNote')}>
+          <ul className="mt-3 flex gap-2 sm:mt-5" aria-label={t('shop.filterNote')}>
             {(
               [
                 { icon: 'banknote' as const, label: t('shop.heroProofCod') },
-                { icon: 'tag' as const, label: t('shop.heroProofDh') },
                 { icon: 'shield' as const, label: t('shop.heroProofWarranty') },
               ] as const
             ).map((item) => (
               <li
                 key={item.label}
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--fg)]"
+                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-xs"
               >
                 <SiteIcon name={item.icon} size={14} className="text-[var(--brand-text)]" />
                 {item.label}
@@ -198,9 +197,9 @@ export function Shop() {
         </Container>
       </section>
 
-      <Container className="py-8 sm:py-10">
+      <Container className="py-5 sm:py-10">
         <div
-          className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+          className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:mb-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
           aria-label={t('shop.shopByCategory')}
         >
           <button
@@ -224,31 +223,31 @@ export function Shop() {
           ))}
         </div>
 
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 shadow-soft">
-          <p className="text-sm text-[var(--fg-muted)]">
+        <div className="sticky top-[calc(var(--nav-height)+0.25rem)] z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 shadow-soft backdrop-blur-md sm:static sm:mb-5 sm:gap-3 sm:px-4 sm:py-3">
+          <p className="min-w-0 truncate text-xs text-[var(--fg-muted)] sm:text-sm">
             {products.isLoading ? (
               t('ui.loading')
             ) : (
               <>
-                <span className="text-[var(--fg-muted)]">{t('shop.showing')} </span>
+                <span className="hidden text-[var(--fg-muted)] sm:inline">{t('shop.showing')} </span>
                 <span className="font-medium text-[var(--fg)]">
                   {total === 0
                     ? t('shop.zeroProducts')
                     : t('shop.productsCount', { from, to, total })}
                 </span>
                 {sidebarFilterCount > 0 ? (
-                  <span className="ms-2 text-xs text-[var(--brand-text)]">
+                  <span className="ms-1 text-[11px] text-[var(--brand-text)] sm:ms-2 sm:text-xs">
                     · {t('shop.refined', { count: sidebarFilterCount })}
                   </span>
                 ) : null}
               </>
             )}
           </p>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               className={cn(
-                'inline-flex h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition',
+                'hidden h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition sm:inline-flex',
                 filters.inStock
                   ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
                   : 'border-[var(--border)] hover:border-[var(--brand)]'
@@ -260,7 +259,7 @@ export function Shop() {
             </button>
             <button
               type="button"
-              className="relative inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] lg:hidden"
+              className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm lg:hidden"
               onClick={() => setFiltersOpen(true)}
             >
               <SiteIcon name="sliders" size={16} />
@@ -330,7 +329,7 @@ export function Shop() {
                 <ProductGrid
                   products={products.data?.items}
                   loading={products.isLoading}
-                  className="lg:grid-cols-2 xl:grid-cols-3"
+                  className="grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
                   emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
                     hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')

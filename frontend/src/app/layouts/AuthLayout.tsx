@@ -10,7 +10,7 @@ export function AuthLayout() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 80% 50% at 18% 12%, color-mix(in srgb, var(--brand) 20%, transparent), transparent 58%), radial-gradient(ellipse 60% 40% at 88% 88%, color-mix(in srgb, var(--fg-muted) 14%, transparent), transparent)',
+            'radial-gradient(ellipse 70% 45% at 18% 10%, color-mix(in srgb, var(--bg-muted) 85%, transparent), transparent 58%), radial-gradient(ellipse 55% 40% at 90% 90%, color-mix(in srgb, var(--fg) 4%, transparent), transparent)',
         }}
       />
       <motion.div

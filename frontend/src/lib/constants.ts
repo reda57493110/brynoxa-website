@@ -1,4 +1,4 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1'
+export const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 export const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
@@ -11,7 +11,6 @@ export const SORT_OPTIONS = [
 export const ORDER_STATUSES = [
   'pending',
   'confirmed',
-  'processing',
   'shipped',
   'delivered',
   'cancelled',

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -27,7 +28,11 @@ export function ProductGrid({
 }) {
   const t = useT()
   const navigate = useNavigate()
-  const gridClass = cn('grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4', className)
+  const reduceMotion = useReducedMotion()
+  const gridClass = cn(
+    'grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    className
+  )
 
   if (loading) {
     return (
@@ -52,8 +57,19 @@ export function ProductGrid({
 
   return (
     <div className={gridClass}>
-      {products.map((p) => (
-        <ProductCard key={p._id} product={p} />
+      {products.map((p, i) => (
+        <motion.div
+          key={p._id}
+          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.35,
+            delay: Math.min(i, 11) * 0.04,
+            ease: [0.22, 1, 0.36, 1],
+          }}
+        >
+          <ProductCard product={p} />
+        </motion.div>
       ))}
     </div>
   )

@@ -5,25 +5,29 @@ export function Price({
   price,
   compareAt,
   className,
+  showDiscountBadge = true,
 }: {
   price: number
   compareAt?: number
   className?: string
+  showDiscountBadge?: boolean
 }) {
   const onSale = compareAt != null && compareAt > price
   return (
-    <div className={cn('flex flex-wrap items-baseline gap-2', className)}>
-      <span className="font-display text-lg font-semibold text-[var(--fg)]">
+    <div className={cn('flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:gap-2', className)}>
+      <span className="font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-lg">
         {formatCurrency(price)}
       </span>
       {onSale ? (
         <>
-          <span className="text-sm text-[var(--fg-muted)] line-through decoration-[var(--fg-muted)]">
+          <span className="text-xs font-medium text-[var(--fg-muted)] line-through decoration-[var(--fg-muted)] sm:text-sm">
             {formatCurrency(compareAt)}
           </span>
-          <span className="rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)]">
-            −{Math.round((1 - price / compareAt) * 100)}%
-          </span>
+          {showDiscountBadge ? (
+            <span className="hidden rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)] sm:inline-flex">
+              −{Math.round((1 - price / compareAt) * 100)}%
+            </span>
+          ) : null}
         </>
       ) : null}
     </div>

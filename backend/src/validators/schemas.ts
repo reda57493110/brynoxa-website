@@ -1,10 +1,14 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-  name: z.string().min(2).max(80),
-  email: z.string().email(),
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().email(),
   password: z.string().min(6).max(100),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value ? value : undefined)),
 });
 
 export const loginSchema = z.object({
@@ -92,10 +96,29 @@ export const createOrderSchema = z.object({
   shippingAddress: addressSchema,
   couponCode: z.string().optional(),
   customerNote: z.string().max(500).optional(),
+  /** Guest checkout — required when not logged in */
+  email: z.string().trim().email().optional(),
+  /** Optional: create / upgrade account at checkout */
+  password: z.string().min(6).max(100).optional(),
 });
 
+export const guestOrderReceiptSchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const updateOrderItemsSchema = z.object({
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1),
+        qty: z.number().int().min(1).max(99),
+      })
+    )
+    .min(1)
+    .max(50),
+});
 export const updateOrderStatusSchema = z.object({
-  orderStatus: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']),
+  orderStatus: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
   adminNote: z.string().optional(),
   note: z.string().optional(),
 });

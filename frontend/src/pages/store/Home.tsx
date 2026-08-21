@@ -59,18 +59,6 @@ export function Home() {
   const navigate = useNavigate()
   const t = useT()
 
-  const heroProof = [
-    { icon: 'package-check' as const, label: t('home.proofCod') },
-    { icon: 'shield' as const, label: t('home.proofWarranty') },
-    { icon: 'truck' as const, label: t('home.proofShip') },
-  ]
-
-  const ctaFacts = [
-    { icon: 'package-check' as const, label: t('home.proofCod'), hint: t('home.ctaCodHint') },
-    { icon: 'shield' as const, label: t('home.proofWarranty'), hint: t('home.ctaWarrantyHint') },
-    { icon: 'truck' as const, label: t('home.ctaShipLabel'), hint: t('home.ctaShipHint') },
-  ]
-
   const featured = useQuery({
     queryKey: ['products', 'featured'],
     queryFn: async () => (await productsApi.list({ featured: true, limit: 4 })).data.data,
@@ -102,7 +90,7 @@ export function Home() {
     <>
       <section
         aria-labelledby="home-hero-heading"
-        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-[var(--nav-height)] flex min-h-[100svh] flex-col overflow-hidden bg-white dark:bg-[#070a0d]"
+        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-[var(--nav-height)] flex min-h-[85svh] flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
       >
         <div className="absolute inset-0" aria-hidden="true">
           <img
@@ -115,7 +103,6 @@ export function Home() {
             fetchPriority="high"
           />
           <div className="absolute inset-0 hidden dark:block bg-[linear-gradient(105deg,rgba(8,11,14,0.94)_0%,rgba(8,11,14,0.72)_46%,rgba(8,11,14,0.38)_100%)]" />
-          <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(ellipse_55%_50%_at_78%_42%,rgba(0,194,255,0.2),transparent_62%)]" />
           <div className="absolute inset-0 dark:hidden bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0%,rgb(0_0_0/0.12)_36%,transparent_58%)]" />
         </div>
 
@@ -130,7 +117,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="mt-4 max-w-2xl font-display text-4xl font-semibold tracking-tight text-balance text-white sm:text-5xl md:text-6xl"
+            className="mt-3 max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance text-white sm:mt-4 sm:text-5xl md:text-6xl"
           >
             {t('home.heroTitleLead')}
             <span className="block text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
@@ -138,46 +125,30 @@ export function Home() {
 
           <motion.p
             {...fadeUp(reduceMotion, 0.16)}
-            className="mt-5 max-w-lg text-base leading-relaxed text-white/80 sm:text-lg"
+            className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:mt-5 sm:text-lg"
           >
             {t('home.heroBody')}
           </motion.p>
 
           <motion.div
             {...fadeUp(reduceMotion, 0.24)}
-            className="mt-8 flex flex-wrap items-center gap-3"
+            className="mt-6 flex w-full flex-col gap-2.5 sm:mt-8 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
           >
             <Link
               to="/shop"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.shopNow')}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Link>
             <a
               href="#categories"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-5 text-base font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
+              className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.browseCategories')}
             </a>
           </motion.div>
         </Container>
-
-        <div className="relative z-10 bg-white/70 backdrop-blur-xl dark:bg-black/35">
-          <Container className="grid sm:grid-cols-3">
-            {heroProof.map(({ icon, label }) => (
-              <div
-                key={label}
-                className="flex items-center gap-3 py-4 sm:justify-center sm:py-5"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)] dark:text-[var(--brand)]">
-                  <SiteIcon name={icon} size={18} />
-                </span>
-                <p className="text-sm font-medium text-[var(--fg)] dark:text-white/90">{label}</p>
-              </div>
-            ))}
-          </Container>
-        </div>
       </section>
 
       {/* Featured */}
@@ -224,7 +195,7 @@ export function Home() {
             />
           ) : featured.isLoading || carousel.isLoading ? (
             <div className="space-y-5">
-              <Skeleton className="h-72 rounded-[1.35rem] lg:h-[26rem]" />
+              <Skeleton className="h-64 rounded-[1.35rem] lg:h-[22rem]" />
               <div className="flex gap-4 overflow-hidden">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-80 w-[18.5rem] shrink-0 rounded-[1.35rem]" />
@@ -325,7 +296,7 @@ export function Home() {
                         >
                           <div
                             className={cn(
-                              'relative overflow-hidden bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg))]',
+                              'relative overflow-hidden bg-[var(--bg-muted)]',
                               featuredTile ? 'min-h-[10.5rem] flex-1' : 'aspect-[16/10]'
                             )}
                           >
@@ -338,14 +309,14 @@ export function Home() {
                               />
                             ) : (
                               <div
-                                className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,color-mix(in_srgb,var(--brand)_18%,transparent),transparent_52%)]"
+                                className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,color-mix(in_srgb,var(--fg)_5%,transparent),transparent_52%)]"
                                 aria-hidden="true"
                               />
                             )}
                           </div>
                           <div className="flex flex-col p-5 sm:p-6">
                             <div className="flex items-center gap-3">
-                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] dark:text-[var(--brand)]">
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--brand-text)]">
                                 <SiteIcon name={icon} size={18} />
                               </span>
                               <h3
@@ -380,7 +351,7 @@ export function Home() {
         </Container>
       </section>
 
-      {/* Closing CTA — COD close, split with proof */}
+      {/* Closing CTA */}
       <section
         aria-labelledby="home-cta-heading"
         className="pb-12 pt-8 sm:pb-14 sm:pt-10"
@@ -398,53 +369,32 @@ export function Home() {
               size={96}
               className="pointer-events-none absolute -left-8 bottom-[-2rem] text-[var(--brand)] opacity-[0.12]"
             />
-            <div className="relative grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_18.5rem] lg:gap-16">
-              <div>
-                <p className="kicker">
-                  {t('home.ctaKicker')}
-                </p>
-                <h2
-                  id="home-cta-heading"
-                  className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+            <div className="relative max-w-2xl">
+              <p className="kicker">{t('home.ctaKicker')}</p>
+              <h2
+                id="home-cta-heading"
+                className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+              >
+                {t('home.ctaTitle')}
+              </h2>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+                {t('home.ctaBody')}
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link
+                  to="/shop"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                 >
-                  {t('home.ctaTitle')}
-                </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                  {t('home.ctaBody')}
-                </p>
-                <div className="mt-8 flex flex-wrap items-center gap-3">
-                  <Link
-                    to="/shop"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
-                  >
-                    {t('common.shopNow')}
-                    <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-                  </Link>
-                  <Link
-                    to="/contact"
-                    className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-base font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:bg-white/5"
-                  >
-                    {t('common.contact')}
-                  </Link>
-                </div>
+                  {t('common.shopNow')}
+                  <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+                </Link>
+                <Link
+                  to="/contact"
+                  className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-base font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:bg-white/5"
+                >
+                  {t('common.contact')}
+                </Link>
               </div>
-
-              <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                {ctaFacts.map(({ icon, label, hint }) => (
-                  <li
-                    key={label}
-                    className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/80 px-4 py-3.5 dark:bg-black/20"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] dark:text-[var(--brand)]">
-                      <SiteIcon name={icon} size={18} />
-                    </span>
-                    <span>
-                      <p className="text-sm font-semibold text-[var(--fg)]">{label}</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-[var(--fg-muted)]">{hint}</p>
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           </motion.div>
         </Container>

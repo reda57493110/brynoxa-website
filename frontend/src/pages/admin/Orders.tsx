@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency, formatDateTime } from '@/lib/format'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import type { OrderStatus, User } from '@/types'
@@ -110,7 +110,7 @@ export function Orders() {
                 <tr>
                   <th className="px-4 py-3">Order</th>
                   <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Placed</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Pay</th>
                   <th className="px-4 py-3">Total</th>
@@ -133,9 +133,11 @@ export function Orders() {
                         <p>{user?.name || '—'}</p>
                         <p className="text-xs text-[var(--fg-muted)]">{user?.email}</p>
                       </td>
-                      <td className="px-4 py-3">{formatDate(o.createdAt)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">{formatDateTime(o.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+                        <Badge variant={orderStatusVariant(o.orderStatus)}>
+                          {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+                        </Badge>
                       </td>
                       <td className="px-4 py-3 uppercase text-[var(--fg-muted)]">
                         {o.paymentMethod} · {o.paymentStatus}

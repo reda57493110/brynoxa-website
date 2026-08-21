@@ -4,7 +4,6 @@ import { IAddress } from './User';
 export type OrderStatus =
   | 'pending'
   | 'confirmed'
-  | 'processing'
   | 'shipped'
   | 'delivered'
   | 'cancelled';
@@ -69,7 +68,7 @@ const timelineSchema = new Schema<IOrderTimeline>(
   {
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
       required: true,
     },
     note: { type: String },
@@ -114,7 +113,7 @@ const orderSchema = new Schema<IOrder>(
     },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
       default: 'pending',
     },
     timeline: [timelineSchema],

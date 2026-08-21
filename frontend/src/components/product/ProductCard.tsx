@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Product } from '@/types'
@@ -42,6 +43,7 @@ export function ProductCard({
   const t = useT()
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
+  const [imgLoaded, setImgLoaded] = useState(false)
 
   const onAddCart = () => {
     if (product.stock <= 0) {
@@ -84,14 +86,14 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        'group flex overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg',
-        spotlight ? 'flex-col lg:grid lg:grid-cols-2 lg:items-stretch' : 'flex-col'
+        'product-card group flex overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg',
+        spotlight ? 'flex-col lg:grid lg:grid-cols-[1.35fr_1fr] lg:items-stretch' : 'flex-col'
       )}
     >
       <div
         className={cn(
           'relative overflow-hidden bg-[var(--bg-muted)]',
-          spotlight ? 'aspect-[16/10] lg:aspect-auto lg:min-h-[26rem]' : 'aspect-square'
+          spotlight ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]' : 'aspect-square'
         )}
       >
         <Link to={`/product/${product.slug}`} className="block h-full w-full">
@@ -99,72 +101,97 @@ export function ProductCard({
             src={primaryImage(product)}
             alt={product.name}
             referrerPolicy="no-referrer"
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            decoding="async"
             loading={spotlight ? 'eager' : 'lazy'}
+            onLoad={() => setImgLoaded(true)}
+            className={cn(
+              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]',
+              imgLoaded ? 'opacity-100' : 'opacity-0'
+            )}
           />
         </Link>
-        <div className="pointer-events-none absolute start-3 top-3 z-10 flex flex-wrap gap-2">
+        <div className="pointer-events-none absolute start-2 top-2 z-10 flex max-w-[calc(100%-3rem)] flex-wrap gap-1 sm:start-3 sm:top-3 sm:max-w-none sm:gap-2">
           {spotlight ? (
             <span className="rounded-full bg-[var(--brand)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-fg)]">
               {t('product.featuredPick')}
             </span>
           ) : null}
           {off ? (
-            <span className="rounded-full bg-[var(--fg)] px-2.5 py-1 text-[11px] font-bold text-[var(--bg)]">
+            <span className="rounded-full bg-[var(--fg)] px-2 py-0.5 text-[10px] font-bold text-[var(--bg)] sm:px-2.5 sm:py-1 sm:text-[11px]">
               −{off}%
             </span>
           ) : null}
-          <StockBadge stock={product.stock} threshold={product.lowStockThreshold} />
+          <StockBadge
+            stock={product.stock}
+            threshold={product.lowStockThreshold}
+            compact={!spotlight}
+          />
         </div>
         <button
           type="button"
           onClick={onWishlist}
           className={cn(
-            'absolute end-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition',
+            'absolute end-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition sm:end-3 sm:top-3 sm:h-9 sm:w-9',
             wishlisted
               ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
           )}
           aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
         >
-          <SiteIcon name="heart" size={16} solid={wishlisted} />
+          <SiteIcon name="heart" size={14} solid={wishlisted} />
         </button>
       </div>
 
       <div
         className={cn(
           'flex flex-1 flex-col',
-          spotlight ? 'justify-center gap-3 p-6 sm:p-8 lg:p-10' : 'gap-2 p-4'
+          spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1.5 p-3 sm:gap-2 sm:p-4'
         )}
       >
         <Link
           to={`/product/${product.slug}`}
           className={cn(
-            'font-display font-semibold leading-snug transition hover:text-[var(--brand-text)]',
-            spotlight ? 'text-2xl sm:text-3xl' : 'text-base'
+            'font-display font-semibold leading-snug text-[var(--fg)] transition duration-200 hover:text-[var(--brand-text)]',
+            spotlight ? 'text-lg sm:text-xl lg:text-2xl' : 'line-clamp-2 text-[0.9375rem] leading-snug sm:text-base'
           )}
         >
           {product.name}
         </Link>
         {spotlight && product.shortDescription ? (
-          <p className="max-w-md text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+          <p className="line-clamp-2 max-w-md text-sm font-medium leading-relaxed text-[var(--fg-muted)]">
             {product.shortDescription}
           </p>
         ) : null}
-        <RatingStars rating={product.averageRating} count={product.reviewCount} size={spotlight ? 'md' : 'sm'} />
+        <div className={spotlight ? undefined : 'hidden sm:block'}>
+          <RatingStars
+            rating={product.averageRating}
+            count={product.reviewCount}
+            size={spotlight ? 'md' : 'sm'}
+          />
+        </div>
         <Price
           price={product.price}
           compareAt={product.compareAtPrice}
-          className={spotlight ? '[&>span:first-child]:text-2xl' : undefined}
+          showDiscountBadge={spotlight}
+          className={
+            spotlight
+              ? '[&>span:first-child]:text-xl sm:[&>span:first-child]:text-2xl'
+              : '[&>span:first-child]:text-base sm:[&>span:first-child]:text-lg'
+          }
         />
-        <div className={cn('flex items-center gap-2', spotlight ? 'mt-4' : 'mt-auto pt-2')}>
+        <div className={cn('flex items-center gap-2', spotlight ? 'mt-2' : 'mt-auto pt-2')}>
           <Button
-            size={spotlight ? 'lg' : 'sm'}
-            className="flex-1 rounded-full"
+            size="sm"
+            className={cn(
+              'rounded-full',
+              spotlight
+                ? 'h-9 px-4 text-sm sm:h-10 sm:px-5'
+                : 'h-8 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm'
+            )}
             onClick={onAddCart}
             disabled={product.stock <= 0}
           >
-            <SiteIcon name="cart" size={16} />
+            <SiteIcon name="cart" size={14} />
             {spotlight ? t('common.addToCart') : t('common.add')}
           </Button>
         </div>

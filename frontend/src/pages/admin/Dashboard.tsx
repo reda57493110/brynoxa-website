@@ -129,7 +129,9 @@ export function Dashboard() {
                   <span className="hidden truncate text-[var(--fg-muted)] sm:block">
                     {user?.name || '—'}
                   </span>
-                  <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+                  <Badge variant={orderStatusVariant(o.orderStatus)}>
+                    {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+                  </Badge>
                   <span className="font-medium">{formatCurrency(o.pricing.total)}</span>
                 </Link>
               )

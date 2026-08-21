@@ -11,12 +11,23 @@ import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 
+function resolvePostLoginPath(role: string, from?: string) {
+  if (role === 'admin') {
+    if (from?.startsWith('/admin')) return from
+    return '/admin'
+  }
+  if (from && from !== '/login' && from !== '/register' && !from.startsWith('/admin')) {
+    return from
+  }
+  return '/'
+}
+
 export function Login() {
   const t = useT()
   usePageTitle(t('auth.titleSignIn'))
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from || '/account'
+  const from = (location.state as { from?: string } | null)?.from
   const setAuth = useAuthStore((s) => s.setAuth)
   const localIds = useWishlistStore((s) => s.ids)
   const setFromServer = useWishlistStore((s) => s.setFromServer)
@@ -24,35 +35,49 @@ export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState('')
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setFormError('')
+
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      setFormError(t('auth.emailInvalid'))
+      return
+    }
+    if (!password) {
+      setFormError(t('auth.passwordRequired'))
+      return
+    }
+
     setLoading(true)
     try {
-      const res = await authApi.login({ email, password })
-      setAuth(res.data.data.user, res.data.data.accessToken)
-      try {
-        if (localIds.length) {
-          setFromServer((await wishlistApi.sync(localIds)).data.data)
-        } else {
-          setFromServer((await wishlistApi.list()).data.data)
-        }
-      } catch {
-        /* ignore */
+      const res = await authApi.login({ email: trimmedEmail, password })
+      const payload = res.data?.data
+      if (!payload?.user || !payload.accessToken) {
+        throw new Error(t('auth.loginFailed'))
       }
+
+      setAuth(payload.user, payload.accessToken)
       toast.success(t('auth.welcomeBack'))
-      const user = res.data.data.user
-      const dest =
-        user.role === 'admin'
-          ? from.startsWith('/admin')
-            ? from
-            : '/admin'
-          : from.startsWith('/admin')
-            ? '/account'
-            : from
-      navigate(dest, { replace: true })
+      navigate(resolvePostLoginPath(payload.user.role, from), { replace: true })
+
+      void (async () => {
+        try {
+          if (localIds.length) {
+            setFromServer((await wishlistApi.sync(localIds)).data.data)
+          } else {
+            setFromServer((await wishlistApi.list()).data.data)
+          }
+        } catch {
+          /* ignore */
+        }
+      })()
     } catch (err) {
-      toast.error(getErrorMessage(err, t('auth.loginFailed')))
+      const message = getErrorMessage(err, t('auth.loginFailed'))
+      setFormError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -63,23 +88,39 @@ export function Login() {
       <p className="kicker">{t('auth.kicker')}</p>
       <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.signInTitle')}</h1>
       <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.signInBody')}</p>
-      <form className="mt-6 space-y-4" onSubmit={onSubmit}>
+      <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
         <Input
           label={t('ui.email')}
+          name="email"
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (formError) setFormError('')
+          }}
           required
           autoComplete="email"
         />
         <Input
           label={t('ui.password')}
+          name="password"
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value)
+            if (formError) setFormError('')
+          }}
           required
           autoComplete="current-password"
         />
+        {formError ? (
+          <p
+            className="rounded-xl border border-[var(--danger)]/40 bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] px-3.5 py-2.5 text-sm text-[var(--danger)]"
+            role="alert"
+          >
+            {formError}
+          </p>
+        ) : null}
         <Button type="submit" className="w-full rounded-full" loading={loading}>
           {t('common.signIn')}
         </Button>

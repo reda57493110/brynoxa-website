@@ -23,6 +23,8 @@ export interface IUser extends Document {
   addresses: IAddress[];
   avatar?: string;
   isActive: boolean;
+  /** Checkout without password — cannot sign in until they set one */
+  isGuest: boolean;
   refreshToken?: string;
   comparePassword(candidate: string): Promise<boolean>;
   createdAt: Date;
@@ -55,6 +57,7 @@ const userSchema = new Schema<IUser>(
     addresses: [addressSchema],
     avatar: { type: String },
     isActive: { type: Boolean, default: true },
+    isGuest: { type: Boolean, default: false },
     refreshToken: { type: String, select: false },
   },
   { timestamps: true }

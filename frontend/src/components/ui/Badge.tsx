@@ -5,7 +5,7 @@ export type BadgeVariant = 'default' | 'brand' | 'success' | 'warning' | 'danger
 
 const styles: Record<BadgeVariant, string> = {
   default: 'bg-[var(--bg-muted)] text-[var(--fg)]',
-  brand: 'bg-[color-mix(in_srgb,var(--brand)_18%,transparent)] text-[var(--brand-text)]',
+  brand: 'bg-[var(--bg-muted)] text-[var(--brand-text)]',
   success: 'bg-[color-mix(in_srgb,var(--success)_18%,transparent)] text-[var(--success)]',
   warning: 'bg-[color-mix(in_srgb,var(--warning)_18%,transparent)] text-[var(--warning)]',
   danger: 'bg-[color-mix(in_srgb,var(--danger)_18%,transparent)] text-[var(--danger)]',

@@ -8,18 +8,24 @@ export function SpecTable({ specs }: { specs: Record<string, string> }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-[1.35rem] border border-[var(--border)]">
+    <div className="overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)]">
       <table className="w-full text-sm">
         <tbody>
           {entries.map(([key, value], i) => (
             <tr
               key={key}
-              className={i % 2 === 0 ? 'bg-[var(--bg-elevated)]' : 'bg-[var(--bg-muted)]'}
+              className={
+                i % 2 === 0
+                  ? 'bg-[var(--bg-elevated)]'
+                  : 'bg-[color-mix(in_srgb,var(--bg-muted)_55%,var(--bg-elevated))]'
+              }
             >
-              <th className="w-2/5 px-4 py-3 text-left font-medium text-[var(--fg-muted)]">
+              <th className="w-[42%] px-4 py-3.5 text-start align-top font-medium text-[var(--fg-muted)]">
                 {key}
               </th>
-              <td className="px-4 py-3 text-[var(--fg)]">{value}</td>
+              <td className="px-4 py-3.5 align-top font-medium leading-relaxed text-[var(--fg)]">
+                {value}
+              </td>
             </tr>
           ))}
         </tbody>

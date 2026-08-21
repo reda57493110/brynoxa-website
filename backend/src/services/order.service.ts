@@ -5,7 +5,7 @@ import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { getSettings } from '../models/Settings';
 import { ApiError } from '../utils/ApiError';
-import { IAddress } from '../models/User';
+import { IAddress, User } from '../models/User';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -38,17 +38,17 @@ export async function validateCoupon(code: string, subtotal: number) {
   return { coupon, discount };
 }
 
-export async function createCodOrder(input: {
-  userId: string;
-  items: { productId: string; qty: number }[];
-  shippingAddress: IAddress;
-  couponCode?: string;
-  customerNote?: string;
-}) {
-  const settings = await getSettings();
-  if (!settings.codEnabled) throw new ApiError(400, 'Cash on delivery is disabled');
+async function buildOrderLines(items: { productId: string; qty: number }[]) {
+  if (!items.length) throw new ApiError(400, 'Add at least one product');
 
-  const productIds = input.items.map((i) => i.productId);
+  const merged = new Map<string, number>();
+  for (const item of items) {
+    const id = item.productId;
+    merged.set(id, (merged.get(id) || 0) + item.qty);
+  }
+  const uniqueItems = [...merged.entries()].map(([productId, qty]) => ({ productId, qty }));
+
+  const productIds = uniqueItems.map((i) => i.productId);
   const products = await Product.find({ _id: { $in: productIds }, isActive: true });
   if (products.length !== productIds.length) {
     throw new ApiError(400, 'One or more products are unavailable');
@@ -56,7 +56,7 @@ export async function createCodOrder(input: {
 
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
   let subtotal = 0;
-  const orderItems = input.items.map((item) => {
+  const orderItems = uniqueItems.map((item) => {
     const product = productMap.get(item.productId);
     if (!product) throw new ApiError(400, 'Product not found');
     if (product.stock < item.qty) {
@@ -74,25 +74,54 @@ export async function createCodOrder(input: {
     };
   });
 
+  return { orderItems, subtotal };
+}
+
+async function priceOrder(subtotal: number, couponCode?: string) {
+  const settings = await getSettings();
   let discount = 0;
   let couponMeta: { code: string; couponId: Types.ObjectId } | undefined;
-  if (input.couponCode) {
-    const { coupon, discount: d } = await validateCoupon(input.couponCode, subtotal);
-    discount = d;
-    couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
+
+  if (couponCode) {
+    try {
+      const { coupon, discount: d } = await validateCoupon(couponCode, subtotal);
+      discount = d;
+      couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
+    } catch {
+      couponMeta = undefined;
+      discount = 0;
+    }
   }
 
-  const shipping =
-    subtotal - discount >= settings.freeShippingMin ? 0 : settings.shippingFlatRate;
+  const shipping = 0;
   const taxable = Math.max(subtotal - discount, 0);
   const tax = (taxable * settings.taxRate) / 100;
   const total = taxable + shipping + tax;
+
+  return {
+    pricing: { subtotal, discount, shipping, tax, total },
+    couponMeta,
+  };
+}
+
+export async function createCodOrder(input: {
+  userId: string;
+  items: { productId: string; qty: number }[];
+  shippingAddress: IAddress;
+  couponCode?: string;
+  customerNote?: string;
+}) {
+  const settings = await getSettings();
+  if (!settings.codEnabled) throw new ApiError(400, 'Cash on delivery is disabled');
+
+  const { orderItems, subtotal } = await buildOrderLines(input.items);
+  const { pricing, couponMeta } = await priceOrder(subtotal, input.couponCode);
 
   const order = await Order.create({
     orderNumber: generateOrderNumber(),
     user: input.userId,
     items: orderItems,
-    pricing: { subtotal, discount, shipping, tax, total },
+    pricing,
     coupon: couponMeta,
     shippingAddress: input.shippingAddress,
     paymentMethod: 'cod',
@@ -114,6 +143,61 @@ export async function createCodOrder(input: {
     message: `Your order ${order.orderNumber} has been placed. Pay cash on delivery.`,
     link: `/account/orders/${order.orderNumber}`,
   });
+
+  return order;
+}
+
+/** Guest confirmation: order number + email must match the account that placed it */
+export async function getGuestOrderReceipt(orderNumber: string, email: string) {
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
+  if (!user) throw new ApiError(404, 'Order not found');
+  const order = await Order.findOne({ orderNumber, user: user._id });
+  if (!order) throw new ApiError(404, 'Order not found');
+  return order;
+}
+
+export async function updateUserOrderItems(
+  userId: string,
+  orderNumber: string,
+  items: { productId: string; qty: number }[]
+) {
+  const order = await Order.findOne({ orderNumber, user: userId });
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (order.orderStatus !== 'pending') {
+    throw new ApiError(400, 'Only pending orders can be edited');
+  }
+  if (order.stockReserved) {
+    throw new ApiError(400, 'This order can no longer be edited');
+  }
+
+  const previousCouponCode = order.coupon?.code;
+  const previousCouponId = order.coupon?.couponId;
+  const { orderItems, subtotal } = await buildOrderLines(items);
+  const { pricing, couponMeta } = await priceOrder(subtotal, previousCouponCode);
+
+  if (previousCouponId && !couponMeta) {
+    await Coupon.updateOne(
+      { _id: previousCouponId, usedCount: { $gt: 0 } },
+      { $inc: { usedCount: -1 } }
+    );
+  }
+  if (!previousCouponId && couponMeta) {
+    await Coupon.findByIdAndUpdate(couponMeta.couponId, { $inc: { usedCount: 1 } });
+  }
+
+  order.items = orderItems;
+  order.pricing = pricing;
+  if (couponMeta) {
+    order.coupon = couponMeta;
+  } else {
+    order.set('coupon', undefined);
+  }
+  order.timeline.push({
+    status: 'pending',
+    note: 'Customer updated order items',
+    at: new Date(),
+  });
+  await order.save();
 
   return order;
 }

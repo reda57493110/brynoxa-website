@@ -14,14 +14,25 @@ interface ToastState {
   dismiss: (id: string) => void
 }
 
+function createToastId() {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID()
+    }
+  } catch {
+    /* insecure context (e.g. http://192.168.x.x) */
+  }
+  return `toast-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   push: (message, type = 'info') => {
-    const id = crypto.randomUUID()
+    const id = createToastId()
     set((state) => ({ toasts: [...state.toasts, { id, message, type }] }))
     window.setTimeout(() => {
       set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) }))
-    }, 3800)
+    }, 2800)
   },
   dismiss: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 }))

@@ -36,7 +36,10 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
     const header = req.headers.authorization;
     if (header?.startsWith('Bearer ')) {
       const payload = verifyAccessToken(header.slice(7));
-      req.user = { userId: payload.userId, role: payload.role };
+      const user = await User.findById(payload.userId);
+      if (user && user.isActive && !user.isGuest) {
+        req.user = { userId: user._id.toString(), role: user.role };
+      }
     }
   } catch {
     // ignore

@@ -27,7 +27,9 @@ export function OrderDetail() {
 
   useEffect(() => {
     if (order.data) {
-      setStatus(order.data.orderStatus)
+      const next =
+        order.data.orderStatus === 'processing' ? 'confirmed' : order.data.orderStatus
+      setStatus(next)
       setNote(order.data.adminNote || '')
     }
   }, [order.data])
@@ -69,7 +71,9 @@ export function OrderDetail() {
         </Link>
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-semibold">#{o.orderNumber}</h1>
-          <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+          <Badge variant={orderStatusVariant(o.orderStatus)}>
+            {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+          </Badge>
         </div>
         <p className="mt-1 text-sm text-[var(--fg-muted)]">
           {user?.name} · {user?.email} · {user?.phone || 'no phone'} · COD
@@ -120,10 +124,12 @@ export function OrderDetail() {
                 <dd>-{formatCurrency(o.pricing.discount)}</dd>
               </div>
             ) : null}
-            <div className="flex justify-between text-[var(--fg-muted)]">
-              <dt>Shipping</dt>
-              <dd>{formatCurrency(o.pricing.shipping)}</dd>
-            </div>
+            {o.pricing.shipping > 0 ? (
+              <div className="flex justify-between text-[var(--fg-muted)]">
+                <dt>Shipping</dt>
+                <dd>{formatCurrency(o.pricing.shipping)}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between font-semibold">
               <dt>Total COD</dt>
               <dd>{formatCurrency(o.pricing.total)}</dd>

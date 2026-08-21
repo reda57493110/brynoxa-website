@@ -24,7 +24,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--brand-text)]">
         <SiteIcon name={icon} size={22} />
       </div>
       <h3 className="font-display text-lg font-semibold">{title}</h3>

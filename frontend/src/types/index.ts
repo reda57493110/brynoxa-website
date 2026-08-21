@@ -35,6 +35,7 @@ export interface User {
   addresses: Address[]
   avatar?: string
   isActive: boolean
+  isGuest?: boolean
   createdAt?: string
   updatedAt?: string
 }
@@ -178,6 +179,14 @@ export interface CreateOrderPayload {
   shippingAddress: Omit<Address, '_id' | 'isDefault'> & { isDefault?: boolean }
   couponCode?: string
   customerNote?: string
+  email?: string
+  password?: string
+}
+
+export interface CreateOrderResult {
+  order: Order
+  user?: User
+  accessToken?: string
 }
 
 export interface Review {

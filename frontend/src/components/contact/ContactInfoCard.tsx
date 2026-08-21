@@ -16,7 +16,7 @@ export function ContactInfoCard({
 }) {
   const inner = (
     <span className="relative flex items-start gap-4">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand)]">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--bg-muted)] text-[var(--brand-text)]">
         {icon}
       </span>
       <span className="min-w-0 pt-0.5">
@@ -39,7 +39,7 @@ export function ContactInfoCard({
 
   const glow = (
     <span
-      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,color-mix(in_srgb,var(--brand)_14%,transparent),transparent_55%)]"
+      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,color-mix(in_srgb,var(--bg-muted)_90%,transparent),transparent_55%)]"
       aria-hidden="true"
     />
   )

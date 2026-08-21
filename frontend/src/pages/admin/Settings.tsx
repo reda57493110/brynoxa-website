@@ -27,8 +27,8 @@ export function Settings() {
   const [form, setForm] = useState({
     storeName: 'Brynoxa',
     currency: 'MAD',
-    shippingFlatRate: 150,
-    freeShippingMin: 2000,
+    shippingFlatRate: 0,
+    freeShippingMin: 0,
     taxRate: 0,
     supportEmail: 'support@brynoxa.com',
     codEnabled: true,

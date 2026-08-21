@@ -90,14 +90,7 @@ export function AppRouter() {
         <Route path="product/:slug" element={<S><ProductDetail /></S>} />
         <Route path="search" element={<S><Search /></S>} />
         <Route path="cart" element={<S><Cart /></S>} />
-        <Route
-          path="checkout"
-          element={
-            <ProtectedRoute>
-              <S><Checkout /></S>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="checkout" element={<S><Checkout /></S>} />
         <Route path="wishlist" element={<S><Wishlist /></S>} />
         <Route path="contact" element={<S><Contact /></S>} />
         <Route path="services" element={<S><Services /></S>} />
@@ -141,14 +134,7 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="order-confirmation/:orderNumber"
-          element={
-            <ProtectedRoute>
-              <S><OrderConfirmation /></S>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="order-confirmation/:orderNumber" element={<S><OrderConfirmation /></S>} />
       </Route>
 
       <Route element={<AuthLayout />}>
