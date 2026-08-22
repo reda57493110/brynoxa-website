@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Product } from '@/types'
@@ -43,7 +42,6 @@ export function ProductCard({
   const t = useT()
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
-  const [imgLoaded, setImgLoaded] = useState(false)
 
   const onAddCart = () => {
     if (product.stock <= 0) {
@@ -103,11 +101,7 @@ export function ProductCard({
             referrerPolicy="no-referrer"
             decoding="async"
             loading={spotlight ? 'eager' : 'lazy'}
-            onLoad={() => setImgLoaded(true)}
-            className={cn(
-              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]',
-              imgLoaded ? 'opacity-100' : 'opacity-0'
-            )}
+            className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
           />
         </Link>
         <div className="pointer-events-none absolute start-2 top-2 z-10 flex max-w-[calc(100%-3rem)] flex-wrap gap-1 sm:start-3 sm:top-3 sm:max-w-none sm:gap-2">

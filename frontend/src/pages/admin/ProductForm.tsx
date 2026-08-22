@@ -157,9 +157,9 @@ export function ProductForm() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">
+    <div className="mx-auto w-full max-w-3xl min-w-0 space-y-4 sm:space-y-6">
+      <div className="min-w-0">
+        <h1 className="font-display text-lg font-semibold sm:text-2xl">
           {isEdit ? 'Edit product' : 'New product'}
         </h1>
         <Link to="/admin/products" className="text-sm text-[var(--brand-text)]">
@@ -168,7 +168,7 @@ export function ProductForm() {
       </div>
 
       <form
-        className="grid gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6 sm:grid-cols-2"
+        className="grid min-w-0 gap-4 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:grid-cols-2 sm:rounded-2xl sm:p-6"
         onSubmit={(e) => {
           e.preventDefault()
           if (!form.name.trim() || form.name.trim().length < 2) {

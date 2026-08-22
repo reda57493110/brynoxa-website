@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useRef, type PointerEvent } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
@@ -6,13 +6,14 @@ import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 
-const DRAG_THRESHOLD = 10
+const DRAG_THRESHOLD = 8
+const AUTO_SPEED = 0.45
 
 function wrapOffset(value: number, half: number) {
   if (half <= 0) return value
-  let next = value
-  while (next <= -half) next += half
-  while (next > 0) next -= half
+  let next = value % half
+  if (next > 0) next -= half
+  if (next <= -half) next += half
   return next
 }
 
@@ -23,42 +24,67 @@ export function ProductCarousel({ products }: { products: Product[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const offsetRef = useRef(0)
   const halfRef = useRef(0)
-  const pausedRef = useRef(false)
+  const hoveringRef = useRef(false)
   const draggingRef = useRef(false)
   const movedRef = useRef(false)
   const pointerIdRef = useRef<number | null>(null)
   const startXRef = useRef(0)
   const startOffsetRef = useRef(0)
-  const [dragging, setDragging] = useState(false)
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const moving = !reduceMotion && products.length > 1
   const loop = products.length > 1 ? [...products, ...products] : products
 
+  const paint = (value: number) => {
+    const next = wrapOffset(value, halfRef.current)
+    offsetRef.current = next
+    const el = trackRef.current
+    if (el) el.style.transform = `translate3d(${next}px,0,0)`
+  }
+
+  const clearResumeTimer = () => {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current)
+      resumeTimerRef.current = null
+    }
+  }
+
   useEffect(() => {
     const track = trackRef.current
     if (!track) return
+
     const measure = () => {
       halfRef.current = products.length > 1 ? track.scrollWidth / 2 : 0
+      paint(offsetRef.current)
     }
+
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(track)
-    return () => ro.disconnect()
-  }, [products.length, loop.length, locale])
+
+    // Re-measure after images settle (card widths can change)
+    const imgs = track.querySelectorAll('img')
+    imgs.forEach((img) => {
+      if (!img.complete) img.addEventListener('load', measure, { once: true })
+    })
+
+    return () => {
+      ro.disconnect()
+      imgs.forEach((img) => img.removeEventListener('load', measure))
+    }
+  }, [products, loop.length, locale])
 
   useEffect(() => {
     offsetRef.current = 0
-    trackRef.current?.style.setProperty('transform', 'translate3d(0px,0,0)')
+    paint(0)
   }, [locale])
 
   useEffect(() => {
     if (!moving) return
     let frame = 0
-    const speed = 0.55
     const tick = () => {
-      if (!pausedRef.current && !draggingRef.current) {
-        offsetRef.current = wrapOffset(offsetRef.current - speed, halfRef.current)
-        trackRef.current?.style.setProperty('transform', `translate3d(${offsetRef.current}px,0,0)`)
+      if (!hoveringRef.current && !draggingRef.current) {
+        paint(offsetRef.current - AUTO_SPEED)
       }
       frame = requestAnimationFrame(tick)
     }
@@ -66,24 +92,35 @@ export function ProductCarousel({ products }: { products: Product[] }) {
     return () => cancelAnimationFrame(frame)
   }, [moving])
 
-  const applyOffset = (value: number) => {
-    offsetRef.current = wrapOffset(value, halfRef.current)
-    trackRef.current?.style.setProperty('transform', `translate3d(${offsetRef.current}px,0,0)`)
-  }
+  useEffect(() => () => clearResumeTimer(), [])
 
   const endPointer = (event: PointerEvent<HTMLDivElement>) => {
     if (pointerIdRef.current !== event.pointerId) return
     pointerIdRef.current = null
     draggingRef.current = false
-    setDragging(false)
+    trackRef.current?.classList.remove('cursor-grabbing')
+    trackRef.current?.classList.add('cursor-grab')
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    // Touch has no reliable hover — resume autoplay shortly after drag
+    if (event.pointerType !== 'mouse') {
+      clearResumeTimer()
+      resumeTimerRef.current = setTimeout(() => {
+        hoveringRef.current = false
+      }, 400)
+    } else if (!hoveringRef.current) {
+      // mouse already left during drag
+      hoveringRef.current = false
     }
   }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (products.length < 2) return
     if (event.pointerType === 'mouse' && event.button !== 0) return
+    clearResumeTimer()
     pointerIdRef.current = event.pointerId
     draggingRef.current = false
     movedRef.current = false
@@ -94,19 +131,22 @@ export function ProductCarousel({ products }: { products: Product[] }) {
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (pointerIdRef.current !== event.pointerId) return
     const dx = event.clientX - startXRef.current
+
     if (!draggingRef.current) {
       if (Math.abs(dx) < DRAG_THRESHOLD) return
       draggingRef.current = true
       movedRef.current = true
-      pausedRef.current = true
-      setDragging(true)
-      event.currentTarget.setPointerCapture(event.pointerId)
+      trackRef.current?.classList.add('cursor-grabbing')
+      trackRef.current?.classList.remove('cursor-grab')
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId)
+      } catch {
+        /* ignore */
+      }
     }
-    applyOffset(startOffsetRef.current + dx)
-  }
 
-  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    endPointer(event)
+    event.preventDefault()
+    paint(startOffsetRef.current + dx)
   }
 
   return (
@@ -114,25 +154,28 @@ export function ProductCarousel({ products }: { products: Product[] }) {
       dir="ltr"
       className="relative overflow-hidden py-1"
       onMouseEnter={() => {
-        pausedRef.current = true
+        hoveringRef.current = true
       }}
       onMouseLeave={() => {
-        pausedRef.current = false
+        hoveringRef.current = false
+        if (!draggingRef.current) return
+        // If mouse leaves while still holding, keep drag until pointerup on window
       }}
     >
       <div
         ref={trackRef}
         dir="ltr"
         className={cn(
-          'flex w-max flex-row gap-4 select-none touch-pan-y',
-          dragging ? 'cursor-grabbing' : 'cursor-grab'
+          'flex w-max cursor-grab flex-row gap-4 select-none',
+          'touch-pan-y will-change-transform'
         )}
+        style={{ transform: 'translate3d(0px,0,0)' }}
         role="region"
         aria-roledescription="carousel"
         aria-label={t('home.featuredProducts')}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        onPointerUp={endPointer}
         onPointerCancel={endPointer}
         onClickCapture={(event) => {
           if (!movedRef.current) return

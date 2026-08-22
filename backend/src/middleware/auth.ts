@@ -3,6 +3,7 @@ import { AuthRequest } from '../types/express';
 import { verifyAccessToken } from '../utils/tokens';
 import { ApiError } from '../utils/ApiError';
 import { User } from '../models/User';
+import { hasPermission, isStaffRole, type Permission } from '../permissions';
 
 export async function requireAuth(req: AuthRequest, _res: Response, next: NextFunction) {
   try {
@@ -24,11 +25,30 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
   }
 }
 
-export function requireAdmin(req: AuthRequest, _res: Response, next: NextFunction) {
-  if (!req.user || req.user.role !== 'admin') {
-    return next(new ApiError(403, 'Admin access required'));
+/** Any staff role (not storefront customer). */
+export function requireStaff(req: AuthRequest, _res: Response, next: NextFunction) {
+  if (!req.user || !isStaffRole(req.user.role)) {
+    return next(new ApiError(403, 'Staff access required'));
   }
   next();
+}
+
+/** @deprecated use requireStaff — kept for older imports */
+export function requireAdmin(req: AuthRequest, _res: Response, next: NextFunction) {
+  return requireStaff(req, _res, next);
+}
+
+export function requirePermission(...permissions: Permission[]) {
+  return (req: AuthRequest, _res: Response, next: NextFunction) => {
+    if (!req.user || !isStaffRole(req.user.role)) {
+      return next(new ApiError(403, 'Staff access required'));
+    }
+    const ok = permissions.some((p) => hasPermission(req.user!.role, p));
+    if (!ok) {
+      return next(new ApiError(403, 'You do not have permission for this action'));
+    }
+    next();
+  };
 }
 
 export async function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {

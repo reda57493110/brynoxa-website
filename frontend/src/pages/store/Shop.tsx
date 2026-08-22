@@ -14,9 +14,12 @@ import { Drawer } from '@/components/ui/Drawer'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
 export function Shop() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
 
@@ -99,6 +102,24 @@ export function Shop() {
   )
   const brandList = brands.data ?? []
   const activeCategory = categoryList.find((c) => c.slug === filters.category)
+  const activeCategoryName = activeCategory
+    ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name)
+    : undefined
+  const activeCategoryDescription = activeCategory
+    ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description)
+    : undefined
+
+  useEffect(() => {
+    const previous = document.title
+    document.title = activeCategoryName
+      ? `${activeCategoryName} — ${t('shop.title')} · Brynoxa`
+      : filters.q
+        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
+        : `${t('shop.title')} — Brynoxa`
+    return () => {
+      document.title = previous
+    }
+  }, [activeCategoryName, filters.q, t])
   const activeBrand = brandList.find((b) => b.slug === filters.brand)
   const total = products.data?.meta?.total ?? 0
   const pages = products.data?.meta?.pages || 1
@@ -111,18 +132,6 @@ export function Shop() {
     filters.maxPrice,
     filters.inStock,
   ].filter(Boolean).length
-
-  useEffect(() => {
-    const previous = document.title
-    document.title = activeCategory
-      ? `${activeCategory.name} — ${t('shop.title')} · Brynoxa`
-      : filters.q
-        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
-        : `${t('shop.title')} — Brynoxa`
-    return () => {
-      document.title = previous
-    }
-  }, [activeCategory, filters.q, t])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -163,16 +172,16 @@ export function Shop() {
             id="shop-heading"
             className="mt-2 max-w-3xl font-display text-3xl font-semibold tracking-tight text-balance sm:mt-3 sm:text-5xl md:text-[3.25rem]"
           >
-            {activeCategory?.name ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
+            {activeCategoryName ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-lg">
             {filters.q ? (
               <>
                 {t('shop.resultsFor', { q: filters.q })}
-                {activeCategory ? t('shop.resultsIn', { name: activeCategory.name }) : null}
+                {activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : null}
               </>
-            ) : activeCategory?.description ? (
-              activeCategory.description
+            ) : activeCategoryDescription ? (
+              activeCategoryDescription
             ) : (
               t('shop.body')
             )}
@@ -218,7 +227,7 @@ export function Shop() {
                 update({ category: filters.category === c.slug ? undefined : c.slug })
               }
             >
-              {c.name}
+              {categoryDisplayName(locale, c.slug, c.name)}
             </button>
           ))}
         </div>
@@ -281,7 +290,7 @@ export function Shop() {
             ) : null}
             {activeCategory ? (
               <ActiveChip
-                label={activeCategory.name}
+                label={activeCategoryName!}
                 onRemove={() => update({ category: undefined })}
               />
             ) : null}

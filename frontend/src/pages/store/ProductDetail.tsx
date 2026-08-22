@@ -27,6 +27,8 @@ import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product, Review, User } from '@/types'
 
 function primaryImage(product: Product) {
@@ -35,6 +37,8 @@ function primaryImage(product: Product) {
 
 export function ProductDetail() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
+  const reduceMotion = useReducedMotion()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -82,6 +86,15 @@ export function ProductDetail() {
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
+  const fade = (delay = 0) =>
+    reduceMotion
+      ? { initial: false as const, animate: { opacity: 1 } }
+      : {
+          initial: { opacity: 0, y: 14 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] as const },
+        }
+
   if (product.isLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -106,6 +119,9 @@ export function ProductDetail() {
   const p = product.data
   const category = typeof p.category === 'object' ? (p.category as Category) : null
   const brand = typeof p.brand === 'object' ? (p.brand as Brand) : null
+  const categoryName = category
+    ? categoryDisplayName(locale, category.slug, category.name)
+    : null
   const wishlisted = isWish(p._id)
 
   const onAddCart = () => {
@@ -146,16 +162,6 @@ export function ProductDetail() {
     { icon: 'shield' as const, label: t('home.proofWarranty') },
   ]
 
-  const reduceMotion = useReducedMotion()
-  const fade = (delay = 0) =>
-    reduceMotion
-      ? { initial: false as const, animate: { opacity: 1 } }
-      : {
-          initial: { opacity: 0, y: 14 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] as const },
-        }
-
   return (
     <>
       <Container className="pb-28 pt-4 sm:py-10 lg:pb-10">
@@ -170,7 +176,7 @@ export function ProductDetail() {
             <>
               <span aria-hidden="true">/</span>
               <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
-                {category.name}
+                {categoryName}
               </Link>
             </>
           ) : null}
@@ -189,7 +195,7 @@ export function ProductDetail() {
               {brand && category ? <span>·</span> : null}
               {category ? (
                 <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
-                  {category.name}
+                  {categoryName}
                 </Link>
               ) : null}
             </div>

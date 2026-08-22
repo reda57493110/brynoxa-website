@@ -617,6 +617,42 @@ export const en = {
       },
     ],
   },
+  catalog: {
+    categories: {
+      laptops: {
+        name: 'Laptops',
+        description: 'Portable power for work, study, and play.',
+      },
+      'gaming-pcs': {
+        name: 'Gaming PCs',
+        description: 'Desktops built for high frame rates and heavy loads.',
+      },
+      monitors: {
+        name: 'Monitors',
+        description: 'Sharp displays for gaming, design, and everyday use.',
+      },
+      keyboards: {
+        name: 'Keyboards',
+        description: 'Mechanical and wireless boards for speed and comfort.',
+      },
+      mice: {
+        name: 'Mice',
+        description: 'Precise mice for gaming and productivity.',
+      },
+      headphones: {
+        name: 'Headphones',
+        description: 'Headsets and audio for immersion and calls.',
+      },
+      components: {
+        name: 'Components',
+        description: 'GPUs, parts, and upgrades for your build.',
+      },
+      accessories: {
+        name: 'Accessories',
+        description: 'Docks, hubs, and everyday tech extras.',
+      },
+    },
+  },
 } as const
 
 type DeepString<T> = T extends string

@@ -1,6 +1,7 @@
 import { Request } from 'express';
+import type { AppRole } from '../permissions';
 
-export type UserRole = 'customer' | 'admin';
+export type UserRole = AppRole;
 
 export interface AuthUser {
   userId: string;

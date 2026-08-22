@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayName } from '@/i18n'
 
 export interface FilterValues {
   category?: string
@@ -100,6 +102,7 @@ export function FilterSidebar({
   plain?: boolean
 }) {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const activeCount = [
     values.category,
     values.brand,
@@ -193,7 +196,7 @@ export function FilterSidebar({
             <OptionRow
               key={c._id}
               active={values.category === c.slug}
-              label={c.name}
+              label={categoryDisplayName(locale, c.slug, c.name)}
               onClick={() =>
                 onChange({
                   ...values,

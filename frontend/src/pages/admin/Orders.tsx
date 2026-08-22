@@ -47,19 +47,21 @@ export function Orders() {
     setParams(next)
   }
 
+  const items = orders.data?.items ?? []
+
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader
         title="Orders"
         description="Filter, search, and move COD orders through the pipeline."
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
         <button
           type="button"
           onClick={() => setFilter({ status: undefined })}
           className={cn(
-            'h-9 rounded-full border px-3 text-sm',
+            'h-8 shrink-0 rounded-full border px-2.5 text-xs whitespace-nowrap sm:h-9 sm:px-3 sm:text-sm',
             !status
               ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
               : 'border-[var(--border)]'
@@ -73,7 +75,7 @@ export function Orders() {
             type="button"
             onClick={() => setFilter({ status: s })}
             className={cn(
-              'h-9 rounded-full border px-3 text-sm capitalize',
+              'h-8 shrink-0 rounded-full border px-2.5 text-xs capitalize whitespace-nowrap sm:h-9 sm:px-3 sm:text-sm',
               status === s
                 ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
                 : 'border-[var(--border)]'
@@ -85,7 +87,7 @@ export function Orders() {
       </div>
 
       <form
-        className="max-w-sm"
+        className="w-full max-w-sm"
         onSubmit={(e) => {
           e.preventDefault()
           setFilter({ q: q || undefined })
@@ -104,8 +106,52 @@ export function Orders() {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-            <table className="w-full min-w-[760px] text-left text-sm">
+          <div className="space-y-2.5 md:hidden">
+            {items.map((o) => {
+              const user = o.user as User
+              return (
+                <Link
+                  key={o._id}
+                  to={`/admin/orders/${o._id}`}
+                  className="block min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 transition active:border-[var(--brand)]"
+                >
+                  <div className="flex min-w-0 items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <p className="truncate text-sm font-medium text-[var(--brand-text)]">
+                        #{o.orderNumber}
+                      </p>
+                      <p className="mt-0.5 truncate text-sm text-[var(--fg)]">
+                        {user?.name || '—'}
+                      </p>
+                      <p className="truncate text-[11px] text-[var(--fg-muted)]">{user?.email}</p>
+                    </div>
+                    <p className="shrink-0 text-sm font-semibold tabular-nums">
+                      {formatCurrency(o.pricing.total)}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+                    <Badge variant={orderStatusVariant(o.orderStatus)}>
+                      {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+                    </Badge>
+                    <span className="text-[11px] uppercase text-[var(--fg-muted)]">
+                      {o.paymentMethod} · {o.paymentStatus}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
+                    {formatDateTime(o.createdAt)}
+                  </p>
+                </Link>
+              )
+            })}
+            {!items.length ? (
+              <p className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-8 text-center text-sm text-[var(--fg-muted)]">
+                No orders found.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
                 <tr>
                   <th className="px-4 py-3">Order</th>
@@ -117,7 +163,7 @@ export function Orders() {
                 </tr>
               </thead>
               <tbody>
-                {orders.data?.items.map((o) => {
+                {items.map((o) => {
                   const user = o.user as User
                   return (
                     <tr key={o._id} className="border-t border-[var(--border)]">
@@ -129,9 +175,9 @@ export function Orders() {
                           #{o.orderNumber}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
-                        <p>{user?.name || '—'}</p>
-                        <p className="text-xs text-[var(--fg-muted)]">{user?.email}</p>
+                      <td className="max-w-[12rem] px-4 py-3">
+                        <p className="truncate">{user?.name || '—'}</p>
+                        <p className="truncate text-xs text-[var(--fg-muted)]">{user?.email}</p>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{formatDateTime(o.createdAt)}</td>
                       <td className="px-4 py-3">
@@ -142,7 +188,9 @@ export function Orders() {
                       <td className="px-4 py-3 uppercase text-[var(--fg-muted)]">
                         {o.paymentMethod} · {o.paymentStatus}
                       </td>
-                      <td className="px-4 py-3 font-medium">{formatCurrency(o.pricing.total)}</td>
+                      <td className="px-4 py-3 font-medium tabular-nums">
+                        {formatCurrency(o.pricing.total)}
+                      </td>
                     </tr>
                   )
                 })}

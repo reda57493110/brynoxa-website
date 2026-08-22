@@ -5,6 +5,7 @@ import { Container } from '@/components/ui/Container'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { authApi } from '@/api/authApi'
+import { isStaffRole, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -81,9 +82,9 @@ export function Account() {
           ))}
         </div>
 
-        {user?.role === 'admin' ? (
+        {isStaffRole(user?.role) ? (
           <Link
-            to="/admin"
+            to={staffHomePath(user?.role)}
             className="mt-6 inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm font-medium text-[var(--brand-text)] transition hover:border-[var(--brand)]"
           >
             <SiteIcon name="dashboard" size={16} />

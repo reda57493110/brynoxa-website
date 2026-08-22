@@ -53,13 +53,15 @@ export function Drawer({
           className
         )}
       >
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-4">
-          <h3 className="font-display text-lg font-semibold">{title}</h3>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('ui.close')}>
-            <SiteIcon name="close" size={16} />
-          </Button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">{children}</div>
+        {title ? (
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-4">
+            <h3 className="font-display text-lg font-semibold">{title}</h3>
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('ui.close')}>
+              <SiteIcon name="close" size={16} />
+            </Button>
+          </div>
+        ) : null}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">{children}</div>
       </aside>
     </div>,
     document.body

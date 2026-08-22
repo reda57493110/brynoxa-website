@@ -170,13 +170,17 @@ export function Inventory() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className={cn('min-w-0 space-y-4 sm:space-y-6', dirtyCount > 0 && 'pb-24 sm:pb-0')}>
       <AdminHeader
         title="Inventory"
         description="Adjust stock and low-stock alerts. Critical items sort to the top."
         actions={
           dirtyCount > 0 ? (
-            <Button loading={saveAll.isPending} onClick={() => saveAll.mutate()}>
+            <Button
+              className="hidden w-full sm:inline-flex sm:w-auto"
+              loading={saveAll.isPending}
+              onClick={() => saveAll.mutate()}
+            >
               Save all ({dirtyCount})
             </Button>
           ) : null
@@ -201,8 +205,8 @@ export function Inventory() {
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <div className="min-w-[14rem] flex-1">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <div className="min-w-0 flex-1 sm:min-w-[14rem]">
           <Input
             placeholder="Search name or SKU"
             value={q}
@@ -218,7 +222,7 @@ export function Inventory() {
             setCategory(e.target.value)
             setPage(1)
           }}
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm"
+          className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm sm:w-auto"
         >
           <option value="">All categories</option>
           {(cats.data as Category[] | undefined)?.map((c) => (
@@ -227,22 +231,24 @@ export function Inventory() {
             </option>
           ))}
         </select>
-        {filters.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFilter(f.id)}
-            className={cn(
-              'h-11 rounded-full border px-3 text-sm',
-              filter === f.id
-                ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-                : 'border-[var(--border)]'
-            )}
-          >
-            {f.label}
-          </button>
-        ))}
-        {dirtyCount > 0 ? <Badge variant="warning">{dirtyCount} unsaved</Badge> : null}
+        <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          {filters.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => setFilter(f.id)}
+              className={cn(
+                'h-11 shrink-0 rounded-full border px-3 text-sm whitespace-nowrap',
+                filter === f.id
+                  ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+                  : 'border-[var(--border)]'
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+          {dirtyCount > 0 ? <Badge variant="warning">{dirtyCount} unsaved</Badge> : null}
+        </div>
       </div>
 
       {products.isLoading ? (
@@ -264,7 +270,7 @@ export function Inventory() {
               <div
                 key={p._id}
                 className={cn(
-                  'rounded-2xl border bg-[var(--bg-elevated)] p-4 transition',
+                  'min-w-0 overflow-hidden rounded-xl border bg-[var(--bg-elevated)] p-3 transition sm:rounded-2xl sm:p-4',
                   status.variant === 'danger'
                     ? 'border-[color-mix(in_srgb,var(--danger)_45%,var(--border))]'
                     : status.variant === 'warning'
@@ -273,9 +279,9 @@ export function Inventory() {
                   changed && 'ring-1 ring-[var(--brand)]'
                 )}
               >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)]">
+                <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)] sm:h-14 sm:w-14 sm:rounded-xl">
                       {img ? (
                         <img
                           src={img}
@@ -289,32 +295,32 @@ export function Inventory() {
                         </div>
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <Link
                         to={`/admin/products/${p._id}/edit`}
-                        className="font-medium hover:text-[var(--brand-text)]"
+                        className="block truncate text-sm font-medium hover:text-[var(--brand-text)]"
                       >
                         {p.name}
                       </Link>
-                      <p className="text-xs text-[var(--fg-muted)]">
+                      <p className="truncate text-[11px] text-[var(--fg-muted)]">
                         {p.sku}
                         {cat ? ` · ${cat}` : ''}
                       </p>
-                      <div className="mt-1.5">
+                      <div className="mt-1">
                         <Badge variant={status.variant}>{status.label}</Badge>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-end gap-3">
-                    <div>
+                  <div className="flex min-w-0 flex-wrap items-end gap-2 sm:gap-3">
+                    <div className="min-w-0">
                       <p className="mb-1 text-xs font-medium text-[var(--fg-muted)]">Stock</p>
                       <div className="flex items-center gap-1">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-11 w-11 shrink-0 rounded-xl px-0"
+                          className="h-10 w-10 shrink-0 rounded-xl px-0 sm:h-11 sm:w-11"
                           onClick={() => bump(p, -1)}
                           aria-label="Decrease stock"
                         >
@@ -323,7 +329,7 @@ export function Inventory() {
                         <Input
                           type="number"
                           min={0}
-                          className="w-24 text-center"
+                          className="w-20 text-center sm:w-24"
                           value={stock}
                           onChange={(e) =>
                             setDraft(p, { stock: Math.max(0, Number(e.target.value) || 0) })
@@ -333,7 +339,7 @@ export function Inventory() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-11 w-11 shrink-0 rounded-xl px-0"
+                          className="h-10 w-10 shrink-0 rounded-xl px-0 sm:h-11 sm:w-11"
                           onClick={() => bump(p, 1)}
                           aria-label="Increase stock"
                         >
@@ -342,7 +348,7 @@ export function Inventory() {
                       </div>
                     </div>
 
-                    <div className="w-28">
+                    <div className="w-24 sm:w-28">
                       <Input
                         label="Low alert"
                         type="number"
@@ -418,6 +424,18 @@ export function Inventory() {
           />
         </div>
       )}
+
+      {dirtyCount > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+          <Button
+            className="h-11 w-full rounded-full"
+            loading={saveAll.isPending}
+            onClick={() => saveAll.mutate()}
+          >
+            Save all ({dirtyCount})
+          </Button>
+        </div>
+      ) : null}
     </div>
   )
 }

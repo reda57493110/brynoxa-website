@@ -136,6 +136,48 @@ export const setCustomerActive = asyncHandler(async (req: Request, res: Response
   sendSuccess(res, user, 'Customer updated');
 });
 
+export const users = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 20;
+  const q = typeof req.query.q === 'string' ? req.query.q : undefined;
+  const roleRaw = typeof req.query.role === 'string' ? req.query.role : 'staff';
+  const role =
+    roleRaw === 'staff' ||
+    roleRaw === 'all' ||
+    roleRaw === 'admin' ||
+    roleRaw === 'orders' ||
+    roleRaw === 'catalog' ||
+    roleRaw === 'support' ||
+    roleRaw === 'marketing'
+      ? roleRaw
+      : 'staff';
+  const result = await adminService.listUsers(page, limit, q, role);
+  sendPaginated(res, result.items, {
+    page: result.page,
+    limit: result.limit,
+    total: result.total,
+  });
+});
+
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const user = await adminService.createStaffUser({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    role: req.body.role,
+  });
+  sendSuccess(res, user, 'User created', 201);
+});
+
+export const setUserRole = asyncHandler(async (req: Request, res: Response) => {
+  const user = await adminService.setUserRole(
+    param(req, 'id'),
+    req.body.role,
+    req.user!.userId
+  );
+  sendSuccess(res, user, 'Role updated');
+});
+
 export const listMessages = asyncHandler(async (req: Request, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;

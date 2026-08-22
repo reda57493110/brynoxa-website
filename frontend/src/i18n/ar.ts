@@ -619,4 +619,40 @@ export const ar: Messages = {
       },
     ],
   },
+  catalog: {
+    categories: {
+      laptops: {
+        name: 'حواسيب محمولة',
+        description: 'أداء محمول للعمل والدراسة واللعب.',
+      },
+      'gaming-pcs': {
+        name: 'أجهزة ألعاب',
+        description: 'حواسيب مكتبية لمعدلات إطارات عالية وأحمال ثقيلة.',
+      },
+      monitors: {
+        name: 'شاشات',
+        description: 'شاشات واضحة للألعاب والتصميم والاستخدام اليومي.',
+      },
+      keyboards: {
+        name: 'لوحات مفاتيح',
+        description: 'ميكانيكية ولاسلكية للسرعة والراحة.',
+      },
+      mice: {
+        name: 'فأرات',
+        description: 'فأرات دقيقة للألعاب والإنتاجية.',
+      },
+      headphones: {
+        name: 'سماعات',
+        description: 'سماعات وصوت للانغماس والمكالمات.',
+      },
+      components: {
+        name: 'مكونات',
+        description: 'بطاقات رسوم وقطع وترقيات لجهازك.',
+      },
+      accessories: {
+        name: 'إكسسوارات',
+        description: 'محاور ومنافذ وإضافات تقنية يومية.',
+      },
+    },
+  },
 }

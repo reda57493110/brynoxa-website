@@ -10,10 +10,13 @@ import { PageHero } from '@/components/layout/PageHero'
 import { Spinner } from '@/components/ui/Spinner'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { cn } from '@/lib/cn'
 
 export function CategoryPage() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const category = useQuery({
@@ -31,7 +34,22 @@ export function CategoryPage() {
     queryFn: async () => (await categoriesApi.list()).data.data,
   })
 
-  usePageTitle(category.data ? `${category.data.name} — ${t('shop.title')} · Brynoxa` : `${t('shop.title')} — Brynoxa`)
+  const displayName = category.data
+    ? categoryDisplayName(locale, category.data.slug, category.data.name)
+    : ''
+  const displayDescription = category.data
+    ? categoryDisplayDescription(
+        locale,
+        category.data.slug,
+        category.data.description
+      ) || t('shop.categoryFallback')
+    : ''
+
+  usePageTitle(
+    category.data
+      ? `${displayName} — ${t('shop.title')} · Brynoxa`
+      : `${t('shop.title')} — Brynoxa`
+  )
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -73,8 +91,8 @@ export function CategoryPage() {
     <>
       <PageHero
         kicker={t('shop.categoryKicker')}
-        title={category.data.name}
-        description={category.data.description || t('shop.categoryFallback')}
+        title={displayName}
+        description={displayDescription}
       />
       <Container className="py-8 sm:py-10">
         <div
@@ -88,7 +106,7 @@ export function CategoryPage() {
             .filter((c) => c.slug !== 'office' && c.slug !== 'networking')
             .map((c) => (
             <Link key={c._id} to={`/category/${c.slug}`} className={chip(c.slug === slug)}>
-              {c.name}
+              {categoryDisplayName(locale, c.slug, c.name)}
             </Link>
           ))}
         </div>

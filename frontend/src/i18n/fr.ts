@@ -622,4 +622,40 @@ export const fr: Messages = {
       },
     ],
   },
+  catalog: {
+    categories: {
+      laptops: {
+        name: 'Portables',
+        description: 'Puissance nomade pour le travail, les études et le jeu.',
+      },
+      'gaming-pcs': {
+        name: 'PC gaming',
+        description: 'Desktops conçus pour de hauts framerates et de lourdes charges.',
+      },
+      monitors: {
+        name: 'Écrans',
+        description: 'Affichages nets pour le jeu, le design et le quotidien.',
+      },
+      keyboards: {
+        name: 'Claviers',
+        description: 'Mécaniques et sans fil pour la vitesse et le confort.',
+      },
+      mice: {
+        name: 'Souris',
+        description: 'Souris précises pour le jeu et la productivité.',
+      },
+      headphones: {
+        name: 'Casques',
+        description: 'Casques et audio pour l’immersion et les appels.',
+      },
+      components: {
+        name: 'Composants',
+        description: 'GPU, pièces et upgrades pour votre config.',
+      },
+      accessories: {
+        name: 'Accessoires',
+        description: 'Docks, hubs et extras tech du quotidien.',
+      },
+    },
+  },
 }

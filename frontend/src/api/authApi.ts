@@ -1,4 +1,4 @@
-import api from './client'
+import api, { resetSessionCheck } from './client'
 import type { Address, ApiResponse, AuthPayload, SessionPayload, User } from '@/types'
 
 export const authApi = {
@@ -10,7 +10,13 @@ export const authApi = {
 
   refresh: () => api.post<ApiResponse<SessionPayload>>('/auth/refresh'),
 
-  logout: () => api.post<ApiResponse<null>>('/auth/logout'),
+  logout: async () => {
+    try {
+      return await api.post<ApiResponse<null>>('/auth/logout')
+    } finally {
+      resetSessionCheck()
+    }
+  },
 
   me: () => api.get<ApiResponse<User>>('/auth/me'),
 

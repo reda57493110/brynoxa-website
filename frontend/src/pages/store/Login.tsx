@@ -11,10 +11,12 @@ import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 
+import { isStaffRole, staffHomePath } from '@/lib/permissions'
+
 function resolvePostLoginPath(role: string, from?: string) {
-  if (role === 'admin') {
+  if (isStaffRole(role)) {
     if (from?.startsWith('/admin')) return from
-    return '/admin'
+    return staffHomePath(role)
   }
   if (from && from !== '/login' && from !== '/register' && !from.startsWith('/admin')) {
     return from

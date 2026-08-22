@@ -12,32 +12,31 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
     ? images
     : [{ url: 'https://placehold.co/800x800/1a2229/00C2FF?text=Brynoxa', alt: name }]
   const [active, setActive] = useState(0)
-  const [loaded, setLoaded] = useState(false)
   const current = list[active] ?? list[0]
-
-  useEffect(() => {
-    setLoaded(false)
-  }, [current.url])
 
   const go = (next: number) => {
     setActive((next + list.length) % list.length)
   }
 
+  // Keep active index valid if the image list changes
+  useEffect(() => {
+    if (active >= list.length) setActive(0)
+  }, [list.length, active])
+
   return (
     <div className="space-y-2.5 sm:space-y-3">
       <div className="relative -mx-4 aspect-square overflow-hidden bg-[var(--bg-muted)] sm:mx-0 sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]">
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="sync" initial={false}>
           <motion.img
             key={current.url}
             src={current.url}
             alt={current.alt || name}
             referrerPolicy="no-referrer"
             decoding="async"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: loaded ? 1 : 0 }}
+            initial={reduceMotion ? false : { opacity: 0.35 }}
+            animate={{ opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            onLoad={() => setLoaded(true)}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0 h-full w-full object-cover"
           />
         </AnimatePresence>

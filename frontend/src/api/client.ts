@@ -28,6 +28,7 @@ async function refreshAccessToken() {
       .then((res) => {
         const payload = res.data.data
         if (!payload?.user || !payload.accessToken) {
+          sessionChecked = false
           useAuthStore.getState().logout()
           return null
         }
@@ -35,6 +36,7 @@ async function refreshAccessToken() {
         return payload.accessToken
       })
       .catch(() => {
+        sessionChecked = false
         useAuthStore.getState().logout()
         return null
       })
@@ -45,9 +47,16 @@ async function refreshAccessToken() {
   return refreshPromise
 }
 
-export async function restoreSession() {
-  if (sessionChecked && !refreshPromise) {
-    return useAuthStore.getState().accessToken
+/** Clear the one-shot bootstrap flag (e.g. after logout) so the next visit can refresh again. */
+export function resetSessionCheck() {
+  sessionChecked = false
+}
+
+export async function restoreSession(force = false) {
+  const existing = useAuthStore.getState().accessToken
+  if (!force && sessionChecked && !refreshPromise) {
+    if (existing) return existing
+    // Memory token missing (HMR / tab race) but cookie may still be valid — try refresh once.
   }
   const token = await refreshAccessToken()
   sessionChecked = true
@@ -61,11 +70,12 @@ api.interceptors.response.use(
     const status = error.response?.status
     const url = original?.url ?? ''
 
+    // Always try cookie refresh on 401 — accessToken may already be null in memory
+    // while the httpOnly refresh cookie is still valid.
     if (
       status === 401 &&
       original &&
       !original._retry &&
-      Boolean(useAuthStore.getState().accessToken) &&
       !url.includes('/auth/login') &&
       !url.includes('/auth/register') &&
       !url.includes('/auth/refresh')

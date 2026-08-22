@@ -5,9 +5,10 @@ import * as catalog from '../services/catalog.service';
 import { uploadProductImage } from '../services/upload.service';
 import { paginationQuerySchema } from '../validators/schemas';
 import { param } from '../utils/params';
+import { isStaffRole } from '../permissions';
 
 export const getCategories = asyncHandler(async (req: Request, res: Response) => {
-  const admin = req.user?.role === 'admin' && req.query.all === 'true';
+  const admin = isStaffRole(req.user?.role) && req.query.all === 'true';
   const items = await catalog.listCategories(!admin);
   sendSuccess(res, items);
 });
@@ -33,7 +34,7 @@ export const deleteCategory = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const getBrands = asyncHandler(async (req: Request, res: Response) => {
-  const admin = req.user?.role === 'admin' && req.query.all === 'true';
+  const admin = isStaffRole(req.user?.role) && req.query.all === 'true';
   const items = await catalog.listBrands(!admin);
   sendSuccess(res, items);
 });
@@ -55,7 +56,7 @@ export const deleteBrand = asyncHandler(async (req: Request, res: Response) => {
 
 export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   const query = paginationQuerySchema.parse(req.query);
-  const admin = req.user?.role === 'admin' && req.query.admin === 'true';
+  const admin = isStaffRole(req.user?.role) && req.query.admin === 'true';
   const isActive =
     req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
   const result = await catalog.listProducts({ ...query, admin, isActive });

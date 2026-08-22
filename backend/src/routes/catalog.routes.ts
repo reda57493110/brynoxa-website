@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as catalog from '../controllers/catalog.controller';
 import { validate } from '../middleware/validate';
-import { optionalAuth, requireAuth, requireAdmin } from '../middleware/auth';
+import { optionalAuth, requireAuth, requirePermission } from '../middleware/auth';
 import { upload } from '../middleware/upload';
 import {
   categorySchema,
@@ -17,60 +17,86 @@ router.get('/categories/:slug', catalog.getCategory);
 router.post(
   '/admin/categories',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write'),
   validate(categorySchema),
   catalog.createCategory
 );
 router.patch(
   '/admin/categories/:id',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write'),
   validate(categorySchema.partial()),
   catalog.updateCategory
 );
-router.delete('/admin/categories/:id', requireAuth, requireAdmin, catalog.deleteCategory);
+router.delete(
+  '/admin/categories/:id',
+  requireAuth,
+  requirePermission('products:write'),
+  catalog.deleteCategory
+);
 
 router.get('/brands', optionalAuth, catalog.getBrands);
-router.post('/admin/brands', requireAuth, requireAdmin, validate(brandSchema), catalog.createBrand);
+router.post(
+  '/admin/brands',
+  requireAuth,
+  requirePermission('products:write'),
+  validate(brandSchema),
+  catalog.createBrand
+);
 router.patch(
   '/admin/brands/:id',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write'),
   validate(brandSchema.partial()),
   catalog.updateBrand
 );
-router.delete('/admin/brands/:id', requireAuth, requireAdmin, catalog.deleteBrand);
+router.delete(
+  '/admin/brands/:id',
+  requireAuth,
+  requirePermission('products:write'),
+  catalog.deleteBrand
+);
 
 router.get('/products', optionalAuth, catalog.getProducts);
 router.get('/products/compare', catalog.compareProducts);
 router.get('/products/:slug', catalog.getProduct);
-router.get('/admin/products/:id', requireAuth, requireAdmin, catalog.getProductAdmin);
+router.get(
+  '/admin/products/:id',
+  requireAuth,
+  requirePermission('products:read'),
+  catalog.getProductAdmin
+);
 router.post(
   '/admin/products',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write'),
   validate(productSchema),
   catalog.createProduct
 );
 router.patch(
   '/admin/products/:id',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write'),
   validate(productSchema.partial()),
   catalog.updateProduct
 );
-router.delete('/admin/products/:id', requireAuth, requireAdmin, catalog.deleteProduct);
+router.delete(
+  '/admin/products/:id',
+  requireAuth,
+  requirePermission('products:delete'),
+  catalog.deleteProduct
+);
 router.patch(
   '/admin/products/:id/inventory',
   requireAuth,
-  requireAdmin,
+  requirePermission('inventory:write'),
   validate(inventorySchema),
   catalog.updateInventory
 );
 router.post(
   '/admin/upload',
   requireAuth,
-  requireAdmin,
+  requirePermission('products:write', 'inventory:write'),
   upload.single('image'),
   catalog.uploadImage
 );

@@ -1,10 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
 import { Types } from 'mongoose';
+import type { AppRole } from '../permissions';
 
 export type TokenPayload = {
   userId: string;
-  role: 'customer' | 'admin';
+  role: AppRole;
 };
 
 export function signAccessToken(payload: TokenPayload): string {

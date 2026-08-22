@@ -9,6 +9,7 @@ import { useWishlistStore } from '@/store/wishlistStore'
 import { useThemeStore } from '@/store/themeStore'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
+import { isStaffRole, staffHomePath } from '@/lib/permissions'
 import { useT } from '@/hooks/useT'
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -102,9 +103,9 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
           ) : null}
         </div>
 
-        {user?.role === 'admin' ? (
+        {isStaffRole(user?.role) ? (
           <NavLink
-            to="/admin"
+            to={staffHomePath(user?.role)}
             onClick={onClose}
             className="mt-4 rounded-xl bg-[var(--brand)] px-3 py-3 text-center text-sm font-semibold text-[var(--brand-fg)]"
           >

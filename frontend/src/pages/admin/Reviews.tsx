@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
 import { RatingStars } from '@/components/product/RatingStars'
+import { AdminHeader } from '@/components/admin/AdminHeader'
 import { useToastStore } from '@/store/toastStore'
 import type { Product, User } from '@/types'
 
@@ -39,19 +40,16 @@ export function Reviews() {
   })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">Reviews</h1>
-        <p className="text-sm text-[var(--fg-muted)]">Moderate customer feedback</p>
-      </div>
+    <div className="space-y-5 sm:space-y-6">
+      <AdminHeader title="Reviews" description="Moderate customer feedback" />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
         {(['all', 'pending', 'approved'] as const).map((id) => (
           <button
             key={id}
             type="button"
             onClick={() => setFilter(id)}
-            className={`h-9 rounded-full border px-3 text-sm ${
+            className={`h-9 shrink-0 rounded-full border px-3 text-sm whitespace-nowrap ${
               filter === id
                 ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
                 : 'border-[var(--border)]'
@@ -76,7 +74,7 @@ export function Reviews() {
             return (
               <div
                 key={r._id}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

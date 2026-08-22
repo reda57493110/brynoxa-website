@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
 import { Badge } from '@/components/ui/Badge'
+import { AdminHeader } from '@/components/admin/AdminHeader'
 import { useToastStore } from '@/store/toastStore'
 import { formatCurrency } from '@/lib/format'
 
@@ -56,14 +57,11 @@ export function Coupons() {
   })
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">Coupons</h1>
-        <p className="text-sm text-[var(--fg-muted)]">Discount codes</p>
-      </div>
+    <div className="space-y-5 sm:space-y-6">
+      <AdminHeader title="Coupons" description="Discount codes" />
 
       <form
-        className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 sm:grid-cols-2 lg:grid-cols-5"
+        className="grid gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-5"
         onSubmit={(e) => {
           e.preventDefault()
           create.mutate()
@@ -112,16 +110,16 @@ export function Coupons() {
           {list.data?.map((c) => (
             <li
               key={c._id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3"
+              className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="font-semibold tracking-wide">{c.code}</p>
                 <p className="text-sm text-[var(--fg-muted)]">
-                  {c.type === 'percent' ? `${c.value}%` : formatCurrency(c.value)} · used {c.usedCount}/
-                  {c.maxUses || '∞'}
+                  {c.type === 'percent' ? `${c.value}%` : formatCurrency(c.value)} · used{' '}
+                  {c.usedCount}/{c.maxUses || '∞'}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={c.isActive ? 'success' : 'danger'}>
                   {c.isActive ? 'Active' : 'Off'}
                 </Badge>

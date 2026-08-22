@@ -70,6 +70,23 @@ export const adminApi = {
       api.patch<ApiResponse<User>>(`/admin/customers/${id}`, { isActive }),
   },
 
+  users: {
+    list: (params?: {
+      page?: number
+      limit?: number
+      q?: string
+      role?: 'all' | 'staff' | User['role']
+    }) => api.get<ApiResponse<User[]>>('/admin/users', { params }),
+    create: (payload: {
+      name?: string
+      email: string
+      password: string
+      role: Exclude<User['role'], 'customer' | 'admin'>
+    }) => api.post<ApiResponse<User>>('/admin/users', payload),
+    setRole: (id: string, role: Exclude<User['role'], 'admin'>) =>
+      api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }),
+  },
+
   reviews: {
     list: (params?: { page?: number; limit?: number }) =>
       api.get<ApiResponse<Review[]>>('/admin/reviews', { params }),

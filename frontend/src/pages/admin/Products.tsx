@@ -60,21 +60,21 @@ export function Products() {
   const pages = products.data?.meta?.pages || 1
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader
         title="Products"
         description={`${products.data?.meta?.total ?? '—'} in catalog · includes hidden items`}
         actions={
-          <Link to="/admin/products/new">
-            <Button>
+          <Link to="/admin/products/new" className="w-full sm:w-auto">
+            <Button size="sm" className="w-full sm:h-11 sm:px-4 sm:text-sm">
               <SiteIcon name="plus" size={16} /> Add product
             </Button>
           </Link>
         }
       />
 
-      <div className="flex flex-wrap gap-2">
-        <div className="min-w-[14rem] flex-1">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <div className="min-w-0 flex-1 sm:min-w-[12rem]">
           <Input
             placeholder="Search name or SKU"
             value={q}
@@ -84,33 +84,35 @@ export function Products() {
             }}
           />
         </div>
-        <select
-          value={category}
-          onChange={(e) => {
-            setCategory(e.target.value)
-            setPage(1)
-          }}
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm"
-        >
-          <option value="">All categories</option>
-          {(cats.data as Category[] | undefined)?.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={active}
-          onChange={(e) => {
-            setActive(e.target.value as typeof active)
-            setPage(1)
-          }}
-          className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm"
-        >
-          <option value="all">All status</option>
-          <option value="true">Active</option>
-          <option value="false">Hidden</option>
-        </select>
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:contents">
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value)
+              setPage(1)
+            }}
+            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
+          >
+            <option value="">All categories</option>
+            {(cats.data as Category[] | undefined)?.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={active}
+            onChange={(e) => {
+              setActive(e.target.value as typeof active)
+              setPage(1)
+            }}
+            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
+          >
+            <option value="all">All status</option>
+            <option value="true">Active</option>
+            <option value="false">Hidden</option>
+          </select>
+        </div>
       </div>
 
       {products.isLoading ? (
@@ -119,8 +121,73 @@ export function Products() {
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-            <table className="w-full min-w-[800px] text-left text-sm">
+          <div className="space-y-2.5 md:hidden">
+            {products.data?.items.map((p) => {
+              const img = p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
+              const cat = typeof p.category === 'object' ? p.category.name : ''
+              return (
+                <div
+                  key={p._id}
+                  className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
+                >
+                  <div className="flex min-w-0 gap-2.5">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
+                      {img ? (
+                        <img src={img} alt="" className="h-full w-full object-cover" />
+                      ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <p className="truncate text-sm font-medium">{p.name}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-[var(--fg-muted)]">
+                        {cat || '—'} · {p.sku}
+                      </p>
+                      <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-1.5 text-sm">
+                        <span className="font-semibold tabular-nums">{formatCurrency(p.price)}</span>
+                        {p.compareAtPrice && p.compareAtPrice > p.price ? (
+                          <span className="text-[11px] text-[var(--fg-muted)] line-through tabular-nums">
+                            {formatCurrency(p.compareAtPrice)}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1">
+                    <Badge variant={p.isActive ? 'success' : 'danger'}>
+                      {p.isActive ? 'Active' : 'Hidden'}
+                    </Badge>
+                    {p.stock <= p.lowStockThreshold ? (
+                      <Badge variant="warning">{p.stock} left</Badge>
+                    ) : (
+                      <span className="text-[11px] text-[var(--fg-muted)]">{p.stock} in stock</span>
+                    )}
+                    {p.isFeatured ? <Badge variant="brand">Featured</Badge> : null}
+                    {p.isCarousel ? <Badge variant="brand">Carousel</Badge> : null}
+                  </div>
+                  <div className="mt-2.5 flex min-w-0 items-center gap-2">
+                    <Link to={`/admin/products/${p._id}/edit`} className="min-w-0 flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <SiteIcon name="pencil" size={14} /> Edit
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0"
+                      aria-label="Delete product"
+                      onClick={() => {
+                        if (confirm('Delete this product?')) remove.mutate(p._id)
+                      }}
+                    >
+                      <SiteIcon name="trash" size={16} />
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
                 <tr>
                   <th className="px-4 py-3 font-medium">Product</th>
@@ -137,23 +204,27 @@ export function Products() {
                   const cat = typeof p.category === 'object' ? p.category.name : ''
                   return (
                     <tr key={p._id} className="border-t border-[var(--border)]">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="h-11 w-11 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
-                            {img ? <img src={img} alt="" className="h-full w-full object-cover" /> : null}
+                      <td className="max-w-[16rem] px-4 py-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
+                            {img ? (
+                              <img src={img} alt="" className="h-full w-full object-cover" />
+                            ) : null}
                           </div>
-                          <div>
-                            <p className="font-medium">{p.name}</p>
-                            <p className="text-xs text-[var(--fg-muted)]">{cat}</p>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{p.name}</p>
+                            <p className="truncate text-xs text-[var(--fg-muted)]">{cat}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-[var(--fg-muted)]">{p.sku}</td>
+                      <td className="px-4 py-3 text-[var(--fg-muted)]">
+                        <span className="block max-w-[8rem] truncate">{p.sku}</span>
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap items-baseline gap-1.5">
-                          <span className="font-medium">{formatCurrency(p.price)}</span>
+                          <span className="font-medium tabular-nums">{formatCurrency(p.price)}</span>
                           {p.compareAtPrice && p.compareAtPrice > p.price ? (
-                            <span className="text-xs text-[var(--fg-muted)] line-through">
+                            <span className="text-xs text-[var(--fg-muted)] line-through tabular-nums">
                               {formatCurrency(p.compareAtPrice)}
                             </span>
                           ) : null}
@@ -167,7 +238,7 @@ export function Products() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex max-w-[12rem] flex-wrap gap-1">
                           <Badge variant={p.isActive ? 'success' : 'danger'}>
                             {p.isActive ? 'Active' : 'Hidden'}
                           </Badge>
@@ -178,13 +249,14 @@ export function Products() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           <Link to={`/admin/products/${p._id}/edit`}>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" aria-label="Edit">
                               <SiteIcon name="pencil" size={16} />
                             </Button>
                           </Link>
                           <Button
                             variant="ghost"
                             size="sm"
+                            aria-label="Delete"
                             onClick={() => {
                               if (confirm('Delete this product?')) remove.mutate(p._id)
                             }}

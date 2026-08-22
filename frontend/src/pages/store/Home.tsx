@@ -12,6 +12,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=2560&q=85'
@@ -58,6 +60,7 @@ export function Home() {
   const reduceMotion = useReducedMotion()
   const navigate = useNavigate()
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
@@ -277,6 +280,12 @@ export function Home() {
                     const photo = CATEGORY_PHOTOS[c.slug] ?? c.image
                     const featuredTile = i < 2
                     const icon = categoryIcon(c.slug, c.name)
+                    const name = categoryDisplayName(locale, c.slug, c.name)
+                    const description = categoryDisplayDescription(
+                      locale,
+                      c.slug,
+                      c.description
+                    )
                     return (
                       <motion.div
                         key={c._id}
@@ -325,12 +334,12 @@ export function Home() {
                                   featuredTile ? 'text-2xl sm:text-3xl' : 'text-xl'
                                 )}
                               >
-                                {c.name}
+                                {name}
                               </h3>
                             </div>
-                            {c.description ? (
+                            {description ? (
                               <p className="mt-1.5 line-clamp-2 max-w-sm text-sm text-[var(--fg-muted)]">
-                                {c.description}
+                                {description}
                               </p>
                             ) : null}
                             <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)]">

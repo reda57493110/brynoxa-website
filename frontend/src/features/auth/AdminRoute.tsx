@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { isStaffRole } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -25,7 +26,7 @@ export function AdminRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  if (role !== 'admin') {
+  if (!isStaffRole(role)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--bg)] px-4">
         <EmptyState

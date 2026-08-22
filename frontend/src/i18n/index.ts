@@ -54,6 +54,25 @@ export function getMessages(locale: Locale): Messages {
   return messages[locale]
 }
 
+/** Localized category name by slug; falls back to API name. */
+export function categoryDisplayName(locale: Locale, slug: string, fallback: string) {
+  const key = `catalog.categories.${slug}.name`
+  const raw = lookup(messages[locale], key) ?? lookup(en, key)
+  return typeof raw === 'string' ? raw : fallback
+}
+
+/** Localized category description by slug; falls back to API description. */
+export function categoryDisplayDescription(
+  locale: Locale,
+  slug: string,
+  fallback?: string
+) {
+  const key = `catalog.categories.${slug}.description`
+  const raw = lookup(messages[locale], key) ?? lookup(en, key)
+  if (typeof raw === 'string') return raw
+  return fallback || ''
+}
+
 export function orderStatusKey(status: string): MessageKey {
   switch (status) {
     case 'confirmed':

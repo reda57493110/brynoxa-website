@@ -165,6 +165,18 @@ export const newsletterSchema = z.object({
   email: z.string().email(),
 });
 
+export const setUserRoleSchema = z.object({
+  // Owner (admin) cannot be assigned via API — only hireable staff roles + customer (remove)
+  role: z.enum(['customer', 'orders', 'catalog', 'support', 'marketing']),
+});
+
+export const createStaffUserSchema = z.object({
+  name: z.string().trim().min(2).max(80).optional(),
+  email: z.string().trim().email(),
+  password: z.string().min(6).max(100),
+  role: z.enum(['orders', 'catalog', 'support', 'marketing']),
+});
+
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(12),

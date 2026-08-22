@@ -30,7 +30,7 @@ export interface User {
   _id: string
   name: string
   email: string
-  role: 'customer' | 'admin'
+  role: 'customer' | 'admin' | 'orders' | 'catalog' | 'support' | 'marketing'
   phone?: string
   addresses: Address[]
   avatar?: string

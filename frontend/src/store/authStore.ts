@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { isStaffRole } from '@/lib/permissions'
 import type { User } from '@/types'
 
 interface AuthState {
@@ -11,6 +12,7 @@ interface AuthState {
   setBootstrapped: (value: boolean) => void
   logout: () => void
   isAuthenticated: () => boolean
+  /** Any staff role that can open /admin */
   isAdmin: () => boolean
 }
 
@@ -24,5 +26,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setBootstrapped: (bootstrapped) => set({ bootstrapped }),
   logout: () => set({ user: null, accessToken: null }),
   isAuthenticated: () => Boolean(get().accessToken && get().user),
-  isAdmin: () => get().user?.role === 'admin',
+  isAdmin: () => isStaffRole(get().user?.role),
 }))
