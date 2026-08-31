@@ -133,10 +133,6 @@ export function Shop() {
     filters.inStock,
   ].filter(Boolean).length
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [filters.page, filters.category, filters.brand, filters.q])
-
   const sidebar = (plain: boolean) => (
     <FilterSidebar
       categories={categoryList}

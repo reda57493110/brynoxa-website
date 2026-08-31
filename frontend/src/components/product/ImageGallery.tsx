@@ -4,6 +4,8 @@ import type { ProductImage } from '@/types'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { optimizedImageUrl } from '@/lib/image'
 
 export function ImageGallery({ images, name }: { images: ProductImage[]; name: string }) {
   const t = useT()
@@ -27,18 +29,22 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
     <div className="space-y-2.5 sm:space-y-3">
       <div className="relative -mx-4 aspect-square overflow-hidden bg-[var(--bg-muted)] sm:mx-0 sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]">
         <AnimatePresence mode="sync" initial={false}>
-          <motion.img
+          <motion.div
             key={current.url}
-            src={current.url}
-            alt={current.alt || name}
-            referrerPolicy="no-referrer"
-            decoding="async"
             initial={reduceMotion ? false : { opacity: 0.35 }}
             animate={{ opacity: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+            className="absolute inset-0"
+          >
+            <SafeImage
+              src={optimizedImageUrl(current.url, 1200)}
+              alt={current.alt || name}
+              referrerPolicy="no-referrer"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          </motion.div>
         </AnimatePresence>
 
         {list.length > 1 ? (
@@ -83,8 +89,8 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
                   : 'border-transparent opacity-60 hover:opacity-100'
               )}
             >
-              <img
-                src={img.url}
+              <SafeImage
+                src={optimizedImageUrl(img.url, 180)}
                 alt={img.alt || `${name} ${i + 1}`}
                 referrerPolicy="no-referrer"
                 decoding="async"

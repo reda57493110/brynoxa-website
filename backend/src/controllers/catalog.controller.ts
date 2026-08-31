@@ -3,9 +3,11 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
 import { uploadProductImage } from '../services/upload.service';
+import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
 import { param } from '../utils/params';
 import { isStaffRole } from '../permissions';
+import { ApiError } from '../utils/ApiError';
 
 export const getCategories = asyncHandler(async (req: Request, res: Response) => {
   const admin = isStaffRole(req.user?.role) && req.query.all === 'true';
@@ -105,6 +107,9 @@ export const uploadImage = asyncHandler(async (req: Request, res: Response) => {
   if (!req.file) {
     res.status(400).json({ success: false, message: 'No file uploaded' });
     return;
+  }
+  if (!hasValidImageSignature(req.file)) {
+    throw new ApiError(400, 'The image file is invalid or corrupted');
   }
   const result = await uploadProductImage(req.file.buffer, req.file.mimetype);
   sendSuccess(res, result, 'Uploaded', 201);

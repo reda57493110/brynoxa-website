@@ -9,6 +9,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -96,9 +97,12 @@ export function Home() {
         className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-[var(--nav-height)] flex min-h-[85svh] flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
       >
         <div className="absolute inset-0" aria-hidden="true">
-          <img
+          <SafeImage
             src={HERO_IMAGE}
             alt=""
+            width={2560}
+            height={1440}
+            sizes="100vw"
             className={cn(
               'home-hero-photo absolute inset-0 h-full w-full max-w-none object-cover object-[32%_48%] dark:object-[72%_42%]',
               !reduceMotion && 'animate-[home-hero-ken_18s_ease-out_forwards]'
@@ -310,9 +314,12 @@ export function Home() {
                             )}
                           >
                             {photo ? (
-                              <img
+                              <SafeImage
                                 src={photo}
                                 alt=""
+                                width={800}
+                                height={500}
+                                sizes="(min-width: 1024px) 33vw, 100vw"
                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                                 loading="lazy"
                               />

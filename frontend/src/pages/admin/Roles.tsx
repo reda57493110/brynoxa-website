@@ -8,12 +8,12 @@ import { Spinner } from '@/components/ui/Spinner'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Pagination } from '@/components/ui/Pagination'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatDate } from '@/lib/format'
 import {
   STAFF_ROLE_LABELS,
-  STAFF_ROLES,
   type StaffRole,
 } from '@/lib/permissions'
 import { toast } from '@/store/toastStore'
@@ -21,7 +21,8 @@ import { useAuthStore } from '@/store/authStore'
 import type { User } from '@/types'
 
 /** Hireable roles only — Owner is fixed and never assignable from this page. */
-const ASSIGNABLE_ROLES = STAFF_ROLES.filter((r) => r !== 'admin')
+type AssignableRole = Exclude<StaffRole, 'admin'>
+const ASSIGNABLE_ROLES: AssignableRole[] = ['orders', 'catalog', 'support', 'marketing']
 const ROLE_OPTIONS = ASSIGNABLE_ROLES.map((value) => ({
   value,
   label: STAFF_ROLE_LABELS[value],
@@ -35,8 +36,9 @@ export function Roles() {
     name: '',
     email: '',
     password: '',
-    role: 'orders' as StaffRole,
+    role: 'orders' as AssignableRole,
   })
+  const [removeTarget, setRemoveTarget] = useState<User | null>(null)
 
   const staff = useQuery({
     queryKey: ['admin-users', { page, role: 'staff' }],
@@ -75,7 +77,7 @@ export function Roles() {
   })
 
   const changeRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: StaffRole }) =>
+    mutationFn: ({ id, role }: { id: string; role: AssignableRole }) =>
       adminApi.users.setRole(id, role),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
@@ -108,10 +110,6 @@ export function Roles() {
       toast.error('Password must be at least 6 characters')
       return
     }
-    if (form.role === 'admin') {
-      toast.error('Owner role cannot be assigned')
-      return
-    }
     createUser.mutate()
   }
 
@@ -124,14 +122,7 @@ export function Roles() {
       toast.error('You cannot remove your own staff access')
       return
     }
-    if (
-      !confirm(
-        `Remove staff access from ${user.name}? They will become a storefront customer.`
-      )
-    ) {
-      return
-    }
-    removeRole.mutate(user._id)
+    setRemoveTarget(user)
   }
 
   const roleLabel = (role: string) =>
@@ -158,7 +149,7 @@ export function Roles() {
         <Select
           label="Role"
           value={form.role}
-          onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as StaffRole }))}
+          onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as AssignableRole }))}
           options={ROLE_OPTIONS}
         />
         <Input
@@ -237,7 +228,7 @@ export function Roles() {
                         onChange={(e) =>
                           changeRole.mutate({
                             id: u._id,
-                            role: e.target.value as StaffRole,
+                            role: e.target.value as AssignableRole,
                           })
                         }
                         options={ROLE_OPTIONS}
@@ -299,7 +290,7 @@ export function Roles() {
                             onChange={(e) =>
                               changeRole.mutate({
                                 id: u._id,
-                                role: e.target.value as StaffRole,
+                                role: e.target.value as AssignableRole,
                               })
                             }
                             options={ROLE_OPTIONS}
@@ -331,6 +322,25 @@ export function Roles() {
           </>
         )}
       </section>
+      <ConfirmDialog
+        open={Boolean(removeTarget)}
+        title="Remove staff access?"
+        description={
+          removeTarget
+            ? `${removeTarget.name} will become a storefront customer and lose admin access.`
+            : ''
+        }
+        confirmLabel="Remove access"
+        loading={removeRole.isPending}
+        onClose={() => setRemoveTarget(null)}
+        onConfirm={() => {
+          if (removeTarget) {
+            removeRole.mutate(removeTarget._id, {
+              onSuccess: () => setRemoveTarget(null),
+            })
+          }
+        }}
+      />
     </div>
   )
 }

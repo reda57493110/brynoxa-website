@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { optimizedImageUrl } from '@/lib/image'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
@@ -70,6 +73,12 @@ export function Orders() {
           <div className="flex justify-center py-16">
             <Spinner size="lg" />
           </div>
+        ) : orders.isError ? (
+          <QueryErrorState
+            title={t('orders.loadError')}
+            description={t('orders.loadErrorBody')}
+            onRetry={() => orders.refetch()}
+          />
         ) : !orders.data?.length ? (
           <EmptyState
             icon="package"
@@ -92,9 +101,9 @@ export function Orders() {
                       <div className="mt-3 flex items-center gap-2">
                         {order.items.slice(0, 4).map((item, i) =>
                           item.image ? (
-                            <img
+                            <SafeImage
                               key={`${item.sku}-${i}`}
-                              src={item.image}
+                              src={optimizedImageUrl(item.image, 240)}
                               alt=""
                               className="h-10 w-10 rounded-xl object-cover"
                             />
@@ -163,7 +172,7 @@ export function Orders() {
                         {order.items.map((item, i) => (
                           <li key={`${item.sku}-${i}`} className="flex items-center gap-3">
                             {item.image ? (
-                              <img src={item.image} alt="" className="h-12 w-12 rounded-xl object-cover" />
+                              <SafeImage src={optimizedImageUrl(item.image, 240)} alt="" className="h-12 w-12 rounded-xl object-cover" />
                             ) : (
                               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--bg-elevated)]">
                                 <SiteIcon name="package" size={16} />

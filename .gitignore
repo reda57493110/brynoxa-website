@@ -2,9 +2,15 @@ node_modules/
 dist/
 build/
 .env
+.env.*
+!.env.example
+**/cookies.txt
+**/sess.xml
 uploads/
 *.log
 .DS_Store
 coverage/
 .vite/
+test-results/
+playwright-report/
 *.local

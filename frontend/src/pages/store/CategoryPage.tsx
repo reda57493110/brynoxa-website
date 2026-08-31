@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -8,6 +7,7 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
@@ -51,15 +51,23 @@ export function CategoryPage() {
       : `${t('shop.title')} — Brynoxa`
   )
 
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [slug])
-
   if (category.isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <Spinner size="lg" />
       </div>
+    )
+  }
+
+  if (category.isError) {
+    return (
+      <Container className="py-8 sm:py-10">
+        <QueryErrorState
+          title={t('shop.loadError')}
+          description={t('shop.loadErrorBody')}
+          onRetry={() => category.refetch()}
+        />
+      </Container>
     )
   }
 
@@ -117,14 +125,22 @@ export function CategoryPage() {
               ? t('shop.productCountOne', { count: productCount })
               : t('shop.productCount', { count: productCount })}
         </p>
-        <ProductGrid
-          products={products.data}
-          loading={products.isLoading}
-          emptyTitle={t('shop.categoryEmpty')}
-          emptyDescription={t('shop.categoryEmptyBody')}
-          emptyActionLabel={t('common.allProducts')}
-          emptyActionTo="/shop"
-        />
+        {products.isError ? (
+          <QueryErrorState
+            title={t('shop.loadError')}
+            description={t('shop.loadErrorBody')}
+            onRetry={() => products.refetch()}
+          />
+        ) : (
+          <ProductGrid
+            products={products.data}
+            loading={products.isLoading}
+            emptyTitle={t('shop.categoryEmpty')}
+            emptyDescription={t('shop.categoryEmptyBody')}
+            emptyActionLabel={t('common.allProducts')}
+            emptyActionTo="/shop"
+          />
+        )}
       </Container>
     </>
   )

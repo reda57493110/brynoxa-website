@@ -36,6 +36,8 @@ export function Login() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [mfaToken, setMfaToken] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -44,19 +46,32 @@ export function Login() {
     setFormError('')
 
     const trimmedEmail = email.trim()
-    if (!trimmedEmail || !trimmedEmail.includes('@')) {
-      setFormError(t('auth.emailInvalid'))
-      return
-    }
-    if (!password) {
-      setFormError(t('auth.passwordRequired'))
-      return
+    if (mfaToken) {
+      if (!mfaCode.trim()) {
+        setFormError(t('auth.mfaCodeRequired'))
+        return
+      }
+    } else {
+      if (!trimmedEmail || !trimmedEmail.includes('@')) {
+        setFormError(t('auth.emailInvalid'))
+        return
+      }
+      if (!password) {
+        setFormError(t('auth.passwordRequired'))
+        return
+      }
     }
 
     setLoading(true)
     try {
-      const res = await authApi.login({ email: trimmedEmail, password })
+      const res = mfaToken
+        ? await authApi.completeMfaLogin({ mfaToken, code: mfaCode.trim() })
+        : await authApi.login({ email: trimmedEmail, password })
       const payload = res.data?.data
+      if (!mfaToken && payload?.mfaRequired && payload.mfaToken) {
+        setMfaToken(payload.mfaToken)
+        return
+      }
       if (!payload?.user || !payload.accessToken) {
         throw new Error(t('auth.loginFailed'))
       }
@@ -87,34 +102,55 @@ export function Login() {
 
   return (
     <div>
-      <p className="kicker">{t('auth.kicker')}</p>
-      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.signInTitle')}</h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.signInBody')}</p>
+      <p className="kicker">{mfaToken ? t('auth.mfaKicker') : t('auth.kicker')}</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">
+        {mfaToken ? t('auth.mfaTitle') : t('auth.signInTitle')}
+      </h1>
+      <p className="mt-1 text-sm text-[var(--fg-muted)]">
+        {mfaToken ? t('auth.mfaBody') : t('auth.signInBody')}
+      </p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
-        <Input
-          label={t('ui.email')}
-          name="email"
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value)
-            if (formError) setFormError('')
-          }}
-          required
-          autoComplete="email"
-        />
-        <Input
-          label={t('ui.password')}
-          name="password"
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            if (formError) setFormError('')
-          }}
-          required
-          autoComplete="current-password"
-        />
+        {mfaToken ? (
+          <Input
+            label={t('auth.mfaCode')}
+            name="mfaCode"
+            inputMode="text"
+            value={mfaCode}
+            onChange={(e) => {
+              setMfaCode(e.target.value)
+              if (formError) setFormError('')
+            }}
+            required
+            autoComplete="one-time-code"
+          />
+        ) : (
+          <>
+            <Input
+              label={t('ui.email')}
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                if (formError) setFormError('')
+              }}
+              required
+              autoComplete="email"
+            />
+            <Input
+              label={t('ui.password')}
+              name="password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (formError) setFormError('')
+              }}
+              required
+              autoComplete="current-password"
+            />
+          </>
+        )}
         {formError ? (
           <p
             className="rounded-xl border border-[var(--danger)]/40 bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] px-3.5 py-2.5 text-sm text-[var(--danger)]"
@@ -124,15 +160,33 @@ export function Login() {
           </p>
         ) : null}
         <Button type="submit" className="w-full rounded-full" loading={loading}>
-          {t('common.signIn')}
+          {mfaToken ? t('auth.mfaVerify') : t('common.signIn')}
         </Button>
+        {mfaToken ? (
+          <button
+            type="button"
+            className="w-full text-sm text-[var(--brand-text)]"
+            onClick={() => {
+              setMfaToken('')
+              setMfaCode('')
+              setFormError('')
+            }}
+          >
+            {t('auth.mfaBack')}
+          </button>
+        ) : null}
       </form>
-      <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
+      {!mfaToken ? (
+        <Link to="/forgot-password" className="mt-4 block text-center text-sm text-[var(--brand-text)]">
+          {t('auth.forgotPassword')}
+        </Link>
+      ) : null}
+      {!mfaToken ? <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
         {t('auth.noAccount')}{' '}
         <Link to="/register" className="font-medium text-[var(--brand-text)]">
           {t('auth.createAccount')}
         </Link>
-      </p>
+      </p> : null}
     </div>
   )
 }

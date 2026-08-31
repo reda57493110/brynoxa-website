@@ -19,7 +19,8 @@ export function Toaster() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          role="status"
+          role={t.type === 'error' ? 'alert' : 'status'}
+          aria-live={t.type === 'error' ? 'assertive' : 'polite'}
           className={cn(
             'pointer-events-auto flex max-w-[min(22rem,calc(100vw-1.5rem))] items-center gap-2 rounded-full border px-3 py-2 text-sm shadow-soft backdrop-blur-md toast-enter',
             t.type === 'success' &&

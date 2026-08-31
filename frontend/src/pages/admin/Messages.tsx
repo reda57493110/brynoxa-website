@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { formatDateTime } from '@/lib/format'
@@ -83,6 +84,8 @@ export function Messages() {
 
       {messages.isLoading ? (
         <Spinner />
+      ) : messages.isError ? (
+        <QueryErrorState onRetry={() => messages.refetch()} />
       ) : (
         <div className="space-y-3">
           {messages.data?.items.map((m) => {
@@ -110,7 +113,12 @@ export function Messages() {
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">
                   {m.status !== 'read' ? (
-                    <Button size="sm" variant="outline" onClick={() => update.mutate({ id: m._id, next: 'read' })}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      loading={update.isPending}
+                      onClick={() => update.mutate({ id: m._id, next: 'read' })}
+                    >
                       Mark read
                     </Button>
                   ) : null}
@@ -118,6 +126,7 @@ export function Messages() {
                     <Button
                       size="sm"
                       variant="ghost"
+                      loading={update.isPending}
                       onClick={() => update.mutate({ id: m._id, next: 'archived' })}
                     >
                       Archive

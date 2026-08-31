@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
@@ -56,6 +57,10 @@ export function OrderDetail() {
         <Spinner size="lg" />
       </div>
     )
+  }
+
+  if (order.isError) {
+    return <QueryErrorState onRetry={() => order.refetch()} />
   }
 
   if (!order.data) return <p>Order not found</p>

@@ -36,13 +36,17 @@ export interface User {
   avatar?: string
   isActive: boolean
   isGuest?: boolean
+  mfaEnabled?: boolean
   createdAt?: string
   updatedAt?: string
 }
 
 export interface AuthPayload {
-  user: User
-  accessToken: string
+  user?: User
+  accessToken?: string
+  mfaRequired?: boolean
+  mfaToken?: string
+  verificationRequired?: boolean
 }
 
 export interface SessionPayload {
@@ -185,6 +189,7 @@ export interface CreateOrderPayload {
 
 export interface CreateOrderResult {
   order: Order
+  receiptToken?: string
   user?: User
   accessToken?: string
 }

@@ -31,17 +31,10 @@ export function ContactInfoCard({
   )
 
   const styles = cn(
-    'relative flex overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft transition duration-300',
+    'relative flex overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)] p-5 shadow-soft transition duration-300',
     href &&
       'hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
     className
-  )
-
-  const glow = (
-    <span
-      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,color-mix(in_srgb,var(--bg-muted)_90%,transparent),transparent_55%)]"
-      aria-hidden="true"
-    />
   )
 
   if (href) {
@@ -52,7 +45,6 @@ export function ContactInfoCard({
         target={href.startsWith('http') ? '_blank' : undefined}
         rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
       >
-        {glow}
         {inner}
       </a>
     )
@@ -60,7 +52,6 @@ export function ContactInfoCard({
 
   return (
     <div className={styles}>
-      {glow}
       {inner}
     </div>
   )

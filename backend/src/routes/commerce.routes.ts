@@ -39,10 +39,10 @@ router.post(
   order.createOrder
 );
 router.get('/orders', requireAuth, order.myOrders);
-router.get(
+router.post(
   '/orders/:orderNumber/receipt',
   orderLimiter,
-  validate(guestOrderReceiptSchema, 'query'),
+  validate(guestOrderReceiptSchema),
   order.guestOrderReceipt
 );
 router.post('/orders/:orderNumber/cancel', requireAuth, order.cancelMyOrder);

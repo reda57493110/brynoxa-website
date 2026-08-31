@@ -1,10 +1,11 @@
-import { useEffect, useRef, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 
 const DRAG_THRESHOLD = 8
 const AUTO_SPEED = 0.45
@@ -24,13 +25,16 @@ export function ProductCarousel({ products }: { products: Product[] }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const offsetRef = useRef(0)
   const halfRef = useRef(0)
+  const stepRef = useRef(0)
   const hoveringRef = useRef(false)
+  const pausedRef = useRef(false)
   const draggingRef = useRef(false)
   const movedRef = useRef(false)
   const pointerIdRef = useRef<number | null>(null)
   const startXRef = useRef(0)
   const startOffsetRef = useRef(0)
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [paused, setPaused] = useState(false)
 
   const moving = !reduceMotion && products.length > 1
   const loop = products.length > 1 ? [...products, ...products] : products
@@ -55,6 +59,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
 
     const measure = () => {
       halfRef.current = products.length > 1 ? track.scrollWidth / 2 : 0
+      stepRef.current = products.length > 1 ? halfRef.current / products.length : 0
       paint(offsetRef.current)
     }
 
@@ -83,7 +88,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
     if (!moving) return
     let frame = 0
     const tick = () => {
-      if (!hoveringRef.current && !draggingRef.current) {
+      if (!pausedRef.current && !hoveringRef.current && !draggingRef.current) {
         paint(offsetRef.current - AUTO_SPEED)
       }
       frame = requestAnimationFrame(tick)
@@ -149,10 +154,17 @@ export function ProductCarousel({ products }: { products: Product[] }) {
     paint(startOffsetRef.current + dx)
   }
 
+  const moveByCard = (direction: number) => {
+    paint(offsetRef.current + direction * (stepRef.current || 304))
+  }
+
   return (
     <div
       dir="ltr"
       className="relative overflow-hidden py-1"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={t('home.featuredProducts')}
       onMouseEnter={() => {
         hoveringRef.current = true
       }}
@@ -170,9 +182,22 @@ export function ProductCarousel({ products }: { products: Product[] }) {
           'touch-pan-y will-change-transform'
         )}
         style={{ transform: 'translate3d(0px,0,0)' }}
-        role="region"
-        aria-roledescription="carousel"
-        aria-label={t('home.featuredProducts')}
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowLeft') {
+            event.preventDefault()
+            moveByCard(1)
+          } else if (event.key === 'ArrowRight') {
+            event.preventDefault()
+            moveByCard(-1)
+          } else if (event.key === 'Home') {
+            event.preventDefault()
+            paint(0)
+          } else if (event.key === 'End') {
+            event.preventDefault()
+            paint(-halfRef.current + (stepRef.current || 304))
+          }
+        }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endPointer}
@@ -194,6 +219,38 @@ export function ProductCarousel({ products }: { products: Product[] }) {
             <ProductCard product={product} />
           </div>
         ))}
+      </div>
+      <div className="mt-2 flex items-center justify-end gap-1.5">
+        <button
+          type="button"
+          onClick={() => moveByCard(1)}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+          aria-label={t('home.previousFeatured')}
+        >
+          <SiteIcon name="chevron-left" size={15} />
+        </button>
+        <button
+          type="button"
+          onClick={() => moveByCard(-1)}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+          aria-label={t('home.nextFeatured')}
+        >
+          <SiteIcon name="chevron-right" size={15} />
+        </button>
+        {moving ? (
+          <button
+            type="button"
+            onClick={() => {
+              const next = !paused
+              pausedRef.current = next
+              setPaused(next)
+            }}
+            className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+            aria-pressed={paused}
+          >
+            {paused ? t('home.resumeFeatured') : t('home.pauseFeatured')}
+          </button>
+        ) : null}
       </div>
     </div>
   )

@@ -8,6 +8,10 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { optimizedImageUrl } from '@/lib/image'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
@@ -21,6 +25,7 @@ export function Products() {
   const [page, setPage] = useState(1)
   const [category, setCategory] = useState('')
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const cats = useQuery({
     queryKey: ['categories', 'all'],
@@ -119,6 +124,8 @@ export function Products() {
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>
+      ) : products.isError ? (
+        <QueryErrorState onRetry={() => products.refetch()} />
       ) : (
         <>
           <div className="space-y-2.5 md:hidden">
@@ -133,7 +140,7 @@ export function Products() {
                   <div className="flex min-w-0 gap-2.5">
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
                       {img ? (
-                        <img src={img} alt="" className="h-full w-full object-cover" />
+                        <SafeImage src={optimizedImageUrl(img, 240)} alt="" className="h-full w-full object-cover" />
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
@@ -175,7 +182,7 @@ export function Products() {
                       className="shrink-0"
                       aria-label="Delete product"
                       onClick={() => {
-                        if (confirm('Delete this product?')) remove.mutate(p._id)
+                        setDeleteId(p._id)
                       }}
                     >
                       <SiteIcon name="trash" size={16} />
@@ -208,7 +215,7 @@ export function Products() {
                         <div className="flex min-w-0 items-center gap-3">
                           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
                             {img ? (
-                              <img src={img} alt="" className="h-full w-full object-cover" />
+                              <SafeImage src={optimizedImageUrl(img, 240)} alt="" className="h-full w-full object-cover" />
                             ) : null}
                           </div>
                           <div className="min-w-0">
@@ -258,7 +265,7 @@ export function Products() {
                             size="sm"
                             aria-label="Delete"
                             onClick={() => {
-                              if (confirm('Delete this product?')) remove.mutate(p._id)
+                              setDeleteId(p._id)
                             }}
                           >
                             <SiteIcon name="trash" size={16} />
@@ -274,6 +281,17 @@ export function Products() {
           <Pagination page={page} pages={pages} onChange={setPage} />
         </>
       )}
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        title="Delete product?"
+        description="This permanently removes the product from the catalog."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
+        }}
+      />
     </div>
   )
 }

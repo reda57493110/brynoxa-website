@@ -20,11 +20,23 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
 let refreshPromise: Promise<string | null> | null = null
 let sessionChecked = false
+let csrfToken: string | null = null
+
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken
+  const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf')
+  csrfToken = response.data.data.csrfToken
+  return csrfToken
+}
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
-    refreshPromise = api
-      .post<ApiResponse<SessionPayload>>('/auth/refresh')
+    refreshPromise = getCsrfToken()
+      .then((token) =>
+        api.post<ApiResponse<SessionPayload>>('/auth/refresh', undefined, {
+          headers: { 'X-CSRF-Token': token },
+        })
+      )
       .then((res) => {
         const payload = res.data.data
         if (!payload?.user || !payload.accessToken) {
@@ -50,6 +62,7 @@ async function refreshAccessToken() {
 /** Clear the one-shot bootstrap flag (e.g. after logout) so the next visit can refresh again. */
 export function resetSessionCheck() {
   sessionChecked = false
+  csrfToken = null
 }
 
 export async function restoreSession(force = false) {

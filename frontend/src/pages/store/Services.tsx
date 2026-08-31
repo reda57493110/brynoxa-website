@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
@@ -17,7 +18,7 @@ const SERVICE_PHOTOS: Record<(typeof CUSTOMER_SERVICES)[number]['id'], string> =
 }
 
 const photoOverlay =
-  'absolute inset-0 bg-gradient-to-t from-[var(--bg-elevated)] from-[12%] via-[color-mix(in_srgb,var(--bg-elevated)_58%,transparent)] via-45% to-[color-mix(in_srgb,var(--bg-elevated)_18%,transparent)]'
+  'absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent'
 
 const POLICY_IDS = ['warranty', 'returns', 'cod'] as const
 
@@ -152,29 +153,29 @@ export function Services() {
                   transition={{ delay: i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                   className="group relative flex min-h-[13.5rem] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:min-h-[15.5rem] sm:p-6"
                 >
-                  <img
+                  <SafeImage
                     src={photo}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                    className="absolute inset-0 h-full w-full object-cover mix-blend-multiply transition duration-500 group-hover:scale-[1.04] dark:mix-blend-normal"
                     loading="lazy"
                   />
                   <div className={photoOverlay} aria-hidden="true" />
                   <div className="relative flex items-start justify-between gap-3">
-                    <p className="text-[11px] font-semibold tracking-[0.16em] text-[var(--fg-muted)]">
+                    <p className="text-[11px] font-semibold tracking-[0.16em] text-white/75">
                       {String(i + 1).padStart(2, '0')}
                     </p>
-                    <span className="rounded-full border border-[var(--border)] bg-[var(--bg)]/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)] backdrop-blur-sm">
+                    <span className="rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/90 backdrop-blur-sm">
                       {service.highlight}
                     </span>
                   </div>
                   <div className="relative mt-auto">
-                    <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">
+                    <h3 className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
                       {service.title}
                     </h3>
-                    <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+                    <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-white/80">
                       {service.summary}
                     </p>
-                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)] sm:mt-4">
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand)] sm:mt-4">
                       {t('services.readPolicy')}
                       <SiteIcon
                         name="arrow-right"
@@ -196,16 +197,12 @@ export function Services() {
           service.id === 'warranty' || service.id === 'returns' || service.id === 'cod'
             ? copy.services.steps[service.id]
             : []
-        const elevated = i % 2 === 0
         return (
           <section
             key={service.id}
             id={service.id}
             aria-labelledby={`${service.id}-heading`}
-            className={cn(
-              'scroll-mt-[calc(var(--nav-height)+1rem)] py-6 sm:py-10',
-              elevated && 'bg-[var(--bg-elevated)]'
-            )}
+          className="scroll-mt-[calc(var(--nav-height)+1rem)] py-6 sm:py-10"
           >
             <Container>
               <div className="grid items-start gap-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
@@ -219,7 +216,7 @@ export function Services() {
                   >
                     {service.title}
                   </h2>
-                  <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base">
+                  <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg)]/80 sm:mt-4 sm:text-base">
                     {service.details}
                   </p>
                   <Link
@@ -232,26 +229,26 @@ export function Services() {
                 </div>
                 <div className="relative overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)] shadow-soft dark:bg-[var(--bg-muted)]">
                   <div className="relative aspect-[16/10] overflow-hidden sm:aspect-[2/1] lg:aspect-auto lg:min-h-[12rem]">
-                    <img
+                    <SafeImage
                       src={photo}
                       alt=""
-                      className="absolute inset-0 h-full w-full object-cover opacity-40"
+                      className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-multiply dark:opacity-60 dark:mix-blend-normal"
                       loading="lazy"
                     />
                     <div
-                      className="absolute inset-0 bg-gradient-to-t from-[var(--bg)] via-[var(--bg)]/70 to-[var(--bg)]/30 dark:from-[var(--bg-muted)] dark:via-[var(--bg-muted)]/75"
+                      className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent"
                       aria-hidden="true"
                     />
                   </div>
-                  <div className="relative -mt-10 px-3 pb-3 sm:px-4 sm:pb-4">
-                    <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+                  <div className="relative border-t border-[var(--border)] bg-[var(--bg-elevated)] px-3 pb-3 pt-4 sm:px-4 sm:pb-4">
+                    <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--fg)]">
                       {t('services.howItWorks')}
                     </p>
                     <ol className="space-y-2">
                       {steps.map((step, index) => (
                         <li
                           key={step}
-                          className="flex gap-3 rounded-2xl bg-[var(--bg-elevated)] px-3.5 py-3 dark:bg-[var(--bg)] sm:gap-4 sm:px-4 sm:py-3.5"
+                          className="flex gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3.5 py-3 shadow-sm dark:bg-[var(--bg-muted)] sm:gap-4 sm:px-4 sm:py-3.5"
                         >
                           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-xs font-bold text-[var(--brand-fg)] sm:h-8 sm:w-8 sm:text-sm">
                             {index + 1}
@@ -289,25 +286,25 @@ export function Services() {
                 <article
                   key={service.id}
                   id={service.id}
-                  className="group relative scroll-mt-[calc(var(--nav-height)+1rem)] overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft transition duration-300 hover:border-[var(--brand)] sm:p-6"
+                  className="group relative scroll-mt-[calc(var(--nav-height)+1rem)] overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)] p-5 shadow-soft transition duration-300 hover:border-[var(--brand)] sm:p-6"
                 >
-                  <img
+                  <SafeImage
                     src={photo}
                     alt=""
-                    className="absolute inset-0 h-full w-full object-cover opacity-40 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-50"
+                    className="absolute inset-0 h-full w-full object-cover opacity-70 mix-blend-multiply transition duration-500 group-hover:scale-[1.03] group-hover:opacity-80 dark:opacity-55 dark:mix-blend-normal"
                     loading="lazy"
                   />
                   <div
-                    className="absolute inset-0 bg-gradient-to-t from-[var(--bg-elevated)] from-40% via-[color-mix(in_srgb,var(--bg-elevated)_78%,transparent)] to-[color-mix(in_srgb,var(--bg-elevated)_40%,transparent)]"
+                    className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"
                     aria-hidden="true"
                   />
                   <div className="relative mt-16 flex flex-wrap items-center gap-2 sm:mt-24">
-                    <h3 className="font-display text-lg font-semibold">{service.title}</h3>
-                    <span className="rounded-full border border-[var(--border)] bg-[var(--bg)]/80 px-2 py-0.5 text-[11px] font-semibold text-[var(--fg-muted)] backdrop-blur-sm">
+                    <h3 className="font-display text-lg font-semibold text-white">{service.title}</h3>
+                    <span className="rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-semibold text-white/90 backdrop-blur-sm">
                       {service.highlight}
                     </span>
                   </div>
-                  <p className="relative mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+                  <p className="relative mt-2 text-sm leading-relaxed text-white/80">
                     {service.details}
                   </p>
                 </article>
@@ -319,7 +316,7 @@ export function Services() {
 
       <section
         aria-labelledby="services-faq-heading"
-        className="bg-[var(--bg-elevated)] py-6 sm:py-10"
+        className="py-6 sm:py-10"
       >
         <Container>
           <div className="mx-auto max-w-3xl">
@@ -380,17 +377,12 @@ export function Services() {
       <section aria-labelledby="services-cta-heading" className="pb-10 pt-6 sm:pb-14 sm:pt-10">
         <Container>
           <motion.div
-            className="cta-band relative overflow-hidden rounded-[1.75rem] px-5 py-8 sm:px-10 sm:py-12 lg:px-14 lg:py-14"
+            className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-8 shadow-soft sm:px-10 sm:py-12 lg:px-14 lg:py-14"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SiteIcon
-              name="shield"
-              size={96}
-              className="pointer-events-none absolute -left-8 bottom-[-2rem] text-[var(--brand)] opacity-[0.12]"
-            />
             <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12">
               <div>
                 <p className="kicker">{t('services.ctaKicker')}</p>

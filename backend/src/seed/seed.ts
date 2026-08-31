@@ -29,6 +29,10 @@ export async function removeRetiredCategories() {
 }
 
 export async function ensureAdmin() {
+  if (!env.ADMIN_EMAIL || !env.ADMIN_PASSWORD) {
+    console.warn('ADMIN_EMAIL and ADMIN_PASSWORD are not configured; skipping admin bootstrap');
+    return null;
+  }
   const existing = await User.findOne({ email: env.ADMIN_EMAIL });
   if (existing) {
     if (existing.role !== 'admin') {

@@ -22,6 +22,7 @@ export function Account() {
     { to: '/account/orders', label: t('account.orders'), desc: t('account.ordersDesc'), icon: 'package' },
     { to: '/wishlist', label: t('account.wishlist'), desc: t('account.wishlistDesc'), icon: 'heart' },
     { to: '/account/reviews', label: t('account.reviews'), desc: t('account.reviewsDesc'), icon: 'star' },
+    { to: '/account/notifications', label: t('notifications.heading'), desc: t('notifications.body'), icon: 'inbox' },
     { to: '/account/settings', label: t('account.settings'), desc: t('account.settingsDesc'), icon: 'settings' },
   ]
 

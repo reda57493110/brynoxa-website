@@ -11,6 +11,8 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Select } from '@/components/ui/Select'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
@@ -64,6 +66,7 @@ export function ProductForm() {
     isActive: true,
     imageUrl: '',
   })
+  const initialFormRef = useRef(JSON.stringify(form))
 
   useEffect(() => {
     if (existing.data) {
@@ -71,7 +74,7 @@ export function ProductForm() {
       const url = p.images?.[0]?.url || ''
       const brandName =
         typeof p.brand === 'string' ? '' : (p.brand as Brand)?.name || ''
-      setForm({
+      const nextForm = {
         name: p.name,
         sku: p.sku,
         description: p.description,
@@ -86,10 +89,24 @@ export function ProductForm() {
         isCarousel: Boolean(p.isCarousel),
         isActive: p.isActive,
         imageUrl: url,
-      })
+      }
+      initialFormRef.current = JSON.stringify(nextForm)
+      setForm(nextForm)
       if (url) setImageSource('url')
     }
   }, [existing.data])
+
+  const isDirty = JSON.stringify(form) !== initialFormRef.current
+
+  useEffect(() => {
+    if (!isDirty) return
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [isDirty])
 
   const save = useMutation({
     mutationFn: async () => {
@@ -154,6 +171,10 @@ export function ProductForm() {
         <Spinner size="lg" />
       </div>
     )
+  }
+
+  if (isEdit && existing.isError) {
+    return <QueryErrorState onRetry={() => existing.refetch()} />
   }
 
   return (
@@ -384,7 +405,7 @@ export function ProductForm() {
 
           {form.imageUrl ? (
             <div className="flex items-start gap-4 rounded-2xl border border-[var(--border)] p-3">
-              <img
+              <SafeImage
                 src={form.imageUrl}
                 alt="Product preview"
                 referrerPolicy="no-referrer"

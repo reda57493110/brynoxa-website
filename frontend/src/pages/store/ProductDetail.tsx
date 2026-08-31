@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ImageGallery } from '@/components/product/ImageGallery'
 import { Price } from '@/components/product/Price'
 import { RatingStars } from '@/components/product/RatingStars'
@@ -103,6 +104,18 @@ export function ProductDetail() {
     )
   }
 
+  if (product.isError) {
+    return (
+      <Container className="py-8 sm:py-10">
+        <QueryErrorState
+          title={t('shop.loadError')}
+          description={t('shop.loadErrorBody')}
+          onRetry={() => product.refetch()}
+        />
+      </Container>
+    )
+  }
+
   if (!product.data) {
     return (
       <Container className="py-8 sm:py-10">
@@ -161,9 +174,29 @@ export function ProductDetail() {
     { icon: 'package-check' as const, label: t('home.proofCod') },
     { icon: 'shield' as const, label: t('home.proofWarranty') },
   ]
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.name,
+    description: p.description,
+    sku: p.sku,
+    image: p.images.map((image) => image.url),
+    brand: brand ? { '@type': 'Brand', name: brand.name } : undefined,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'MAD',
+      price: p.price,
+      availability:
+        p.stock > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+      url: window.location.href,
+    },
+  }
 
   return (
     <>
+      <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
       <Container className="pb-28 pt-4 sm:py-10 lg:pb-10">
         <motion.nav
           {...fade(0)}
@@ -274,7 +307,14 @@ export function ProductDetail() {
           <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_22rem] lg:gap-8">
             <div className="space-y-3 sm:space-y-4">
               {reviews.isLoading ? <Spinner /> : null}
-              {!reviews.isLoading && !reviews.data?.length ? (
+              {reviews.isError ? (
+                <QueryErrorState
+                  title={t('shop.loadError')}
+                  description={t('shop.loadErrorBody')}
+                  onRetry={() => reviews.refetch()}
+                />
+              ) : null}
+              {!reviews.isLoading && !reviews.isError && !reviews.data?.length ? (
                 <p className="text-sm text-[var(--fg-muted)]">{t('productPage.noReviews')}</p>
               ) : null}
               {reviews.data?.map((r: Review) => {

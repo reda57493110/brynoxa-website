@@ -5,7 +5,8 @@ import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { getSettings } from '../models/Settings';
 import { ApiError } from '../utils/ApiError';
-import { IAddress, User } from '../models/User';
+import { IAddress } from '../models/User';
+import { createHash, randomBytes } from 'crypto';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -13,6 +14,18 @@ function generateOrderNumber() {
   const rand = Math.floor(1000 + Math.random() * 9000);
   return `BRX-${stamp}-${rand}`;
 }
+
+function hashReceiptToken(token: string) {
+  return createHash('sha256').update(token).digest('hex');
+}
+
+const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
+  pending: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['delivered'],
+  delivered: [],
+  cancelled: [],
+};
 
 export async function validateCoupon(code: string, subtotal: number) {
   const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
@@ -36,6 +49,27 @@ export async function validateCoupon(code: string, subtotal: number) {
   discount = Math.min(discount, subtotal);
 
   return { coupon, discount };
+}
+
+async function claimCoupon(couponId: Types.ObjectId) {
+  const now = new Date();
+  const coupon = await Coupon.findOneAndUpdate(
+    {
+      _id: couponId,
+      isActive: true,
+      $and: [
+        { $or: [{ startsAt: { $exists: false } }, { startsAt: null }, { startsAt: { $lte: now } }] },
+        { $or: [{ expiresAt: { $exists: false } }, { expiresAt: null }, { expiresAt: { $gt: now } }] },
+        { $or: [{ maxUses: { $lte: 0 } }, { $expr: { $lt: ['$usedCount', '$maxUses'] } }] },
+      ],
+    },
+    { $inc: { usedCount: 1 } },
+    { new: true }
+  );
+  if (!coupon) {
+    throw new ApiError(400, 'Coupon is no longer available');
+  }
+  return coupon;
 }
 
 async function buildOrderLines(items: { productId: string; qty: number }[]) {
@@ -83,17 +117,15 @@ async function priceOrder(subtotal: number, couponCode?: string) {
   let couponMeta: { code: string; couponId: Types.ObjectId } | undefined;
 
   if (couponCode) {
-    try {
-      const { coupon, discount: d } = await validateCoupon(couponCode, subtotal);
-      discount = d;
-      couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
-    } catch {
-      couponMeta = undefined;
-      discount = 0;
-    }
+    const { coupon, discount: d } = await validateCoupon(couponCode, subtotal);
+    discount = d;
+    couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
   }
 
-  const shipping = 0;
+  const shipping =
+    settings.freeShippingMin > 0 && subtotal >= settings.freeShippingMin
+      ? 0
+      : settings.shippingFlatRate;
   const taxable = Math.max(subtotal - discount, 0);
   const tax = (taxable * settings.taxRate) / 100;
   const total = taxable + shipping + tax;
@@ -117,41 +149,58 @@ export async function createCodOrder(input: {
   const { orderItems, subtotal } = await buildOrderLines(input.items);
   const { pricing, couponMeta } = await priceOrder(subtotal, input.couponCode);
 
-  const order = await Order.create({
-    orderNumber: generateOrderNumber(),
-    user: input.userId,
-    items: orderItems,
-    pricing,
-    coupon: couponMeta,
-    shippingAddress: input.shippingAddress,
-    paymentMethod: 'cod',
-    paymentStatus: 'pending',
-    orderStatus: 'pending',
-    timeline: [{ status: 'pending', note: 'Order placed — awaiting confirmation', at: new Date() }],
-    customerNote: input.customerNote,
-    stockReserved: false,
-  });
-
+  let couponClaimed = false;
   if (couponMeta) {
-    await Coupon.findByIdAndUpdate(couponMeta.couponId, { $inc: { usedCount: 1 } });
+    await claimCoupon(couponMeta.couponId);
+    couponClaimed = true;
   }
 
-  await Notification.create({
-    user: input.userId,
-    type: 'order',
-    title: 'Order placed',
-    message: `Your order ${order.orderNumber} has been placed. Pay cash on delivery.`,
-    link: `/account/orders/${order.orderNumber}`,
-  });
+  const receiptToken = randomBytes(32).toString('hex');
+  let order: InstanceType<typeof Order>;
+  try {
+    order = await Order.create({
+      orderNumber: generateOrderNumber(),
+      receiptTokenHash: hashReceiptToken(receiptToken),
+      user: input.userId,
+      items: orderItems,
+      pricing,
+      coupon: couponMeta,
+      shippingAddress: input.shippingAddress,
+      paymentMethod: 'cod',
+      paymentStatus: 'pending',
+      orderStatus: 'pending',
+      timeline: [{ status: 'pending', note: 'Order placed — awaiting confirmation', at: new Date() }],
+      customerNote: input.customerNote,
+      stockReserved: false,
+    });
+  } catch (error) {
+    if (couponClaimed && couponMeta) {
+      await Coupon.updateOne({ _id: couponMeta.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
+    }
+    throw error;
+  }
 
-  return order;
+  try {
+    await Notification.create({
+      user: input.userId,
+      type: 'order',
+      title: 'Order placed',
+      message: `Your order ${order.orderNumber} has been placed. Pay cash on delivery.`,
+      link: `/account/orders/${order.orderNumber}`,
+    });
+  } catch (error) {
+    console.error('Order notification failed', error);
+  }
+
+  return { order, receiptToken };
 }
 
-/** Guest confirmation: order number + email must match the account that placed it */
-export async function getGuestOrderReceipt(orderNumber: string, email: string) {
-  const user = await User.findOne({ email: email.trim().toLowerCase() });
-  if (!user) throw new ApiError(404, 'Order not found');
-  const order = await Order.findOne({ orderNumber, user: user._id });
+/** Guest confirmation: order number plus a high-entropy receipt token. */
+export async function getGuestOrderReceipt(orderNumber: string, receiptToken: string) {
+  const order = await Order.findOne({
+    orderNumber,
+    receiptTokenHash: hashReceiptToken(receiptToken),
+  });
   if (!order) throw new ApiError(404, 'Order not found');
   return order;
 }
@@ -203,24 +252,47 @@ export async function updateUserOrderItems(
 }
 
 async function adjustStock(order: InstanceType<typeof Order>, direction: 'reserve' | 'restore') {
-  for (const item of order.items) {
-    const delta = direction === 'reserve' ? -item.qty : item.qty;
-    const updated = await Product.findOneAndUpdate(
-      {
-        _id: item.product,
-        ...(direction === 'reserve' ? { stock: { $gte: item.qty } } : {}),
-      },
-      {
-        $inc: {
-          stock: delta,
-          soldCount: direction === 'reserve' ? item.qty : -item.qty,
+  const changed: { productId: Types.ObjectId; stockDelta: number; soldDelta: number }[] = [];
+
+  try {
+    for (const item of order.items) {
+      const stockDelta = direction === 'reserve' ? -item.qty : item.qty;
+      const soldDelta = direction === 'reserve' ? item.qty : -item.qty;
+      const updated = await Product.findOneAndUpdate(
+        {
+          _id: item.product,
+          ...(direction === 'reserve' ? { stock: { $gte: item.qty } } : {}),
         },
-      },
-      { new: true }
-    );
-    if (direction === 'reserve' && !updated) {
-      throw new ApiError(400, `Insufficient stock for ${item.name}`);
+        {
+          $inc: {
+            stock: stockDelta,
+            soldCount: soldDelta,
+          },
+        },
+        { new: true }
+      );
+      if (direction === 'reserve' && !updated) {
+        throw new ApiError(400, `Insufficient stock for ${item.name}`);
+      }
+      if (!updated) {
+        throw new ApiError(400, `Product unavailable for ${item.name}`);
+      }
+      changed.push({
+        productId: item.product as Types.ObjectId,
+        stockDelta,
+        soldDelta,
+      });
     }
+  } catch (error) {
+    await Promise.all(
+      changed.map(({ productId, stockDelta, soldDelta }) =>
+        Product.updateOne(
+          { _id: productId },
+          { $inc: { stock: -stockDelta, soldCount: -soldDelta } }
+        )
+      )
+    );
+    throw error;
   }
 }
 
@@ -235,6 +307,9 @@ export async function updateOrderStatus(
 
   const prev = order.orderStatus;
   if (prev === orderStatus) return order;
+  if (!ORDER_TRANSITIONS[prev].includes(orderStatus)) {
+    throw new ApiError(400, `Cannot move an order from ${prev} to ${orderStatus}`);
+  }
 
   if (orderStatus === 'confirmed' && !order.stockReserved) {
     await adjustStock(order, 'reserve');
@@ -270,13 +345,17 @@ export async function updateOrderStatus(
   if (adminNote !== undefined) order.adminNote = adminNote;
   await order.save();
 
-  await Notification.create({
-    user: order.user,
-    type: 'order',
-    title: 'Order updated',
-    message: `Order ${order.orderNumber} is now ${orderStatus}.`,
-    link: `/account/orders/${order.orderNumber}`,
-  });
+  try {
+    await Notification.create({
+      user: order.user,
+      type: 'order',
+      title: 'Order updated',
+      message: `Order ${order.orderNumber} is now ${orderStatus}.`,
+      link: `/account/orders/${order.orderNumber}`,
+    });
+  } catch (error) {
+    console.error('Order status notification failed', error);
+  }
 
   return order;
 }

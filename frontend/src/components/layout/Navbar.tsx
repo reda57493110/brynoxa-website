@@ -4,6 +4,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useThemeStore } from '@/store/themeStore'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
+import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
 import { MobileNav } from './MobileNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -29,6 +30,7 @@ export function Navbar() {
   const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const cartCount = useCartStore((s) => s.itemCount())
   const wishCount = useWishlistStore((s) => s.ids.length)
+  const compareCount = useCompareStore((s) => s.items.length)
   const user = useAuthStore((s) => s.user)
   const t = useT()
   const links = [
@@ -171,6 +173,19 @@ export function Navbar() {
                 {wishCount > 0 ? (
                   <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold text-[var(--brand-fg)]">
                     {wishCount}
+                  </span>
+                ) : null}
+              </Link>
+
+              <Link
+                to="/compare"
+                className={cn(iconBtn, 'relative hidden sm:inline-flex')}
+                aria-label={t('compare.heading')}
+              >
+                <SiteIcon name="layers" size={17} />
+                {compareCount > 0 ? (
+                  <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold text-[var(--brand-fg)]">
+                    {compareCount}
                   </span>
                 ) : null}
               </Link>

@@ -3,6 +3,7 @@ import * as catalog from '../controllers/catalog.controller';
 import { validate } from '../middleware/validate';
 import { optionalAuth, requireAuth, requirePermission } from '../middleware/auth';
 import { upload } from '../middleware/upload';
+import { uploadLimiter } from '../middleware/rateLimit';
 import {
   categorySchema,
   brandSchema,
@@ -97,6 +98,7 @@ router.post(
   '/admin/upload',
   requireAuth,
   requirePermission('products:write', 'inventory:write'),
+  uploadLimiter,
   upload.single('image'),
   catalog.uploadImage
 );

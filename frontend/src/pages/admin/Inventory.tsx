@@ -7,6 +7,9 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { optimizedImageUrl } from '@/lib/image'
 import { Badge } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
@@ -106,7 +109,7 @@ export function Inventory() {
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
-  const list = products.data?.items ?? []
+  const list = useMemo(() => products.data?.items ?? [], [products.data?.items])
 
   const summary = useMemo(() => {
     const all = list
@@ -255,6 +258,8 @@ export function Inventory() {
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>
+      ) : products.isError ? (
+        <QueryErrorState onRetry={() => products.refetch()} />
       ) : (
         <div className="space-y-3">
           {rows.map((p) => {
@@ -283,8 +288,8 @@ export function Inventory() {
                   <div className="flex min-w-0 flex-1 items-center gap-2.5">
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)] sm:h-14 sm:w-14 sm:rounded-xl">
                       {img ? (
-                        <img
-                          src={img}
+                        <SafeImage
+                          src={optimizedImageUrl(img, 240)}
                           alt=""
                           referrerPolicy="no-referrer"
                           className="h-full w-full object-cover"

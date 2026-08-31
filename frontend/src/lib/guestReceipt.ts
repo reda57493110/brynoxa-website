@@ -4,13 +4,13 @@ const KEY = 'brynoxa-guest-receipt'
 
 export type GuestReceipt = {
   orderNumber: string
-  email: string
+  receiptToken: string
   order: Order
 }
 
-export function saveGuestReceipt(orderNumber: string, email: string, order: Order) {
+export function saveGuestReceipt(orderNumber: string, receiptToken: string, order: Order) {
   try {
-    const payload: GuestReceipt = { orderNumber, email, order }
+    const payload: GuestReceipt = { orderNumber, receiptToken, order }
     sessionStorage.setItem(KEY, JSON.stringify(payload))
   } catch {
     // ignore quota / private mode

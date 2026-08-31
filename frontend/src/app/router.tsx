@@ -21,9 +21,22 @@ const Checkout = lazy(() => import('@/pages/store/Checkout').then((m) => ({ defa
 const Wishlist = lazy(() =>
   import('@/pages/store/Wishlist').then((m) => ({ default: m.Wishlist }))
 )
+const Compare = lazy(() => import('@/pages/store/Compare').then((m) => ({ default: m.Compare })))
+const Notifications = lazy(() =>
+  import('@/pages/store/Notifications').then((m) => ({ default: m.Notifications }))
+)
 const Login = lazy(() => import('@/pages/store/Login').then((m) => ({ default: m.Login })))
 const Register = lazy(() =>
   import('@/pages/store/Register').then((m) => ({ default: m.Register }))
+)
+const ForgotPassword = lazy(() =>
+  import('@/pages/store/ForgotPassword').then((m) => ({ default: m.ForgotPassword }))
+)
+const VerifyEmail = lazy(() =>
+  import('@/pages/store/VerifyEmail').then((m) => ({ default: m.VerifyEmail }))
+)
+const ResetPassword = lazy(() =>
+  import('@/pages/store/ResetPassword').then((m) => ({ default: m.ResetPassword }))
 )
 const Account = lazy(() => import('@/pages/store/Account').then((m) => ({ default: m.Account })))
 const Orders = lazy(() => import('@/pages/store/Orders').then((m) => ({ default: m.Orders })))
@@ -76,6 +89,9 @@ const AdminCoupons = lazy(() =>
 const AdminSettings = lazy(() =>
   import('@/pages/admin/Settings').then((m) => ({ default: m.Settings }))
 )
+const AdminSecurity = lazy(() =>
+  import('@/pages/admin/Security').then((m) => ({ default: m.Security }))
+)
 
 function S({ children }: { children: ReactNode }) {
   return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
@@ -93,6 +109,15 @@ export function AppRouter() {
         <Route path="cart" element={<S><Cart /></S>} />
         <Route path="checkout" element={<S><Checkout /></S>} />
         <Route path="wishlist" element={<S><Wishlist /></S>} />
+        <Route path="compare" element={<S><Compare /></S>} />
+        <Route
+          path="account/notifications"
+          element={
+            <ProtectedRoute>
+              <S><Notifications /></S>
+            </ProtectedRoute>
+          }
+        />
         <Route path="contact" element={<S><Contact /></S>} />
         <Route path="services" element={<S><Services /></S>} />
         <Route
@@ -141,6 +166,9 @@ export function AppRouter() {
       <Route element={<AuthLayout />}>
         <Route path="login" element={<S><Login /></S>} />
         <Route path="register" element={<S><Register /></S>} />
+        <Route path="forgot-password" element={<S><ForgotPassword /></S>} />
+        <Route path="verify-email" element={<S><VerifyEmail /></S>} />
+        <Route path="reset-password" element={<S><ResetPassword /></S>} />
       </Route>
 
       <Route
@@ -163,6 +191,7 @@ export function AppRouter() {
         <Route path="messages" element={<S><AdminMessages /></S>} />
         <Route path="reviews" element={<S><AdminReviews /></S>} />
         <Route path="coupons" element={<S><AdminCoupons /></S>} />
+        <Route path="security" element={<S><AdminSecurity /></S>} />
         <Route path="settings" element={<S><AdminSettings /></S>} />
       </Route>
 

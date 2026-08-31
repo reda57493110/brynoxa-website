@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ordersApi } from '@/api/ordersApi'
 import { couponsApi } from '@/api/couponsApi'
+import { productsApi } from '@/api/productsApi'
 import { settingsApi } from '@/api/settingsApi'
 import { getErrorMessage } from '@/api/client'
 import { Container } from '@/components/ui/Container'
@@ -43,6 +44,8 @@ export function Checkout() {
     country: 'MA',
     postalCode: '00000',
   }
+  const emptyAddressRef = useRef(emptyAddress)
+  emptyAddressRef.current = emptyAddress
 
   const defaultAddr = user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0]
   const [address, setAddress] = useState<Address>({
@@ -55,6 +58,7 @@ export function Checkout() {
     country: 'MA',
     postalCode: '00000',
   })
+  const [selectedAddressId, setSelectedAddressId] = useState(defaultAddr?._id || '')
   const [email, setEmail] = useState(user?.email || '')
   const [createAccount, setCreateAccount] = useState(false)
   const [password, setPassword] = useState('')
@@ -63,7 +67,24 @@ export function Checkout() {
   const [discount, setDiscount] = useState(0)
   const [note, setNote] = useState('')
   const [validating, setValidating] = useState(false)
+  const [stockChecking, setStockChecking] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState('')
   const [formError, setFormError] = useState('')
+
+  useEffect(() => {
+    if (!user) return
+    setEmail(user.email)
+    const nextDefault = user.addresses.find((a) => a.isDefault) || user.addresses[0]
+    if (nextDefault) {
+      setSelectedAddressId(nextDefault._id || '')
+      setAddress({
+        ...emptyAddressRef.current,
+        ...nextDefault,
+        country: nextDefault.country || 'MA',
+        postalCode: nextDefault.postalCode || '00000',
+      })
+    }
+  }, [user])
 
   const settings = useQuery({
     queryKey: ['settings'],
@@ -71,9 +92,15 @@ export function Checkout() {
   })
 
   const taxRate = settings.data?.taxRate ?? 0
+  const shippingRate = settings.data?.shippingFlatRate ?? 0
+  const freeShippingMin = settings.data?.freeShippingMin ?? 0
   const taxable = Math.max(0, subtotal - discount)
+  const shipping =
+    freeShippingMin > 0 && subtotal >= freeShippingMin
+      ? 0
+      : shippingRate
   const tax = (taxable * taxRate) / 100
-  const total = taxable + tax
+  const total = taxable + shipping + tax
 
   const placeOrder = useMutation({
     mutationFn: () =>
@@ -83,9 +110,11 @@ export function Checkout() {
           label: address.label,
           fullName: address.fullName,
           line1: address.line1,
+          line2: address.line2,
           city: address.city,
-          postalCode: '00000',
-          country: 'MA',
+          state: address.state,
+          postalCode: address.postalCode || '00000',
+          country: address.country || 'MA',
           phone: address.phone,
         },
         couponCode: couponCode || undefined,
@@ -98,8 +127,8 @@ export function Checkout() {
       const order = payload.order
       if (payload.user && payload.accessToken) {
         setAuth(payload.user, payload.accessToken)
-      } else if (!isAuth) {
-        saveGuestReceipt(order.orderNumber, email.trim(), order)
+      } else if (!isAuth && payload.receiptToken) {
+        saveGuestReceipt(order.orderNumber, payload.receiptToken, order)
       }
       clear()
       toast.success(t('checkout.orderPlaced'))
@@ -112,14 +141,20 @@ export function Checkout() {
   })
 
   const validateCoupon = async () => {
-    if (!couponCode.trim()) return
+    if (!couponCode.trim()) {
+      setDiscount(0)
+      setAppliedCoupon('')
+      return
+    }
     setValidating(true)
     try {
       const res = await couponsApi.validate(couponCode.trim(), subtotal)
       setDiscount(res.data.data.discount || 0)
+      setAppliedCoupon(couponCode.trim().toUpperCase())
       toast.success(res.data.message || t('checkout.couponApplied'))
     } catch (e) {
       setDiscount(0)
+      setAppliedCoupon('')
       toast.error(getErrorMessage(e, t('checkout.invalidCoupon')))
     } finally {
       setValidating(false)
@@ -149,7 +184,7 @@ export function Checkout() {
   const set = (key: keyof Address, value: string) =>
     setAddress((prev) => ({ ...prev, [key]: value }))
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setFormError('')
 
@@ -159,7 +194,7 @@ export function Checkout() {
         return
       }
       if (createAccount) {
-        if (password.length < 6) {
+        if (password.length < 12) {
           setFormError(t('checkout.passwordMin'))
           return
         }
@@ -170,7 +205,32 @@ export function Checkout() {
       }
     }
 
-    placeOrder.mutate()
+    setStockChecking(true)
+    try {
+      const ids = items.map((item) => item.productId)
+      const currentProducts = (
+        await Promise.all(
+          Array.from({ length: Math.ceil(ids.length / 4) }, (_, index) =>
+            productsApi.compare(ids.slice(index * 4, index * 4 + 4))
+          )
+        )
+      ).flatMap((response) => response.data.data)
+
+      const stockIssue = items.find((item) => {
+        const current = currentProducts.find((product) => product._id === item.productId)
+        return !current || current.stock < item.qty
+      })
+      if (stockIssue) {
+        setFormError(t('checkout.stockChanged', { name: stockIssue.name }))
+        return
+      }
+
+      placeOrder.mutate()
+    } catch (e) {
+      setFormError(getErrorMessage(e, t('checkout.stockCheckFailed')))
+    } finally {
+      setStockChecking(false)
+    }
   }
 
   return (
@@ -245,6 +305,7 @@ export function Checkout() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        minLength={12}
                       />
                       <Input
                         label={t('checkout.confirmPassword')}
@@ -253,6 +314,7 @@ export function Checkout() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
+                        minLength={12}
                       />
                     </div>
                   ) : null}
@@ -265,6 +327,37 @@ export function Checkout() {
                 {t('checkout.shippingTitle')}
               </h2>
               <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('checkout.shippingBody')}</p>
+              {isAuth && user?.addresses?.length ? (
+                <label className="mt-4 flex flex-col gap-1.5 text-sm sm:mt-5">
+                  <span className="font-medium">{t('account.addresses')}</span>
+                  <select
+                    value={selectedAddressId}
+                    onChange={(e) => {
+                      const id = e.target.value
+                      setSelectedAddressId(id)
+                      const selected = user.addresses.find((item) => item._id === id)
+                      setAddress(
+                        selected
+                          ? {
+                              ...emptyAddress,
+                              ...selected,
+                              country: selected.country || 'MA',
+                              postalCode: selected.postalCode || '00000',
+                            }
+                          : emptyAddress
+                      )
+                    }}
+                    className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3.5 text-[var(--fg)] outline-none ring-brand"
+                  >
+                    <option value="">{t('account.addAddress')}</option>
+                    {user.addresses.map((saved) => (
+                      <option key={saved._id} value={saved._id}>
+                        {saved.label} — {saved.line1}, {saved.city}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2">
                 <Input
                   label={t('checkout.fullName')}
@@ -316,6 +409,11 @@ export function Checkout() {
                   {t('checkout.apply')}
                 </Button>
               </div>
+              {appliedCoupon && discount > 0 ? (
+                <p className="mt-2 text-xs font-medium text-[var(--success)]">
+                  {t('checkout.couponApplied')}: {appliedCoupon}
+                </p>
+              ) : null}
               <Textarea
                 className="mt-3 sm:mt-4"
                 label={t('checkout.orderNote')}
@@ -361,6 +459,10 @@ export function Checkout() {
                   <span>-{formatCurrency(discount)}</span>
                 </div>
               ) : null}
+              <div className="flex justify-between">
+                <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
+                <span>{shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}</span>
+              </div>
               {taxRate > 0 ? (
                 <div className="flex justify-between">
                   <span className="text-[var(--fg-muted)]">{t('checkout.tax')}</span>
@@ -382,7 +484,12 @@ export function Checkout() {
                 {t('checkout.warranty6')}
               </li>
             </ul>
-            <Button type="submit" className="mt-6 w-full rounded-full" loading={placeOrder.isPending}>
+            <Button
+              type="submit"
+              className="mt-6 w-full rounded-full"
+              loading={placeOrder.isPending || stockChecking || settings.isLoading}
+              disabled={settings.isLoading}
+            >
               {t('checkout.placeOrder')}
             </Button>
             <Link
@@ -405,6 +512,10 @@ export function Checkout() {
               <span>-{formatCurrency(discount)}</span>
             </div>
           ) : null}
+          <div className="mt-2 flex justify-between text-sm">
+            <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
+            <span>{shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}</span>
+          </div>
           <div className="mt-3 flex justify-between border-t border-[var(--border)] pt-3 font-display text-base font-semibold">
             <span>{t('checkout.totalCod')}</span>
             <span>{formatCurrency(total)}</span>
@@ -432,7 +543,8 @@ export function Checkout() {
             type="submit"
             form="checkout-form"
             className="h-11 flex-1 rounded-full text-sm"
-            loading={placeOrder.isPending}
+            loading={placeOrder.isPending || stockChecking || settings.isLoading}
+            disabled={settings.isLoading}
           >
             {t('checkout.placeOrder')}
           </Button>

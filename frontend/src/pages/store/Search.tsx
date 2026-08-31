@@ -5,6 +5,7 @@ import { Container } from '@/components/ui/Container'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 
@@ -42,21 +43,31 @@ export function Search() {
           />
         ) : (
           <>
-            <p className="mb-5 text-sm text-[var(--fg-muted)]">
-              {products.isLoading
-                ? t('ui.searching')
-                : resultCount === 1
-                  ? t('search.resultOne', { count: resultCount })
-                  : t('search.results', { count: resultCount })}
-            </p>
-            <ProductGrid
-              products={products.data}
-              loading={products.isLoading}
-              emptyTitle={t('search.noMatch')}
-              emptyDescription={t('search.noMatchBody')}
-              emptyActionLabel={t('home.browseShop')}
-              emptyActionTo="/shop"
-            />
+            {products.isError ? (
+              <QueryErrorState
+                title={t('shop.loadError')}
+                description={t('shop.loadErrorBody')}
+                onRetry={() => products.refetch()}
+              />
+            ) : (
+              <>
+                <p className="mb-5 text-sm text-[var(--fg-muted)]">
+                  {products.isLoading
+                    ? t('ui.searching')
+                    : resultCount === 1
+                      ? t('search.resultOne', { count: resultCount })
+                      : t('search.results', { count: resultCount })}
+                </p>
+                <ProductGrid
+                  products={products.data}
+                  loading={products.isLoading}
+                  emptyTitle={t('search.noMatch')}
+                  emptyDescription={t('search.noMatchBody')}
+                  emptyActionLabel={t('home.browseShop')}
+                  emptyActionTo="/shop"
+                />
+              </>
+            )}
           </>
         )}
       </Container>

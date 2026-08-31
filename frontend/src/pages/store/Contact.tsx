@@ -19,7 +19,7 @@ const pillPrimary =
   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
 
 const pillGhost =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
+  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
 
 type FormErrors = Partial<Record<'name' | 'email' | 'subject' | 'message', string>>
 
@@ -168,7 +168,7 @@ export function Contact() {
               {HERO_PROOF.map(({ icon, label }) => (
                 <li
                   key={label}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-sm"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-sm"
                 >
                   <SiteIcon name={icon} size={14} className="text-[var(--brand-text)]" />
                   {label}
@@ -222,7 +222,7 @@ export function Contact() {
       <section
         id="message"
         aria-labelledby="contact-form-heading"
-        className="scroll-mt-[calc(var(--nav-height)+1rem)] bg-[var(--bg-elevated)] py-6 sm:py-10"
+        className="scroll-mt-[calc(var(--nav-height)+1rem)] py-6 sm:py-10"
       >
         <Container>
           <div className="grid gap-8 lg:grid-cols-5 lg:gap-14">
@@ -409,7 +409,7 @@ export function Contact() {
                 return (
                   <li
                     key={item.q}
-                    className="overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)]"
+                    className="overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)]"
                   >
                     <button
                       type="button"
@@ -452,17 +452,12 @@ export function Contact() {
       <section aria-labelledby="newsletter-heading" className="pb-10 pt-6 sm:pb-14 sm:pt-10">
         <Container>
           <motion.div
-            className="cta-band relative overflow-hidden rounded-[1.75rem] px-5 py-8 sm:px-10 sm:py-12 lg:px-14 lg:py-14"
+            className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-8 shadow-soft sm:px-10 sm:py-12 lg:px-14 lg:py-14"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SiteIcon
-              name="mail"
-              size={96}
-              className="pointer-events-none absolute -left-8 bottom-[-2rem] text-[var(--brand)] opacity-[0.12]"
-            />
             <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_min(22rem,100%)] lg:gap-16">
               <div>
                 <p className="kicker">{t('contact.newsletter')}</p>

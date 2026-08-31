@@ -10,6 +10,9 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { optimizedImageUrl } from '@/lib/image'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
 import { PageHero } from '@/components/layout/PageHero'
@@ -160,6 +163,18 @@ export function OrderDetail() {
     )
   }
 
+  if (order.isError) {
+    return (
+      <Container className="py-8 sm:py-10">
+        <QueryErrorState
+          title={t('orders.loadError')}
+          description={t('orders.loadErrorBody')}
+          onRetry={() => order.refetch()}
+        />
+      </Container>
+    )
+  }
+
   if (!order.data) {
     return (
       <Container className="py-8 sm:py-10">
@@ -211,7 +226,7 @@ export function OrderDetail() {
             {draft.map((item) => (
               <div key={item.productId} className={`${surfaceCard} flex gap-4 p-4`}>
                 {item.image ? (
-                  <img src={item.image} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+                  <SafeImage src={optimizedImageUrl(item.image, 320)} alt="" className="h-20 w-20 rounded-2xl object-cover" />
                 ) : (
                   <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--bg-muted)]">
                     <SiteIcon name="package" size={22} className="text-[var(--fg-muted)]" />
@@ -383,7 +398,7 @@ export function OrderDetail() {
                   className="flex items-center gap-3 rounded-2xl border border-[var(--border)] p-3"
                 >
                   {image ? (
-                    <img src={image} alt="" className="h-14 w-14 rounded-xl object-cover" />
+                    <SafeImage src={optimizedImageUrl(image, 240)} alt="" className="h-14 w-14 rounded-xl object-cover" />
                   ) : (
                     <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--bg-muted)]">
                       <SiteIcon name="package" size={18} />

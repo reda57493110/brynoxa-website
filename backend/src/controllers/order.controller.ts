@@ -17,7 +17,7 @@ export const createOrder = asyncHandler(async (req: AuthRequest, res: Response) 
     shippingAddress,
   });
 
-  const order = await orderService.createCodOrder({
+  const result = await orderService.createCodOrder({
     userId,
     items: req.body.items,
     shippingAddress,
@@ -29,14 +29,14 @@ export const createOrder = asyncHandler(async (req: AuthRequest, res: Response) 
     authService.setRefreshCookie(res, auth.refreshToken);
     sendSuccess(
       res,
-      { order, user: auth.user, accessToken: auth.accessToken },
+      { order: result.order, user: auth.user, accessToken: auth.accessToken },
       'Order placed',
       201
     );
     return;
   }
 
-  sendSuccess(res, { order }, 'Order placed', 201);
+  sendSuccess(res, { order: result.order, receiptToken: result.receiptToken }, 'Order placed', 201);
 });
 
 export const myOrders = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -56,8 +56,8 @@ export const myOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
 });
 
 export const guestOrderReceipt = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const email = String(req.query.email || '');
-  const order = await orderService.getGuestOrderReceipt(param(req, 'orderNumber'), email);
+  const receiptToken = String(req.body.token || '');
+  const order = await orderService.getGuestOrderReceipt(param(req, 'orderNumber'), receiptToken);
   sendSuccess(res, order);
 });
 

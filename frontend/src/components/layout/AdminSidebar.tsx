@@ -30,6 +30,7 @@ const items: {
   { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'star' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'ticket' },
+  { to: '/admin/security', label: 'Security', icon: 'shield' },
   { to: '/admin/settings', label: 'Settings', icon: 'settings' },
 ]
 
@@ -56,7 +57,7 @@ export function AdminSidebar({
 
   const visible = items.filter((item) => {
     const permission = ADMIN_NAV_PERMISSION[item.to]
-    return Boolean(permission && hasPermission(role, permission))
+    return item.to === '/admin/security' || Boolean(permission && hasPermission(role, permission))
   })
 
   return (

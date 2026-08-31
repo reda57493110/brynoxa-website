@@ -5,6 +5,7 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
@@ -54,6 +55,8 @@ export function Customers() {
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>
+      ) : customers.isError ? (
+        <QueryErrorState onRetry={() => customers.refetch()} />
       ) : (
         <>
           <div className="space-y-2.5 md:hidden">

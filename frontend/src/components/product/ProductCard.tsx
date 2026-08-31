@@ -7,11 +7,14 @@ import { StockBadge } from './StockBadge'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
+import { useCompareStore } from '@/store/compareStore'
 import { wishlistApi } from '@/api/wishlistApi'
 import { toast } from '@/store/toastStore'
 import { Button } from '@/components/ui/Button'
+import { SafeImage } from '@/components/ui/SafeImage'
 import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
+import { optimizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
 
 function primaryImage(product: Product) {
@@ -39,6 +42,9 @@ export function ProductCard({
   const toggleLocal = useWishlistStore((s) => s.toggleLocal)
   const setFromServer = useWishlistStore((s) => s.setFromServer)
   const isAuth = useAuthStore((s) => s.isAuthenticated())
+  const compareHas = useCompareStore((s) => s.has(product._id))
+  const addCompare = useCompareStore((s) => s.add)
+  const removeCompare = useCompareStore((s) => s.remove)
   const t = useT()
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
@@ -81,6 +87,19 @@ export function ProductCard({
     }
   }
 
+  const onCompare = () => {
+    if (compareHas) {
+      removeCompare(product._id)
+      toast.info(t('compare.remove'))
+      return
+    }
+    if (addCompare(product)) {
+      toast.success(t('compare.added'))
+    } else {
+      toast.info(t('compare.full', { max: 4 }))
+    }
+  }
+
   return (
     <article
       className={cn(
@@ -95,12 +114,19 @@ export function ProductCard({
         )}
       >
         <Link to={`/product/${product.slug}`} className="block h-full w-full">
-          <img
-            src={primaryImage(product)}
+          <SafeImage
+            src={optimizedImageUrl(primaryImage(product), spotlight ? 1200 : 640)}
             alt={product.name}
             referrerPolicy="no-referrer"
             decoding="async"
             loading={spotlight ? 'eager' : 'lazy'}
+            width={600}
+            height={600}
+            sizes={
+              spotlight
+                ? '(min-width: 1024px) 52vw, 100vw'
+                : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, 50vw'
+            }
             className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
           />
         </Link>
@@ -187,6 +213,17 @@ export function ProductCard({
           >
             <SiteIcon name="cart" size={14} />
             {spotlight ? t('common.addToCart') : t('common.add')}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={compareHas ? 'secondary' : 'outline'}
+            className="h-8 w-9 shrink-0 !px-0 sm:h-9"
+            onClick={onCompare}
+            aria-label={compareHas ? t('compare.remove') : t('compare.add')}
+            title={compareHas ? t('compare.remove') : t('compare.add')}
+          >
+            <SiteIcon name="layers" size={14} />
           </Button>
         </div>
       </div>

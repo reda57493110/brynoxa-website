@@ -10,9 +10,11 @@ import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { runSeed, removeRetiredCategories, ensureAdmin } from './seed/seed';
 import { migrateCurrencyToMad } from './config/migrateCurrency';
+import { migrateRefreshTokens } from './services/auth.service';
 
 async function bootstrap() {
   await connectDB();
+  await migrateRefreshTokens();
   await migrateCurrencyToMad();
   await removeRetiredCategories();
   await ensureAdmin();
@@ -29,6 +31,7 @@ async function bootstrap() {
     cors({
       origin: env.CLIENT_URL,
       credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
     })
   );
   app.use(compression());

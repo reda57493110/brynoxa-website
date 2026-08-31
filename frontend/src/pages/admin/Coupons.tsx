@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { useToastStore } from '@/store/toastStore'
@@ -14,12 +16,14 @@ import { formatCurrency } from '@/lib/format'
 export function Coupons() {
   const qc = useQueryClient()
   const toast = useToastStore((s) => s.push)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
   const [form, setForm] = useState({
     code: '',
     type: 'percent' as 'percent' | 'fixed',
     value: 10,
     minOrder: 0,
     maxUses: 100,
+    expiresAt: '',
   })
 
   const list = useQuery({
@@ -31,7 +35,7 @@ export function Coupons() {
     mutationFn: () => adminApi.coupons.create(form),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-coupons'] })
-      setForm({ code: '', type: 'percent', value: 10, minOrder: 0, maxUses: 100 })
+      setForm({ code: '', type: 'percent', value: 10, minOrder: 0, maxUses: 100, expiresAt: '' })
       toast('Coupon created', 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
@@ -96,6 +100,20 @@ export function Coupons() {
           value={form.minOrder}
           onChange={(e) => setForm({ ...form, minOrder: Number(e.target.value) })}
         />
+        <Input
+          label="Maximum uses"
+          type="number"
+          min={0}
+          step={1}
+          value={form.maxUses}
+          onChange={(e) => setForm({ ...form, maxUses: Number(e.target.value) })}
+        />
+        <Input
+          label="Expires (optional)"
+          type="datetime-local"
+          value={form.expiresAt}
+          onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
+        />
         <div className="flex items-end">
           <Button type="submit" loading={create.isPending} className="w-full">
             Create
@@ -105,6 +123,8 @@ export function Coupons() {
 
       {list.isLoading ? (
         <Spinner />
+      ) : list.isError ? (
+        <QueryErrorState onRetry={() => list.refetch()} />
       ) : (
         <ul className="space-y-2">
           {list.data?.map((c) => (
@@ -117,16 +137,22 @@ export function Coupons() {
                 <p className="text-sm text-[var(--fg-muted)]">
                   {c.type === 'percent' ? `${c.value}%` : formatCurrency(c.value)} · used{' '}
                   {c.usedCount}/{c.maxUses || '∞'}
+                  {c.expiresAt ? ` · expires ${new Date(c.expiresAt).toLocaleDateString()}` : ''}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant={c.isActive ? 'success' : 'danger'}>
                   {c.isActive ? 'Active' : 'Off'}
                 </Badge>
-                <Button variant="outline" size="sm" onClick={() => toggle.mutate(c)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  loading={toggle.isPending}
+                  onClick={() => toggle.mutate(c)}
+                >
                   {c.isActive ? 'Turn off' : 'Turn on'}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => remove.mutate(c._id)}>
+                <Button variant="ghost" size="sm" onClick={() => setDeleteId(c._id)}>
                   Delete
                 </Button>
               </div>
@@ -134,6 +160,17 @@ export function Coupons() {
           ))}
         </ul>
       )}
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        title="Delete coupon?"
+        description="This cannot be undone. Existing orders will keep their recorded discount."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
+        }}
+      />
     </div>
   )
 }

@@ -25,7 +25,18 @@ export interface IUser extends Document {
   isActive: boolean;
   /** Checkout without password — cannot sign in until they set one */
   isGuest: boolean;
+  emailVerified: boolean;
+  emailVerificationTokenHash?: string;
+  emailVerificationExpires?: Date;
+  passwordResetTokenHash?: string;
+  passwordResetExpires?: Date;
   refreshToken?: string;
+  mfaEnabled: boolean;
+  mfaSecretEncrypted?: string;
+  mfaPendingSecretEncrypted?: string;
+  mfaRecoveryCodeHashes: string[];
+  failedLoginAttempts: number;
+  lockedUntil?: Date;
   comparePassword(candidate: string): Promise<boolean>;
   createdAt: Date;
   updatedAt: Date;
@@ -51,14 +62,25 @@ const userSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6, select: false },
+    password: { type: String, required: true, minlength: 12, select: false },
     role: { type: String, enum: ['customer', 'admin', 'orders', 'catalog', 'support', 'marketing'], default: 'customer' },
     phone: { type: String },
     addresses: [addressSchema],
     avatar: { type: String },
     isActive: { type: Boolean, default: true },
     isGuest: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: true },
+    emailVerificationTokenHash: { type: String, select: false },
+    emailVerificationExpires: { type: Date, select: false },
+    passwordResetTokenHash: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
     refreshToken: { type: String, select: false },
+    mfaEnabled: { type: Boolean, default: false },
+    mfaSecretEncrypted: { type: String, select: false },
+    mfaPendingSecretEncrypted: { type: String, select: false },
+    mfaRecoveryCodeHashes: { type: [String], select: false, default: [] },
+    failedLoginAttempts: { type: Number, default: 0, select: false },
+    lockedUntil: { type: Date, select: false },
   },
   { timestamps: true }
 );

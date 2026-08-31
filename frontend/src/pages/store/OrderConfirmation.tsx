@@ -24,13 +24,13 @@ export function OrderConfirmation() {
   const guest = orderNumber ? loadGuestReceipt(orderNumber) : null
 
   const order = useQuery({
-    queryKey: ['order', orderNumber, isAuth ? 'auth' : guest?.email || 'guest'],
+    queryKey: ['order', orderNumber, isAuth ? 'auth' : guest?.receiptToken || 'guest'],
     queryFn: async () => {
       if (isAuth) {
         return (await ordersApi.getByNumber(orderNumber)).data.data
       }
-      if (guest?.email) {
-        return (await ordersApi.getGuestReceipt(orderNumber, guest.email)).data.data
+      if (guest?.receiptToken) {
+        return (await ordersApi.getGuestReceipt(orderNumber, guest.receiptToken)).data.data
       }
       return guest?.order ?? null
     },

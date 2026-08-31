@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
+import { SafeImage } from '@/components/ui/SafeImage'
 
 export function Cart() {
   const t = useT()
@@ -73,7 +74,7 @@ export function Cart() {
                   className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)] sm:h-24 sm:w-24 sm:rounded-2xl"
                 >
                   {item.image ? (
-                    <img
+                    <SafeImage
                       src={item.image}
                       alt={item.name}
                       referrerPolicy="no-referrer"

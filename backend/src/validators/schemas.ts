@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(12).max(100),
   phone: z
     .string()
     .trim()
@@ -14,6 +14,35 @@ export const registerSchema = z.object({
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+});
+
+export const mfaCodeSchema = z.object({
+  code: z.string().trim().min(6).max(20),
+});
+
+export const mfaLoginSchema = z.object({
+  mfaToken: z.string().min(20).max(2000),
+  code: z.string().trim().min(6).max(20),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(100),
+  newPassword: z.string().min(12).max(100),
+});
+
+const oneTimeToken = z.string().regex(/^[a-f0-9]{64}$/i, 'Invalid token');
+
+export const emailSchema = z.object({
+  email: z.string().trim().email(),
+});
+
+export const verifyEmailSchema = z.object({
+  token: oneTimeToken,
+});
+
+export const resetPasswordSchema = z.object({
+  token: oneTimeToken,
+  newPassword: z.string().min(12).max(100),
 });
 
 export const updateProfileSchema = z.object({
@@ -99,11 +128,11 @@ export const createOrderSchema = z.object({
   /** Guest checkout — required when not logged in */
   email: z.string().trim().email().optional(),
   /** Optional: create / upgrade account at checkout */
-  password: z.string().min(6).max(100).optional(),
+  password: z.string().min(12).max(100).optional(),
 });
 
 export const guestOrderReceiptSchema = z.object({
-  email: z.string().trim().email(),
+  token: z.string().regex(/^[a-f0-9]{64}$/i, 'Invalid receipt token'),
 });
 
 export const updateOrderItemsSchema = z.object({
@@ -173,7 +202,7 @@ export const setUserRoleSchema = z.object({
 export const createStaffUserSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   email: z.string().trim().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(12).max(100),
   role: z.enum(['orders', 'catalog', 'support', 'marketing']),
 });
 

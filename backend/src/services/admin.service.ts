@@ -4,6 +4,8 @@ import { User } from '../models/User';
 import { Review } from '../models/Review';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { ApiError } from '../utils/ApiError';
+import { isProd } from '../config/env';
+import { sendVerificationEmail } from './auth.service';
 import { isStaffRole, STAFF_ROLES, type StaffRole } from '../permissions';
 
 function dayKey(offset: number) {
@@ -191,6 +193,7 @@ export async function createStaffUser(input: {
     user.role = role;
     user.isGuest = false;
     user.isActive = true;
+    user.emailVerified = !isProd;
     user.refreshToken = undefined;
     await user.save();
   } else {
@@ -201,9 +204,11 @@ export async function createStaffUser(input: {
       role,
       isGuest: false,
       isActive: true,
+      emailVerified: !isProd,
     });
   }
 
+  if (isProd) await sendVerificationEmail(user);
   return user;
 }
 

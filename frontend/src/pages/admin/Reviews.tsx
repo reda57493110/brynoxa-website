@@ -5,6 +5,8 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { RatingStars } from '@/components/product/RatingStars'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { useToastStore } from '@/store/toastStore'
@@ -14,6 +16,7 @@ export function Reviews() {
   const qc = useQueryClient()
   const toast = useToastStore((s) => s.push)
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all')
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const reviews = useQuery({
     queryKey: ['admin-reviews'],
@@ -62,6 +65,8 @@ export function Reviews() {
 
       {reviews.isLoading ? (
         <Spinner />
+      ) : reviews.isError ? (
+        <QueryErrorState onRetry={() => reviews.refetch()} />
       ) : (
         <div className="space-y-3">
           {reviews.data
@@ -94,6 +99,7 @@ export function Reviews() {
                   <Button
                     size="sm"
                     variant="outline"
+                    loading={moderate.isPending}
                     onClick={() => moderate.mutate({ id: r._id, isApproved: !r.isApproved })}
                   >
                     {r.isApproved ? 'Hide' : 'Approve'}
@@ -101,7 +107,8 @@ export function Reviews() {
                   <Button
                     size="sm"
                     variant="danger"
-                    onClick={() => confirm('Delete review?') && remove.mutate(r._id)}
+                    loading={remove.isPending}
+                    onClick={() => setDeleteId(r._id)}
                   >
                     Delete
                   </Button>
@@ -111,6 +118,17 @@ export function Reviews() {
           })}
         </div>
       )}
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        title="Delete review?"
+        description="This permanently removes the customer review."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
+        }}
+      />
     </div>
   )
 }

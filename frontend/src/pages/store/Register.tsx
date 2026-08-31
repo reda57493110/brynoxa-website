@@ -42,7 +42,7 @@ export function Register() {
       setFormError(t('auth.emailInvalid'))
       return
     }
-    if (password.length < 6) {
+    if (password.length < 12) {
       setFormError(t('auth.passwordTooShort'))
       return
     }
@@ -56,6 +56,11 @@ export function Register() {
         phone: trimmedPhone || undefined,
       })
       const payload = res.data?.data
+      if (payload?.verificationRequired) {
+        toast.success(t('auth.verificationSent'))
+        navigate('/login', { replace: true })
+        return
+      }
       if (!payload?.user || !payload.accessToken) {
         throw new Error(t('auth.registerFailed'))
       }
@@ -128,7 +133,7 @@ export function Register() {
             if (formError) setFormError('')
           }}
           required
-          minLength={6}
+          minLength={12}
         />
         {formError ? (
           <p className="rounded-xl border border-[var(--danger)]/40 bg-[color-mix(in_srgb,var(--danger)_12%,transparent)] px-3.5 py-2.5 text-sm text-[var(--danger)]" role="alert">

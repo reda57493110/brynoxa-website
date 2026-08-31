@@ -4,6 +4,7 @@ import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Price } from '@/components/product/Price'
 import { RatingStars } from '@/components/product/RatingStars'
@@ -26,6 +27,18 @@ export function Compare() {
   })
 
   const list = remote.data?.length ? remote.data : items
+
+  if (remote.isError) {
+    return (
+      <Container className="py-8 sm:py-10">
+        <QueryErrorState
+          title={t('shop.loadError')}
+          description={t('shop.loadErrorBody')}
+          onRetry={() => remote.refetch()}
+        />
+      </Container>
+    )
+  }
 
   if (!list.length) {
     return (

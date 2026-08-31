@@ -8,6 +8,30 @@ export const authApi = {
   login: (payload: { email: string; password: string }) =>
     api.post<ApiResponse<AuthPayload>>('/auth/login', payload),
 
+  requestPasswordReset: (email: string) =>
+    api.post<ApiResponse<null>>('/auth/password-reset/request', { email }),
+
+  resendVerification: (email: string) =>
+    api.post<ApiResponse<null>>('/auth/verification/resend', { email }),
+
+  verifyEmail: (token: string) =>
+    api.post<ApiResponse<null>>('/auth/verification/confirm', { token }),
+
+  resetPassword: (payload: { token: string; newPassword: string }) =>
+    api.post<ApiResponse<null>>('/auth/password-reset/confirm', payload),
+
+  completeMfaLogin: (payload: { mfaToken: string; code: string }) =>
+    api.post<ApiResponse<AuthPayload>>('/auth/mfa/login', payload),
+
+  setupMfa: () =>
+    api.post<ApiResponse<{ secret: string; qrCodeDataUrl: string }>>('/auth/mfa/setup'),
+
+  verifyMfaSetup: (code: string) =>
+    api.post<ApiResponse<{ recoveryCodes: string[] }>>('/auth/mfa/verify', { code }),
+
+  disableMfa: (code: string) =>
+    api.post<ApiResponse<null>>('/auth/mfa/disable', { code }),
+
   refresh: () => api.post<ApiResponse<SessionPayload>>('/auth/refresh'),
 
   logout: async () => {
@@ -17,6 +41,9 @@ export const authApi = {
       resetSessionCheck()
     }
   },
+
+  changePassword: (payload: { currentPassword: string; newPassword: string }) =>
+    api.post<ApiResponse<null>>('/auth/change-password', payload),
 
   me: () => api.get<ApiResponse<User>>('/auth/me'),
 

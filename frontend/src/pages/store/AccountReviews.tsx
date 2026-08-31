@@ -4,6 +4,7 @@ import { reviewsApi } from '@/api/reviewsApi'
 import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { RatingStars } from '@/components/product/RatingStars'
@@ -37,6 +38,12 @@ export function AccountReviews() {
           <div className="flex justify-center py-16">
             <Spinner size="lg" />
           </div>
+        ) : reviews.isError ? (
+          <QueryErrorState
+            title={t('account.loadError')}
+            description={t('account.loadErrorBody')}
+            onRetry={() => reviews.refetch()}
+          />
         ) : !reviews.data?.length ? (
           <EmptyState
             icon="star"

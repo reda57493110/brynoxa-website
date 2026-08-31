@@ -27,6 +27,7 @@ export interface IOrderTimeline {
 
 export interface IOrder extends Document {
   orderNumber: string;
+  receiptTokenHash?: string;
   user: Types.ObjectId;
   items: IOrderItem[];
   pricing: {
@@ -80,6 +81,7 @@ const timelineSchema = new Schema<IOrderTimeline>(
 const orderSchema = new Schema<IOrder>(
   {
     orderNumber: { type: String, required: true, unique: true },
+    receiptTokenHash: { type: String, select: false },
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     items: { type: [orderItemSchema], required: true },
     pricing: {

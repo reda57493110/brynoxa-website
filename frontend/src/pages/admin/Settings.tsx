@@ -7,6 +7,8 @@ import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { useToastStore } from '@/store/toastStore'
 
@@ -36,6 +38,7 @@ export function Settings() {
 
   const [catName, setCatName] = useState('')
   const [catDescription, setCatDescription] = useState('')
+  const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
     if (settings.data) {
@@ -97,6 +100,10 @@ export function Settings() {
         <Spinner size="lg" />
       </div>
     )
+  }
+
+  if (settings.isError) {
+    return <QueryErrorState onRetry={() => settings.refetch()} />
   }
 
   return (
@@ -201,6 +208,8 @@ export function Settings() {
 
         {categories.isLoading ? (
           <Spinner />
+        ) : categories.isError ? (
+          <QueryErrorState onRetry={() => categories.refetch()} />
         ) : (
           <ul className="space-y-2">
             {categories.data?.map((c) => (
@@ -222,7 +231,7 @@ export function Settings() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => confirm('Delete this category?') && removeCategory.mutate(c._id)}
+                    onClick={() => setDeleteCategoryId(c._id)}
                   >
                     Delete
                   </Button>
@@ -235,6 +244,21 @@ export function Settings() {
           </ul>
         )}
       </section>
+      <ConfirmDialog
+        open={Boolean(deleteCategoryId)}
+        title="Delete category?"
+        description="Products in this category may no longer appear correctly. This cannot be undone."
+        confirmLabel="Delete"
+        loading={removeCategory.isPending}
+        onClose={() => setDeleteCategoryId(null)}
+        onConfirm={() => {
+          if (deleteCategoryId) {
+            removeCategory.mutate(deleteCategoryId, {
+              onSuccess: () => setDeleteCategoryId(null),
+            })
+          }
+        }}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/authApi'
@@ -7,6 +7,8 @@ import { Container } from '@/components/ui/Container'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
@@ -22,6 +24,8 @@ export function AccountSettings() {
   const setAuth = useAuthStore((s) => s.setAuth)
   const accessToken = useAuthStore((s) => s.accessToken)
   const toast = useToastStore((s) => s.push)
+  const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
 
   const emptyAddress: Omit<Address, '_id'> = {
     label: t('account.homeLabel'),
@@ -41,7 +45,11 @@ export function AccountSettings() {
 
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [address, setAddress] = useState(emptyAddress)
+  const [removeAddressId, setRemoveAddressId] = useState<string | null>(null)
 
   useEffect(() => {
     if (me.data) {
@@ -81,11 +89,33 @@ export function AccountSettings() {
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
 
+  const changePassword = useMutation({
+    mutationFn: () => authApi.changePassword({ currentPassword, newPassword }),
+    onSuccess: () => {
+      logout()
+      toast(t('account.passwordChanged'), 'success')
+      navigate('/login', { replace: true })
+    },
+    onError: (e) => toast(getErrorMessage(e), 'error'),
+  })
+
   if (me.isLoading) {
     return (
       <div className="flex justify-center py-24">
         <Spinner size="lg" />
       </div>
+    )
+  }
+
+  if (me.isError) {
+    return (
+      <Container className="py-8 sm:py-10">
+        <QueryErrorState
+          title={t('account.loadError')}
+          description={t('account.loadErrorBody')}
+          onRetry={() => me.refetch()}
+        />
+      </Container>
     )
   }
 
@@ -125,6 +155,49 @@ export function AccountSettings() {
         </Button>
       </form>
 
+      <form
+        className={`${surfaceCard} mt-8 max-w-lg space-y-4 p-6`}
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (newPassword !== confirmPassword) {
+            toast(t('account.passwordMismatch'), 'error')
+            return
+          }
+          changePassword.mutate()
+        }}
+      >
+        <h2 className="font-display text-lg font-semibold">{t('account.changePassword')}</h2>
+        <Input
+          label={t('account.currentPassword')}
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
+        <Input
+          label={t('account.newPassword')}
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          autoComplete="new-password"
+          minLength={12}
+          required
+        />
+        <Input
+          label={t('account.confirmPassword')}
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          autoComplete="new-password"
+          minLength={12}
+          required
+        />
+        <Button type="submit" className="rounded-full" loading={changePassword.isPending}>
+          {t('account.changePasswordAction')}
+        </Button>
+      </form>
+
       <div className="mt-8 max-w-2xl">
         <h2 className="font-display text-lg font-semibold">{t('account.addresses')}</h2>
         <div className="mt-3 space-y-3">
@@ -149,7 +222,7 @@ export function AccountSettings() {
                   variant="ghost"
                   size="sm"
                   className="rounded-full"
-                  onClick={() => removeAddress.mutate(a._id!)}
+                  onClick={() => setRemoveAddressId(a._id!)}
                   loading={removeAddress.isPending}
                 >
                   {t('ui.remove')}
@@ -184,6 +257,21 @@ export function AccountSettings() {
         </form>
       </div>
       </Container>
+      <ConfirmDialog
+        open={Boolean(removeAddressId)}
+        title={t('account.removeAddressTitle')}
+        description={t('account.removeAddressBody')}
+        confirmLabel={t('ui.remove')}
+        loading={removeAddress.isPending}
+        onClose={() => setRemoveAddressId(null)}
+        onConfirm={() => {
+          if (removeAddressId) {
+            removeAddress.mutate(removeAddressId, {
+              onSuccess: () => setRemoveAddressId(null),
+            })
+          }
+        }}
+      />
     </>
   )
 }

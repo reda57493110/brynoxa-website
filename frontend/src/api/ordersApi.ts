@@ -11,8 +11,8 @@ export const ordersApi = {
   getByNumber: (orderNumber: string) =>
     api.get<ApiResponse<Order>>(`/orders/${orderNumber}`),
 
-  getGuestReceipt: (orderNumber: string, email: string) =>
-    api.get<ApiResponse<Order>>(`/orders/${orderNumber}/receipt`, { params: { email } }),
+  getGuestReceipt: (orderNumber: string, token: string) =>
+    api.post<ApiResponse<Order>>(`/orders/${orderNumber}/receipt`, { token }),
 
   cancel: (orderNumber: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/cancel`),

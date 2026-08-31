@@ -9,6 +9,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, error, id, ...props }, ref) => {
     const inputId = id || props.name
+    const errorId = inputId ? `${inputId}-error` : undefined
+    const describedBy =
+      [props['aria-describedby'], errorId].filter(Boolean).join(' ') || undefined
     return (
       <label className="flex w-full flex-col gap-1.5 text-sm">
         {label ? <span className="font-medium text-[var(--fg)]">{label}</span> : null}
@@ -21,8 +24,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className
           )}
           {...props}
+          aria-invalid={error ? true : props['aria-invalid']}
+          aria-describedby={describedBy}
         />
-        {error ? <span className="text-xs text-[var(--danger)]">{error}</span> : null}
+        {error ? (
+          <span id={errorId} role="alert" className="text-xs text-[var(--danger)]">
+            {error}
+          </span>
+        ) : null}
       </label>
     )
   }
