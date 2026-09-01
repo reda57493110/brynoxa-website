@@ -2,7 +2,8 @@ import { Response } from 'express';
 import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/tokens';
-import { env, isProd } from '../config/env';
+import { env, isProd, isEmailConfigured } from '../config/env';
+import { getCookieSameSite } from '../config/cookies';
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { createCipheriv, createDecipheriv } from 'crypto';
 import { generateSecret, generateURI, verify } from 'otplib';
@@ -55,13 +56,12 @@ function hashOneTimeToken(token: string) {
 }
 
 async function sendSecurityEmail(to: string, subject: string, html: string) {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) {
-    if (isProd) throw new ApiError(503, 'Email delivery is not configured');
-    console.warn(`Security email skipped in development for ${to}`);
+  if (!isEmailConfigured()) {
+    console.warn(`Security email skipped (Resend not configured) for ${to}`);
     return;
   }
-  const { error } = await new Resend(env.RESEND_API_KEY).emails.send({
-    from: env.EMAIL_FROM,
+  const { error } = await new Resend(env.RESEND_API_KEY!).emails.send({
+    from: env.EMAIL_FROM!,
     to,
     subject,
     html,
@@ -168,7 +168,7 @@ export function setCsrfCookie(res: Response, csrfToken: string) {
   res.cookie(CSRF_COOKIE, csrfToken, {
     httpOnly: false,
     secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite: getCookieSameSite(),
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/api/v1/auth',
   });
@@ -191,7 +191,7 @@ export function setRefreshCookie(res: Response, token: string, csrfToken?: strin
   res.cookie(REFRESH_COOKIE, token, {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite: getCookieSameSite(),
     maxAge: 7 * 24 * 60 * 60 * 1000,
     path: '/api/v1/auth',
   });
@@ -199,15 +199,16 @@ export function setRefreshCookie(res: Response, token: string, csrfToken?: strin
 }
 
 export function clearRefreshCookie(res: Response) {
+  const sameSite = getCookieSameSite();
   res.clearCookie(REFRESH_COOKIE, {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite,
     path: '/api/v1/auth',
   });
   res.clearCookie(CSRF_COOKIE, {
     secure: isProd,
-    sameSite: isProd ? 'none' : 'lax',
+    sameSite,
     path: '/api/v1/auth',
   });
 }

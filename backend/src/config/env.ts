@@ -3,11 +3,19 @@ import { z } from 'zod';
 
 dotenv.config();
 
+function resolveClientUrl(raw?: string): string {
+  const trimmed = raw?.replace(/\/$/, '');
+  if (trimmed) return trimmed;
+  const vercelUrl = process.env.VERCEL_URL?.replace(/\/$/, '');
+  if (vercelUrl) return `https://${vercelUrl}`;
+  return 'http://localhost:5173';
+}
+
 const envSchema = z.object({
   PORT: z.string().default('5000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   MONGODB_URI: z.string().min(1),
-  CLIENT_URL: z.string().url(),
+  CLIENT_URL: z.preprocess((value) => resolveClientUrl(typeof value === 'string' ? value : undefined), z.string().url()),
   JWT_ACCESS_SECRET: z.string().min(16),
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_ACCESS_EXPIRES: z.string().default('15m'),
@@ -37,13 +45,11 @@ if (parsed.data.NODE_ENV === 'production') {
     accessSecret.length < 32 ||
     refreshSecret.length < 32 ||
     (process.env.MFA_ENCRYPTION_KEY || '').length < 32 ||
-    !process.env.RESEND_API_KEY ||
-    !process.env.EMAIL_FROM ||
     !process.env.ADMIN_EMAIL ||
     adminPassword.length < 12
   ) {
     console.error(
-      'Production requires explicit 32+ character JWT secrets, ADMIN_EMAIL, and a 12+ character ADMIN_PASSWORD'
+      'Production requires explicit 32+ character JWT secrets, MFA_ENCRYPTION_KEY, ADMIN_EMAIL, and a 12+ character ADMIN_PASSWORD'
     );
     process.exit(1);
   }
@@ -51,3 +57,13 @@ if (parsed.data.NODE_ENV === 'production') {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
+
+export function isEmailConfigured(): boolean {
+  const key = env.RESEND_API_KEY?.trim();
+  return Boolean(
+    key &&
+      key !== 'PASTE_YOUR_RESEND_KEY_HERE' &&
+      env.EMAIL_FROM &&
+      !env.EMAIL_FROM.includes('example.com')
+  );
+}
