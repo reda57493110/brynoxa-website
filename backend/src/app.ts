@@ -43,6 +43,10 @@ export function getApp(): express.Application {
   expressApp.use(express.urlencoded({ extended: true }));
   expressApp.use(cookieParser());
 
+  expressApp.get('/api/v1/health', (_req, res) => {
+    res.json({ success: true, message: 'Brynoxa API OK' });
+  });
+
   expressApp.use(async (req, res, next) => {
     try {
       await ensureInitialized();
