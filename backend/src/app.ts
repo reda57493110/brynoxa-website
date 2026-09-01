@@ -10,39 +10,53 @@ import routes from './routes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { runBootstrap } from './bootstrap';
 
-let appPromise: Promise<express.Application> | null = null;
+let app: express.Application | null = null;
+let initPromise: Promise<void> | null = null;
 
-export async function getApp(): Promise<express.Application> {
-  if (appPromise) return appPromise;
+function ensureInitialized(): Promise<void> {
+  if (!initPromise) {
+    initPromise = (async () => {
+      await connectDB();
+      await runBootstrap();
+    })();
+  }
+  return initPromise;
+}
 
-  appPromise = (async () => {
-    await connectDB();
-    await runBootstrap();
+export function getApp(): express.Application {
+  if (app) return app;
 
-    const app = express();
+  const expressApp = express();
 
-    app.set('trust proxy', 1);
-    app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-    app.use(
-      cors({
-        origin: env.CLIENT_URL,
-        credentials: true,
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
-      })
-    );
-    app.use(compression());
-    app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
-    app.use(express.json({ limit: '2mb' }));
-    app.use(express.urlencoded({ extended: true }));
-    app.use(cookieParser());
+  expressApp.set('trust proxy', 1);
+  expressApp.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  expressApp.use(
+    cors({
+      origin: env.CLIENT_URL,
+      credentials: true,
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    })
+  );
+  expressApp.use(compression());
+  expressApp.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+  expressApp.use(express.json({ limit: '2mb' }));
+  expressApp.use(express.urlencoded({ extended: true }));
+  expressApp.use(cookieParser());
 
-    app.use('/api/v1', routes);
+  expressApp.use(async (req, res, next) => {
+    try {
+      await ensureInitialized();
+      next();
+    } catch (err) {
+      next(err);
+    }
+  });
 
-    app.use(notFound);
-    app.use(errorHandler);
+  expressApp.use('/api/v1', routes);
 
-    return app;
-  })();
+  expressApp.use(notFound);
+  expressApp.use(errorHandler);
 
-  return appPromise;
+  app = expressApp;
+  return app;
 }

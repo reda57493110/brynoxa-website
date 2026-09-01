@@ -7,31 +7,15 @@ if (!module.paths.includes(backendNodeModules)) {
 }
 
 const serverless = require('serverless-http');
+const { getApp } = require('../backend/dist/app');
 
-/** @type {import('serverless-http').Handler | null} */
-let handler = null;
-/** @type {Promise<void> | null} */
-let booting = null;
-
-async function getHandler() {
-  if (handler) return handler;
-  if (!booting) {
-    booting = (async () => {
-      const { getApp } = require('../backend/dist/app');
-      const app = await getApp();
-      handler = serverless(app);
-    })();
-  }
-  await booting;
-  return handler;
-}
+const handler = serverless(getApp());
 
 module.exports = async (req, res) => {
   try {
-    const fn = await getHandler();
-    return fn(req, res);
+    return await handler(req, res);
   } catch (err) {
-    console.error('API bootstrap failed:', err);
+    console.error('API request failed:', err);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
     res.end(

@@ -2,7 +2,7 @@ import { env } from './config/env';
 import { getApp } from './app';
 
 async function bootstrap() {
-  const app = await getApp();
+  const app = getApp();
 
   app.listen(Number(env.PORT), () => {
     console.log(`Brynoxa API running on http://localhost:${env.PORT}`);

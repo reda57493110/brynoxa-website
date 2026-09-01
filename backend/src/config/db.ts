@@ -33,7 +33,14 @@ export async function connectDB(): Promise<typeof mongoose> {
   }
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(uri).then((connection) => {
+    cached.promise = mongoose
+      .connect(uri, {
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 8000,
+        socketTimeoutMS: 15000,
+        maxPoolSize: 10,
+      })
+      .then((connection) => {
       const host = connection.connection.host || 'unknown';
       console.log(`MongoDB connected (${isMemoryUri(env.MONGODB_URI) ? 'in-memory' : host})`);
       return connection;
