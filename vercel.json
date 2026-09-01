@@ -9,7 +9,7 @@
   ],
   "functions": {
     "api/index.js": {
-      "includeFiles": "backend/dist/**",
+      "includeFiles": "{backend/dist/**,backend/node_modules/**}",
       "maxDuration": 30
     }
   },

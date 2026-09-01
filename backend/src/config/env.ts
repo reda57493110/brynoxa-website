@@ -34,7 +34,7 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error('Invalid environment variables:', parsed.error.flatten().fieldErrors);
-  process.exit(1);
+  throw new Error('Invalid environment variables');
 }
 
 if (parsed.data.NODE_ENV === 'production') {
@@ -48,10 +48,9 @@ if (parsed.data.NODE_ENV === 'production') {
     !process.env.ADMIN_EMAIL ||
     adminPassword.length < 12
   ) {
-    console.error(
+    throw new Error(
       'Production requires explicit 32+ character JWT secrets, MFA_ENCRYPTION_KEY, ADMIN_EMAIL, and a 12+ character ADMIN_PASSWORD'
     );
-    process.exit(1);
   }
 }
 
