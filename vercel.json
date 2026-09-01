@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "installCommand": "npm install --prefix backend --include=dev && npm install --prefix frontend --include=dev",
+  "installCommand": "npm install --include=dev && npm install --prefix backend --include=dev && npm install --prefix frontend --include=dev",
   "buildCommand": "npm run build --prefix backend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
@@ -8,8 +8,8 @@
     { "source": "/api/v1/(.*)", "destination": "/api" }
   ],
   "functions": {
-    "api/index.ts": {
-      "memory": 1024,
+    "api/index.js": {
+      "includeFiles": "backend/dist/**",
       "maxDuration": 30
     }
   },
