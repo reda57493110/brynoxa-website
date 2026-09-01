@@ -11,6 +11,12 @@ declare global {
 export async function runBootstrap(): Promise<void> {
   if (global.__brynoxaBootstrapped) return;
 
+  if (process.env.VERCEL) {
+    await ensureAdmin();
+    global.__brynoxaBootstrapped = true;
+    return;
+  }
+
   await migrateRefreshTokens();
   await migrateCurrencyToMad();
   await removeRetiredCategories();

@@ -5,7 +5,8 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/api/v1/((?!health$).*)", "destination": "/api" },
-    { "source": "/api/v1", "destination": "/api" }
+    { "source": "/api/v1", "destination": "/api" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/index.js": {
