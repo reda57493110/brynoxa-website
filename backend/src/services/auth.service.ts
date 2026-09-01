@@ -6,11 +6,10 @@ import { env, isProd, isEmailConfigured } from '../config/env';
 import { getCookieSameSite } from '../config/cookies';
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { createCipheriv, createDecipheriv } from 'crypto';
-import { generateSecret, generateURI, verify } from 'otplib';
 import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
-import { Resend } from 'resend';
+import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
 
 const REFRESH_COOKIE = 'brynoxa_refresh';
 const CSRF_COOKIE = 'brynoxa_csrf';
@@ -60,6 +59,7 @@ async function sendSecurityEmail(to: string, subject: string, html: string) {
     console.warn(`Security email skipped (Resend not configured) for ${to}`);
     return;
   }
+  const { Resend } = await import('resend');
   const { error } = await new Resend(env.RESEND_API_KEY!).emails.send({
     from: env.EMAIL_FROM!,
     to,
@@ -135,9 +135,7 @@ export async function resetPassword(token: string, newPassword: string) {
 }
 
 async function verifyTotp(secret: string, code: string) {
-  if (!/^\d{6}$/.test(code.trim())) return false;
-  const result = await verify({ secret, token: code.trim(), epochTolerance: 1 });
-  return result.valid;
+  return verifyTotpCode(secret, code);
 }
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -235,8 +233,8 @@ export async function setupMfa(userId: string) {
   if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff account not found');
   if (user.mfaEnabled) throw new ApiError(409, 'MFA is already enabled');
 
-  const secret = generateSecret({ length: 20 });
-  const uri = generateURI({ issuer: 'Brynoxa', label: user.email, secret });
+  const secret = await createTotpSecret(20);
+  const uri = await createTotpUri({ issuer: 'Brynoxa', label: user.email, secret });
   user.mfaPendingSecretEncrypted = encryptMfaSecret(secret);
   await user.save({ validateBeforeSave: false });
 
