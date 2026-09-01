@@ -33,12 +33,18 @@ export async function ensureAdmin() {
     console.warn('ADMIN_EMAIL and ADMIN_PASSWORD are not configured; skipping admin bootstrap');
     return null;
   }
-  const existing = await User.findOne({ email: env.ADMIN_EMAIL });
+  const existing = await User.findOne({ email: env.ADMIN_EMAIL }).select('+password');
   if (existing) {
     if (existing.role !== 'admin') {
       existing.role = 'admin';
       await existing.save();
       console.log(`Promoted ${env.ADMIN_EMAIL} to admin`);
+    } else if (env.ADMIN_PASSWORD && !(await existing.comparePassword(env.ADMIN_PASSWORD))) {
+      existing.password = env.ADMIN_PASSWORD;
+      existing.failedLoginAttempts = 0;
+      existing.lockedUntil = undefined;
+      await existing.save();
+      console.log(`Synced admin password for ${env.ADMIN_EMAIL}`);
     }
     return existing;
   }
