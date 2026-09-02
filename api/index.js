@@ -7,18 +7,12 @@ if (!module.paths.includes(backendNodeModules)) {
 }
 
 const serverless = require('serverless-http');
-const { connectDB } = require('../backend/dist/config/db');
 const { getApp } = require('../backend/dist/app');
-
-const dbReady = connectDB().catch((err) => {
-  console.error('Mongo preconnect failed:', err);
-});
 
 const handler = serverless(getApp());
 
 module.exports = async (req, res) => {
   try {
-    await dbReady;
     return await handler(req, res);
   } catch (err) {
     console.error('API request failed:', err);

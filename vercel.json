@@ -4,7 +4,7 @@
   "buildCommand": "npm run build --prefix backend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/v1/((?!health$).*)", "destination": "/api" },
+    { "source": "/api/v1/((?!health$|db-ping$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
@@ -14,6 +14,9 @@
       "maxDuration": 10
     },
     "api/v1/health.js": {
+      "maxDuration": 10
+    },
+    "api/v1/db-ping.js": {
       "maxDuration": 10
     }
   },

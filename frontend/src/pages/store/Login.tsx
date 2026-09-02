@@ -93,8 +93,10 @@ export function Login() {
       })()
     } catch (err) {
       const message = getErrorMessage(err, t('auth.loginFailed'))
-      setFormError(message)
-      toast.error(message)
+      const serverBusy =
+        message.includes('timed out') || message.includes('Cannot reach the server')
+      setFormError(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
+      toast.error(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
     } finally {
       setLoading(false)
     }
