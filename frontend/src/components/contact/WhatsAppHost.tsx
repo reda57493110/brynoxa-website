@@ -106,8 +106,6 @@ const PRODUCT_TOPIC: TopicConfig = {
   noteLine: 'contact.waLineQuestion',
 }
 
-const STICKY_BAR_ROUTES = ['/cart', '/checkout']
-
 function topicConfig(id: WhatsAppTopic | null): TopicConfig | null {
   if (!id) return null
   if (id === 'product') return PRODUCT_TOPIC
@@ -121,7 +119,6 @@ export function WhatsAppHost() {
   const isOpen = useWhatsAppStore((s) => s.isOpen)
   const storedTopic = useWhatsAppStore((s) => s.topic)
   const storedProductName = useWhatsAppStore((s) => s.productName)
-  const open = useWhatsAppStore((s) => s.open)
   const close = useWhatsAppStore((s) => s.close)
 
   const onProductPage = location.pathname.startsWith('/product/')
@@ -129,10 +126,6 @@ export function WhatsAppHost() {
   const cachedProduct = slug ? qc.getQueryData<Product>(['product', slug]) : undefined
   const productName = storedProductName || cachedProduct?.name || ''
   const productUrl = onProductPage ? `${window.location.origin}${location.pathname}` : ''
-
-  const hideFabOnMobile =
-    onProductPage ||
-    STICKY_BAR_ROUTES.some((route) => location.pathname === route || location.pathname.startsWith(`${route}/`))
 
   const [selected, setSelected] = useState<WhatsAppTopic | null>(null)
   const [orderNumber, setOrderNumber] = useState('')
@@ -190,25 +183,7 @@ export function WhatsAppHost() {
   }
 
   return (
-    <>
-      {!isOpen ? (
-        <button
-          type="button"
-          onClick={() => open(onProductPage ? { topic: 'product', productName } : undefined)}
-          className={cn(
-            'fixed end-3 z-40 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_10px_22px_-8px_rgba(37,211,102,0.7)] transition hover:scale-[1.04] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-            'h-12 w-12 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:h-14 sm:w-14 sm:end-6 sm:bottom-6',
-            hideFabOnMobile ? 'hidden sm:inline-flex' : 'inline-flex'
-          )}
-          aria-label={t('contact.whatsapp')}
-        >
-          <WhatsAppIcon size={22} className="sm:hidden" />
-          <WhatsAppIcon size={28} className="hidden sm:block" />
-          <span className="absolute end-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-300 sm:end-0.5 sm:top-0.5 sm:h-3 sm:w-3" />
-        </button>
-      ) : null}
-
-      <Modal open={isOpen} onClose={close} title={t('contact.waTitle')} size="sm" presentation="sheet">
+    <Modal open={isOpen} onClose={close} title={t('contact.waTitle')} size="sm" presentation="sheet">
         <div className="flex min-h-0 flex-col gap-3 sm:gap-4">
           <div className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white sm:h-11 sm:w-11">
@@ -329,7 +304,6 @@ export function WhatsAppHost() {
           </div>
         </div>
       </Modal>
-    </>
   )
 }
 
