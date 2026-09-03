@@ -11,7 +11,7 @@
   "functions": {
     "api/index.js": {
       "includeFiles": "backend/dist/**",
-      "maxDuration": 10
+      "maxDuration": 60
     },
     "api/v1/health.js": {
       "maxDuration": 10
@@ -20,14 +20,14 @@
       "maxDuration": 10
     },
     "api/v1/auth/login.js": {
-      "maxDuration": 10
+      "maxDuration": 60
     },
     "api/v1/products.js": {
-      "maxDuration": 10,
+      "maxDuration": 60,
       "includeFiles": "backend/dist/**"
     },
     "api/v1/categories.js": {
-      "maxDuration": 10,
+      "maxDuration": 60,
       "includeFiles": "backend/dist/**"
     }
   },
