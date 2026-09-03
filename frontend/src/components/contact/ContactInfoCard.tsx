@@ -17,15 +17,15 @@ export function ContactInfoCard({
   className?: string
 }) {
   const inner = (
-    <span className="relative flex items-start gap-4">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--bg-muted)] text-[var(--brand-text)]">
+    <span className="relative flex h-full items-start gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-muted)] text-[var(--brand-text)] sm:h-11 sm:w-11 sm:rounded-2xl">
         {icon}
       </span>
-      <span className="min-w-0 pt-0.5">
-        <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--fg-muted)]">
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
           {label}
         </span>
-        <span className="mt-1.5 block text-sm font-semibold leading-snug text-[var(--fg)] sm:text-[15px]">
+        <span className="mt-1 block break-words text-sm font-semibold leading-snug text-[var(--fg)]">
           {value}
         </span>
       </span>
@@ -33,15 +33,15 @@ export function ContactInfoCard({
   )
 
   const styles = cn(
-    'relative flex overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)] p-5 shadow-soft transition duration-300',
+    'relative flex h-full w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5 text-start shadow-soft transition duration-200 sm:rounded-[1.25rem] sm:p-4',
     (href || onClick) &&
-      'hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+      'hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
     className
   )
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={cn(styles, 'w-full text-start')}>
+      <button type="button" onClick={onClick} className={styles}>
         {inner}
       </button>
     )
@@ -60,9 +60,5 @@ export function ContactInfoCard({
     )
   }
 
-  return (
-    <div className={styles}>
-      {inner}
-    </div>
-  )
+  return <div className={styles}>{inner}</div>
 }

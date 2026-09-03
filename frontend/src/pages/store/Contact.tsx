@@ -179,8 +179,8 @@ export function Contact() {
 
       <section aria-labelledby="contact-info-heading" className="py-6 sm:py-10">
         <Container>
-          <div className="mb-5 max-w-xl sm:mb-8">
-            <p className="kicker">{t('contact.hoursChannels')}</p>
+          <div className="mx-auto mb-5 max-w-2xl text-center sm:mb-8">
+            <p className="kicker mx-auto">{t('contact.hoursChannels')}</p>
             <h2
               id="contact-info-heading"
               className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
@@ -192,33 +192,29 @@ export function Contact() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
             <ContactInfoCard
-              icon={<SiteIcon name="chat" size={20} />}
+              icon={<SiteIcon name="chat" size={18} />}
               label={t('contact.whatsapp')}
               value={<PhoneText>{CONTACT.whatsapp.value}</PhoneText>}
               onClick={() => openWhatsAppPicker()}
-              className="p-4 sm:p-5"
             />
             <ContactInfoCard
-              icon={<SiteIcon name="phone" size={20} />}
+              icon={<SiteIcon name="phone" size={18} />}
               label={t('contact.phone')}
               value={<PhoneText>{CONTACT.phone.value}</PhoneText>}
               href={CONTACT.phone.href}
-              className="p-4 sm:p-5"
             />
             <ContactInfoCard
-              icon={<SiteIcon name="mail" size={20} />}
+              icon={<SiteIcon name="mail" size={18} />}
               label={t('contact.email')}
               value={CONTACT.email.value}
               href={CONTACT.email.href}
-              className="p-4 sm:p-5"
             />
             <ContactInfoCard
-              icon={<SiteIcon name="clock" size={20} />}
+              icon={<SiteIcon name="clock" size={18} />}
               label={t('contact.hours')}
               value={t('contact.hoursValue')}
-              className="p-4 sm:p-5"
             />
           </div>
         </Container>
@@ -230,154 +226,155 @@ export function Contact() {
         className="scroll-mt-[calc(var(--nav-height)+1rem)] py-6 sm:py-10"
       >
         <Container>
-          <div className="grid gap-8 lg:grid-cols-5 lg:gap-14">
-            <div className="lg:col-span-3">
-              <p className="kicker">{t('contact.messageKicker')}</p>
-              <h2
-                id="contact-form-heading"
-                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+          <div className="mx-auto max-w-xl text-center">
+            <p className="kicker mx-auto">{t('contact.messageKicker')}</p>
+            <h2
+              id="contact-form-heading"
+              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+            >
+              {t('contact.sendMessage')}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+              {t('contact.formBody')}
+            </p>
+          </div>
+
+          <div className="mx-auto mt-5 max-w-xl sm:mt-8">
+            {sent ? (
+              <motion.div
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-start gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--success)_35%,var(--border))] bg-[color-mix(in_srgb,var(--success)_10%,var(--bg-elevated))] p-4 text-start sm:p-5"
+                role="status"
               >
-                {t('contact.sendMessage')}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                {t('contact.formBody')}
-              </p>
-
-              {sent ? (
-                <motion.div
-                  initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="mt-6 flex items-start gap-3 rounded-[1.35rem] border border-[color-mix(in_srgb,var(--success)_35%,var(--border))] bg-[color-mix(in_srgb,var(--success)_10%,var(--bg))] p-4 sm:mt-8 sm:p-5"
-                  role="status"
-                >
-                  <SiteIcon name="check" size={18} className="mt-0.5 shrink-0 text-[var(--success)]" />
-                  <div>
-                    <p className="font-semibold">{t('contact.received')}</p>
-                    <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('contact.receivedBody')}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 rounded-full"
-                      onClick={() => setSent(false)}
-                    >
-                      {t('contact.sendAnother')}
-                    </Button>
-                  </div>
-                </motion.div>
-              ) : (
-                <form className="mt-5 space-y-4 sm:mt-8" onSubmit={onSubmit} noValidate>
-                  <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
-                    {SUBJECT_PRESETS.map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setSubject(preset)}
-                        className={cn(
-                          'h-8 shrink-0 rounded-full border px-3 text-xs font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-                          subject === preset
-                            ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-                            : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
-                        )}
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Input
-                      label={t('contact.fullName')}
-                      name="name"
-                      autoComplete="name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      error={errors.name}
-                      required
-                      aria-invalid={Boolean(errors.name)}
-                    />
-                    <Input
-                      label={t('contact.email')}
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      error={errors.email}
-                      required
-                      aria-invalid={Boolean(errors.email)}
-                    />
-                  </div>
-                  <Input
-                    label={t('contact.subject')}
-                    name="subject"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    error={errors.subject}
-                    required
-                    aria-invalid={Boolean(errors.subject)}
-                  />
-                  <Textarea
-                    label={t('contact.message')}
-                    name="message"
-                    rows={5}
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    error={errors.message}
-                    required
-                    aria-invalid={Boolean(errors.message)}
-                  />
-                  {formError ? (
-                    <p className="text-sm text-[var(--danger)]" role="alert">
-                      {formError}
-                    </p>
-                  ) : null}
+                <SiteIcon name="check" size={18} className="mt-0.5 shrink-0 text-[var(--success)]" />
+                <div>
+                  <p className="font-semibold">{t('contact.received')}</p>
+                  <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('contact.receivedBody')}</p>
                   <Button
-                    type="submit"
-                    size="lg"
-                    loading={sending}
-                    className="w-full rounded-full sm:w-auto sm:min-w-[10rem]"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 rounded-full"
+                    onClick={() => setSent(false)}
                   >
-                    <SiteIcon name="send" size={16} />
-                    {t('contact.send')}
+                    {t('contact.sendAnother')}
                   </Button>
-                </form>
-              )}
-            </div>
+                </div>
+              </motion.div>
+            ) : (
+              <form
+                className="space-y-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-start shadow-soft sm:space-y-4 sm:rounded-[1.35rem] sm:p-6"
+                onSubmit={onSubmit}
+                noValidate
+              >
+                <div className="flex flex-wrap gap-2">
+                  {SUBJECT_PRESETS.map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setSubject(preset)}
+                      className={cn(
+                        'h-8 rounded-full border px-3 text-xs font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+                        subject === preset
+                          ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+                          : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+                      )}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid gap-3.5 sm:grid-cols-2 sm:gap-4">
+                  <Input
+                    label={t('contact.fullName')}
+                    name="name"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    error={errors.name}
+                    required
+                    aria-invalid={Boolean(errors.name)}
+                  />
+                  <Input
+                    label={t('contact.email')}
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={errors.email}
+                    required
+                    aria-invalid={Boolean(errors.email)}
+                  />
+                </div>
+                <Input
+                  label={t('contact.subject')}
+                  name="subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  error={errors.subject}
+                  required
+                  aria-invalid={Boolean(errors.subject)}
+                />
+                <Textarea
+                  label={t('contact.message')}
+                  name="message"
+                  rows={5}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  error={errors.message}
+                  required
+                  aria-invalid={Boolean(errors.message)}
+                />
+                {formError ? (
+                  <p className="text-sm text-[var(--danger)]" role="alert">
+                    {formError}
+                  </p>
+                ) : null}
+                <Button type="submit" size="lg" loading={sending} className="w-full rounded-full">
+                  <SiteIcon name="send" size={16} />
+                  {t('contact.send')}
+                </Button>
+              </form>
+            )}
+          </div>
 
-            <aside className="lg:col-span-2">
-              <p className="kicker">{t('contact.linksKicker')}</p>
+          <div className="mx-auto mt-8 max-w-xl sm:mt-10">
+            <div className="text-center">
+              <p className="kicker mx-auto">{t('contact.linksKicker')}</p>
               <h2 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
                 {t('contact.policiesTitle')}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
                 {t('contact.policiesBody')}
               </p>
-              <ul className="mt-4 space-y-2 sm:mt-6">
-                {[
-                  { to: '/account/orders', label: t('contact.trackOrder') },
-                  { to: '/services#warranty', label: t('footer.warranty') },
-                  { to: '/services#returns', label: t('footer.returns') },
-                  { to: '/shop', label: t('contact.browseShop') },
-                ].map((item) => (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      className="group flex min-h-11 items-center justify-between rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-                    >
-                      {item.label}
-                      <SiteIcon
-                        name="arrow-right"
-                        size={16}
-                        className="transition group-hover:translate-x-0.5 rtl:rotate-180"
-                      />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            </div>
+            <ul className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2">
+              {[
+                { to: '/account/orders', label: t('contact.trackOrder') },
+                { to: '/services#warranty', label: t('footer.warranty') },
+                { to: '/services#returns', label: t('footer.returns') },
+                { to: '/shop', label: t('contact.browseShop') },
+              ].map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    className="group flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+                  >
+                    {item.label}
+                    <SiteIcon
+                      name="arrow-right"
+                      size={16}
+                      className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
 
-              <p className="mt-6 text-sm font-semibold text-[var(--fg)] sm:mt-8">
-                {t('contact.social')}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-col items-center gap-3 sm:mt-8">
+              <p className="text-sm font-semibold text-[var(--fg)]">{t('contact.social')}</p>
+              <div className="flex flex-wrap justify-center gap-2">
                 {SOCIAL_LINKS.map((s) =>
                   s.id === 'whatsapp' ? (
                     <button
@@ -385,7 +382,7 @@ export function Contact() {
                       type="button"
                       onClick={() => openWhatsAppPicker()}
                       aria-label={t('nav.socialOpens', { name: s.name })}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     >
                       <SocialGlyph id={s.id} size={16} />
                     </button>
@@ -396,14 +393,14 @@ export function Contact() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={t('nav.socialOpens', { name: s.name })}
-                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     >
                       <SocialGlyph id={s.id} size={16} />
                     </a>
                   )
                 )}
               </div>
-            </aside>
+            </div>
           </div>
         </Container>
       </section>
@@ -411,22 +408,24 @@ export function Contact() {
       <section aria-labelledby="contact-faq-heading" className="py-6 sm:py-10">
         <Container>
           <div className="mx-auto max-w-3xl">
-            <p className="kicker">{t('ui.faq')}</p>
-            <h2
-              id="contact-faq-heading"
-              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
-            >
-              {t('ui.commonQuestions')}
-            </h2>
-            <p className="mt-2 text-sm text-[var(--fg-muted)]">{t('contact.faqBody')}</p>
-            <ul className="mt-5 space-y-2.5 sm:mt-8 sm:space-y-3">
+            <div className="text-center">
+              <p className="kicker mx-auto">{t('ui.faq')}</p>
+              <h2
+                id="contact-faq-heading"
+                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+              >
+                {t('ui.commonQuestions')}
+              </h2>
+              <p className="mt-2 text-sm text-[var(--fg-muted)]">{t('contact.faqBody')}</p>
+            </div>
+            <ul className="mt-5 space-y-2.5 text-start sm:mt-8 sm:space-y-3">
               {contact.faqs.map((item, i) => {
                 const open = openFaq === i
                 const panelId = `contact-faq-${i}`
                 return (
                   <li
                     key={item.q}
-                    className="overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)]"
+                    className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
                   >
                     <button
                       type="button"
