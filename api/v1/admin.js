@@ -37,7 +37,12 @@ module.exports = async (req, res) => {
 
   try {
     const { pathname, query } = parseUrl(req.url || '');
-    const route = pathname.replace(/^\/api\/v1\/admin\/?/, '').replace(/\/$/, '');
+    const route = (
+      query.__route
+        ? String(query.__route)
+        : pathname.replace(/^\/api\/v1\/admin\/?/, '')
+    )
+      .replace(/^\/+|\/+$/g, '');
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 20);
 

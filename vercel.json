@@ -4,7 +4,9 @@
   "buildCommand": "npm run build --prefix backend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin" },
+    { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin?__route=$1" },
+    { "source": "/api/v1/products/(.*)", "destination": "/api/v1/products?__route=$1" },
+    { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
     { "source": "/api/v1/((?!health$|db-ping$|auth/login$|products$|categories$|admin$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
