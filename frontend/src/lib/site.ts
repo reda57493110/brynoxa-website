@@ -6,6 +6,7 @@ export const CONTACT = {
     label: 'WhatsApp',
     value: '07 79 31 80 61',
     href: 'https://wa.me/212779318061',
+    number: '212779318061',
   },
   phone: {
     label: 'Phone',

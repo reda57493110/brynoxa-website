@@ -6,6 +6,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
+import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
 
 const SERVICE_PHOTOS: Record<(typeof CUSTOMER_SERVICES)[number]['id'], string> = {
@@ -45,6 +46,7 @@ export function Services() {
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   const copy = useMessages()
   const t = useT()
+  const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
   const catalog = CUSTOMER_SERVICES.map((s) => ({
     ...s,
     ...copy.services.items[s.id],
@@ -56,7 +58,7 @@ export function Services() {
   ]
 
   const CTA_LINKS = [
-    { icon: 'chat' as const, label: t('contact.whatsapp'), hint: CONTACT.whatsapp.value, href: CONTACT.whatsapp.href },
+    { icon: 'chat' as const, label: t('contact.whatsapp'), hint: CONTACT.whatsapp.value, onClick: openWhatsAppPicker },
     { icon: 'mail' as const, label: t('ui.email'), hint: CONTACT.email.value, href: CONTACT.email.href },
   ]
 
@@ -409,22 +411,40 @@ export function Services() {
                 </div>
               </div>
               <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                {CTA_LINKS.map(({ icon, label, hint, href }) => (
+                {CTA_LINKS.map(({ icon, label, hint, href, onClick }) => (
                   <li key={label}>
-                    <a
-                      href={href}
-                      className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/80 px-4 py-3 transition hover:border-[var(--brand)] dark:bg-black/20"
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--brand-text)]">
-                        <SiteIcon name={icon} size={16} />
-                      </span>
-                      <span className="min-w-0">
-                        <p className="text-sm font-semibold text-[var(--fg)]">{label}</p>
-                        <p className="mt-0.5 truncate text-xs leading-relaxed text-[var(--fg-muted)]">
-                          {hint}
-                        </p>
-                      </span>
-                    </a>
+                    {onClick ? (
+                      <button
+                        type="button"
+                        onClick={onClick}
+                        className="flex w-full items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/80 px-4 py-3 text-start transition hover:border-[var(--brand)] dark:bg-black/20"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--brand-text)]">
+                          <SiteIcon name={icon} size={16} />
+                        </span>
+                        <span className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--fg)]">{label}</p>
+                          <p className="mt-0.5 truncate text-xs leading-relaxed text-[var(--fg-muted)]">
+                            {hint}
+                          </p>
+                        </span>
+                      </button>
+                    ) : (
+                      <a
+                        href={href}
+                        className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/80 px-4 py-3 transition hover:border-[var(--brand)] dark:bg-black/20"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--brand-text)]">
+                          <SiteIcon name={icon} size={16} />
+                        </span>
+                        <span className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--fg)]">{label}</p>
+                          <p className="mt-0.5 truncate text-xs leading-relaxed text-[var(--fg-muted)]">
+                            {hint}
+                          </p>
+                        </span>
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

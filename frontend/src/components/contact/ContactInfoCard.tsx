@@ -6,12 +6,14 @@ export function ContactInfoCard({
   label,
   value,
   href,
+  onClick,
   className,
 }: {
   icon: ReactNode
   label: string
   value: string
   href?: string
+  onClick?: () => void
   className?: string
 }) {
   const inner = (
@@ -32,10 +34,18 @@ export function ContactInfoCard({
 
   const styles = cn(
     'relative flex overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg)] p-5 shadow-soft transition duration-300',
-    href &&
+    (href || onClick) &&
       'hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
     className
   )
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={cn(styles, 'w-full text-start')}>
+        {inner}
+      </button>
+    )
+  }
 
   if (href) {
     return (

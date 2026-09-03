@@ -13,6 +13,7 @@ import { getErrorMessage } from '@/api/client'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
+import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
 
 const pillPrimary =
@@ -36,6 +37,7 @@ export function Contact() {
   const reduceMotion = useReducedMotion()
   const { contact } = useMessages()
   const t = useT()
+  const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   const SUBJECT_PRESETS = [
@@ -151,15 +153,10 @@ export function Contact() {
               {t('contact.heroBody')}
             </p>
             <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <a
-                href={CONTACT.whatsapp.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={pillPrimary}
-              >
+              <button type="button" onClick={openWhatsAppPicker} className={pillPrimary}>
                 {t('contact.whatsapp')}
                 <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-              </a>
+              </button>
               <a href="#message" className={pillGhost}>
                 {t('contact.sendMessage')}
               </a>
@@ -199,7 +196,7 @@ export function Contact() {
               icon={<SiteIcon name="chat" size={20} />}
               label={t('contact.whatsapp')}
               value={CONTACT.whatsapp.value}
-              href={CONTACT.whatsapp.href}
+              onClick={openWhatsAppPicker}
               className="p-4 sm:p-5"
             />
             <ContactInfoCard
@@ -380,18 +377,30 @@ export function Contact() {
                 {t('contact.social')}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {SOCIAL_LINKS.map((s) => (
-                  <a
-                    key={s.id}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={t('nav.socialOpens', { name: s.name })}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
-                  >
-                    <SocialGlyph id={s.id} size={16} />
-                  </a>
-                ))}
+                {SOCIAL_LINKS.map((s) =>
+                  s.id === 'whatsapp' ? (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={openWhatsAppPicker}
+                      aria-label={t('nav.socialOpens', { name: s.name })}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                    >
+                      <SocialGlyph id={s.id} size={16} />
+                    </button>
+                  ) : (
+                    <a
+                      key={s.id}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t('nav.socialOpens', { name: s.name })}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                    >
+                      <SocialGlyph id={s.id} size={16} />
+                    </a>
+                  )
+                )}
               </div>
             </aside>
           </div>

@@ -5,6 +5,7 @@ import { SocialGlyph } from '@/components/contact/BrandIcons'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useWhatsAppStore } from '@/store/whatsappStore'
 
 const explore = [
   { to: '/shop', key: 'common.shop' as const },
@@ -31,6 +32,7 @@ function FooterHeading({ children }: { children: string }) {
 
 export function Footer() {
   const t = useT()
+  const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-[var(--bg-elevated)] pb-[env(safe-area-inset-bottom)]">
@@ -44,22 +46,38 @@ export function Footer() {
               Brynox<span className="text-[var(--brand)]">a</span>
             </Link>
             <div className="flex gap-1.5" aria-label={t('nav.social')}>
-              {SOCIAL_LINKS.map((s) => (
-                <a
-                  key={s.id}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={t('nav.socialOpens', { name: s.name })}
-                  className={cn(
-                    'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]',
-                    'transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
-                    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
-                  )}
-                >
-                  <SocialGlyph id={s.id} size={14} />
-                </a>
-              ))}
+              {SOCIAL_LINKS.map((s) =>
+                s.id === 'whatsapp' ? (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={openWhatsAppPicker}
+                    aria-label={t('nav.socialOpens', { name: s.name })}
+                    className={cn(
+                      'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]',
+                      'transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
+                    )}
+                  >
+                    <SocialGlyph id={s.id} size={14} />
+                  </button>
+                ) : (
+                  <a
+                    key={s.id}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={t('nav.socialOpens', { name: s.name })}
+                    className={cn(
+                      'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]',
+                      'transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
+                      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
+                    )}
+                  >
+                    <SocialGlyph id={s.id} size={14} />
+                  </a>
+                )
+              )}
             </div>
           </div>
           <p className="mt-2 max-w-sm text-xs leading-snug text-[var(--fg-muted)] sm:mt-3 sm:max-w-xs sm:text-sm sm:leading-relaxed">
@@ -99,13 +117,14 @@ export function Footer() {
           <FooterHeading>{t('footer.contact')}</FooterHeading>
           <ul className="mt-2 flex flex-wrap gap-2 sm:mt-3 lg:flex-col lg:gap-2">
             <li>
-              <a
-                href={CONTACT.whatsapp.href}
+              <button
+                type="button"
+                onClick={openWhatsAppPicker}
                 className={cn(linkClass, 'inline-flex items-center gap-2')}
               >
                 <SiteIcon name="chat" size={14} className="shrink-0 text-[var(--brand-text)]" />
                 <span className="truncate">{CONTACT.whatsapp.value}</span>
-              </a>
+              </button>
             </li>
             <li>
               <a

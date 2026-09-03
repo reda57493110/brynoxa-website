@@ -30,6 +30,7 @@ import { formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { useWhatsAppStore } from '@/store/whatsappStore'
 import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product, Review, User } from '@/types'
 
@@ -41,6 +42,7 @@ export function ProductDetail() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const reduceMotion = useReducedMotion()
+  const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -282,6 +284,10 @@ export function ProductDetail() {
               >
                 <SiteIcon name="heart" size={16} />
               </Button>
+              <Button variant="outline" onClick={openWhatsAppPicker} className="rounded-full">
+                <SiteIcon name="chat" size={16} />
+                {t('contact.whatsapp')}
+              </Button>
             </div>
 
             <ul className="mt-5 flex flex-wrap gap-2 sm:mt-6">
@@ -437,6 +443,14 @@ export function ProductDetail() {
             aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
           >
             <SiteIcon name="heart" size={16} />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={openWhatsAppPicker}
+            className="h-11 w-11 shrink-0 rounded-full !px-0"
+            aria-label={t('contact.whatsapp')}
+          >
+            <SiteIcon name="chat" size={16} />
           </Button>
         </div>
       </div>
