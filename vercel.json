@@ -4,7 +4,8 @@
   "buildCommand": "npm run build --prefix backend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/v1/((?!health$|db-ping$|auth/login$|products$|categories$).*)", "destination": "/api" },
+    { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin" },
+    { "source": "/api/v1/((?!health$|db-ping$|auth/login$|products$|categories$|admin$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
@@ -28,6 +29,10 @@
       "includeFiles": "backend/dist/**"
     },
     "api/v1/categories.js": {
+      "maxDuration": 60,
+      "includeFiles": "backend/dist/**"
+    },
+    "api/v1/admin.js": {
       "maxDuration": 60,
       "includeFiles": "backend/dist/**"
     }

@@ -6,7 +6,7 @@ import type { ApiResponse, SessionPayload } from '@/types'
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  timeout: 20_000,
+  timeout: 45_000,
   headers: { 'Content-Type': 'application/json' },
 })
 

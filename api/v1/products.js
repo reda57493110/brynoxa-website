@@ -2,6 +2,7 @@ const path = require('path');
 const Module = require('module');
 const { connectMongo } = require('../_lib/mongo');
 const { sendJson } = require('../_lib/http');
+const { requireStaff } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -31,6 +32,11 @@ module.exports = async (req, res) => {
     const raw = parseQuery(req.url || '');
     const page = Number(raw.page || 1);
     const limit = Number(raw.limit || 12);
+    const isAdmin = raw.admin === 'true';
+    if (isAdmin) {
+      const user = await requireStaff(req, res, ['products:read']);
+      if (!user) return;
+    }
 
     const result = await listProducts({
       page,
@@ -44,7 +50,7 @@ module.exports = async (req, res) => {
       featured: raw.featured === 'true',
       carousel: raw.carousel === 'true',
       inStock: raw.inStock === 'true',
-      admin: false,
+      admin: isAdmin,
       isActive: toBool(raw.isActive),
     });
 
