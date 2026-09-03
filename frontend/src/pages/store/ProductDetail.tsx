@@ -11,7 +11,7 @@ import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
-import { Spinner } from '@/components/ui/Spinner'
+import { PageLoader } from '@/components/ui/PageLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ImageGallery } from '@/components/product/ImageGallery'
@@ -115,11 +115,7 @@ export function ProductDetail() {
         }
 
   if (product.isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    )
+    return <PageLoader label={t('ui.loadingPage')} />
   }
 
   if (product.isError) {
@@ -338,7 +334,7 @@ export function ProductDetail() {
           </h2>
           <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_22rem] lg:gap-8">
             <div className="space-y-3 sm:space-y-4">
-              {reviews.isLoading ? <Spinner /> : null}
+              {reviews.isLoading ? <PageLoader compact label={t('ui.loading')} className="min-h-0 py-8" /> : null}
               {reviews.isError ? (
                 <QueryErrorState
                   title={t('shop.loadError')}

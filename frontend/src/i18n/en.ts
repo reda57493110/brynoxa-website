@@ -112,6 +112,8 @@ export const en = {
     clearAll: 'Clear all',
     all: 'All',
     loading: 'Loading catalog…',
+    loadingProducts: 'Loading products…',
+    loadingPage: 'Loading page…',
     searching: 'Searching…',
     faq: 'FAQ',
     commonQuestions: 'Common questions',

@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { PageLoader } from '@/components/ui/PageLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -36,10 +37,15 @@ export function ProductGrid({
 
   if (loading) {
     return (
-      <div className={gridClass}>
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-80 rounded-[var(--radius-card)]" />
-        ))}
+      <div className="relative">
+        <div className={gridClass} aria-hidden="true">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-80 rounded-[var(--radius-card)]" />
+          ))}
+        </div>
+        <div className="absolute inset-0 flex items-start justify-center bg-[color-mix(in_srgb,var(--bg)_55%,transparent)] pt-16 backdrop-blur-[1px]">
+          <PageLoader compact label={t('ui.loadingProducts')} className="min-h-0 rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-6 py-5 shadow-soft" />
+        </div>
       </div>
     )
   }

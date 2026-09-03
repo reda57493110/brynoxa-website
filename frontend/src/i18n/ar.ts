@@ -114,6 +114,8 @@ export const ar: Messages = {
     clearAll: 'مسح الكل',
     all: 'الكل',
     loading: 'جاري تحميل الكتالوج…',
+    loadingProducts: 'جاري تحميل المنتجات…',
+    loadingPage: 'جاري تحميل الصفحة…',
     searching: 'جاري البحث…',
     faq: 'الأسئلة الشائعة',
     commonQuestions: 'أسئلة شائعة',

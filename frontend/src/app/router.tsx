@@ -5,7 +5,7 @@ import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { AdminRoute } from '@/features/auth/AdminRoute'
-import { PageSkeleton } from '@/components/ui/Skeleton'
+import { PageLoader } from '@/components/ui/PageLoader'
 
 const Home = lazy(() => import('@/pages/store/Home').then((m) => ({ default: m.Home })))
 const Shop = lazy(() => import('@/pages/store/Shop').then((m) => ({ default: m.Shop })))
@@ -94,7 +94,7 @@ const AdminSecurity = lazy(() =>
 )
 
 function S({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
 }
 
 export function AppRouter() {

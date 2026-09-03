@@ -7,7 +7,7 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { SortSelect } from '@/components/product/SortSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
-import { Spinner } from '@/components/ui/Spinner'
+import { PageLoader } from '@/components/ui/PageLoader'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -57,11 +57,7 @@ export function CategoryPage() {
   )
 
   if (category.isLoading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    )
+    return <PageLoader label={t('ui.loadingPage')} />
   }
 
   if (category.isError) {

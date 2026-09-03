@@ -115,6 +115,8 @@ export const fr: Messages = {
     clearAll: 'Tout effacer',
     all: 'Tout',
     loading: 'Chargement du catalogue…',
+    loadingProducts: 'Chargement des produits…',
+    loadingPage: 'Chargement de la page…',
     searching: 'Recherche…',
     faq: 'FAQ',
     commonQuestions: 'Questions fréquentes',

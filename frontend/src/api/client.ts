@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
+import { useNetworkStore } from '@/store/networkStore'
 import type { ApiResponse, SessionPayload } from '@/types'
 
 const api = axios.create({
@@ -11,6 +12,7 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  useNetworkStore.getState().begin()
   const token = useAuthStore.getState().accessToken
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -77,8 +79,12 @@ export async function restoreSession(force = false) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    useNetworkStore.getState().end()
+    return response
+  },
   async (error: AxiosError<ApiResponse<unknown>>) => {
+    useNetworkStore.getState().end()
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
     const status = error.response?.status
     const url = original?.url ?? ''
