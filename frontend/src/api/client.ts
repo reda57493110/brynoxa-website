@@ -1,21 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
-import { useNetworkStore } from '@/store/networkStore'
 import type { ApiResponse, SessionPayload } from '@/types'
-
-declare module 'axios' {
-  interface AxiosRequestConfig {
-    skipLoader?: boolean
-    _loaderStarted?: boolean
-  }
-}
-
-function shouldSkipLoader(config: InternalAxiosRequestConfig) {
-  if (config.skipLoader) return true
-  const url = `${config.baseURL || ''}${config.url || ''}`
-  return /\/auth\/(csrf|refresh|me|logout)/.test(url) || /\/wishlist/.test(url) || /\/notifications/.test(url)
-}
 
 const api = axios.create({
   baseURL: API_URL,
@@ -25,10 +11,6 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
-  if (!shouldSkipLoader(config)) {
-    useNetworkStore.getState().begin()
-    config._loaderStarted = true
-  }
   const token = useAuthStore.getState().accessToken
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -42,9 +24,7 @@ let csrfToken: string | null = null
 
 async function getCsrfToken() {
   if (csrfToken) return csrfToken
-  const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf', {
-    skipLoader: true,
-  })
+  const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf')
   csrfToken = response.data.data.csrfToken
   return csrfToken
 }
@@ -55,7 +35,6 @@ async function refreshAccessToken() {
       .then((token) =>
         api.post<ApiResponse<SessionPayload>>('/auth/refresh', undefined, {
           headers: { 'X-CSRF-Token': token },
-          skipLoader: true,
         })
       )
       .then((res) => {
@@ -98,18 +77,9 @@ export async function restoreSession(force = false) {
 }
 
 api.interceptors.response.use(
-  (response) => {
-    if (response.config._loaderStarted) {
-      useNetworkStore.getState().end()
-    }
-    return response
-  },
+  (response) => response,
   async (error: AxiosError<ApiResponse<unknown>>) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
-    if (original?._loaderStarted) {
-      useNetworkStore.getState().end()
-      original._loaderStarted = false
-    }
     const status = error.response?.status
     const url = original?.url ?? ''
 
