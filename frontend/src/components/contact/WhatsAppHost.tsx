@@ -16,23 +16,102 @@ import { cn } from '@/lib/cn'
 import type { MessageKey } from '@/i18n'
 import type { Product } from '@/types'
 
-const OPTIONS: {
-  id: Exclude<WhatsAppTopic, 'product'>
+type TopicConfig = {
+  id: WhatsAppTopic
   icon: SiteIconName
   title: MessageKey
   hint: MessageKey
-}[] = [
-  { id: 'order', icon: 'package', title: 'contact.waOrder', hint: 'contact.waOrderHint' },
-  { id: 'advice', icon: 'laptop', title: 'contact.waAdvice', hint: 'contact.waAdviceHint' },
-  { id: 'warranty', icon: 'shield', title: 'contact.waWarranty', hint: 'contact.waWarrantyHint' },
-  { id: 'return', icon: 'refresh', title: 'contact.waReturn', hint: 'contact.waReturnHint' },
-  { id: 'other', icon: 'chat', title: 'contact.waOther', hint: 'contact.waOtherHint' },
+  prompt: MessageKey
+  intent: MessageKey
+  showOrderNumber?: boolean
+  showBudget?: boolean
+  showUseCase?: boolean
+  noteLabel: MessageKey
+  notePh: MessageKey
+  noteLine: MessageKey
+}
+
+const TOPIC_OPTIONS: Array<Omit<TopicConfig, 'id'> & { id: Exclude<WhatsAppTopic, 'product'> }> = [
+  {
+    id: 'order',
+    icon: 'package',
+    title: 'contact.waOrder',
+    hint: 'contact.waOrderHint',
+    prompt: 'contact.waPromptOrder',
+    intent: 'contact.waMsgOrder',
+    showOrderNumber: true,
+    noteLabel: 'contact.waNoteOrder',
+    notePh: 'contact.waNoteOrderPh',
+    noteLine: 'contact.waLineHelp',
+  },
+  {
+    id: 'advice',
+    icon: 'laptop',
+    title: 'contact.waAdvice',
+    hint: 'contact.waAdviceHint',
+    prompt: 'contact.waPromptAdvice',
+    intent: 'contact.waMsgAdvice',
+    showBudget: true,
+    showUseCase: true,
+    noteLabel: 'contact.waNoteAdvice',
+    notePh: 'contact.waNoteAdvicePh',
+    noteLine: 'contact.waLineNote',
+  },
+  {
+    id: 'warranty',
+    icon: 'shield',
+    title: 'contact.waWarranty',
+    hint: 'contact.waWarrantyHint',
+    prompt: 'contact.waPromptWarranty',
+    intent: 'contact.waMsgWarranty',
+    showOrderNumber: true,
+    noteLabel: 'contact.waIssue',
+    notePh: 'contact.waIssuePh',
+    noteLine: 'contact.waLineIssue',
+  },
+  {
+    id: 'return',
+    icon: 'refresh',
+    title: 'contact.waReturn',
+    hint: 'contact.waReturnHint',
+    prompt: 'contact.waPromptReturn',
+    intent: 'contact.waMsgReturn',
+    showOrderNumber: true,
+    noteLabel: 'contact.waReason',
+    notePh: 'contact.waReasonPh',
+    noteLine: 'contact.waLineReason',
+  },
+  {
+    id: 'other',
+    icon: 'chat',
+    title: 'contact.waOther',
+    hint: 'contact.waOtherHint',
+    prompt: 'contact.waPromptOther',
+    intent: 'contact.waMsgOther',
+    noteLabel: 'contact.waNoteOther',
+    notePh: 'contact.waNoteOtherPh',
+    noteLine: 'contact.waLineQuestion',
+  },
 ]
+
+const PRODUCT_TOPIC: TopicConfig = {
+  id: 'product',
+  icon: 'tag',
+  title: 'contact.waProduct',
+  hint: 'contact.waProductHint',
+  prompt: 'contact.waPromptProduct',
+  intent: 'contact.waMsgProduct',
+  noteLabel: 'contact.waNoteProduct',
+  notePh: 'contact.waNoteProductPh',
+  noteLine: 'contact.waLineQuestion',
+}
 
 const STICKY_BAR_ROUTES = ['/cart', '/checkout']
 
-function needsOrderNumber(topic: WhatsAppTopic | null) {
-  return topic === 'order' || topic === 'warranty' || topic === 'return'
+function topicConfig(id: WhatsAppTopic | null): TopicConfig | null {
+  if (!id) return null
+  if (id === 'product') return PRODUCT_TOPIC
+  return TOPIC_OPTIONS.find((option) => option.id === id) ?? null
 }
 
 export function WhatsAppHost() {
@@ -52,48 +131,57 @@ export function WhatsAppHost() {
   const productUrl = onProductPage ? `${window.location.origin}${location.pathname}` : ''
 
   const hideFabOnMobile =
-    onProductPage || STICKY_BAR_ROUTES.some((route) => location.pathname === route || location.pathname.startsWith(`${route}/`))
+    onProductPage ||
+    STICKY_BAR_ROUTES.some((route) => location.pathname === route || location.pathname.startsWith(`${route}/`))
 
   const [selected, setSelected] = useState<WhatsAppTopic | null>(null)
-  const [extra, setExtra] = useState('')
+  const [orderNumber, setOrderNumber] = useState('')
+  const [budget, setBudget] = useState('')
+  const [useCase, setUseCase] = useState('')
   const [note, setNote] = useState('')
 
   useEffect(() => {
     if (!isOpen) return
     setSelected(storedTopic ?? (onProductPage ? 'product' : null))
-    setExtra('')
+    setOrderNumber('')
+    setBudget('')
+    setUseCase('')
     setNote('')
   }, [isOpen, storedTopic, onProductPage])
 
+  const config = topicConfig(selected)
+
+  const selectTopic = (id: WhatsAppTopic) => {
+    setSelected(id)
+    setOrderNumber('')
+    setBudget('')
+    setUseCase('')
+    setNote('')
+  }
+
   const preview = useMemo(() => {
-    if (!selected) return ''
-    const intent =
-      selected === 'order'
-        ? t('contact.waMsgOrder')
-        : selected === 'advice'
-          ? t('contact.waMsgAdvice')
-          : selected === 'warranty'
-            ? t('contact.waMsgWarranty')
-            : selected === 'return'
-              ? t('contact.waMsgReturn')
-              : selected === 'product'
-                ? t('contact.waMsgProduct')
-                : t('contact.waMsgOther')
+    if (!config) return ''
+    const orderValue = orderNumber.trim()
+    const budgetValue = budget.trim()
+    const useValue = useCase.trim()
+    const noteValue = note.trim()
 
     return composeWhatsAppMessage([
       t('contact.waGreeting'),
       '',
-      intent,
-      selected === 'product' && productName ? productName : undefined,
-      selected === 'product' ? productUrl : undefined,
-      extra.trim() && needsOrderNumber(selected)
-        ? t('contact.waLineOrder', { value: extra.trim() })
+      t(config.intent),
+      config.id === 'product' && productName ? productName : undefined,
+      config.id === 'product' ? productUrl : undefined,
+      orderValue ? t('contact.waLineOrder', { value: orderValue }) : undefined,
+      budgetValue ? t('contact.waLineBudget', { value: budgetValue }) : undefined,
+      useValue ? t('contact.waLineUse', { value: useValue }) : undefined,
+      noteValue
+        ? config.noteLine === 'contact.waLineNote'
+          ? `${t(config.noteLine)}\n${noteValue}`
+          : t(config.noteLine, { value: noteValue })
         : undefined,
-      extra.trim() && selected === 'advice' ? t('contact.waLineBudget', { value: extra.trim() }) : undefined,
-      note.trim() ? t('contact.waLineNote') : undefined,
-      note.trim() || undefined,
     ])
-  }, [extra, note, productName, productUrl, selected, t])
+  }, [budget, config, note, orderNumber, productName, productUrl, t, useCase])
 
   const startChat = () => {
     if (!selected || !preview) return
@@ -152,57 +240,75 @@ export function WhatsAppHost() {
                   icon="tag"
                   title={t('contact.waProduct')}
                   hint={productName || t('contact.waProductHint')}
-                  onClick={() => setSelected('product')}
+                  onClick={() => selectTopic('product')}
                 />
               </li>
             ) : null}
-            {OPTIONS.map((option) => (
+            {TOPIC_OPTIONS.map((option) => (
               <li key={option.id} className={option.id === 'other' ? 'col-span-2' : undefined}>
                 <TopicButton
                   selected={selected === option.id}
                   icon={option.icon}
                   title={t(option.title)}
                   hint={t(option.hint)}
-                  onClick={() => setSelected(option.id)}
+                  onClick={() => selectTopic(option.id)}
                 />
               </li>
             ))}
           </ul>
 
-          {selected ? (
+          {config ? (
             <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 sm:space-y-3 sm:rounded-2xl sm:p-3.5">
-              {needsOrderNumber(selected) ? (
+              <p className="text-xs leading-snug text-[var(--fg-muted)] sm:text-sm sm:leading-relaxed">
+                {t(config.prompt)}
+              </p>
+
+              {config.showOrderNumber ? (
                 <Input
                   label={t('contact.waOrderNumber')}
-                  value={extra}
-                  onChange={(e) => setExtra(e.target.value)}
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value)}
                   placeholder={t('contact.waOrderNumberPh')}
                   autoComplete="off"
                   className="h-10 sm:h-11"
                 />
               ) : null}
-              {selected === 'advice' ? (
+
+              {config.showBudget ? (
                 <Input
                   label={t('contact.waBudget')}
-                  value={extra}
-                  onChange={(e) => setExtra(e.target.value)}
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
                   placeholder={t('contact.waBudgetPh')}
                   autoComplete="off"
                   className="h-10 sm:h-11"
                 />
               ) : null}
+
+              {config.showUseCase ? (
+                <Input
+                  label={t('contact.waUseCase')}
+                  value={useCase}
+                  onChange={(e) => setUseCase(e.target.value)}
+                  placeholder={t('contact.waUseCasePh')}
+                  autoComplete="off"
+                  className="h-10 sm:h-11"
+                />
+              ) : null}
+
               <Textarea
-                label={t('contact.waNote')}
+                label={t(config.noteLabel)}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder={t('contact.waNotePh')}
+                placeholder={t(config.notePh)}
                 className="min-h-[4.25rem] sm:min-h-[5.5rem]"
               />
+
               <div>
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:mb-1.5 sm:text-xs">
                   {t('contact.waPreview')}
                 </p>
-                <p className="line-clamp-4 whitespace-pre-wrap rounded-lg bg-[var(--bg-muted)] px-2.5 py-2 text-xs leading-relaxed text-[var(--fg)] sm:line-clamp-none sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm">
+                <p className="line-clamp-5 whitespace-pre-wrap rounded-lg bg-[var(--bg-muted)] px-2.5 py-2 text-xs leading-relaxed text-[var(--fg)] sm:line-clamp-none sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm">
                   {preview}
                 </p>
               </div>
