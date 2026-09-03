@@ -152,7 +152,7 @@ export const en = {
     title: 'Shop',
     kicker: 'Morocco',
     searchTitle: 'Search',
-    body: 'Laptops, gaming PCs, and components.',
+    body: 'Browse by category — laptops, PCs, screens, peripherals, and upgrades. Prices in DH.',
     resultsFor: 'Results for “{q}”',
     resultsIn: ' in {name}',
     shopByCategory: 'Shop by category',
@@ -484,6 +484,7 @@ export const en = {
     submitReview: 'Submit review',
     reviewSubmitted: 'Review submitted',
     noSpecs: 'No specifications listed.',
+    moreInCategory: 'More in {name}',
   },
   contact: {
     heroKicker: 'Contact',
@@ -688,16 +689,16 @@ export const en = {
         description: 'Precise mice for gaming and productivity.',
       },
       headphones: {
-        name: 'Headphones',
-        description: 'Headsets and audio for immersion and calls.',
+        name: 'Audio',
+        description: 'Headsets for games, calls, and music.',
       },
       components: {
         name: 'Components',
-        description: 'GPUs, parts, and upgrades for your build.',
+        description: 'GPUs, storage, and memory for upgrades.',
       },
       accessories: {
         name: 'Accessories',
-        description: 'Docks, hubs, and everyday tech extras.',
+        description: 'Hubs, stands, and desk extras.',
       },
     },
   },

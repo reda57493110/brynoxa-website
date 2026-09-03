@@ -221,8 +221,17 @@ export function Home() {
               {featured.data?.[0] ? (
                 <ProductCard product={featured.data[0]} variant="spotlight" />
               ) : null}
-              {carousel.data?.length ? (
-                <ProductCarousel products={carousel.data} />
+              {(carousel.data?.length
+                ? carousel.data
+                : featured.data?.slice(1) || []
+              ).length ? (
+                <ProductCarousel
+                  products={
+                    carousel.data?.length
+                      ? carousel.data
+                      : (featured.data?.slice(1) || [])
+                  }
+                />
               ) : null}
             </div>
           )}

@@ -8,15 +8,7 @@ import { Coupon } from '../models/Coupon';
 import { getSettings } from '../models/Settings';
 import { slugify } from '../utils/slugify';
 import { migrateCurrencyToMad } from '../config/migrateCurrency';
-
-const placeholders = [
-  'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=800&q=80',
-  'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&q=80',
-  'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&q=80',
-  'https://images.unsplash.com/photo-1616588589676-62b3bd4ff6d1?w=800&q=80',
-  'https://images.unsplash.com/photo-1625842268584-8f3296236761?w=800&q=80',
-  'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80',
-];
+import { BRAND_DEFS, CATEGORY_DEFS, CATALOG_VERSION, PRODUCT_DEFS } from './catalogData';
 
 const RETIRED_CATEGORY_SLUGS = ['office', 'networking'];
 
@@ -59,231 +51,109 @@ export async function ensureAdmin() {
   return admin;
 }
 
+export async function upsertCatalog() {
+  await removeRetiredCategories();
+
+  const categoryIds = new Map<string, string>();
+  for (const def of CATEGORY_DEFS) {
+    const category = await Category.findOneAndUpdate(
+      { slug: def.slug },
+      {
+        name: def.name,
+        slug: def.slug,
+        description: def.description,
+        sortOrder: def.sortOrder,
+        isActive: true,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    categoryIds.set(def.slug, category._id.toString());
+  }
+
+  const brandIds = new Map<string, string>();
+  for (const name of BRAND_DEFS) {
+    const slug = slugify(name);
+    const brand = await Brand.findOneAndUpdate(
+      { slug },
+      { name, slug, isActive: true },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    brandIds.set(name, brand._id.toString());
+  }
+
+  const keepSkus = PRODUCT_DEFS.map((p) => p.sku);
+  const now = new Date();
+
+  for (const def of PRODUCT_DEFS) {
+    const category = categoryIds.get(def.category);
+    const brand = brandIds.get(def.brand);
+    if (!category || !brand) {
+      throw new Error(`Missing category or brand for ${def.sku}`);
+    }
+
+    await Product.findOneAndUpdate(
+      { sku: def.sku },
+      {
+        $set: {
+          name: def.name,
+          slug: def.slug,
+          sku: def.sku,
+          category,
+          brand,
+          price: def.price,
+          ...(def.compareAtPrice !== undefined
+            ? { compareAtPrice: def.compareAtPrice }
+            : { compareAtPrice: undefined }),
+          stock: def.stock,
+          isFeatured: Boolean(def.isFeatured),
+          featuredAt: def.isFeatured ? now : null,
+          isCarousel: Boolean(def.isCarousel),
+          carouselAt: def.isCarousel ? now : null,
+          shortDescription: def.shortDescription,
+          description: def.description,
+          specs: def.specs,
+          tags: def.tags,
+          images: [{ url: def.image, alt: def.name, isPrimary: true }],
+          isActive: true,
+          lowStockThreshold: 5,
+          averageRating: 0,
+          reviewCount: 0,
+          soldCount: 0,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  await Product.updateMany({ sku: { $nin: keepSkus } }, { $set: { isActive: false } });
+  console.log(`Catalog upserted (${PRODUCT_DEFS.length} products, v${CATALOG_VERSION})`);
+}
+
+export async function syncCatalogIfNeeded() {
+  const settings = await getSettings();
+  if (settings.catalogVersion === CATALOG_VERSION) return;
+  await upsertCatalog();
+  settings.catalogVersion = CATALOG_VERSION;
+  await settings.save();
+}
+
 export async function runSeed(force = false) {
   await getSettings();
   await ensureAdmin();
-
   await removeRetiredCategories();
-
-  const productCount = await Product.countDocuments();
-  if (productCount > 0 && !force) {
-    console.log('Catalog already seeded, skipping');
-    return;
-  }
 
   if (force) {
     await Promise.all([
       Product.deleteMany({}),
       Category.deleteMany({}),
       Brand.deleteMany({}),
-      Coupon.deleteMany({}),
     ]);
+    const settings = await getSettings();
+    settings.catalogVersion = 0;
+    await settings.save();
   }
 
-  const categoryNames = [
-    'Laptops',
-    'Gaming PCs',
-    'Monitors',
-    'Keyboards',
-    'Mice',
-    'Headphones',
-    'Components',
-    'Accessories',
-  ];
-
-  const categories = await Category.insertMany(
-    categoryNames.map((name, i) => ({
-      name,
-      slug: slugify(name),
-      description: `Premium ${name.toLowerCase()} for work and play.`,
-      sortOrder: i,
-      isActive: true,
-    }))
-  );
-
-  const brandNames = ['Brynoxa', 'ASUS', 'MSI', 'Razer', 'Dell', 'Logitech', 'Samsung', 'NVIDIA'];
-  const brands = await Brand.insertMany(
-    brandNames.map((name) => ({
-      name,
-      slug: slugify(name),
-      isActive: true,
-    }))
-  );
-
-  const cat = (name: string) => categories.find((c) => c.name === name)!._id;
-  const brand = (name: string) => brands.find((b) => b.name === name)!._id;
-
-  const products = [
-    {
-      name: 'Brynoxa Blade 15 Pro',
-      sku: 'BRX-LAP-001',
-      category: cat('Laptops'),
-      brand: brand('Brynoxa'),
-      price: 18990,
-      compareAtPrice: 21990,
-      stock: 24,
-      isFeatured: true,
-      shortDescription: 'Ultra-thin performance laptop for creators.',
-      description:
-        'The Brynoxa Blade 15 Pro combines a vivid 15.6" QHD display with a powerful multi-core CPU and dedicated graphics — built for design, code, and entertainment.',
-      specs: {
-        CPU: 'Intel Core i7',
-        RAM: '32GB DDR5',
-        Storage: '1TB NVMe SSD',
-        GPU: 'RTX 4060',
-        Display: '15.6" QHD 165Hz',
-      },
-      tags: ['laptop', 'creator', 'portable'],
-    },
-    {
-      name: 'Phantom Rogue Gaming Desktop',
-      sku: 'BRX-PC-001',
-      category: cat('Gaming PCs'),
-      brand: brand('Brynoxa'),
-      price: 24990,
-      compareAtPrice: 27990,
-      stock: 12,
-      isFeatured: true,
-      shortDescription: 'Liquid-cooled tower ready for 4K gaming.',
-      description:
-        'Factory-tuned gaming PC with high-airflow chassis, RGB accents, and room to expand. Dominate every title at ultra settings.',
-      specs: {
-        CPU: 'AMD Ryzen 7',
-        RAM: '32GB DDR5',
-        Storage: '2TB NVMe',
-        GPU: 'RTX 4070 Ti',
-        PSU: '850W Gold',
-      },
-      tags: ['gaming', 'desktop', 'rtx'],
-    },
-    {
-      name: 'VistaPro 27 OLED',
-      sku: 'BRX-MON-001',
-      category: cat('Monitors'),
-      brand: brand('Samsung'),
-      price: 7990,
-      compareAtPrice: 8990,
-      stock: 40,
-      isFeatured: true,
-      shortDescription: '27-inch OLED with near-instant response.',
-      description:
-        'Immersive OLED panel with HDR, ultra-thin bezels, and USB-C docking for a clean desk setup.',
-      specs: { Size: '27"', Panel: 'OLED', Refresh: '240Hz', Resolution: '2560x1440' },
-      tags: ['monitor', 'oled', 'gaming'],
-    },
-    {
-      name: 'Strike Mechanical Keyboard',
-      sku: 'BRX-KB-001',
-      category: cat('Keyboards'),
-      brand: brand('Razer'),
-      price: 1490,
-      stock: 80,
-      isFeatured: true,
-      shortDescription: 'Hot-swap switches with aluminum frame.',
-      description:
-        'Precision typing with per-key RGB, gasket mount, and wireless dual-mode connectivity.',
-      specs: { Switches: 'Hot-swap tactile', Layout: '75%', Connectivity: '2.4G / BT / USB' },
-      tags: ['keyboard', 'mechanical'],
-    },
-    {
-      name: 'Aero Pro Wireless Mouse',
-      sku: 'BRX-MS-001',
-      category: cat('Mice'),
-      brand: brand('Logitech'),
-      price: 990,
-      stock: 120,
-      isFeatured: false,
-      shortDescription: 'Lightweight sensor for competitive play.',
-      description:
-        'Ultra-light shell, optical switches, and 80-hour battery life for marathon sessions.',
-      specs: { Sensor: '26K DPI', Weight: '58g', Battery: '80 hours' },
-      tags: ['mouse', 'wireless'],
-    },
-    {
-      name: 'Nova Surround Headset',
-      sku: 'BRX-HP-001',
-      category: cat('Headphones'),
-      brand: brand('Razer'),
-      price: 1790,
-      stock: 55,
-      isFeatured: true,
-      shortDescription: 'Studio-tuned drivers with detachable mic.',
-      description: 'Immersive spatial audio and memory-foam cushions for all-day comfort.',
-      specs: { Drivers: '50mm', Mic: 'Detachable', Connectivity: 'USB / 3.5mm' },
-      tags: ['headset', 'audio'],
-    },
-    {
-      name: 'Force RTX 4080 Founders',
-      sku: 'BRX-GPU-001',
-      category: cat('Components'),
-      brand: brand('NVIDIA'),
-      price: 11990,
-      stock: 18,
-      isFeatured: true,
-      shortDescription: 'Flagship graphics for creators and gamers.',
-      description: 'Ray tracing, DLSS, and massive VRAM for future-proof performance.',
-      specs: { VRAM: '16GB GDDR6X', Interface: 'PCIe 4.0', TGP: '320W' },
-      tags: ['gpu', 'rtx', 'component'],
-    },
-    {
-      name: 'ChargeDock USB-C Hub',
-      sku: 'BRX-ACC-001',
-      category: cat('Accessories'),
-      brand: brand('Brynoxa'),
-      price: 690,
-      stock: 200,
-      isFeatured: false,
-      shortDescription: '8-in-1 hub with 100W pass-through.',
-      description: 'HDMI 4K, SD/TF, USB-A/C, and Ethernet in a compact aluminum body.',
-      specs: { Ports: '8-in-1', Power: '100W PD', Video: 'HDMI 4K60' },
-      tags: ['hub', 'usb-c', 'accessory'],
-    },
-    {
-      name: 'MSI Stealth 16 Studio',
-      sku: 'MSI-LAP-016',
-      category: cat('Laptops'),
-      brand: brand('MSI'),
-      price: 20990,
-      stock: 15,
-      isFeatured: true,
-      shortDescription: 'Creator laptop with mini-LED display.',
-      description: 'Studio-grade color accuracy and discrete graphics for 3D and video.',
-      specs: { CPU: 'Intel Core i9', RAM: '32GB', GPU: 'RTX 4070', Display: '16" Mini-LED' },
-      tags: ['laptop', 'msi', 'creator'],
-    },
-    {
-      name: 'ASUS ROG Swift PG32',
-      sku: 'ASUS-MON-032',
-      category: cat('Monitors'),
-      brand: brand('ASUS'),
-      price: 12990,
-      stock: 10,
-      isFeatured: false,
-      shortDescription: '32-inch 4K gaming monitor.',
-      description: 'HDMI 2.1, variable refresh, and elite contrast for console and PC.',
-      specs: { Size: '32"', Resolution: '4K', Refresh: '144Hz', HDR: 'HDR1600' },
-      tags: ['monitor', '4k', 'rog'],
-    },
-  ];
-
-  await Product.insertMany(
-    products.map((p, i) => ({
-      ...p,
-      slug: slugify(p.name),
-      images: [
-        {
-          url: placeholders[i % placeholders.length],
-          alt: p.name,
-          isPrimary: true,
-        },
-      ],
-      isActive: true,
-      lowStockThreshold: 5,
-      averageRating: 4 + (i % 10) / 10,
-      reviewCount: 5 + i,
-      soldCount: 10 + i * 3,
-    }))
-  );
+  await syncCatalogIfNeeded();
 
   const couponExists = await Coupon.findOne({ code: 'BRYNOXA10' });
   if (!couponExists) {

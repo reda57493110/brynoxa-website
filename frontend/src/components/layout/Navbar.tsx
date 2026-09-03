@@ -74,7 +74,7 @@ export function Navbar() {
   const onSearch = (e: FormEvent) => {
     e.preventDefault()
     const query = q.trim()
-    navigate(query ? `/search?q=${encodeURIComponent(query)}` : '/shop')
+    navigate(query ? `/shop?q=${encodeURIComponent(query)}` : '/shop')
     setSearchOpen(false)
   }
 

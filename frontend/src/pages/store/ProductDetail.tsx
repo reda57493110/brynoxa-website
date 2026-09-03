@@ -20,6 +20,7 @@ import { RatingStars } from '@/components/product/RatingStars'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { SpecTable } from '@/components/product/SpecTable'
 import { StockBadge } from '@/components/product/StockBadge'
+import { ProductGrid } from '@/components/product/ProductGrid'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
@@ -66,6 +67,23 @@ export function ProductDetail() {
     queryKey: ['reviews', product.data?._id],
     queryFn: async () =>
       (await reviewsApi.forProduct(product.data!._id, { limit: 20 })).data.data,
+    enabled: Boolean(product.data?._id),
+  })
+
+  const related = useQuery({
+    queryKey: [
+      'products',
+      'related',
+      typeof product.data?.category === 'object' ? product.data.category.slug : '',
+      product.data?._id,
+    ],
+    queryFn: async () => {
+      const category =
+        typeof product.data?.category === 'object' ? product.data.category.slug : undefined
+      if (!category) return []
+      const items = (await productsApi.list({ category, limit: 8, sort: 'popular' })).data.data
+      return items.filter((item) => item._id !== product.data!._id).slice(0, 4)
+    },
     enabled: Boolean(product.data?._id),
   })
 
@@ -238,7 +256,9 @@ export function ProductDetail() {
             </h1>
 
             <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
-              <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
+              {p.reviewCount > 0 ? (
+                <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
+              ) : null}
               <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
             </div>
 
@@ -298,6 +318,18 @@ export function ProductDetail() {
             </div>
           </motion.div>
         </div>
+
+        {related.data?.length ? (
+          <motion.section {...fade(0.14)} className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12">
+            <p className="kicker">{t('common.shop')}</p>
+            <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">
+              {t('productPage.moreInCategory', { name: categoryName || t('shop.category') })}
+            </h2>
+            <div className="mt-6">
+              <ProductGrid products={related.data} loading={related.isLoading} />
+            </div>
+          </motion.section>
+        ) : null}
 
         <motion.section {...fade(0.16)} className="mt-8 border-t border-[var(--border)] pt-8 sm:mt-10">
           <p className="kicker">{t('productPage.reviews')}</p>

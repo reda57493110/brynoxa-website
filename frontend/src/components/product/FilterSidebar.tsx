@@ -17,10 +17,10 @@ export interface FilterValues {
 }
 
 const PRICE_PRESETS: Array<{ min?: string; max?: string }> = [
-  { max: '500' },
-  { max: '1500' },
-  { max: '3000' },
-  { min: '5000' },
+  { max: '1000' },
+  { min: '1000', max: '5000' },
+  { min: '5000', max: '15000' },
+  { min: '15000' },
 ]
 
 const ALL_CAPS = new Set(['hp', 'msi', 'lg', 'ibm', 'amd', 'cpu', 'gpu', 'ssd', 'hdd', 'usb'])
@@ -93,6 +93,7 @@ export function FilterSidebar({
   onChange,
   onClear,
   plain = false,
+  hideCategories = false,
 }: {
   categories: Category[]
   brands: Brand[]
@@ -100,6 +101,7 @@ export function FilterSidebar({
   onChange: (next: FilterValues) => void
   onClear: () => void
   plain?: boolean
+  hideCategories?: boolean
 }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
@@ -185,28 +187,30 @@ export function FilterSidebar({
 
       <div className="h-px bg-[var(--border)]" />
 
-      <FilterSection title={t('shop.category')} icon="layers">
-        <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40 p-1.5">
-          <OptionRow
-            active={!values.category}
-            label={t('shop.allCategories')}
-            onClick={() => onChange({ ...values, category: undefined })}
-          />
-          {categories.map((c) => (
+      {!hideCategories ? (
+        <FilterSection title={t('shop.category')} icon="layers">
+          <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40 p-1.5">
             <OptionRow
-              key={c._id}
-              active={values.category === c.slug}
-              label={categoryDisplayName(locale, c.slug, c.name)}
-              onClick={() =>
-                onChange({
-                  ...values,
-                  category: values.category === c.slug ? undefined : c.slug,
-                })
-              }
+              active={!values.category}
+              label={t('shop.allCategories')}
+              onClick={() => onChange({ ...values, category: undefined })}
             />
-          ))}
-        </div>
-      </FilterSection>
+            {categories.map((c) => (
+              <OptionRow
+                key={c._id}
+                active={values.category === c.slug}
+                label={categoryDisplayName(locale, c.slug, c.name)}
+                onClick={() =>
+                  onChange({
+                    ...values,
+                    category: values.category === c.slug ? undefined : c.slug,
+                  })
+                }
+              />
+            ))}
+          </div>
+        </FilterSection>
+      ) : null}
 
       {brands.length > 0 ? (
         <FilterSection title={t('shop.brand')} icon="boxes">
@@ -236,9 +240,12 @@ export function FilterSidebar({
       <FilterSection title={t('shop.priceDh')} icon="tag">
         <div className="grid grid-cols-2 gap-1.5">
           {PRICE_PRESETS.map((preset) => {
-            const label = preset.max
-              ? t('shop.under', { amount: Number(preset.max).toLocaleString('fr-MA') })
-              : `${Number(preset.min).toLocaleString('fr-MA')}+ DH`
+            const label =
+              preset.max && !preset.min
+                ? t('shop.under', { amount: Number(preset.max).toLocaleString('fr-MA') })
+                : preset.min && !preset.max
+                  ? `${Number(preset.min).toLocaleString('fr-MA')}+ DH`
+                  : `${Number(preset.min).toLocaleString('fr-MA')}–${Number(preset.max).toLocaleString('fr-MA')}`
             const active = presetActive(preset)
             return (
               <button

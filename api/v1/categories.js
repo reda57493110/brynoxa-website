@@ -16,6 +16,12 @@ module.exports = async (req, res) => {
 
   try {
     await connectMongo();
+    try {
+      const { syncCatalogIfNeeded } = require('../../backend/dist/seed/seed');
+      await syncCatalogIfNeeded();
+    } catch (err) {
+      console.error('Catalog sync skipped:', err);
+    }
     const { listCategories } = require('../../backend/dist/services/catalog.service');
     const items = await listCategories(true);
     sendJson(res, 200, {

@@ -144,7 +144,13 @@ export async function listProducts(query: ProductQuery) {
 
   if (query.q?.trim()) {
     const rx = new RegExp(query.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    filter.$or = [{ name: rx }, { sku: rx }, { tags: rx }];
+    filter.$or = [
+      { name: rx },
+      { sku: rx },
+      { tags: rx },
+      { shortDescription: rx },
+      { description: rx },
+    ];
   }
   if (query.category) {
     const categoryId = await resolveCategoryId(query.category);

@@ -28,6 +28,12 @@ module.exports = async (req, res) => {
 
   try {
     await connectMongo();
+    try {
+      const { syncCatalogIfNeeded } = require('../../backend/dist/seed/seed');
+      await syncCatalogIfNeeded();
+    } catch (err) {
+      console.error('Catalog sync skipped:', err);
+    }
     const { listProducts } = require('../../backend/dist/services/catalog.service');
     const raw = parseQuery(req.url || '');
     const page = Number(raw.page || 1);

@@ -16,6 +16,9 @@ import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
 import { optimizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { categoryDisplayName } from '@/i18n'
+import type { Locale } from '@/i18n'
 
 function primaryImage(product: Product) {
   return (
@@ -28,6 +31,15 @@ function primaryImage(product: Product) {
 function salePercent(product: Product) {
   if (!product.compareAtPrice || product.compareAtPrice <= product.price) return null
   return Math.round((1 - product.price / product.compareAtPrice) * 100)
+}
+
+function brandName(product: Product) {
+  return typeof product.brand === 'object' && product.brand ? product.brand.name : null
+}
+
+function categoryName(product: Product, locale: Locale) {
+  if (typeof product.category !== 'object' || !product.category) return null
+  return categoryDisplayName(locale, product.category.slug, product.category.name)
 }
 
 export function ProductCard({
@@ -46,8 +58,13 @@ export function ProductCard({
   const addCompare = useCompareStore((s) => s.add)
   const removeCompare = useCompareStore((s) => s.remove)
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
+  const brand = brandName(product)
+  const category = categoryName(product, locale)
+  const meta = [brand, category].filter(Boolean).join(' · ')
+  const blurb = product.shortDescription?.trim()
 
   const onAddCart = () => {
     if (product.stock <= 0) {
@@ -168,6 +185,16 @@ export function ProductCard({
           spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1.5 p-3 sm:gap-2 sm:p-4'
         )}
       >
+        {meta ? (
+          <p
+            className={cn(
+              'font-medium uppercase tracking-[0.12em] text-[var(--fg-muted)]',
+              spotlight ? 'text-[11px]' : 'text-[10px] sm:text-[11px]'
+            )}
+          >
+            {meta}
+          </p>
+        ) : null}
         <Link
           to={`/product/${product.slug}`}
           className={cn(
@@ -177,18 +204,25 @@ export function ProductCard({
         >
           {product.name}
         </Link>
-        {spotlight && product.shortDescription ? (
-          <p className="line-clamp-2 max-w-md text-sm font-medium leading-relaxed text-[var(--fg-muted)]">
-            {product.shortDescription}
+        {blurb ? (
+          <p
+            className={cn(
+              'font-medium leading-relaxed text-[var(--fg-muted)]',
+              spotlight ? 'line-clamp-2 max-w-md text-sm' : 'line-clamp-2 text-xs sm:text-sm'
+            )}
+          >
+            {blurb}
           </p>
         ) : null}
-        <div className={spotlight ? undefined : 'hidden sm:block'}>
-          <RatingStars
-            rating={product.averageRating}
-            count={product.reviewCount}
-            size={spotlight ? 'md' : 'sm'}
-          />
-        </div>
+        {product.reviewCount > 0 ? (
+          <div className={spotlight ? undefined : 'hidden sm:block'}>
+            <RatingStars
+              rating={product.averageRating}
+              count={product.reviewCount}
+              size={spotlight ? 'md' : 'sm'}
+            />
+          </div>
+        ) : null}
         <Price
           price={product.price}
           compareAt={product.compareAtPrice}

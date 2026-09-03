@@ -1,9 +1,10 @@
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/categoriesApi'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { ProductGrid } from '@/components/product/ProductGrid'
+import { SortSelect } from '@/components/product/SortSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
 import { Spinner } from '@/components/ui/Spinner'
@@ -19,14 +20,18 @@ export function CategoryPage() {
   const locale = useLocaleStore((s) => s.locale)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const sort = params.get('sort') || 'newest'
+
   const category = useQuery({
     queryKey: ['category', slug],
     queryFn: async () => (await categoriesApi.getBySlug(slug)).data.data,
     enabled: Boolean(slug),
   })
   const products = useQuery({
-    queryKey: ['products', 'category', slug],
-    queryFn: async () => (await productsApi.list({ category: slug, limit: 24 })).data.data,
+    queryKey: ['products', 'category', slug, sort],
+    queryFn: async () =>
+      (await productsApi.list({ category: slug, limit: 24, sort })).data.data,
     enabled: Boolean(slug),
   })
   const categories = useQuery({
@@ -113,18 +118,29 @@ export function CategoryPage() {
           {(categories.data ?? [])
             .filter((c) => c.slug !== 'office' && c.slug !== 'networking')
             .map((c) => (
-            <Link key={c._id} to={`/category/${c.slug}`} className={chip(c.slug === slug)}>
-              {categoryDisplayName(locale, c.slug, c.name)}
-            </Link>
-          ))}
+              <Link key={c._id} to={`/category/${c.slug}`} className={chip(c.slug === slug)}>
+                {categoryDisplayName(locale, c.slug, c.name)}
+              </Link>
+            ))}
         </div>
-        <p className="mb-5 text-sm text-[var(--fg-muted)]">
-          {products.isLoading
-            ? t('ui.loading')
-            : productCount === 1
-              ? t('shop.productCountOne', { count: productCount })
-              : t('shop.productCount', { count: productCount })}
-        </p>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[var(--fg-muted)]">
+            {products.isLoading
+              ? t('ui.loading')
+              : productCount === 1
+                ? t('shop.productCountOne', { count: productCount })
+                : t('shop.productCount', { count: productCount })}
+          </p>
+          <SortSelect
+            value={sort}
+            onChange={(next) => {
+              const updated = new URLSearchParams(params)
+              if (!next || next === 'newest') updated.delete('sort')
+              else updated.set('sort', next)
+              setParams(updated)
+            }}
+          />
+        </div>
         {products.isError ? (
           <QueryErrorState
             title={t('shop.loadError')}

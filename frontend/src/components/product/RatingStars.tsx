@@ -9,6 +9,7 @@ export function RatingStars({
   count?: number
   size?: 'sm' | 'md'
 }) {
+  if (count === 0) return null
   const px = size === 'sm' ? 13 : 15
   return (
     <div className="flex items-center gap-1.5">

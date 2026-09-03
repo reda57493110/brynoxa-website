@@ -155,7 +155,7 @@ export const fr: Messages = {
     title: 'Boutique',
     kicker: 'Maroc',
     searchTitle: 'Recherche',
-    body: 'Portables, PC gaming et composants.',
+    body: 'Parcourez par catégorie — portables, PC, écrans, périphériques et upgrades. Prix en DH.',
     resultsFor: 'Résultats pour « {q} »',
     resultsIn: ' dans {name}',
     shopByCategory: 'Acheter par catégorie',
@@ -489,6 +489,7 @@ export const fr: Messages = {
     submitReview: 'Envoyer l’avis',
     reviewSubmitted: 'Avis envoyé',
     noSpecs: 'Aucune caractéristique listée.',
+    moreInCategory: 'Plus dans {name}',
   },
   contact: {
     heroKicker: 'Contact',
@@ -693,16 +694,16 @@ export const fr: Messages = {
         description: 'Souris précises pour le jeu et la productivité.',
       },
       headphones: {
-        name: 'Casques',
-        description: 'Casques et audio pour l’immersion et les appels.',
+        name: 'Audio',
+        description: 'Casques pour le jeu, les appels et la musique.',
       },
       components: {
         name: 'Composants',
-        description: 'GPU, pièces et upgrades pour votre config.',
+        description: 'GPU, stockage et mémoire pour upgrades.',
       },
       accessories: {
         name: 'Accessoires',
-        description: 'Docks, hubs et extras tech du quotidien.',
+        description: 'Hubs, supports et extras de bureau.',
       },
     },
   },

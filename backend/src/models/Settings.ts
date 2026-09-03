@@ -8,6 +8,7 @@ export interface ISettings extends Document {
   taxRate: number;
   supportEmail: string;
   codEnabled: boolean;
+  catalogVersion?: number;
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -19,6 +20,7 @@ const settingsSchema = new Schema<ISettings>(
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: 'support@brynoxa.com' },
     codEnabled: { type: Boolean, default: true },
+    catalogVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

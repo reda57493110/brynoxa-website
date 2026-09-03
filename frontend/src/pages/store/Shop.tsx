@@ -22,6 +22,11 @@ export function Shop() {
   const locale = useLocaleStore((s) => s.locale)
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [searchDraft, setSearchDraft] = useState(params.get('q') || '')
+
+  useEffect(() => {
+    setSearchDraft(params.get('q') || '')
+  }, [params])
 
   const filters = useMemo(
     () => ({
@@ -147,6 +152,7 @@ export function Shop() {
         if (plain) setFiltersOpen(false)
       }}
       plain={plain}
+      hideCategories
     />
   )
 
@@ -199,6 +205,32 @@ export function Shop() {
               </li>
             ))}
           </ul>
+
+          <form
+            className="mt-4 flex max-w-xl gap-2 sm:mt-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              update({ q: searchDraft.trim() || undefined })
+            }}
+          >
+            <label className="sr-only" htmlFor="shop-search">
+              {t('shop.searchShop')}
+            </label>
+            <input
+              id="shop-search"
+              value={searchDraft}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              placeholder={t('shop.searchShopPlaceholder')}
+              className="h-11 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm outline-none ring-brand"
+            />
+            <button
+              type="submit"
+              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)]"
+            >
+              <SiteIcon name="search" size={16} />
+              {t('shop.searchAction')}
+            </button>
+          </form>
         </Container>
       </section>
 

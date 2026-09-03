@@ -154,7 +154,7 @@ export const ar: Messages = {
     title: 'المتجر',
     kicker: 'المغرب',
     searchTitle: 'بحث',
-    body: 'حواسيب محمولة وأجهزة ألعاب ومكوّنات.',
+    body: 'تصفّح حسب الفئة — حواسيب محمولة وأجهزة وأشاشات وملحقات وترقيات. الأسعار بالدرهم.',
     resultsFor: 'نتائج « {q} »',
     resultsIn: ' في {name}',
     shopByCategory: 'تسوق حسب الفئة',
@@ -486,6 +486,7 @@ export const ar: Messages = {
     submitReview: 'إرسال التقييم',
     reviewSubmitted: 'تم إرسال التقييم',
     noSpecs: 'لا توجد مواصفات.',
+    moreInCategory: 'المزيد في {name}',
   },
   contact: {
     heroKicker: 'اتصل بنا',
@@ -690,16 +691,16 @@ export const ar: Messages = {
         description: 'فأرات دقيقة للألعاب والإنتاجية.',
       },
       headphones: {
-        name: 'سماعات',
-        description: 'سماعات وصوت للانغماس والمكالمات.',
+        name: 'صوتيات',
+        description: 'سماعات للألعاب والمكالمات والموسيقى.',
       },
       components: {
         name: 'مكونات',
-        description: 'بطاقات رسوم وقطع وترقيات لجهازك.',
+        description: 'بطاقات رسوم وتخزين وذاكرة للترقية.',
       },
       accessories: {
         name: 'إكسسوارات',
-        description: 'محاور ومنافذ وإضافات تقنية يومية.',
+        description: 'محاور وحاملات وإضافات للمكتب.',
       },
     },
   },
