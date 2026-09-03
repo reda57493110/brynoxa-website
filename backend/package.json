@@ -55,5 +55,9 @@
     "nodemon": "^3.1.10",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
+  },
+  "allowScripts": {
+    "esbuild": true,
+    "mongodb-memory-server": true
   }
 }
