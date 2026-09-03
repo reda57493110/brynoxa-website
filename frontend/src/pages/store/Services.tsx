@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { useWhatsAppStore } from '@/store/whatsappStore'
@@ -425,7 +426,7 @@ export function Services() {
                         <span className="min-w-0">
                           <p className="text-sm font-semibold text-[var(--fg)]">{label}</p>
                           <p className="mt-0.5 truncate text-xs leading-relaxed text-[var(--fg-muted)]">
-                            {hint}
+                            {icon === 'chat' ? <PhoneText>{hint}</PhoneText> : hint}
                           </p>
                         </span>
                       </button>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SocialGlyph } from '@/components/contact/BrandIcons'
+import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -123,7 +124,7 @@ export function Footer() {
                 className={cn(linkClass, 'inline-flex items-center gap-2')}
               >
                 <SiteIcon name="chat" size={14} className="shrink-0 text-[var(--brand-text)]" />
-                <span className="truncate">{CONTACT.whatsapp.value}</span>
+                <PhoneText className="truncate">{CONTACT.whatsapp.value}</PhoneText>
               </button>
             </li>
             <li>

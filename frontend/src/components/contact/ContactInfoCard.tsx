@@ -11,7 +11,7 @@ export function ContactInfoCard({
 }: {
   icon: ReactNode
   label: string
-  value: string
+  value: ReactNode
   href?: string
   onClick?: () => void
   className?: string

@@ -10,6 +10,7 @@ import { SocialGlyph } from '@/components/contact/BrandIcons'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { contactApi } from '@/api/contactApi'
 import { getErrorMessage } from '@/api/client'
+import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
@@ -195,14 +196,14 @@ export function Contact() {
             <ContactInfoCard
               icon={<SiteIcon name="chat" size={20} />}
               label={t('contact.whatsapp')}
-              value={CONTACT.whatsapp.value}
+              value={<PhoneText>{CONTACT.whatsapp.value}</PhoneText>}
               onClick={() => openWhatsAppPicker()}
               className="p-4 sm:p-5"
             />
             <ContactInfoCard
               icon={<SiteIcon name="phone" size={20} />}
               label={t('contact.phone')}
-              value={CONTACT.phone.value}
+              value={<PhoneText>{CONTACT.phone.value}</PhoneText>}
               href={CONTACT.phone.href}
               className="p-4 sm:p-5"
             />

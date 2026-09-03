@@ -9,6 +9,7 @@ import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore, type WhatsAppTopic } from '@/store/whatsappStore'
 import { composeWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp'
+import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT } from '@/lib/site'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
@@ -129,9 +130,13 @@ export function WhatsAppHost() {
             <span className="min-w-0">
               <span className="block text-xs font-semibold text-[var(--fg)] sm:text-sm">{t('contact.waReplyHint')}</span>
               <span className="mt-0.5 block text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs sm:leading-relaxed">
-                <span className="sm:hidden">{CONTACT.whatsapp.value}</span>
+                <span className="sm:hidden">
+                  <PhoneText>{CONTACT.whatsapp.value}</PhoneText>
+                </span>
                 <span className="hidden sm:inline">
-                  {CONTACT.whatsapp.value} · {t('contact.waHours')}
+                  <PhoneText>{CONTACT.whatsapp.value}</PhoneText>
+                  {' · '}
+                  {t('contact.waHours')}
                 </span>
               </span>
             </span>
