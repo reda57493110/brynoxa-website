@@ -6,13 +6,6 @@ export function AuthLayout() {
   const t = useT()
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg)] px-4 py-10">
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 70% 45% at 18% 10%, color-mix(in srgb, var(--bg-muted) 85%, transparent), transparent 58%), radial-gradient(ellipse 55% 40% at 90% 90%, color-mix(in srgb, var(--fg) 4%, transparent), transparent)',
-        }}
-      />
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

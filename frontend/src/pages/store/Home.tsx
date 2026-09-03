@@ -94,7 +94,7 @@ export function Home() {
     <>
       <section
         aria-labelledby="home-hero-heading"
-        className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 -mt-[var(--nav-height)] flex min-h-[85svh] flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
+        className="relative -mt-[var(--nav-height)] flex min-h-[85svh] w-full flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
       >
         <div className="absolute inset-0" aria-hidden="true">
           <SafeImage
