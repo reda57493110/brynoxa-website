@@ -8,7 +8,8 @@ async function connectMongo() {
   if (!connectionPromise) {
     connectionPromise = connectDB();
   }
-  return connectionPromise;
+  const mongoose = await connectionPromise;
+  return mongoose.connection;
 }
 
 module.exports = { connectMongo };
