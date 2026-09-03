@@ -153,7 +153,7 @@ export function Contact() {
               {t('contact.heroBody')}
             </p>
             <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <button type="button" onClick={openWhatsAppPicker} className={pillPrimary}>
+              <button type="button" onClick={() => openWhatsAppPicker()} className={pillPrimary}>
                 {t('contact.whatsapp')}
                 <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
               </button>
@@ -196,7 +196,7 @@ export function Contact() {
               icon={<SiteIcon name="chat" size={20} />}
               label={t('contact.whatsapp')}
               value={CONTACT.whatsapp.value}
-              onClick={openWhatsAppPicker}
+              onClick={() => openWhatsAppPicker()}
               className="p-4 sm:p-5"
             />
             <ContactInfoCard
@@ -382,7 +382,7 @@ export function Contact() {
                     <button
                       key={s.id}
                       type="button"
-                      onClick={openWhatsAppPicker}
+                      onClick={() => openWhatsAppPicker()}
                       aria-label={t('nav.socialOpens', { name: s.name })}
                       className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                     >

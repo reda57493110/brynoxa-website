@@ -58,7 +58,7 @@ export function Services() {
   ]
 
   const CTA_LINKS = [
-    { icon: 'chat' as const, label: t('contact.whatsapp'), hint: CONTACT.whatsapp.value, onClick: openWhatsAppPicker },
+    { icon: 'chat' as const, label: t('contact.whatsapp'), hint: CONTACT.whatsapp.value, onClick: () => openWhatsAppPicker() },
     { icon: 'mail' as const, label: t('ui.email'), hint: CONTACT.email.value, href: CONTACT.email.href },
   ]
 

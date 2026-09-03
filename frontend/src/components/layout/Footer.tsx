@@ -51,7 +51,7 @@ export function Footer() {
                   <button
                     key={s.id}
                     type="button"
-                    onClick={openWhatsAppPicker}
+                    onClick={() => openWhatsAppPicker()}
                     aria-label={t('nav.socialOpens', { name: s.name })}
                     className={cn(
                       'inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)]',
@@ -119,7 +119,7 @@ export function Footer() {
             <li>
               <button
                 type="button"
-                onClick={openWhatsAppPicker}
+                onClick={() => openWhatsAppPicker()}
                 className={cn(linkClass, 'inline-flex items-center gap-2')}
               >
                 <SiteIcon name="chat" size={14} className="shrink-0 text-[var(--brand-text)]" />

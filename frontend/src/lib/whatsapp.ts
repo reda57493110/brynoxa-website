@@ -9,3 +9,11 @@ export function whatsappHref(text?: string) {
 export function openWhatsApp(text?: string) {
   window.open(whatsappHref(text), '_blank', 'noopener,noreferrer')
 }
+
+export function composeWhatsAppMessage(lines: Array<string | false | undefined>) {
+  return lines
+    .filter((line): line is string => Boolean(line && line.trim()))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}

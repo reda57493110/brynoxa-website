@@ -30,6 +30,7 @@ import { formatDate } from '@/lib/format'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product, Review, User } from '@/types'
@@ -284,8 +285,12 @@ export function ProductDetail() {
               >
                 <SiteIcon name="heart" size={16} />
               </Button>
-              <Button variant="outline" onClick={openWhatsAppPicker} className="rounded-full">
-                <SiteIcon name="chat" size={16} />
+              <Button
+                variant="outline"
+                onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
+                className="rounded-full"
+              >
+                <WhatsAppIcon size={16} />
                 {t('contact.whatsapp')}
               </Button>
             </div>
@@ -446,11 +451,11 @@ export function ProductDetail() {
           </Button>
           <Button
             variant="outline"
-            onClick={openWhatsAppPicker}
+            onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
             className="h-11 w-11 shrink-0 rounded-full !px-0"
             aria-label={t('contact.whatsapp')}
           >
-            <SiteIcon name="chat" size={16} />
+            <WhatsAppIcon size={18} />
           </Button>
         </div>
       </div>
