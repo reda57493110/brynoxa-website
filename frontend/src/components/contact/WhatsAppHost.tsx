@@ -107,36 +107,41 @@ export function WhatsAppHost() {
           type="button"
           onClick={() => open(onProductPage ? { topic: 'product', productName } : undefined)}
           className={cn(
-            'fixed end-4 z-40 h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_12px_28px_-8px_rgba(37,211,102,0.65)] transition hover:scale-[1.04] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-            'bottom-[max(1.25rem,env(safe-area-inset-bottom))] sm:end-6 sm:bottom-6',
+            'fixed end-3 z-40 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_10px_22px_-8px_rgba(37,211,102,0.7)] transition hover:scale-[1.04] hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+            'h-12 w-12 bottom-[max(1rem,env(safe-area-inset-bottom))] sm:h-14 sm:w-14 sm:end-6 sm:bottom-6',
             hideFabOnMobile ? 'hidden sm:inline-flex' : 'inline-flex'
           )}
           aria-label={t('contact.whatsapp')}
         >
-          <WhatsAppIcon size={28} />
-          <span className="absolute end-0.5 top-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-300" />
+          <WhatsAppIcon size={22} className="sm:hidden" />
+          <WhatsAppIcon size={28} className="hidden sm:block" />
+          <span className="absolute end-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-300 sm:end-0.5 sm:top-0.5 sm:h-3 sm:w-3" />
         </button>
       ) : null}
 
-      <Modal open={isOpen} onClose={close} title={t('contact.waTitle')} size="md">
-        <div className="max-h-[min(70vh,40rem)] space-y-4 overflow-y-auto pe-1">
-          <div className="flex items-start gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-3.5 py-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white">
-              <WhatsAppIcon size={22} />
+      <Modal open={isOpen} onClose={close} title={t('contact.waTitle')} size="sm" presentation="sheet">
+        <div className="flex min-h-0 flex-col gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white sm:h-11 sm:w-11">
+              <WhatsAppIcon size={16} className="sm:hidden" />
+              <WhatsAppIcon size={22} className="hidden sm:block" />
             </span>
             <span className="min-w-0">
-              <span className="block text-sm font-semibold text-[var(--fg)]">{t('contact.waReplyHint')}</span>
-              <span className="mt-0.5 block text-xs leading-relaxed text-[var(--fg-muted)]">
-                {CONTACT.whatsapp.value} · {t('contact.waHours')}
+              <span className="block text-xs font-semibold text-[var(--fg)] sm:text-sm">{t('contact.waReplyHint')}</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs sm:leading-relaxed">
+                <span className="sm:hidden">{CONTACT.whatsapp.value}</span>
+                <span className="hidden sm:inline">
+                  {CONTACT.whatsapp.value} · {t('contact.waHours')}
+                </span>
               </span>
             </span>
           </div>
 
-          <p className="text-sm leading-relaxed text-[var(--fg-muted)]">{t('contact.waBody')}</p>
+          <p className="hidden text-sm leading-relaxed text-[var(--fg-muted)] sm:block">{t('contact.waBody')}</p>
 
-          <ul className="grid gap-2 sm:grid-cols-2">
+          <ul className="grid grid-cols-2 gap-1.5 sm:gap-2">
             {onProductPage ? (
-              <li className="sm:col-span-2">
+              <li className="col-span-2">
                 <TopicButton
                   selected={selected === 'product'}
                   icon="tag"
@@ -147,7 +152,7 @@ export function WhatsAppHost() {
               </li>
             ) : null}
             {OPTIONS.map((option) => (
-              <li key={option.id}>
+              <li key={option.id} className={option.id === 'other' ? 'col-span-2' : undefined}>
                 <TopicButton
                   selected={selected === option.id}
                   icon={option.icon}
@@ -160,7 +165,7 @@ export function WhatsAppHost() {
           </ul>
 
           {selected ? (
-            <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3.5">
+            <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 sm:space-y-3 sm:rounded-2xl sm:p-3.5">
               {needsOrderNumber(selected) ? (
                 <Input
                   label={t('contact.waOrderNumber')}
@@ -168,6 +173,7 @@ export function WhatsAppHost() {
                   onChange={(e) => setExtra(e.target.value)}
                   placeholder={t('contact.waOrderNumberPh')}
                   autoComplete="off"
+                  className="h-10 sm:h-11"
                 />
               ) : null}
               {selected === 'advice' ? (
@@ -177,6 +183,7 @@ export function WhatsAppHost() {
                   onChange={(e) => setExtra(e.target.value)}
                   placeholder={t('contact.waBudgetPh')}
                   autoComplete="off"
+                  className="h-10 sm:h-11"
                 />
               ) : null}
               <Textarea
@@ -184,28 +191,31 @@ export function WhatsAppHost() {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t('contact.waNotePh')}
-                className="min-h-[5.5rem]"
+                className="min-h-[4.25rem] sm:min-h-[5.5rem]"
               />
               <div>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:mb-1.5 sm:text-xs">
                   {t('contact.waPreview')}
                 </p>
-                <p className="whitespace-pre-wrap rounded-xl bg-[var(--bg-muted)] px-3 py-2.5 text-sm leading-relaxed text-[var(--fg)]">
+                <p className="line-clamp-4 whitespace-pre-wrap rounded-lg bg-[var(--bg-muted)] px-2.5 py-2 text-xs leading-relaxed text-[var(--fg)] sm:line-clamp-none sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-sm">
                   {preview}
                 </p>
               </div>
             </div>
           ) : null}
 
-          <Button
-            type="button"
-            onClick={startChat}
-            disabled={!selected}
-            className="w-full rounded-full bg-[#25D366] text-white shadow-none hover:brightness-110 disabled:opacity-50"
-          >
-            <WhatsAppIcon size={18} />
-            {t('contact.waContinue')}
-          </Button>
+          <div className="sticky bottom-0 -mx-3 mt-auto border-t border-[var(--border)] bg-[var(--bg-elevated)] px-3 pt-2.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-0">
+            <Button
+              type="button"
+              onClick={startChat}
+              disabled={!selected}
+              size="md"
+              className="h-11 w-full rounded-full bg-[#25D366] text-white shadow-none hover:brightness-110 disabled:opacity-50 sm:h-12"
+            >
+              <WhatsAppIcon size={16} />
+              {t('contact.waContinue')}
+            </Button>
+          </div>
         </div>
       </Modal>
     </>
@@ -231,7 +241,7 @@ function TopicButton({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'flex h-full w-full items-start gap-3 rounded-2xl border px-3.5 py-3 text-start transition',
+        'flex h-full w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-start transition sm:items-start sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3',
         selected
           ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_10%,var(--bg))] shadow-soft'
           : 'border-[var(--border)] bg-[var(--bg)] hover:border-[var(--brand)]'
@@ -239,18 +249,21 @@ function TopicButton({
     >
       <span
         className={cn(
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl',
           selected ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[var(--bg-muted)] text-[var(--brand-text)]'
         )}
       >
-        <SiteIcon name={icon} size={18} />
+        <SiteIcon name={icon} size={15} className="sm:hidden" />
+        <SiteIcon name={icon} size={18} className="hidden sm:block" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-[var(--fg)]">{title}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-[var(--fg-muted)]">{hint}</span>
+        <span className="block text-[13px] font-semibold leading-tight text-[var(--fg)] sm:text-sm">{title}</span>
+        <span className="mt-0.5 line-clamp-1 block text-[11px] leading-snug text-[var(--fg-muted)] sm:line-clamp-2 sm:text-xs">
+          {hint}
+        </span>
       </span>
       {selected ? (
-        <SiteIcon name="check" size={16} className="mt-1 shrink-0 text-[var(--brand-text)]" />
+        <SiteIcon name="check" size={14} className="mt-0.5 shrink-0 text-[var(--brand-text)] sm:mt-1" />
       ) : null}
     </button>
   )

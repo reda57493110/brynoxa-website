@@ -12,6 +12,7 @@ interface ModalProps {
   children: ReactNode
   className?: string
   size?: 'sm' | 'md' | 'lg'
+  presentation?: 'dialog' | 'sheet'
 }
 
 const sizes = {
@@ -20,7 +21,15 @@ const sizes = {
   lg: 'max-w-2xl',
 }
 
-export function Modal({ open, onClose, title, children, className, size = 'md' }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  className,
+  size = 'md',
+  presentation = 'dialog',
+}: ModalProps) {
   const t = useT()
   const dialogRef = useRef<HTMLDivElement>(null)
   const onCloseRef = useRef(onClose)
@@ -72,7 +81,14 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
   if (!open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+    <div
+      className={cn(
+        'fixed inset-0 z-[80] flex justify-center',
+        presentation === 'sheet'
+          ? 'items-end p-0 sm:items-center sm:p-4'
+          : 'items-center p-3 sm:p-4'
+      )}
+    >
       <button
         type="button"
         aria-label={t('ui.closeModal')}
@@ -86,18 +102,26 @@ export function Modal({ open, onClose, title, children, className, size = 'md' }
         aria-labelledby={title ? 'modal-title' : undefined}
         tabIndex={-1}
         className={cn(
-          'relative z-10 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft-lg',
+          'relative z-10 flex w-full flex-col border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft-lg',
+          presentation === 'sheet'
+            ? 'max-h-[min(88dvh,36rem)] rounded-t-[1.25rem] rounded-b-none sm:max-h-[min(85vh,40rem)] sm:rounded-2xl'
+            : 'max-h-[min(90dvh,40rem)] rounded-2xl',
           sizes[size],
           className
         )}
       >
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-          <h3 id="modal-title" className="font-display text-lg font-semibold">{title}</h3>
+        {presentation === 'sheet' ? (
+          <div className="flex justify-center pt-2 sm:hidden" aria-hidden="true">
+            <span className="h-1 w-10 rounded-full bg-[var(--border)]" />
+          </div>
+        ) : null}
+        <div className="flex shrink-0 items-center justify-between border-b border-[var(--border)] px-4 py-2.5 sm:px-5 sm:py-3.5">
+          <h3 id="modal-title" className="font-display text-base font-semibold sm:text-lg">{title}</h3>
           <Button data-dialog-close variant="ghost" size="sm" onClick={onClose} aria-label={t('ui.close')}>
             <SiteIcon name="close" size={16} />
           </Button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5">{children}</div>
       </div>
     </div>,
     document.body
