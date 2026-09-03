@@ -4,6 +4,17 @@ import { useAuthStore } from '@/store/authStore'
 import { useNetworkStore } from '@/store/networkStore'
 import type { ApiResponse, SessionPayload } from '@/types'
 
+type TrackedConfig = InternalAxiosRequestConfig & {
+  skipLoader?: boolean
+  _loaderStarted?: boolean
+}
+
+function shouldSkipLoader(config: TrackedConfig) {
+  if (config.skipLoader) return true
+  const url = `${config.baseURL || ''}${config.url || ''}`
+  return /\/auth\/(csrf|refresh|me|logout)/.test(url) || /\/wishlist/.test(url) || /\/notifications/.test(url)
+}
+
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
@@ -12,7 +23,11 @@ const api = axios.create({
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  useNetworkStore.getState().begin()
+  const tracked = config as TrackedConfig
+  if (!shouldSkipLoader(tracked)) {
+    useNetworkStore.getState().begin()
+    tracked._loaderStarted = true
+  }
   const token = useAuthStore.getState().accessToken
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
@@ -26,7 +41,9 @@ let csrfToken: string | null = null
 
 async function getCsrfToken() {
   if (csrfToken) return csrfToken
-  const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf')
+  const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf', {
+    skipLoader: true,
+  } as InternalAxiosRequestConfig)
   csrfToken = response.data.data.csrfToken
   return csrfToken
 }
@@ -37,7 +54,8 @@ async function refreshAccessToken() {
       .then((token) =>
         api.post<ApiResponse<SessionPayload>>('/auth/refresh', undefined, {
           headers: { 'X-CSRF-Token': token },
-        })
+          skipLoader: true,
+        } as InternalAxiosRequestConfig)
       )
       .then((res) => {
         const payload = res.data.data
@@ -80,12 +98,17 @@ export async function restoreSession(force = false) {
 
 api.interceptors.response.use(
   (response) => {
-    useNetworkStore.getState().end()
+    if ((response.config as TrackedConfig)._loaderStarted) {
+      useNetworkStore.getState().end()
+    }
     return response
   },
   async (error: AxiosError<ApiResponse<unknown>>) => {
-    useNetworkStore.getState().end()
-    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const original = error.config as TrackedConfig & { _retry?: boolean }
+    if (original?._loaderStarted) {
+      useNetworkStore.getState().end()
+      original._loaderStarted = false
+    }
     const status = error.response?.status
     const url = original?.url ?? ''
 

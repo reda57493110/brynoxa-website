@@ -35,7 +35,7 @@ export function ProductGrid({
     className
   )
 
-  if (loading) {
+  if (loading && !products?.length) {
     return (
       <div className="relative">
         <div className={gridClass} aria-hidden="true">
@@ -43,9 +43,19 @@ export function ProductGrid({
             <Skeleton key={i} className="h-80 rounded-[var(--radius-card)]" />
           ))}
         </div>
-        <div className="absolute inset-0 flex items-start justify-center bg-[color-mix(in_srgb,var(--bg)_55%,transparent)] pt-16 backdrop-blur-[1px]">
-          <PageLoader compact label={t('ui.loadingProducts')} className="min-h-0 rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-6 py-5 shadow-soft" />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <PageLoader compact label={t('ui.loadingProducts')} className="min-h-0" />
         </div>
+      </div>
+    )
+  }
+
+  if (loading && products?.length) {
+    return (
+      <div className={cn(gridClass, 'opacity-70')}>
+        {products.map((p) => (
+          <ProductCard key={p._id} product={p} />
+        ))}
       </div>
     )
   }
