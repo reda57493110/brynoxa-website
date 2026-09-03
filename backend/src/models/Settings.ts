@@ -18,7 +18,7 @@ const settingsSchema = new Schema<ISettings>(
     shippingFlatRate: { type: Number, default: 0 },
     freeShippingMin: { type: Number, default: 0 },
     taxRate: { type: Number, default: 0 },
-    supportEmail: { type: String, default: 'support@brynoxa.com' },
+    supportEmail: { type: String, default: 'brynoxa.com@gmail.com' },
     codEnabled: { type: Boolean, default: true },
     catalogVersion: { type: Number, default: 0 },
   },

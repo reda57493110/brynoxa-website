@@ -558,7 +558,7 @@ export const fr: Messages = {
       },
       {
         q: 'Proposez-vous des commandes professionnelles / en volume ?',
-        a: 'Oui. Écrivez à support@brynoxa.com avec vos besoins et nous préparerons un devis.',
+        a: 'Oui. Écrivez à brynoxa.com@gmail.com avec vos besoins et nous préparerons un devis.',
       },
     ],
   },

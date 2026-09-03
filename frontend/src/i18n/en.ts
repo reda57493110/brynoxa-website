@@ -553,7 +553,7 @@ export const en = {
       },
       {
         q: 'Do you offer business / bulk orders?',
-        a: 'Absolutely. Email support@brynoxa.com with your requirements and our team will prepare a custom quote.',
+        a: 'Absolutely. Email brynoxa.com@gmail.com with your requirements and our team will prepare a custom quote.',
       },
     ],
   },

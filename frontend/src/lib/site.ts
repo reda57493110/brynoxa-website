@@ -14,8 +14,8 @@ export const CONTACT = {
   },
   email: {
     label: 'Email',
-    value: 'support@brynoxa.com',
-    href: 'mailto:support@brynoxa.com',
+    value: 'brynoxa.com@gmail.com',
+    href: 'mailto:brynoxa.com@gmail.com',
   },
   address: {
     label: 'Address',
@@ -64,7 +64,7 @@ export const CONTACT_FAQS = [
   },
   {
     q: 'Do you offer business / bulk orders?',
-    a: 'Absolutely. Email support@brynoxa.com with your requirements and our team will prepare a custom quote.',
+    a: 'Absolutely. Email brynoxa.com@gmail.com with your requirements and our team will prepare a custom quote.',
   },
 ] as const
 

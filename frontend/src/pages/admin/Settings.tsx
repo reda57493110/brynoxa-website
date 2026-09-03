@@ -32,7 +32,7 @@ export function Settings() {
     shippingFlatRate: 0,
     freeShippingMin: 0,
     taxRate: 0,
-    supportEmail: 'support@brynoxa.com',
+    supportEmail: 'brynoxa.com@gmail.com',
     codEnabled: true,
   })
 
