@@ -4,13 +4,13 @@ export const TAGLINE =
 export const CONTACT = {
   whatsapp: {
     label: 'WhatsApp',
-    value: '+1 (555) 014-2200',
-    href: 'https://wa.me/15550142200',
+    value: '07 79 31 80 61',
+    href: 'https://wa.me/212779318061',
   },
   phone: {
     label: 'Phone',
-    value: '+1 (555) 014-2100',
-    href: 'tel:+15550142100',
+    value: '07 79 31 80 61',
+    href: 'tel:+212779318061',
   },
   email: {
     label: 'Email',
@@ -19,8 +19,8 @@ export const CONTACT = {
   },
   address: {
     label: 'Address',
-    value: '1200 Innovation Drive, Suite 400, San Francisco, CA 94107',
-    href: 'https://maps.google.com/?q=1200+Innovation+Drive+San+Francisco+CA',
+    value: 'Morocco — cash on delivery nationwide',
+    href: 'https://wa.me/212779318061',
   },
   hours: {
     label: 'Working hours',
@@ -38,14 +38,14 @@ export const SOCIAL_LINKS = [
   {
     id: 'facebook',
     name: 'Facebook',
-    href: 'https://facebook.com/brynoxa',
-    handle: '@brynoxa',
+    href: 'https://www.facebook.com/profile.php?id=61594042771780',
+    handle: 'Brynoxa',
   },
   {
     id: 'instagram',
     name: 'Instagram',
-    href: 'https://instagram.com/brynoxa',
-    handle: '@brynoxa',
+    href: 'https://www.instagram.com/brynoxa1',
+    handle: '@brynoxa1',
   },
 ] as const
 

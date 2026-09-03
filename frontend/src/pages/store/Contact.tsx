@@ -194,12 +194,19 @@ export function Contact() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             <ContactInfoCard
               icon={<SiteIcon name="chat" size={20} />}
               label={t('contact.whatsapp')}
               value={CONTACT.whatsapp.value}
               href={CONTACT.whatsapp.href}
+              className="p-4 sm:p-5"
+            />
+            <ContactInfoCard
+              icon={<SiteIcon name="phone" size={20} />}
+              label={t('contact.phone')}
+              value={CONTACT.phone.value}
+              href={CONTACT.phone.href}
               className="p-4 sm:p-5"
             />
             <ContactInfoCard
@@ -213,7 +220,7 @@ export function Contact() {
               icon={<SiteIcon name="clock" size={20} />}
               label={t('contact.hours')}
               value={t('contact.hoursValue')}
-              className="p-4 sm:col-span-2 sm:p-5 lg:col-span-1"
+              className="p-4 sm:p-5"
             />
           </div>
         </Container>
