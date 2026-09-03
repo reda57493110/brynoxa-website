@@ -1,26 +1,14 @@
-const mongoose = require('mongoose');
+const { connectDB } = require('../../backend/dist/config/db');
 
 let connectionPromise = null;
 
 async function connectMongo() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error('MONGODB_URI is not set');
-
-  if (mongoose.connection.readyState === 1) {
-    return mongoose.connection;
-  }
-
+  // Reuse backend's DB connector so fast handlers and backend models share
+  // the same mongoose singleton instance.
   if (!connectionPromise) {
-    connectionPromise = mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 30000,
-      connectTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      maxPoolSize: 10,
-    });
+    connectionPromise = connectDB();
   }
-
-  await connectionPromise;
-  return mongoose.connection;
+  return connectionPromise;
 }
 
 module.exports = { connectMongo };

@@ -20,7 +20,8 @@
       "maxDuration": 10
     },
     "api/v1/auth/login.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "includeFiles": "backend/dist/**"
     },
     "api/v1/products.js": {
       "maxDuration": 60,
