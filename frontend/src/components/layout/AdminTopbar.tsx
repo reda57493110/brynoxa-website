@@ -31,7 +31,7 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
       /* cookie may already be gone */
     }
     logout()
-    navigate('/login')
+    navigate('/login', { replace: true })
   }
 
   return (
