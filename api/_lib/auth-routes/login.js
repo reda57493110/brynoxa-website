@@ -3,8 +3,8 @@ const Module = require('module');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { connectMongo } = require('../../_lib/mongo');
-const { sendJson, readJsonBody } = require('../../_lib/http');
+const { connectMongo } = require('../mongo');
+const { sendJson, readJsonBody } = require('../http');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {

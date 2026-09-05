@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const { connectMongo } = require('../../_lib/mongo');
-const { sendJson } = require('../../_lib/http');
+const { connectMongo } = require('../mongo');
+const { sendJson } = require('../http');
 
 function hashRefreshToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');

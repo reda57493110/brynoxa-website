@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { sendJson } = require('../../_lib/http');
+const { sendJson } = require('../http');
 
 function parseCookies(header = '') {
   const out = {};

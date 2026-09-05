@@ -1,6 +1,6 @@
 const path = require('path');
-const { sendJson, readJsonBody } = require('../../_lib/http');
-const { requireUser } = require('../../_lib/auth');
+const { sendJson, readJsonBody } = require('../http');
+const { requireUser } = require('../auth');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {

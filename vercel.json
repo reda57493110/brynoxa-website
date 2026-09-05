@@ -7,8 +7,9 @@
     { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin?__route=$1" },
     { "source": "/api/v1/products/(.*)", "destination": "/api/v1/products?__route=$1" },
     { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
-    { "source": "/api/v1/auth/me/(.*)", "destination": "/api/v1/auth/me?__route=$1" },
-    { "source": "/api/v1/((?!health$|db-ping$|auth/login$|auth/csrf$|auth/refresh$|auth/me$|auth/change-password$|auth/logout$|products$|categories$|settings$|admin$).*)", "destination": "/api" },
+    { "source": "/api/v1/auth/me/(.*)", "destination": "/api/v1/auth?__route=me/$1" },
+    { "source": "/api/v1/auth/(login|csrf|refresh|logout|change-password|me)", "destination": "/api/v1/auth?__route=$1" },
+    { "source": "/api/v1/((?!health$|db-ping$|auth$|products$|categories$|settings$|admin$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
@@ -23,28 +24,9 @@
     "api/v1/db-ping.js": {
       "maxDuration": 10
     },
-    "api/v1/auth/csrf.js": {
-      "maxDuration": 10
-    },
-    "api/v1/auth/refresh.js": {
-      "maxDuration": 30,
-      "includeFiles": "backend/dist/**"
-    },
-    "api/v1/auth/me.js": {
-      "maxDuration": 30,
-      "includeFiles": "backend/dist/**"
-    },
-    "api/v1/auth/change-password.js": {
-      "maxDuration": 30,
-      "includeFiles": "backend/dist/**"
-    },
-    "api/v1/auth/logout.js": {
-      "maxDuration": 30,
-      "includeFiles": "backend/dist/**"
-    },
-    "api/v1/auth/login.js": {
+    "api/v1/auth.js": {
       "maxDuration": 60,
-      "includeFiles": "backend/dist/**"
+      "includeFiles": "{backend/dist/**,api/_lib/auth-routes/**}"
     },
     "api/v1/products.js": {
       "maxDuration": 60,

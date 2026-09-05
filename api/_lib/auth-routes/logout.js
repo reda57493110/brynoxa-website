@@ -1,7 +1,7 @@
 const path = require('path');
 const jwt = require('jsonwebtoken');
-const { connectMongo } = require('../../_lib/mongo');
-const { sendJson } = require('../../_lib/http');
+const { connectMongo } = require('../mongo');
+const { sendJson } = require('../http');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
