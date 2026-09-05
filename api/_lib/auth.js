@@ -8,7 +8,7 @@ if (!module.paths.includes(backendNodeModules)) {
   module.paths.unshift(backendNodeModules);
 }
 
-async function requireStaff(req, res, permissions = []) {
+async function requireUser(req, res) {
   await connectMongo();
 
   const header = req.headers.authorization || '';
@@ -26,12 +26,20 @@ async function requireStaff(req, res, permissions = []) {
   }
 
   const { User } = require('../../backend/dist/models/User');
-  const { hasPermission, isStaffRole } = require('../../backend/dist/permissions');
   const user = await User.findById(payload.userId);
   if (!user || !user.isActive) {
     sendJson(res, 401, { success: false, message: 'User not found or inactive' });
     return null;
   }
+
+  return user;
+}
+
+async function requireStaff(req, res, permissions = []) {
+  const user = await requireUser(req, res);
+  if (!user) return null;
+
+  const { hasPermission, isStaffRole } = require('../../backend/dist/permissions');
   if (!isStaffRole(user.role)) {
     sendJson(res, 403, { success: false, message: 'Staff access required' });
     return null;
@@ -44,4 +52,4 @@ async function requireStaff(req, res, permissions = []) {
   return user;
 }
 
-module.exports = { requireStaff };
+module.exports = { requireUser, requireStaff };
