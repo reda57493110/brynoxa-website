@@ -244,6 +244,62 @@ export function ProductDetail() {
     },
   }
 
+  const writeReviewPanel = (
+    <>
+      <h3 className="font-display text-base font-semibold text-[var(--fg)]">
+        {t('productPage.writeReview')}
+      </h3>
+      {!isAuth ? (
+        <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+          <Link to="/login" className="font-medium text-[var(--brand-text)]">
+            {t('common.signIn')}
+          </Link>{' '}
+          {t('productPage.signInToReview')}
+        </p>
+      ) : (
+        <form
+          className="mt-3 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            reviewMutation.mutate()
+          }}
+        >
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">{t('productPage.rating')}</span>
+            <select
+              value={rating}
+              onChange={(e) => setRating(Number(e.target.value))}
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand"
+            >
+              {[5, 4, 3, 2, 1].map((n) => (
+                <option key={n} value={n}>
+                  {t('productPage.stars', { n })}
+                </option>
+              ))}
+            </select>
+          </label>
+          <Input
+            label={t('ui.title')}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+            minLength={3}
+          />
+          <Textarea
+            label={t('ui.comment')}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            required
+            minLength={10}
+          />
+          <Button type="submit" loading={reviewMutation.isPending} className="w-full rounded-full">
+            {t('productPage.submitReview')}
+          </Button>
+        </form>
+      )}
+    </>
+  )
+
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
@@ -401,94 +457,71 @@ export function ProductDetail() {
           </motion.section>
         ) : null}
 
-        <motion.section {...fade(0.16)} className="mt-8 border-t border-[var(--border)] pt-8 sm:mt-10">
-          <p className="kicker">{t('productPage.reviews')}</p>
-          <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">
-            {t('productPage.reviews')}
-          </h2>
-          <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[1fr_22rem] lg:gap-8">
-            <div className="space-y-3 sm:space-y-4">
-              {reviews.isLoading ? <PageLoader compact label={t('ui.loading')} className="min-h-0 py-8" /> : null}
-              {reviews.isError ? (
-                <QueryErrorState
-                  title={t('shop.loadError')}
-                  description={t('shop.loadErrorBody')}
-                  onRetry={() => reviews.refetch()}
-                />
-              ) : null}
-              {!reviews.isLoading && !reviews.isError && !reviews.data?.length ? (
-                <p className="text-sm text-[var(--fg-muted)]">{t('productPage.noReviews')}</p>
-              ) : null}
-              {reviews.data?.map((r: Review) => {
-                const user = typeof r.user === 'object' ? (r.user as User) : null
-                return (
-                  <article key={r._id} className={`${surfaceCard} p-4 sm:p-5`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-semibold text-[var(--fg)]">{user?.name || t('ui.customer')}</p>
-                      <span className="text-xs text-[var(--fg-muted)]">{formatDate(r.createdAt)}</span>
-                    </div>
-                    <div className="mt-1">
-                      <RatingStars rating={r.rating} />
-                    </div>
-                    <p className="mt-2 font-medium text-[var(--fg)]">{r.title}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-[var(--fg)]/75">{r.comment}</p>
-                  </article>
-                )
-              })}
+        <motion.section
+          {...fade(0.16)}
+          className="mt-8 border-t border-[var(--border)] pt-8 sm:mt-10"
+          aria-labelledby="product-reviews-heading"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2
+                id="product-reviews-heading"
+                className="font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
+              >
+                {t('productPage.reviews')}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--fg-muted)]">
+                {p.reviewCount > 0
+                  ? p.reviewCount === 1
+                    ? t('productPage.reviewCountOne', { count: p.reviewCount })
+                    : t('productPage.reviewCount', { count: p.reviewCount })
+                  : t('productPage.noReviews')}
+              </p>
             </div>
-
-            <div className={`${surfaceCard} p-5 sm:p-6`}>
-              <h3 className="font-display text-lg font-semibold text-[var(--fg)]">{t('productPage.writeReview')}</h3>
-              {!isAuth ? (
-                <p className="mt-3 text-sm text-[var(--fg-muted)]">
-                  <Link to="/login" className="font-medium text-[var(--brand-text)]">
-                    {t('common.signIn')}
-                  </Link>{' '}
-                  {t('productPage.signInToReview')}
-                </p>
-              ) : (
-                <form
-                  className="mt-4 space-y-3"
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    reviewMutation.mutate()
-                  }}
-                >
-                  <label className="flex flex-col gap-1.5 text-sm">
-                    <span className="font-medium">{t('productPage.rating')}</span>
-                    <select
-                      value={rating}
-                      onChange={(e) => setRating(Number(e.target.value))}
-                      className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand"
-                    >
-                      {[5, 4, 3, 2, 1].map((n) => (
-                        <option key={n} value={n}>
-                          {t('productPage.stars', { n })}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <Input
-                    label={t('ui.title')}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    minLength={3}
-                  />
-                  <Textarea
-                    label={t('ui.comment')}
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    required
-                    minLength={10}
-                  />
-                  <Button type="submit" loading={reviewMutation.isPending} className="w-full rounded-full">
-                    {t('productPage.submitReview')}
-                  </Button>
-                </form>
-              )}
-            </div>
+            {p.reviewCount > 0 ? (
+              <div className="flex items-center gap-2">
+                <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
+              </div>
+            ) : null}
           </div>
+
+          {reviews.isLoading ? (
+            <PageLoader compact label={t('ui.loading')} className="min-h-0 py-8" />
+          ) : reviews.isError ? (
+            <div className="mt-4">
+              <QueryErrorState
+                title={t('shop.loadError')}
+                description={t('shop.loadErrorBody')}
+                onRetry={() => reviews.refetch()}
+              />
+            </div>
+          ) : reviews.data?.length ? (
+            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
+              <div className="space-y-3">
+                {reviews.data.map((r: Review) => {
+                  const user = typeof r.user === 'object' ? (r.user as User) : null
+                  return (
+                    <article key={r._id} className={`${surfaceCard} p-4 sm:p-5`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-semibold text-[var(--fg)]">
+                          {user?.name || t('ui.customer')}
+                        </p>
+                        <span className="text-xs text-[var(--fg-muted)]">{formatDate(r.createdAt)}</span>
+                      </div>
+                      <div className="mt-1">
+                        <RatingStars rating={r.rating} />
+                      </div>
+                      <p className="mt-2 font-medium text-[var(--fg)]">{r.title}</p>
+                      <p className="mt-1 text-sm leading-relaxed text-[var(--fg)]/75">{r.comment}</p>
+                    </article>
+                  )
+                })}
+              </div>
+              <div className={`${surfaceCard} h-fit p-4 sm:p-5`}>{writeReviewPanel}</div>
+            </div>
+          ) : (
+            <div className={`${surfaceCard} mt-4 max-w-xl p-4 sm:p-5`}>{writeReviewPanel}</div>
+          )}
         </motion.section>
       </Container>
 

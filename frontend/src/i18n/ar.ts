@@ -481,6 +481,8 @@ export const ar: Messages = {
     description: 'الوصف',
     specifications: 'المواصفات',
     reviews: 'التقييمات',
+    reviewCount: '{count} تقييمات',
+    reviewCountOne: '{count} تقييم',
     noReviews: 'لا تقييمات بعد — كن الأول بعد التسليم.',
     writeReview: 'اكتب تقييماً',
     signInToReview: 'لتترك تقييماً.',

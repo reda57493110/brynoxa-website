@@ -479,6 +479,8 @@ export const en = {
     description: 'Description',
     specifications: 'Specifications',
     reviews: 'Reviews',
+    reviewCount: '{count} reviews',
+    reviewCountOne: '{count} review',
     noReviews: 'No reviews yet — be the first after delivery.',
     writeReview: 'Write a review',
     signInToReview: 'to leave a review.',

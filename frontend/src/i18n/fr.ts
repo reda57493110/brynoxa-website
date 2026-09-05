@@ -484,6 +484,8 @@ export const fr: Messages = {
     description: 'Description',
     specifications: 'Caractéristiques',
     reviews: 'Avis',
+    reviewCount: '{count} avis',
+    reviewCountOne: '{count} avis',
     noReviews: 'Pas encore d’avis — soyez le premier après la livraison.',
     writeReview: 'Écrire un avis',
     signInToReview: 'pour laisser un avis.',
