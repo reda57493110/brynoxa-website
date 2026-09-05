@@ -475,6 +475,7 @@ export const en = {
     notFoundBody: 'It may have been removed from the catalog.',
     gallery: 'Product images',
     specs: 'Specs',
+    details: 'Product details',
     description: 'Description',
     specifications: 'Specifications',
     reviews: 'Reviews',

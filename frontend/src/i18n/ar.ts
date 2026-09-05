@@ -477,6 +477,7 @@ export const ar: Messages = {
     notFoundBody: 'ربما أُزيل من الكتالوج.',
     gallery: 'صور المنتج',
     specs: 'البيانات',
+    details: 'تفاصيل المنتج',
     description: 'الوصف',
     specifications: 'المواصفات',
     reviews: 'التقييمات',

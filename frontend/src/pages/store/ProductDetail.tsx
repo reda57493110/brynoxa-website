@@ -267,23 +267,29 @@ export function ProductDetail() {
           <span className="line-clamp-1 text-[var(--fg)]">{p.name}</span>
         </motion.nav>
 
-        <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
-          <motion.div {...fade(0.05)}>
+        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 xl:gap-12">
+          <motion.div {...fade(0.05)} className="lg:sticky lg:top-[calc(var(--nav-height)+1rem)]">
             <ImageGallery images={p.images || []} name={p.name} />
           </motion.div>
 
-          <motion.div {...fade(0.1)}>
+          <motion.div {...fade(0.1)} className="flex flex-col">
             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--fg-muted)]">
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
-              {brand && category ? <span>·</span> : null}
+              {brand && category ? <span aria-hidden="true">·</span> : null}
               {category ? (
                 <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
                   {categoryName}
                 </Link>
               ) : null}
+              {p.sku ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-mono text-xs tracking-wide">{p.sku}</span>
+                </>
+              ) : null}
             </div>
 
-            <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] sm:text-4xl">
+            <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl lg:text-4xl">
               {p.name}
             </h1>
 
@@ -300,9 +306,11 @@ export function ProductDetail() {
               compareAt={p.compareAtPrice}
             />
 
-            <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--fg)]/85 sm:mt-4 sm:text-base sm:leading-7">
-              {p.shortDescription || p.description.slice(0, 180)}
-            </p>
+            {p.shortDescription ? (
+              <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base sm:leading-7">
+                {p.shortDescription}
+              </p>
+            ) : null}
 
             <div className="mt-5 hidden flex-wrap items-center gap-3 sm:mt-6 sm:flex">
               <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
@@ -339,25 +347,44 @@ export function ProductDetail() {
                 </li>
               ))}
             </ul>
-
-            <div className="mt-8 sm:mt-10">
-              <p className="kicker">{t('productPage.specs')}</p>
-              <h2 className="mt-2 font-display text-lg font-semibold text-[var(--fg)] sm:text-xl">
-                {t('productPage.description')}
-              </h2>
-              <p className="mt-3 whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--fg)]/80 sm:text-[0.975rem] sm:leading-7">
-                {p.description}
-              </p>
-            </div>
-
-            <div className="mt-6 sm:mt-8">
-              <h2 className="mb-3 font-display text-lg font-semibold text-[var(--fg)] sm:text-xl">
-                {t('productPage.specifications')}
-              </h2>
-              <SpecTable specs={(p.specs as Record<string, string>) || {}} />
-            </div>
           </motion.div>
         </div>
+
+        <motion.section
+          {...fade(0.12)}
+          className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12 sm:pt-10"
+          aria-labelledby="product-details-heading"
+        >
+          <p className="kicker">{t('productPage.specs')}</p>
+          <h2
+            id="product-details-heading"
+            className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
+          >
+            {t('productPage.details')}
+          </h2>
+
+          <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2 lg:gap-8">
+            <div>
+              <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
+                {t('productPage.description')}
+              </h3>
+              <div className="mt-3 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
+                <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--fg)]/80 sm:text-[0.975rem] sm:leading-7">
+                  {p.description}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
+                {t('productPage.specifications')}
+              </h3>
+              <div className="mt-3">
+                <SpecTable specs={(p.specs as Record<string, string>) || {}} />
+              </div>
+            </div>
+          </div>
+        </motion.section>
 
         {related.data?.length ? (
           <motion.section {...fade(0.14)} className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12">

@@ -480,6 +480,7 @@ export const fr: Messages = {
     notFoundBody: 'Il a peut-être été retiré du catalogue.',
     gallery: 'Images du produit',
     specs: 'Fiche',
+    details: 'Détails du produit',
     description: 'Description',
     specifications: 'Caractéristiques',
     reviews: 'Avis',
