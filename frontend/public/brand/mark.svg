@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Brynoxa">
+  <rect width="128" height="128" rx="28" fill="#080B0E"/>
+  <path
+    fill="#00C2FF"
+    d="M34 28h36.5c16.2 0 27.5 8.8 27.5 22.4 0 8.6-4.6 15.4-12.2 19.1 9.4 3.5 15.2 11.2 15.2 21.3C101 106.2 88.4 116 70.2 116H34V28zm18.5 32.2h16.8c7.4 0 12.2-3.6 12.2-9.6s-4.8-9.4-12.2-9.4H52.5v19zm0 37.6h19.4c8.2 0 13.6-4 13.6-10.4s-5.4-10.2-13.6-10.2H52.5v20.6z"
+  />
+  <path
+    stroke="#7ADFFF"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    d="M58 78.8h10.5"
+  />
+  <circle cx="72.5" cy="78.8" r="2.4" fill="#7ADFFF"/>
+</svg>

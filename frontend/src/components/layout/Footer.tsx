@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SocialGlyph } from '@/components/contact/BrandIcons'
@@ -40,12 +41,7 @@ export function Footer() {
       <Container className="grid gap-5 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_minmax(0,1.15fr)] lg:gap-8 lg:py-10">
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              to="/"
-              className="font-display text-lg font-bold tracking-tight focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:text-xl"
-            >
-              Brynox<span className="text-[var(--brand)]">a</span>
-            </Link>
+            <BrandLogo markClassName="h-8 w-8" />
             <div className="flex gap-1.5" aria-label={t('nav.social')}>
               {SOCIAL_LINKS.map((s) =>
                 s.id === 'whatsapp' ? (

@@ -7,6 +7,7 @@ import { useWishlistStore } from '@/store/wishlistStore'
 import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
 import { isStaffRole, staffHomePath } from '@/lib/permissions'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { MobileNav } from './MobileNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '@/lib/cn'
@@ -100,12 +101,7 @@ export function Navbar() {
               <SiteIcon name="menu" size={18} />
             </button>
 
-            <Link
-              to="/"
-              className="min-w-0 shrink truncate px-1 font-display text-base font-bold tracking-tight sm:px-1.5 sm:text-xl"
-            >
-              Brynox<span className="text-[var(--brand)]">a</span>
-            </Link>
+            <BrandLogo className="min-w-0 shrink px-1 sm:px-1.5" markClassName="h-7 w-7 sm:h-8 sm:w-8" />
 
             <nav className="ml-1 hidden items-center gap-0.5 lg:flex" aria-label={t('nav.primary')}>
               {links.map((l) => (

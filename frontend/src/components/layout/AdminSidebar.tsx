@@ -1,4 +1,5 @@
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -68,17 +69,13 @@ export function AdminSidebar({
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
-        <Link
+        <BrandLogo
           to={home}
           onClick={onNavigate}
-          className="flex min-w-0 flex-1 items-center gap-2"
-        >
-          <SiteIcon name="tag" size={18} className="shrink-0 text-[var(--brand)]" />
-          <span className="font-display text-lg font-bold">
-            Brynox<span className="text-[var(--brand)]">a</span>
-            <span className="ml-1 text-xs font-medium text-[var(--fg-muted)]">Admin</span>
-          </span>
-        </Link>
+          suffix="Admin"
+          className="min-w-0 flex-1"
+          markClassName="h-7 w-7"
+        />
         {embedded && onNavigate ? (
           <Button variant="ghost" size="sm" onClick={onNavigate} aria-label="Close menu">
             <SiteIcon name="close" size={16} />
