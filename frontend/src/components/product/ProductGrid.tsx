@@ -92,6 +92,7 @@ export function ProductGrid({
       {products.map((p, i) => (
         <motion.div
           key={p._id}
+          className="h-full"
           initial={reduceMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{

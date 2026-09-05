@@ -120,7 +120,7 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        'product-card group flex overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg',
+        'product-card group flex h-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg',
         spotlight ? 'flex-col lg:grid lg:grid-cols-[1.35fr_1fr] lg:items-stretch' : 'flex-col'
       )}
     >
@@ -185,35 +185,35 @@ export function ProductCard({
           spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1.5 p-3 sm:gap-2 sm:p-4'
         )}
       >
-        {meta ? (
-          <p
-            className={cn(
-              'font-medium uppercase tracking-[0.12em] text-[var(--fg-muted)]',
-              spotlight ? 'text-[11px]' : 'text-[10px] sm:text-[11px]'
-            )}
-          >
-            {meta}
-          </p>
-        ) : null}
+        <p
+          className={cn(
+            'font-medium uppercase tracking-[0.12em] text-[var(--fg-muted)]',
+            spotlight ? 'text-[11px]' : 'min-h-[1.1rem] text-[10px] sm:min-h-[1.2rem] sm:text-[11px]'
+          )}
+        >
+          {meta || '\u00A0'}
+        </p>
         <Link
           to={`/product/${product.slug}`}
           className={cn(
             'font-display font-semibold leading-snug text-[var(--fg)] transition duration-200 hover:text-[var(--brand-text)]',
-            spotlight ? 'text-lg sm:text-xl lg:text-2xl' : 'line-clamp-2 text-[0.9375rem] leading-snug sm:text-base'
+            spotlight
+              ? 'text-lg sm:text-xl lg:text-2xl'
+              : 'line-clamp-2 min-h-[2.5rem] text-[0.9375rem] leading-snug sm:min-h-[2.75rem] sm:text-base'
           )}
         >
           {product.name}
         </Link>
-        {blurb ? (
-          <p
-            className={cn(
-              'font-medium leading-relaxed text-[var(--fg-muted)]',
-              spotlight ? 'line-clamp-2 max-w-md text-sm' : 'line-clamp-2 text-xs sm:text-sm'
-            )}
-          >
-            {blurb}
-          </p>
-        ) : null}
+        <p
+          className={cn(
+            'font-medium leading-relaxed text-[var(--fg-muted)]',
+            spotlight
+              ? 'line-clamp-2 max-w-md text-sm'
+              : 'line-clamp-2 min-h-[2.25rem] text-xs sm:min-h-[2.5rem] sm:text-sm'
+          )}
+        >
+          {blurb || '\u00A0'}
+        </p>
         {product.reviewCount > 0 ? (
           <div className={spotlight ? undefined : 'hidden sm:block'}>
             <RatingStars
@@ -222,43 +222,47 @@ export function ProductCard({
               size={spotlight ? 'md' : 'sm'}
             />
           </div>
-        ) : null}
-        <Price
-          price={product.price}
-          compareAt={product.compareAtPrice}
-          showDiscountBadge={spotlight}
-          className={
-            spotlight
-              ? '[&>span:first-child]:text-xl sm:[&>span:first-child]:text-2xl'
-              : '[&>span:first-child]:text-base sm:[&>span:first-child]:text-lg'
-          }
-        />
-        <div className={cn('flex items-center gap-2', spotlight ? 'mt-2' : 'mt-auto pt-2')}>
-          <Button
-            size="sm"
-            className={cn(
-              'rounded-full',
+        ) : spotlight ? null : (
+          <div className="hidden min-h-[1.25rem] sm:block" aria-hidden />
+        )}
+        <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
+          <Price
+            price={product.price}
+            compareAt={product.compareAtPrice}
+            showDiscountBadge={spotlight}
+            className={
               spotlight
-                ? 'h-9 px-4 text-sm sm:h-10 sm:px-5'
-                : 'h-8 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm'
-            )}
-            onClick={onAddCart}
-            disabled={product.stock <= 0}
-          >
-            <SiteIcon name="cart" size={14} />
-            {spotlight ? t('common.addToCart') : t('common.add')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={compareHas ? 'secondary' : 'outline'}
-            className="h-8 w-9 shrink-0 !px-0 sm:h-9"
-            onClick={onCompare}
-            aria-label={compareHas ? t('compare.remove') : t('compare.add')}
-            title={compareHas ? t('compare.remove') : t('compare.add')}
-          >
-            <SiteIcon name="layers" size={14} />
-          </Button>
+                ? '[&>span:first-child]:text-xl sm:[&>span:first-child]:text-2xl'
+                : 'min-h-[1.75rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-base sm:[&>span:first-child]:text-lg'
+            }
+          />
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className={cn(
+                'rounded-full',
+                spotlight
+                  ? 'h-9 px-4 text-sm sm:h-10 sm:px-5'
+                  : 'h-8 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm'
+              )}
+              onClick={onAddCart}
+              disabled={product.stock <= 0}
+            >
+              <SiteIcon name="cart" size={14} />
+              {spotlight ? t('common.addToCart') : t('common.add')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={compareHas ? 'secondary' : 'outline'}
+              className="h-8 w-9 shrink-0 !px-0 sm:h-9"
+              onClick={onCompare}
+              aria-label={compareHas ? t('compare.remove') : t('compare.add')}
+              title={compareHas ? t('compare.remove') : t('compare.add')}
+            >
+              <SiteIcon name="layers" size={14} />
+            </Button>
+          </div>
         </div>
       </div>
     </article>
