@@ -18,7 +18,8 @@ export function useAdminStats() {
   return useQuery({
     queryKey: ['admin-dashboard'],
     queryFn: async () => (await adminApi.dashboard()).data.data,
-    refetchInterval: 20_000,
+    staleTime: 60_000,
+    refetchInterval: 90_000,
     enabled,
   })
 }

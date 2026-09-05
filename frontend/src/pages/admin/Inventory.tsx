@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
@@ -63,6 +63,7 @@ export function Inventory() {
       })
       return { items: res.data.data, meta: res.data.meta }
     },
+    placeholderData: keepPreviousData,
   })
 
   const save = useMutation({
@@ -254,7 +255,7 @@ export function Inventory() {
         </div>
       </div>
 
-      {products.isLoading ? (
+      {products.isPending && !products.data ? (
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>

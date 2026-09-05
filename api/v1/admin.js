@@ -7,6 +7,9 @@ if (!module.paths.includes(backendNodeModules)) {
   module.paths.unshift(backendNodeModules);
 }
 
+const DASHBOARD_CACHE_MS = 45_000;
+let dashboardCache = { at: 0, data: null };
+
 function parseUrl(url = '') {
   const [pathname, queryString = ''] = url.split('?');
   return {
@@ -56,8 +59,14 @@ module.exports = async (req, res) => {
         'reviews',
       ]);
       if (!user) return;
+      const now = Date.now();
+      if (dashboardCache.data && now - dashboardCache.at < DASHBOARD_CACHE_MS) {
+        sendJson(res, 200, { success: true, message: 'Success', data: dashboardCache.data });
+        return;
+      }
       const { getDashboardStats } = require('../../backend/dist/services/admin.service');
       const stats = await getDashboardStats();
+      dashboardCache = { at: now, data: stats };
       sendJson(res, 200, { success: true, message: 'Success', data: stats });
       return;
     }

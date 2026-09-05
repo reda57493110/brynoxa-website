@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -50,6 +50,7 @@ export function Products() {
       const res = await adminApi.products.list(filters)
       return { items: res.data.data, meta: res.data.meta }
     },
+    placeholderData: keepPreviousData,
   })
 
   const remove = useMutation({
@@ -120,7 +121,7 @@ export function Products() {
         </div>
       </div>
 
-      {products.isLoading ? (
+      {products.isPending && !products.data ? (
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>

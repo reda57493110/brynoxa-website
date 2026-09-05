@@ -34,20 +34,20 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
     ;(async () => {
       const token = await restoreSession()
       if (cancelled) return
-      if (token) {
-        try {
-          if (localIds.length) {
-            const synced = await wishlistApi.sync(localIds)
-            setFromServer(synced.data.data)
-          } else {
-            const wish = await wishlistApi.list()
-            setFromServer(wish.data.data)
-          }
-        } catch {
-          /* wishlist optional */
+      // Unlock routing immediately — wishlist is storefront-only and must not block /admin.
+      setBootstrapped(true)
+      if (!token) return
+      try {
+        if (localIds.length) {
+          const synced = await wishlistApi.sync(localIds)
+          if (!cancelled) setFromServer(synced.data.data)
+        } else {
+          const wish = await wishlistApi.list()
+          if (!cancelled) setFromServer(wish.data.data)
         }
+      } catch {
+        /* wishlist optional */
       }
-      if (!cancelled) setBootstrapped(true)
     })()
 
     return () => {

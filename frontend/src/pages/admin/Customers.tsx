@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
@@ -23,6 +23,7 @@ export function Customers() {
       const res = await adminApi.customers.list({ limit: 20, page, q: q || undefined })
       return { items: res.data.data, meta: res.data.meta }
     },
+    placeholderData: keepPreviousData,
   })
 
   const toggle = useMutation({
@@ -51,7 +52,7 @@ export function Customers() {
         }}
       />
 
-      {customers.isLoading ? (
+      {customers.isPending && !customers.data ? (
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>

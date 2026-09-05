@@ -25,63 +25,147 @@ function escapeRegex(value: string) {
 export async function getDashboardStats() {
   const startToday = new Date();
   startToday.setHours(0, 0, 0, 0);
-  const start30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const start14 = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
-  const [
-    totalRevenue,
-    todayRevenue,
-    orderCount,
-    pendingOrders,
-    customerCount,
-    productCount,
-    lowStock,
-    recentOrders,
-    reviewCount,
-    unreadMessages,
-    ordersByStatus,
-    salesRaw,
-    lowStockProducts,
-  ] = await Promise.all([
-    Order.aggregate([
-      { $match: { orderStatus: { $ne: 'cancelled' } } },
-      { $group: { _id: null, total: { $sum: '$pricing.total' } } },
-    ]),
-    Order.aggregate([
-      { $match: { createdAt: { $gte: startToday }, orderStatus: { $ne: 'cancelled' } } },
-      { $group: { _id: null, total: { $sum: '$pricing.total' }, orders: { $sum: 1 } } },
-    ]),
-    Order.countDocuments(),
-    Order.countDocuments({ orderStatus: 'pending' }),
-    User.countDocuments({ role: 'customer' }),
-    Product.countDocuments(),
-    Product.countDocuments({ $expr: { $lte: ['$stock', '$lowStockThreshold'] } }),
-    Order.find().sort({ createdAt: -1 }).limit(8).populate('user', 'name email'),
-    Review.countDocuments(),
-    ContactMessage.countDocuments({ status: 'new' }),
-    Order.aggregate([{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }]),
-    Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: start30 },
-          orderStatus: { $ne: 'cancelled' },
+  const [orderStats, customerCount, productStats, reviewCount, unreadMessages] =
+    await Promise.all([
+      Order.aggregate([
+        {
+          $facet: {
+            totals: [
+              { $match: { orderStatus: { $ne: 'cancelled' } } },
+              {
+                $group: {
+                  _id: null,
+                  revenue: { $sum: '$pricing.total' },
+                  paidOrders: { $sum: 1 },
+                },
+              },
+            ],
+            today: [
+              {
+                $match: {
+                  createdAt: { $gte: startToday },
+                  orderStatus: { $ne: 'cancelled' },
+                },
+              },
+              {
+                $group: {
+                  _id: null,
+                  total: { $sum: '$pricing.total' },
+                  orders: { $sum: 1 },
+                },
+              },
+            ],
+            counts: [
+              {
+                $group: {
+                  _id: null,
+                  orderCount: { $sum: 1 },
+                  pendingOrders: {
+                    $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] },
+                  },
+                },
+              },
+            ],
+            byStatus: [{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }],
+            recent: [
+              { $sort: { createdAt: -1 } },
+              { $limit: 8 },
+              {
+                $lookup: {
+                  from: 'users',
+                  localField: 'user',
+                  foreignField: '_id',
+                  as: 'userDoc',
+                },
+              },
+              {
+                $addFields: {
+                  user: {
+                    $let: {
+                      vars: { u: { $arrayElemAt: ['$userDoc', 0] } },
+                      in: {
+                        _id: '$$u._id',
+                        name: '$$u.name',
+                        email: '$$u.email',
+                      },
+                    },
+                  },
+                },
+              },
+              { $project: { userDoc: 0 } },
+            ],
+            sales: [
+              {
+                $match: {
+                  createdAt: { $gte: start14 },
+                  orderStatus: { $ne: 'cancelled' },
+                },
+              },
+              {
+                $group: {
+                  _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                  revenue: { $sum: '$pricing.total' },
+                  orders: { $sum: 1 },
+                },
+              },
+              { $sort: { _id: 1 } },
+            ],
+          },
         },
-      },
-      {
-        $group: {
-          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-          revenue: { $sum: '$pricing.total' },
-          orders: { $sum: 1 },
+      ]),
+      User.countDocuments({ role: 'customer' }),
+      Product.aggregate([
+        {
+          $facet: {
+            productCount: [{ $count: 'n' }],
+            lowStock: [
+              { $match: { $expr: { $lte: ['$stock', '$lowStockThreshold'] } } },
+              { $count: 'n' },
+            ],
+            lowStockProducts: [
+              { $match: { $expr: { $lte: ['$stock', '$lowStockThreshold'] } } },
+              { $sort: { stock: 1 } },
+              { $limit: 8 },
+              {
+                $project: {
+                  name: 1,
+                  sku: 1,
+                  stock: 1,
+                  slug: 1,
+                  images: 1,
+                  lowStockThreshold: 1,
+                },
+              },
+            ],
+          },
         },
-      },
-      { $sort: { _id: 1 } },
-    ]),
-    Product.find({ $expr: { $lte: ['$stock', '$lowStockThreshold'] } })
-      .sort({ stock: 1 })
-      .limit(8)
-      .select('name sku stock slug images lowStockThreshold'),
-  ]);
+      ]),
+      Review.countDocuments(),
+      ContactMessage.countDocuments({ status: 'new' }),
+    ]);
 
-  const salesMap = new Map(salesRaw.map((row) => [row._id as string, row]));
+  const facet = orderStats[0] || {
+    totals: [],
+    today: [],
+    counts: [],
+    byStatus: [],
+    recent: [],
+    sales: [],
+  };
+  const productsFacet = productStats[0] || {
+    productCount: [],
+    lowStock: [],
+    lowStockProducts: [],
+  };
+
+  const salesMap = new Map<string, { revenue: number; orders: number }>(
+    (facet.sales || []).map((row: { _id: string; revenue: number; orders: number }) => [
+      row._id,
+      row,
+    ])
+  );
   const salesByDay = Array.from({ length: 14 }, (_, i) => {
     const key = dayKey(i - 13);
     const row = salesMap.get(key);
@@ -93,29 +177,31 @@ export async function getDashboardStats() {
   });
 
   const statusMap: Record<string, number> = {};
-  for (const row of ordersByStatus) {
+  for (const row of facet.byStatus || []) {
     statusMap[row._id] = row.count;
   }
 
-  const revenue = totalRevenue[0]?.total || 0;
-  const paidOrders = orderCount - (statusMap.cancelled || 0);
+  const revenue = facet.totals[0]?.revenue || 0;
+  const paidOrders = facet.totals[0]?.paidOrders || 0;
+  const orderCount = facet.counts[0]?.orderCount || 0;
+  const pendingOrders = facet.counts[0]?.pendingOrders || 0;
 
   return {
     revenue,
-    todayRevenue: todayRevenue[0]?.total || 0,
-    todayOrders: todayRevenue[0]?.orders || 0,
+    todayRevenue: facet.today[0]?.total || 0,
+    todayOrders: facet.today[0]?.orders || 0,
     avgOrderValue: paidOrders > 0 ? revenue / paidOrders : 0,
     orderCount,
     pendingOrders,
     customerCount,
-    productCount,
-    lowStock,
+    productCount: productsFacet.productCount[0]?.n || 0,
+    lowStock: productsFacet.lowStock[0]?.n || 0,
     reviewCount,
     unreadMessages,
-    recentOrders,
+    recentOrders: facet.recent || [],
     salesByDay,
     ordersByStatus: statusMap,
-    lowStockProducts,
+    lowStockProducts: productsFacet.lowStockProducts || [],
   };
 }
 

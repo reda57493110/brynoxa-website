@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { Badge } from '@/components/ui/Badge'
 import { Spinner } from '@/components/ui/Spinner'
@@ -36,6 +36,7 @@ export function Orders() {
       })
       return { items: res.data.data, meta: res.data.meta }
     },
+    placeholderData: keepPreviousData,
   })
 
   const setFilter = (patch: Record<string, string | undefined>) => {
@@ -101,7 +102,7 @@ export function Orders() {
         />
       </form>
 
-      {orders.isLoading ? (
+      {orders.isPending && !orders.data ? (
         <div className="flex justify-center py-16">
           <Spinner size="lg" />
         </div>

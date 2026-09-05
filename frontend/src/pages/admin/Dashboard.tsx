@@ -20,7 +20,7 @@ export function Dashboard() {
     return <Navigate to={staffHomePath(role)} replace />
   }
 
-  if (stats.isLoading) {
+  if (stats.isPending && !stats.data) {
     return (
       <div className="flex justify-center py-24">
         <Spinner size="lg" />
@@ -68,7 +68,7 @@ export function Dashboard() {
     <div className="min-w-0 space-y-5 sm:space-y-8">
       <AdminHeader
         title="Dashboard"
-        description="Live COD pipeline — refreshes every 20 seconds."
+        description="Live COD pipeline — auto-refreshes about every 90 seconds."
       />
 
       <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
