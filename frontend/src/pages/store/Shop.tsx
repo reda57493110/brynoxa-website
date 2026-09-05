@@ -170,7 +170,7 @@ export function Shop() {
   return (
     <>
       <section aria-labelledby="shop-heading" className="page-hero">
-        <Container className="relative z-10 py-5 sm:py-10">
+        <Container className="relative z-10 max-w-[96rem] py-5 sm:py-10">
           <p className="kicker">{t('shop.kicker')}</p>
           <h1
             id="shop-heading"
@@ -236,7 +236,7 @@ export function Shop() {
         </Container>
       </section>
 
-      <Container className="py-5 sm:py-10">
+      <Container className="max-w-[96rem] py-5 sm:py-10">
         <div
           className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:mb-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
           aria-label={t('shop.shopByCategory')}
@@ -349,7 +349,7 @@ export function Shop() {
           </div>
         ) : null}
 
-        <div className="grid gap-8 lg:grid-cols-[17rem_minmax(0,1fr)]">
+        <div className="grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)] xl:gap-6">
           <div className="hidden lg:block">
             <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto">
               {sidebar(false)}
@@ -368,7 +368,7 @@ export function Shop() {
                 <ProductGrid
                   products={products.data?.items}
                   loading={productsLoading}
-                  className="grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+                  className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
                   emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
                     hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')
