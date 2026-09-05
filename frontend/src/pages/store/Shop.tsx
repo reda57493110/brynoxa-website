@@ -349,7 +349,7 @@ export function Shop() {
           </div>
         ) : null}
 
-        <div className="grid gap-5 lg:grid-cols-[14rem_minmax(0,1fr)] xl:gap-6">
+        <div className="grid gap-5 lg:grid-cols-[16.5rem_minmax(0,1fr)] xl:gap-6">
           <div className="hidden lg:block">
             <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto">
               {sidebar(false)}

@@ -146,7 +146,7 @@ export function FilterSidebar({
         type="button"
         onClick={() => onChange({ ...values, inStock: values.inStock ? undefined : true })}
         className={cn(
-          'flex w-full items-center gap-3 rounded-2xl border px-3.5 py-3 text-left transition',
+          'flex w-full items-start gap-2.5 rounded-2xl border px-3 py-3 text-left transition',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
           values.inStock
             ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_14%,transparent)]'
@@ -155,23 +155,23 @@ export function FilterSidebar({
       >
         <span
           className={cn(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
+            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl',
             values.inStock
               ? 'bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
           )}
         >
-          <SiteIcon name="package-check" size={16} />
+          <SiteIcon name="package-check" size={15} />
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold leading-5">{t('shop.inStockOnly')}</span>
-          <span className="mt-0.5 block truncate text-xs leading-4 text-[var(--fg-muted)]">
+        <span className="min-w-0 flex-1 pr-1">
+          <span className="block text-sm font-semibold leading-snug">{t('shop.inStockOnly')}</span>
+          <span className="mt-1 block text-xs leading-snug text-[var(--fg-muted)]">
             {values.inStock ? t('stock.inStock') : t('shop.any')}
           </span>
         </span>
         <span
           className={cn(
-            'relative h-6 w-11 shrink-0 rounded-full transition',
+            'relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition',
             values.inStock ? 'bg-[var(--brand)]' : 'bg-[var(--bg-muted)]'
           )}
           aria-hidden
