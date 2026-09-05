@@ -33,8 +33,12 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
     { to: '/compare', label: t('compare.heading'), icon: 'layers', count: compareCount },
     { to: '/cart', label: t('common.cart'), icon: 'cart', count: cartCount },
     {
-      to: user ? '/account' : '/login',
-      label: user ? t('common.account') : t('common.signIn'),
+      to: user ? (isStaffRole(user.role) ? staffHomePath(user.role) : '/account') : '/login',
+      label: user
+        ? isStaffRole(user.role)
+          ? t('common.adminDashboard')
+          : t('common.account')
+        : t('common.signIn'),
       icon: 'user',
     },
   ]
@@ -105,16 +109,6 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
             </button>
           ) : null}
         </div>
-
-        {isStaffRole(user?.role) ? (
-          <NavLink
-            to={staffHomePath(user?.role)}
-            onClick={onClose}
-            className="mt-4 rounded-xl bg-[var(--brand)] px-3 py-3 text-center text-sm font-semibold text-[var(--brand-fg)]"
-          >
-            {t('common.adminDashboard')}
-          </NavLink>
-        ) : null}
       </nav>
     </Drawer>
   )
