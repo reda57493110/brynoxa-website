@@ -1,5 +1,5 @@
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/categoriesApi'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
@@ -7,7 +7,7 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { SortSelect } from '@/components/product/SortSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
-import { PageLoader } from '@/components/ui/PageLoader'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -33,6 +33,7 @@ export function CategoryPage() {
     queryFn: async () =>
       (await productsApi.list({ category: slug, limit: 24, sort })).data.data,
     enabled: Boolean(slug),
+    placeholderData: keepPreviousData,
   })
   const categories = useQuery({
     queryKey: ['categories'],
@@ -56,10 +57,6 @@ export function CategoryPage() {
       : `${t('shop.title')} — Brynoxa`
   )
 
-  if (category.isLoading) {
-    return <PageLoader label={t('ui.loadingPage')} />
-  }
-
   if (category.isError) {
     return (
       <Container className="py-8 sm:py-10">
@@ -72,7 +69,7 @@ export function CategoryPage() {
     )
   }
 
-  if (!category.data) {
+  if (!category.isPending && !category.data) {
     return (
       <Container className="py-8 sm:py-10">
         <EmptyState
@@ -95,13 +92,26 @@ export function CategoryPage() {
     )
 
   const productCount = products.data?.length ?? 0
+  const productsLoading = category.isPending || products.isPending || products.isFetching
 
   return (
     <>
       <PageHero
         kicker={t('shop.categoryKicker')}
-        title={displayName}
-        description={displayDescription}
+        title={
+          category.data ? (
+            displayName
+          ) : (
+            <Skeleton className="inline-block h-9 w-48 align-middle sm:h-11 sm:w-64" />
+          )
+        }
+        description={
+          category.data ? (
+            displayDescription
+          ) : (
+            <Skeleton className="mt-1 h-4 w-72 max-w-full" />
+          )
+        }
       />
       <Container className="py-8 sm:py-10">
         <div
@@ -121,8 +131,8 @@ export function CategoryPage() {
         </div>
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[var(--fg-muted)]">
-            {products.isLoading
-              ? t('ui.loading')
+            {productsLoading
+              ? t('ui.loadingProducts')
               : productCount === 1
                 ? t('shop.productCountOne', { count: productCount })
                 : t('shop.productCount', { count: productCount })}
@@ -137,7 +147,7 @@ export function CategoryPage() {
             }}
           />
         </div>
-        {products.isError ? (
+        {products.isError && !productsLoading ? (
           <QueryErrorState
             title={t('shop.loadError')}
             description={t('shop.loadErrorBody')}
@@ -146,7 +156,7 @@ export function CategoryPage() {
         ) : (
           <ProductGrid
             products={products.data}
-            loading={products.isLoading}
+            loading={productsLoading}
             emptyTitle={t('shop.categoryEmpty')}
             emptyDescription={t('shop.categoryEmptyBody')}
             emptyActionLabel={t('common.allProducts')}

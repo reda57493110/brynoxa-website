@@ -29,12 +29,12 @@ export function PageHero({
           {title}
         </h1>
         {description ? (
-          <p
+          <div
             className="text-reveal mt-2 max-w-xl text-sm font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-base sm:leading-7"
             style={{ animationDelay: '80ms' }}
           >
             {description}
-          </p>
+          </div>
         ) : null}
         {children ? (
           <div className="text-reveal mt-4 sm:mt-6" style={{ animationDelay: '120ms' }}>

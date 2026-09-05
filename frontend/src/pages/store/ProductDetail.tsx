@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { PageLoader } from '@/components/ui/PageLoader'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ImageGallery } from '@/components/product/ImageGallery'
@@ -117,8 +118,40 @@ export function ProductDetail() {
           transition: { duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] as const },
         }
 
-  if (product.isLoading) {
-    return <PageLoader label={t('ui.loadingPage')} />
+  if (product.isPending) {
+    return (
+      <Container className="pb-28 pt-4 sm:py-10 lg:pb-10">
+        <div
+          className="relative min-h-[24rem]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="mb-6 flex gap-2" aria-hidden="true">
+            <Skeleton className="h-4 w-16 ring-0" />
+            <Skeleton className="h-4 w-24 ring-0" />
+            <Skeleton className="h-4 w-32 ring-0" />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-10" aria-hidden="true">
+            <Skeleton className="aspect-square w-full rounded-[1.35rem] ring-0" />
+            <div className="space-y-4">
+              <Skeleton className="h-4 w-28 ring-0" />
+              <Skeleton className="h-9 w-[85%] ring-0" />
+              <Skeleton className="h-6 w-40 ring-0" />
+              <Skeleton className="h-20 w-full ring-0" />
+              <Skeleton className="h-12 w-full rounded-full ring-0" />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg)_50%,transparent)]">
+            <PageLoader
+              compact
+              label={t('ui.loadingProducts')}
+              className="min-h-0 rounded-2xl bg-[var(--bg-elevated)]/90 px-5 shadow-soft"
+            />
+          </div>
+        </div>
+      </Container>
+    )
   }
 
   if (product.isError) {
@@ -333,7 +366,10 @@ export function ProductDetail() {
               {t('productPage.moreInCategory', { name: categoryName || t('shop.category') })}
             </h2>
             <div className="mt-6">
-              <ProductGrid products={related.data} loading={related.isLoading} />
+              <ProductGrid
+                products={related.data}
+                loading={related.isPending || related.isFetching}
+              />
             </div>
           </motion.section>
         ) : null}

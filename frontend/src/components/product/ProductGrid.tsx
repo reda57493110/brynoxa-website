@@ -8,6 +8,42 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 
+function ProductCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)]">
+      <Skeleton className="aspect-[4/3] w-full rounded-none border-0 ring-0" />
+      <div className="space-y-2.5 p-3 sm:p-4">
+        <Skeleton className="h-3 w-1/3 ring-0" />
+        <Skeleton className="h-4 w-[80%] ring-0" />
+        <Skeleton className="h-4 w-1/2 ring-0" />
+        <Skeleton className="mt-1 h-9 w-full rounded-full ring-0" />
+      </div>
+    </div>
+  )
+}
+
+function ProductGridLoading({
+  className,
+  count = 8,
+}: {
+  className?: string
+  count?: number
+}) {
+  const t = useT()
+  return (
+    <div className="relative min-h-[18rem]" role="status" aria-live="polite" aria-busy="true">
+      <div className={className} aria-hidden="true">
+        {Array.from({ length: count }).map((_, i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
+      </div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg)_55%,transparent)] backdrop-blur-[1px]">
+        <PageLoader compact label={t('ui.loadingProducts')} className="min-h-0 rounded-2xl bg-[var(--bg-elevated)]/90 px-5 shadow-soft" />
+      </div>
+    </div>
+  )
+}
+
 export function ProductGrid({
   products,
   loading,
@@ -35,29 +71,9 @@ export function ProductGrid({
     className
   )
 
-  if (loading && !products?.length) {
-    return (
-      <div className="relative">
-        <div className={gridClass} aria-hidden="true">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-80 rounded-[var(--radius-card)]" />
-          ))}
-        </div>
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <PageLoader compact label={t('ui.loadingProducts')} className="min-h-0" />
-        </div>
-      </div>
-    )
-  }
-
-  if (loading && products?.length) {
-    return (
-      <div className={cn(gridClass, 'opacity-70')}>
-        {products.map((p) => (
-          <ProductCard key={p._id} product={p} />
-        ))}
-      </div>
-    )
+  // Always show in-place product loader while fetching — even with previous cards.
+  if (loading) {
+    return <ProductGridLoading className={gridClass} />
   }
 
   if (!products?.length) {

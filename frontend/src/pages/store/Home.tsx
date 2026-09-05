@@ -8,6 +8,7 @@ import { Container } from '@/components/ui/Container'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { PageLoader } from '@/components/ui/PageLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
@@ -200,13 +201,23 @@ export function Home() {
                 carousel.refetch()
               }}
             />
-          ) : featured.isLoading || carousel.isLoading ? (
-            <div className="space-y-5">
+          ) : featured.isPending ||
+            featured.isFetching ||
+            carousel.isPending ||
+            carousel.isFetching ? (
+            <div className="relative min-h-[18rem] space-y-5" role="status" aria-live="polite" aria-busy="true">
               <Skeleton className="h-64 rounded-[1.35rem] lg:h-[22rem]" />
-              <div className="flex gap-4 overflow-hidden">
+              <div className="flex gap-4 overflow-hidden" aria-hidden="true">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <Skeleton key={i} className="h-80 w-[18.5rem] shrink-0 rounded-[1.35rem]" />
                 ))}
+              </div>
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg)_45%,transparent)]">
+                <PageLoader
+                  compact
+                  label={t('ui.loadingProducts')}
+                  className="min-h-0 rounded-2xl bg-[var(--bg-elevated)]/90 px-5 shadow-soft"
+                />
               </div>
             </div>
           ) : !featured.data?.length && !carousel.data?.length ? (

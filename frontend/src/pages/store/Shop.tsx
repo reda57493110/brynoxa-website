@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -49,7 +49,9 @@ export function Shop() {
       const res = await productsApi.list(filters)
       return { items: res.data.data, meta: res.data.meta }
     },
+    placeholderData: keepPreviousData,
   })
+  const productsLoading = products.isPending || products.isFetching
   const categories = useQuery({
     queryKey: ['categories'],
     queryFn: async () => (await categoriesApi.list()).data.data,
@@ -262,8 +264,8 @@ export function Shop() {
 
         <div className="sticky top-[calc(var(--nav-height)+0.25rem)] z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 shadow-soft backdrop-blur-md sm:static sm:mb-5 sm:gap-3 sm:px-4 sm:py-3">
           <p className="min-w-0 truncate text-xs text-[var(--fg-muted)] sm:text-sm">
-            {products.isLoading ? (
-              t('ui.loading')
+            {productsLoading ? (
+              t('ui.loadingProducts')
             ) : (
               <>
                 <span className="hidden text-[var(--fg-muted)] sm:inline">{t('shop.showing')} </span>
@@ -365,7 +367,7 @@ export function Shop() {
               <>
                 <ProductGrid
                   products={products.data?.items}
-                  loading={products.isLoading}
+                  loading={productsLoading}
                   className="grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
                   emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
