@@ -117,6 +117,6 @@ export const adminApi = {
 
   settings: {
     update: (payload: Partial<StoreSettings>) =>
-      api.patch<ApiResponse<StoreSettings>>('/admin/settings', payload),
+      api.patch<ApiResponse<StoreSettings>>('/settings', payload),
   },
 }

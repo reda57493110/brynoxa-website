@@ -149,6 +149,13 @@ router.get('/admin/subscribers', requireAuth, requirePermission('messages'), mis
 
 router.get('/settings', misc.getStoreSettings);
 router.patch(
+  '/settings',
+  requireAuth,
+  requirePermission('settings'),
+  validate(settingsSchema),
+  misc.updateStoreSettings
+);
+router.patch(
   '/admin/settings',
   requireAuth,
   requirePermission('settings'),

@@ -1,5 +1,5 @@
 const path = require('path');
-const { sendJson } = require('../_lib/http');
+const { sendJson, readJsonBody } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -32,12 +32,43 @@ function paginated(items, page, limit, total) {
   };
 }
 
-module.exports = async (req, res) => {
-  if (req.method !== 'GET') {
+async function handleCategoryMutation(req, res, route) {
+  const user = await requireStaff(req, res, ['products:write']);
+  if (!user) return;
+
+  const catalog = require('../../backend/dist/services/catalog.service');
+
+  if (req.method === 'POST' && route === 'categories') {
+    const body = await readJsonBody(req);
+    const item = await catalog.createCategory(body);
+    sendJson(res, 201, { success: true, message: 'Category created', data: item });
+    return;
+  }
+
+  const match = route.match(/^categories\/([^/]+)$/);
+  if (!match) {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
     return;
   }
 
+  const id = match[1];
+  if (req.method === 'PATCH') {
+    const body = await readJsonBody(req);
+    const item = await catalog.updateCategory(id, body);
+    sendJson(res, 200, { success: true, message: 'Category updated', data: item });
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    await catalog.deleteCategory(id);
+    sendJson(res, 200, { success: true, message: 'Category deleted', data: null });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
+module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
     const route = (
@@ -46,6 +77,25 @@ module.exports = async (req, res) => {
         : pathname.replace(/^\/api\/v1\/admin\/?/, '')
     )
       .replace(/^\/+|\/+$/g, '');
+
+    // Settings page category CRUD — keep off the slow Express lambda.
+    if (
+      route === 'categories' ||
+      route.startsWith('categories/')
+    ) {
+      if (req.method === 'GET') {
+        sendJson(res, 405, { success: false, message: 'Use GET /categories' });
+        return;
+      }
+      await handleCategoryMutation(req, res, route);
+      return;
+    }
+
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { success: false, message: 'Method not allowed' });
+      return;
+    }
+
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 20);
 
@@ -146,7 +196,8 @@ module.exports = async (req, res) => {
     sendJson(res, 404, { success: false, message: 'Not found' });
   } catch (err) {
     console.error('Fast admin failed:', err);
-    sendJson(res, 500, {
+    const status = err?.statusCode || 500;
+    sendJson(res, status, {
       success: false,
       message: err instanceof Error ? err.message : 'Server error',
     });
