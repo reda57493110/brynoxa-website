@@ -126,8 +126,8 @@ export function FilterSidebar({
           'rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft'
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t('shop.filters')}</h2>
           {hasActive ? <Badge variant="brand">{activeCount}</Badge> : null}
         </div>
@@ -155,7 +155,7 @@ export function FilterSidebar({
       >
         <span
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-xl',
+            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
             values.inStock
               ? 'bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
@@ -164,8 +164,8 @@ export function FilterSidebar({
           <SiteIcon name="package-check" size={16} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold">{t('shop.inStockOnly')}</span>
-          <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
+          <span className="block truncate text-sm font-semibold leading-5">{t('shop.inStockOnly')}</span>
+          <span className="mt-0.5 block truncate text-xs leading-4 text-[var(--fg-muted)]">
             {values.inStock ? t('stock.inStock') : t('shop.any')}
           </span>
         </span>
@@ -238,7 +238,7 @@ export function FilterSidebar({
       ) : null}
 
       <FilterSection title={t('shop.priceDh')} icon="tag">
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-1 gap-1.5">
           {PRICE_PRESETS.map((preset) => {
             const label =
               preset.max && !preset.min
@@ -259,13 +259,17 @@ export function FilterSidebar({
                   })
                 }
                 className={cn(
-                  'h-10 rounded-xl border px-2 text-xs font-semibold transition',
+                  'flex min-h-10 w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-xs font-semibold leading-5 transition',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                   active
                     ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
                     : 'border-[var(--border)] text-[var(--fg)] hover:border-[var(--brand)]'
                 )}
               >
-                {label}
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+                {active ? (
+                  <SiteIcon name="check" size={14} className="shrink-0 text-[var(--brand-text)]" />
+                ) : null}
               </button>
             )
           })}
@@ -275,9 +279,9 @@ export function FilterSidebar({
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--fg-muted)]">
             {t('shop.customRange')}
           </p>
-          <div className="flex items-end gap-2">
-            <label className="min-w-0 flex-1 space-y-1 text-xs">
-              <span className="font-medium text-[var(--fg-muted)]">{t('shop.min')}</span>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+            <label className="min-w-0 space-y-1 text-xs">
+              <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.min')}</span>
               <input
                 type="number"
                 min={0}
@@ -287,9 +291,11 @@ export function FilterSidebar({
                 className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm outline-none ring-brand"
               />
             </label>
-            <span className="pb-2.5 text-sm text-[var(--fg-muted)]">–</span>
-            <label className="min-w-0 flex-1 space-y-1 text-xs">
-              <span className="font-medium text-[var(--fg-muted)]">{t('shop.max')}</span>
+            <span className="mb-2.5 text-sm leading-none text-[var(--fg-muted)]" aria-hidden>
+              –
+            </span>
+            <label className="min-w-0 space-y-1 text-xs">
+              <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.max')}</span>
               <input
                 type="number"
                 min={0}
