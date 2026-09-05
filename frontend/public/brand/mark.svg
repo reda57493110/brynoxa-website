@@ -1,14 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-label="Brynoxa">
+  <defs>
+    <linearGradient id="bFill" x1="28" y1="20" x2="102" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B8F4FF"/>
+      <stop offset="35%" stop-color="#00C2FF"/>
+      <stop offset="100%" stop-color="#0077A8"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="soft"/>
+      <feColorMatrix in="soft" type="matrix" values="
+        0 0 0 0 0
+        0 0 0 0 0.76
+        0 0 0 0 1
+        0 0 0 0.55 0" result="tint"/>
+      <feMerge>
+        <feMergeNode in="tint"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   <rect width="128" height="128" rx="28" fill="#080B0E"/>
-  <path
-    fill="#00C2FF"
-    d="M34 28h36.5c16.2 0 27.5 8.8 27.5 22.4 0 8.6-4.6 15.4-12.2 19.1 9.4 3.5 15.2 11.2 15.2 21.3C101 106.2 88.4 116 70.2 116H34V28zm18.5 32.2h16.8c7.4 0 12.2-3.6 12.2-9.6s-4.8-9.4-12.2-9.4H52.5v19zm0 37.6h19.4c8.2 0 13.6-4 13.6-10.4s-5.4-10.2-13.6-10.2H52.5v20.6z"
-  />
-  <path
-    stroke="#7ADFFF"
-    stroke-width="2.5"
-    stroke-linecap="round"
-    d="M58 78.8h10.5"
-  />
-  <circle cx="72.5" cy="78.8" r="2.4" fill="#7ADFFF"/>
+  <g filter="url(#glow)">
+    <path
+      fill="url(#bFill)"
+      fill-rule="evenodd"
+      d="M32 24h38c17.5 0 29.5 9.2 29.5 23.2 0 8.4-4.2 15.2-11.4 19.2 10.2 3.6 16.6 11.8 16.6 22.6C104.7 107.8 90.6 118 70.4 118H32V24zm19 33.5h17.5c8 0 13.2-4 13.2-10.4S76.5 37 68.5 37H51v20.5zm0 42h20.2c9 0 14.8-4.4 14.8-11.4S80.2 77 71.2 77H51v22.5z"
+    />
+    <path stroke="#EAFBFF" stroke-width="3" stroke-linecap="round" d="M57 79.2h13.5"/>
+    <circle cx="74.5" cy="79.2" r="3.6" fill="#EAFBFF"/>
+    <circle cx="74.5" cy="79.2" r="1.5" fill="#00C2FF"/>
+  </g>
 </svg>

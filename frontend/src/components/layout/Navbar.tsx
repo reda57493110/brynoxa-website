@@ -101,7 +101,7 @@ export function Navbar() {
               <SiteIcon name="menu" size={18} />
             </button>
 
-            <BrandLogo className="min-w-0 shrink px-1 sm:px-1.5" markClassName="h-7 w-7 sm:h-8 sm:w-8" />
+            <BrandLogo className="min-w-0 shrink px-1 sm:px-1.5" markClassName="h-8 w-8 sm:h-9 sm:w-9" />
 
             <nav className="ml-1 hidden items-center gap-0.5 lg:flex" aria-label={t('nav.primary')}>
               {links.map((l) => (

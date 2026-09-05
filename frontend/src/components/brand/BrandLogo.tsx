@@ -12,6 +12,9 @@ type BrandLogoProps = {
   onClick?: () => void
 }
 
+/** Glowing mark from brand pack — matches social profile art. */
+const MARK_SRC = '/brand/brynoxa-mark.png'
+
 export function BrandLogo({
   to = '/',
   className,
@@ -22,43 +25,55 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const content = (
     <>
-      <img
-        src="/brand/mark.svg"
-        alt=""
-        width={32}
-        height={32}
-        className={cn('h-8 w-8 shrink-0 rounded-lg', markClassName)}
-        decoding="async"
-      />
+      <span
+        className={cn(
+          'relative inline-flex shrink-0 overflow-hidden rounded-[0.7rem] bg-[#080B0E]',
+          'ring-1 ring-[rgb(0_194_255_/_0.28)]',
+          'shadow-[0_0_20px_-4px_rgb(0_194_255_/_0.55)]',
+          'transition duration-300',
+          'group-hover:ring-[rgb(0_194_255_/_0.5)] group-hover:shadow-[0_0_26px_-2px_rgb(0_194_255_/_0.75)]',
+          'h-8 w-8 sm:h-9 sm:w-9',
+          markClassName
+        )}
+      >
+        <img
+          src={MARK_SRC}
+          alt=""
+          width={72}
+          height={72}
+          className="h-full w-full scale-[1.08] object-cover"
+          decoding="async"
+        />
+      </span>
       {wordmark ? (
         <span className="min-w-0 truncate font-display text-base font-bold tracking-tight sm:text-xl">
           Brynox<span className="text-[var(--brand)]">a</span>
           {suffix ? (
-            <span className="ml-1 text-xs font-medium text-[var(--fg-muted)]">{suffix}</span>
+            <span className="ml-1.5 text-xs font-medium tracking-normal text-[var(--fg-muted)]">
+              {suffix}
+            </span>
           ) : null}
         </span>
       ) : null}
     </>
   )
 
+  const shared = cn(
+    'group inline-flex min-w-0 items-center gap-2.5 transition duration-200',
+    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+    className
+  )
+
   if (!to) {
     return (
-      <span className={cn('inline-flex items-center gap-2', className)} aria-label="Brynoxa">
+      <span className={shared} aria-label="Brynoxa">
         {content}
       </span>
     )
   }
 
   return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className={cn(
-        'inline-flex min-w-0 items-center gap-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-        className
-      )}
-      aria-label="Brynoxa"
-    >
+    <Link to={to} onClick={onClick} className={shared} aria-label="Brynoxa home">
       {content}
     </Link>
   )

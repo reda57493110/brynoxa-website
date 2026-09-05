@@ -41,7 +41,7 @@ export function Footer() {
       <Container className="grid gap-5 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_minmax(0,1.15fr)] lg:gap-8 lg:py-10">
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex flex-wrap items-center gap-3">
-            <BrandLogo markClassName="h-8 w-8" />
+            <BrandLogo markClassName="h-9 w-9 sm:h-10 sm:w-10" />
             <div className="flex gap-1.5" aria-label={t('nav.social')}>
               {SOCIAL_LINKS.map((s) =>
                 s.id === 'whatsapp' ? (

@@ -74,7 +74,7 @@ export function AdminSidebar({
           onClick={onNavigate}
           suffix="Admin"
           className="min-w-0 flex-1"
-          markClassName="h-7 w-7"
+          markClassName="h-8 w-8"
         />
         {embedded && onNavigate ? (
           <Button variant="ghost" size="sm" onClick={onNavigate} aria-label="Close menu">
