@@ -14,7 +14,7 @@ const fileFilter: multer.Options['fileFilter'] = (_req, file, cb) => {
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 4 * 1024 * 1024 },
 });
 
 export function hasValidImageSignature(file: Express.Multer.File) {

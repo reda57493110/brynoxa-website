@@ -1,6 +1,7 @@
 const path = require('path');
 const { sendJson, readJsonBody } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
+const { parseImageUpload, assertAllowedImage } = require('../_lib/multipart');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -170,6 +171,30 @@ async function handleProductRoutes(req, res, route) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
+async function handleUpload(req, res) {
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { success: false, message: 'Method not allowed' });
+    return;
+  }
+
+  const user = await requireStaff(req, res, ['products:write', 'inventory:write']);
+  if (!user) return;
+
+  const parsed = assertAllowedImage(await parseImageUpload(req));
+  const { hasValidImageSignature } = require('../../backend/dist/middleware/upload');
+  if (!hasValidImageSignature(parsed)) {
+    sendJson(res, 400, {
+      success: false,
+      message: 'The image file is invalid or corrupted',
+    });
+    return;
+  }
+
+  const { uploadProductImage } = require('../../backend/dist/services/upload.service');
+  const result = await uploadProductImage(parsed.buffer, parsed.mimetype);
+  sendJson(res, 201, { success: true, message: 'Uploaded', data: result });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -206,6 +231,12 @@ module.exports = async (req, res) => {
     // Admin product CRUD + inventory — keep off the slow Express lambda.
     if (route === 'products' || route.startsWith('products/')) {
       await handleProductRoutes(req, res, route);
+      return;
+    }
+
+    // Product image upload (multipart) — keep off the slow Express lambda.
+    if (route === 'upload') {
+      await handleUpload(req, res);
       return;
     }
 
