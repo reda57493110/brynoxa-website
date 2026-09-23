@@ -10,6 +10,7 @@ import {
   updateOrderStatusSchema,
   validateCouponSchema,
   guestOrderReceiptSchema,
+  trackOrderSchema,
   reviewSchema,
   couponSchema,
   settingsSchema,
@@ -31,13 +32,8 @@ const contactLimiter = rateLimit({
 
 const router = Router();
 
-router.post(
-  '/orders',
-  optionalAuth,
-  orderLimiter,
-  validate(createOrderSchema),
-  order.createOrder
-);
+router.post('/orders', optionalAuth, orderLimiter, validate(createOrderSchema), order.createOrder);
+router.post('/orders/track', orderLimiter, validate(trackOrderSchema), order.trackGuestOrder);
 router.get('/orders', requireAuth, order.myOrders);
 router.post(
   '/orders/:orderNumber/receipt',

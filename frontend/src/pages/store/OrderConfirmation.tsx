@@ -88,9 +88,14 @@ export function OrderConfirmation() {
                 {t('orders.trackOrder')}
               </Link>
             ) : (
-              <Link to="/register" className={cn(pillPrimary, 'w-full sm:w-auto')}>
-                {t('orders.createAccountTrack')}
-              </Link>
+              <>
+                <Link to="/track-order" className={cn(pillPrimary, 'w-full sm:w-auto')}>
+                  {t('orders.trackOrder')}
+                </Link>
+                <Link to="/register" className={cn(pillGhost, 'w-full bg-[var(--bg)] sm:w-auto')}>
+                  {t('orders.createAccountTrack')}
+                </Link>
+              </>
             )}
             <Link to="/shop" className={cn(pillGhost, 'w-full bg-[var(--bg)] sm:w-auto')}>
               {t('orders.continueShopping')}

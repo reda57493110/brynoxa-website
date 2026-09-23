@@ -49,6 +49,9 @@ const AccountReviews = lazy(() =>
 const AccountSettings = lazy(() =>
   import('@/pages/store/AccountSettings').then((m) => ({ default: m.AccountSettings }))
 )
+const TrackOrder = lazy(() =>
+  import('@/pages/store/TrackOrder').then((m) => ({ default: m.TrackOrder }))
+)
 const OrderConfirmation = lazy(() =>
   import('@/pages/store/OrderConfirmation').then((m) => ({ default: m.OrderConfirmation }))
 )
@@ -160,6 +163,7 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
+        <Route path="track-order" element={<S><TrackOrder /></S>} />
         <Route path="order-confirmation/:orderNumber" element={<S><OrderConfirmation /></S>} />
       </Route>
 

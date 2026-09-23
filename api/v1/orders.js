@@ -93,6 +93,14 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // POST /orders/track — guest lookup by order number + phone
+    if (route === 'track' && req.method === 'POST') {
+      const body = parseBody(schemas.trackOrderSchema, await readJsonBody(req));
+      const order = await orderService.trackGuestOrder(body.orderNumber, body.phone);
+      sendJson(res, 200, { success: true, message: 'Success', data: order });
+      return;
+    }
+
     // POST /orders — place COD order (guest or logged-in)
     if (!route && req.method === 'POST') {
       const body = parseBody(schemas.createOrderSchema, await readJsonBody(req));

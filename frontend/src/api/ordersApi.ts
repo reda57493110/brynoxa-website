@@ -14,6 +14,9 @@ export const ordersApi = {
   getGuestReceipt: (orderNumber: string, token: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/receipt`, { token }),
 
+  track: (orderNumber: string, phone: string) =>
+    api.post<ApiResponse<Order>>('/orders/track', { orderNumber, phone }),
+
   cancel: (orderNumber: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/cancel`),
 

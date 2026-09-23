@@ -135,6 +135,11 @@ export const guestOrderReceiptSchema = z.object({
   token: z.string().regex(/^[a-f0-9]{64}$/i, 'Invalid receipt token'),
 });
 
+export const trackOrderSchema = z.object({
+  orderNumber: z.string().trim().min(6).max(40),
+  phone: z.string().trim().min(8).max(30),
+});
+
 export const updateOrderItemsSchema = z.object({
   items: z
     .array(

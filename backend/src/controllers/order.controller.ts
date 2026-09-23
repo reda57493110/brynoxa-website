@@ -61,6 +61,11 @@ export const guestOrderReceipt = asyncHandler(async (req: AuthRequest, res: Resp
   sendSuccess(res, order);
 });
 
+export const trackGuestOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await orderService.trackGuestOrder(req.body.orderNumber, req.body.phone);
+  sendSuccess(res, order);
+});
+
 export const cancelMyOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.cancelUserOrder(req.user!.userId, param(req, 'orderNumber'));
   sendSuccess(res, order, 'Order cancelled');

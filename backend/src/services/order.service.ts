@@ -215,6 +215,40 @@ export async function getGuestOrderReceipt(orderNumber: string, receiptToken: st
   return order;
 }
 
+/** Normalize Moroccan / international phone digits for comparison. */
+export function normalizePhoneDigits(phone: string) {
+  let digits = String(phone || '').replace(/\D/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('212') && digits.length >= 12) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  return digits;
+}
+
+function phonesMatch(a: string, b: string) {
+  const left = normalizePhoneDigits(a);
+  const right = normalizePhoneDigits(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+  const minLen = Math.min(left.length, right.length);
+  if (minLen < 8) return false;
+  return left.endsWith(right) || right.endsWith(left);
+}
+
+/**
+ * Public guest tracking: order number + delivery phone.
+ * Always returns the same 404 message to avoid leaking which field failed.
+ */
+export async function trackGuestOrder(orderNumber: string, phone: string) {
+  const normalizedNumber = orderNumber.trim().toUpperCase();
+  const order = await Order.findOne({
+    $or: [{ orderNumber: orderNumber.trim() }, { orderNumber: normalizedNumber }],
+  });
+  if (!order || !phonesMatch(order.shippingAddress?.phone || '', phone)) {
+    throw new ApiError(404, 'We could not find an order with those details');
+  }
+  return order;
+}
+
 export async function updateUserOrderItems(
   userId: string,
   orderNumber: string,

@@ -55,6 +55,7 @@ module.exports = async (req, res) => {
     { path: '/shop', changefreq: 'daily', priority: '0.9' },
     { path: '/services', changefreq: 'weekly', priority: '0.7' },
     { path: '/contact', changefreq: 'monthly', priority: '0.6' },
+    { path: '/track-order', changefreq: 'monthly', priority: '0.7' },
   ];
 
   let categoryUrls = [];

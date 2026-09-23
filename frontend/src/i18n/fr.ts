@@ -386,6 +386,19 @@ export const fr: Messages = {
     packedSoon: 'Emballée sous 1 à 2 jours ouvrés',
     cancelHint: 'Besoin d’annuler ? C’est possible depuis la page de la commande tant qu’elle est en attente.',
     trackOrder: 'Suivre la commande',
+    trackTitle: 'Suivre votre commande — Brynoxa',
+    trackDescription:
+      'Retrouvez une commande Brynoxa contre remboursement avec le numéro et le téléphone de livraison.',
+    trackHeading: 'Suivre la commande',
+    trackBody:
+      'Saisissez le numéro reçu à la confirmation et le téléphone utilisé pour la livraison.',
+    trackOrderNumber: 'Numéro de commande',
+    trackPhone: 'Téléphone de livraison',
+    trackSubmit: 'Trouver la commande',
+    trackHint:
+      'Utilisez le même téléphone qu’au paiement. Les invités peuvent suivre sans compte.',
+    trackEmpty: 'Le statut de votre commande apparaîtra ici.',
+    trackNotFound: 'Impossible de trouver une commande avec ces informations.',
     guestSaveNumber:
       'Conservez votre numéro de commande — nous enverrons aussi des mises à jour à l’e-mail indiqué.',
     createAccountTrack: 'Créer un compte pour suivre',
