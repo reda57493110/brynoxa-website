@@ -21,6 +21,8 @@ const contactMessageSchema = new Schema<IContactMessage>(
   { timestamps: true }
 );
 
+contactMessageSchema.index({ status: 1, createdAt: -1 });
+
 export const ContactMessage = mongoose.model<IContactMessage>(
   'ContactMessage',
   contactMessageSchema

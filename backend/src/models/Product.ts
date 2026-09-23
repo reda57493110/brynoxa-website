@@ -72,9 +72,13 @@ const productSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
-productSchema.index({ name: 'text', description: 'text', tags: 'text' });
+productSchema.index({ name: 'text', description: 'text', tags: 'text', shortDescription: 'text' });
 productSchema.index({ category: 1, brand: 1, price: 1, isActive: 1 });
 productSchema.index({ isFeatured: 1, isActive: 1, featuredAt: -1 });
 productSchema.index({ isCarousel: 1, isActive: 1, carouselAt: -1 });
+productSchema.index({ isActive: 1, createdAt: -1 });
+productSchema.index({ isActive: 1, soldCount: -1 });
+productSchema.index({ isActive: 1, averageRating: -1 });
+productSchema.index({ isActive: 1, stock: 1 });
 
 export const Product = mongoose.model<IProduct>('Product', productSchema);

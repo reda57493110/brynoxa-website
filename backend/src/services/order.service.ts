@@ -13,6 +13,7 @@ import {
   notifyOrderStatusChanged,
   statusNotificationCopy,
 } from './orderNotify.service';
+import { invalidateDashboardCache } from './admin.service';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -301,22 +302,29 @@ async function adjustStock(order: InstanceType<typeof Order>, direction: 'reserv
   const changed: { productId: Types.ObjectId; stockDelta: number; soldDelta: number }[] = [];
 
   try {
-    for (const item of order.items) {
-      const stockDelta = direction === 'reserve' ? -item.qty : item.qty;
-      const soldDelta = direction === 'reserve' ? item.qty : -item.qty;
-      const updated = await Product.findOneAndUpdate(
-        {
-          _id: item.product,
-          ...(direction === 'reserve' ? { stock: { $gte: item.qty } } : {}),
-        },
-        {
-          $inc: {
-            stock: stockDelta,
-            soldCount: soldDelta,
+    // Parallel atomic updates (each line is its own findOneAndUpdate).
+    const results = await Promise.all(
+      order.items.map(async (item) => {
+        const stockDelta = direction === 'reserve' ? -item.qty : item.qty;
+        const soldDelta = direction === 'reserve' ? item.qty : -item.qty;
+        const updated = await Product.findOneAndUpdate(
+          {
+            _id: item.product,
+            ...(direction === 'reserve' ? { stock: { $gte: item.qty } } : {}),
           },
-        },
-        { new: true }
-      );
+          {
+            $inc: {
+              stock: stockDelta,
+              soldCount: soldDelta,
+            },
+          },
+          { new: true }
+        );
+        return { item, updated, stockDelta, soldDelta };
+      })
+    );
+
+    for (const { item, updated, stockDelta, soldDelta } of results) {
       if (direction === 'reserve' && !updated) {
         throw new ApiError(400, `Insufficient stock for ${item.name}`);
       }
@@ -391,6 +399,8 @@ export async function updateOrderStatus(
   if (adminNote !== undefined) order.adminNote = adminNote;
   await order.save();
 
+  invalidateDashboardCache();
+
   try {
     const copy = statusNotificationCopy(orderStatus);
     await Notification.create({
@@ -451,7 +461,8 @@ export async function listAllOrders(page = 1, limit = 20, status?: string, q?: s
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('user', 'name email'),
+      .populate('user', 'name email')
+      .lean(),
     Order.countDocuments(filter),
   ]);
   return { items, total, page, limit };

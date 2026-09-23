@@ -22,12 +22,32 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+const DASHBOARD_CACHE_MS = 45_000;
+let dashboardCache: { at: number; data: Awaited<ReturnType<typeof buildDashboardStats>> | null } = {
+  at: 0,
+  data: null,
+};
+
+export function invalidateDashboardCache() {
+  dashboardCache = { at: 0, data: null };
+}
+
 export async function getDashboardStats() {
+  const now = Date.now();
+  if (dashboardCache.data && now - dashboardCache.at < DASHBOARD_CACHE_MS) {
+    return dashboardCache.data;
+  }
+  const data = await buildDashboardStats();
+  dashboardCache = { at: now, data };
+  return data;
+}
+
+async function buildDashboardStats() {
   const startToday = new Date();
   startToday.setHours(0, 0, 0, 0);
   const start14 = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
-  const [orderStats, customerCount, productStats, reviewCount, unreadMessages] =
+  const [orderStats, customerCount, productStats, reviewCount, unreadMessages, recentOrders] =
     await Promise.all([
       Order.aggregate([
         {
@@ -69,33 +89,6 @@ export async function getDashboardStats() {
               },
             ],
             byStatus: [{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }],
-            recent: [
-              { $sort: { createdAt: -1 } },
-              { $limit: 8 },
-              {
-                $lookup: {
-                  from: 'users',
-                  localField: 'user',
-                  foreignField: '_id',
-                  as: 'userDoc',
-                },
-              },
-              {
-                $addFields: {
-                  user: {
-                    $let: {
-                      vars: { u: { $arrayElemAt: ['$userDoc', 0] } },
-                      in: {
-                        _id: '$$u._id',
-                        name: '$$u.name',
-                        email: '$$u.email',
-                      },
-                    },
-                  },
-                },
-              },
-              { $project: { userDoc: 0 } },
-            ],
             sales: [
               {
                 $match: {
@@ -144,6 +137,12 @@ export async function getDashboardStats() {
       ]),
       Review.countDocuments(),
       ContactMessage.countDocuments({ status: 'new' }),
+      Order.find()
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .populate('user', 'name email')
+        .select('orderNumber orderStatus pricing createdAt user shippingAddress')
+        .lean(),
     ]);
 
   const facet = orderStats[0] || {
@@ -151,7 +150,6 @@ export async function getDashboardStats() {
     today: [],
     counts: [],
     byStatus: [],
-    recent: [],
     sales: [],
   };
   const productsFacet = productStats[0] || {
@@ -198,7 +196,7 @@ export async function getDashboardStats() {
     lowStock: productsFacet.lowStock[0]?.n || 0,
     reviewCount,
     unreadMessages,
-    recentOrders: facet.recent || [],
+    recentOrders: recentOrders || [],
     salesByDay,
     ordersByStatus: statusMap,
     lowStockProducts: productsFacet.lowStockProducts || [],

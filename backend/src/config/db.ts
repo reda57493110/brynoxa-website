@@ -49,6 +49,22 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
+    // Keep Atlas indexes aligned with schema (non-blocking).
+    void import('../models/Product')
+      .then(({ Product }) => Product.syncIndexes())
+      .catch((err) => console.error('Product index sync failed', err));
+    void import('../models/Order')
+      .then(({ Order }) => Order.syncIndexes())
+      .catch((err) => console.error('Order index sync failed', err));
+    void import('../models/Review')
+      .then(({ Review }) => Review.syncIndexes())
+      .catch((err) => console.error('Review index sync failed', err));
+    void import('../models/Category')
+      .then(({ Category }) => Category.syncIndexes())
+      .catch((err) => console.error('Category index sync failed', err));
+    void import('../models/Contact')
+      .then(({ ContactMessage }) => ContactMessage.syncIndexes())
+      .catch((err) => console.error('Contact index sync failed', err));
     return cached.conn;
   } catch (err) {
     cached.promise = null;

@@ -63,14 +63,18 @@ export async function listProductReviews(productId: string, page = 1, limit = 10
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .populate('user', 'name avatar'),
+      .populate('user', 'name avatar')
+      .lean(),
     Review.countDocuments(filter),
   ]);
   return { items, total, page, limit };
 }
 
 export async function listUserReviews(userId: string) {
-  return Review.find({ user: userId }).sort({ createdAt: -1 }).populate('product', 'name slug images');
+  return Review.find({ user: userId })
+    .sort({ createdAt: -1 })
+    .populate('product', 'name slug images')
+    .lean();
 }
 
 export async function listAllReviews(page = 1, limit = 20) {
@@ -80,7 +84,8 @@ export async function listAllReviews(page = 1, limit = 20) {
       .skip((page - 1) * limit)
       .limit(limit)
       .populate('user', 'name email')
-      .populate('product', 'name slug'),
+      .populate('product', 'name slug')
+      .lean(),
     Review.countDocuments(),
   ]);
   return { items, total, page, limit };

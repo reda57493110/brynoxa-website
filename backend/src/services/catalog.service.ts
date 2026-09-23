@@ -21,13 +21,38 @@ async function resolveBrandId(brand: string) {
   return doc?._id?.toString() || null;
 }
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Storefront-only: products must belong to an active category. */
+const ACTIVE_CATEGORY_TTL_MS = 60_000;
+let activeCategoryCache: { at: number; ids: mongoose.Types.ObjectId[] } = {
+  at: 0,
+  ids: [],
+};
+
 async function activeCategoryObjectIds() {
+  const now = Date.now();
+  if (now - activeCategoryCache.at < ACTIVE_CATEGORY_TTL_MS && activeCategoryCache.ids.length) {
+    return activeCategoryCache.ids;
+  }
   const cats = await Category.find({
     isActive: true,
     slug: { $nin: ['office', 'networking'] },
-  }).select('_id');
-  return cats.map((c) => c._id);
+  })
+    .select('_id')
+    .lean();
+  activeCategoryCache = {
+    at: now,
+    ids: cats.map((c) => c._id as mongoose.Types.ObjectId),
+  };
+  return activeCategoryCache.ids;
+}
+
+/** Call after category create/update/delete so storefront filters stay correct. */
+export function invalidateActiveCategoryCache() {
+  activeCategoryCache = { at: 0, ids: [] };
 }
 
 function categoryIsActive(category: unknown): boolean {
@@ -65,11 +90,13 @@ export async function createCategory(data: {
   const exists = await Category.findOne({ slug });
   if (exists) slug = uniqueSlug(data.name, Date.now().toString(36));
 
-  return Category.create({
+  const created = await Category.create({
     ...data,
     slug,
     parent: data.parent || null,
   });
+  invalidateActiveCategoryCache();
+  return created;
 }
 
 export async function updateCategory(id: string, data: Partial<{
@@ -92,6 +119,7 @@ export async function updateCategory(id: string, data: Partial<{
   if (data.isActive !== undefined) category.isActive = data.isActive;
   if (data.sortOrder !== undefined) category.sortOrder = data.sortOrder;
   await category.save();
+  invalidateActiveCategoryCache();
   return category;
 }
 
@@ -100,6 +128,7 @@ export async function deleteCategory(id: string) {
   if (inUse) throw new ApiError(400, 'Category has products; reassign them first');
   const category = await Category.findByIdAndDelete(id);
   if (!category) throw new ApiError(404, 'Category not found');
+  invalidateActiveCategoryCache();
   return category;
 }
 
@@ -159,15 +188,18 @@ export async function listProducts(query: ProductQuery) {
   if (!query.admin) filter.isActive = true;
   else if (query.isActive !== undefined) filter.isActive = query.isActive;
 
-  if (query.q?.trim()) {
-    const rx = new RegExp(query.q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    filter.$or = [
-      { name: rx },
-      { sku: rx },
-      { tags: rx },
-      { shortDescription: rx },
-      { description: rx },
-    ];
+  const q = query.q?.trim() || '';
+  let useTextScore = false;
+  if (q) {
+    // SKU / short codes: use indexed prefix match. Longer phrases: Mongo text index.
+    const looksLikeSku = /^[a-z0-9][a-z0-9\-_]{1,31}$/i.test(q) && !/\s/.test(q);
+    if (looksLikeSku) {
+      const rx = new RegExp(`^${escapeRegex(q)}`, 'i');
+      filter.$or = [{ sku: rx }, { name: rx }];
+    } else {
+      filter.$text = { $search: q };
+      useTextScore = true;
+    }
   }
   if (query.category) {
     const categoryId = await resolveCategoryId(query.category);
@@ -180,7 +212,9 @@ export async function listProducts(query: ProductQuery) {
         _id: categoryId,
         isActive: true,
         slug: { $nin: ['office', 'networking'] },
-      }).select('_id');
+      })
+        .select('_id')
+        .lean();
       if (!active) {
         return { items: [], total: 0, page: query.page, limit: query.limit };
       }
@@ -209,7 +243,7 @@ export async function listProducts(query: ProductQuery) {
     if (query.maxPrice !== undefined) (filter.price as Record<string, number>).$lte = query.maxPrice;
   }
 
-  let sort: Record<string, 1 | -1> = { createdAt: -1 };
+  let sort: Record<string, 1 | -1 | { $meta: string }> = { createdAt: -1 };
   if (query.featured) {
     sort = { featuredAt: -1, createdAt: -1 };
   } else if (query.carousel) {
@@ -232,20 +266,28 @@ export async function listProducts(query: ProductQuery) {
         sort = { name: 1 };
         break;
       default:
-        sort = { createdAt: -1 };
+        sort = useTextScore
+          ? { score: { $meta: 'textScore' }, createdAt: -1 }
+          : { createdAt: -1 };
     }
   }
 
   const skip = (query.page - 1) * query.limit;
-  const [items, total] = await Promise.all([
-    Product.find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(query.limit)
-      .populate('category', 'name slug isActive')
-      .populate('brand', 'name slug logo'),
-    Product.countDocuments(filter),
-  ]);
+  const listQuery = Product.find(filter)
+    .skip(skip)
+    .limit(query.limit)
+    .populate('category', 'name slug isActive')
+    .populate('brand', 'name slug logo')
+    .lean();
+
+  if (useTextScore && !query.sort) {
+    listQuery.select({ score: { $meta: 'textScore' } });
+    listQuery.sort({ score: { $meta: 'textScore' }, createdAt: -1 } as never);
+  } else {
+    listQuery.sort(sort as never);
+  }
+
+  const [items, total] = await Promise.all([listQuery, Product.countDocuments(filter)]);
 
   return { items, total, page: query.page, limit: query.limit };
 }
