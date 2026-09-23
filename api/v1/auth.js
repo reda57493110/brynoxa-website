@@ -20,19 +20,35 @@ function resolveRoute(pathname, query) {
   return pathname.replace(/^\/api\/v1\/auth\/?/, '').replace(/\/$/, '');
 }
 
+const ACCOUNT_ACTIONS = new Set([
+  'register',
+  'password-reset/request',
+  'password-reset/confirm',
+  'verification/resend',
+  'verification/confirm',
+  'mfa/login',
+]);
+
 module.exports = async (req, res) => {
   const { pathname, query } = parseUrl(req.url || '');
   const route = resolveRoute(pathname, query);
-  const [head, ...rest] = route.split('/').filter(Boolean);
-  const action = head || '';
+  const parts = route.split('/').filter(Boolean);
+  const head = parts[0] || '';
+  const nested = parts.slice(1).join('/');
+  const fullAction = nested ? `${head}/${nested}` : head;
 
   // Preserve nested me/addresses paths for the me handler.
-  if (action === 'me' && rest.length) {
-    const nested = new URLSearchParams(query);
-    nested.set('__route', rest.join('/'));
-    req.url = `/api/v1/auth/me?${nested.toString()}`;
-  } else if (action === 'me') {
+  if (head === 'me' && nested) {
+    const nestedQs = new URLSearchParams(query);
+    nestedQs.set('__route', nested);
+    req.url = `/api/v1/auth/me?${nestedQs.toString()}`;
+  } else if (head === 'me') {
     req.url = '/api/v1/auth/me';
+  }
+
+  if (ACCOUNT_ACTIONS.has(fullAction)) {
+    req.__authAction = fullAction;
+    return require('../_lib/auth-routes/account')(req, res);
   }
 
   const handlers = {
@@ -44,7 +60,7 @@ module.exports = async (req, res) => {
     'change-password': () => require('../_lib/auth-routes/change-password'),
   };
 
-  const load = handlers[action];
+  const load = handlers[head];
   if (!load) {
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
