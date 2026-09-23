@@ -27,7 +27,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
 
   return (
     <div className="space-y-2.5 sm:space-y-3">
-      <div className="relative -mx-4 aspect-square overflow-hidden bg-[var(--bg-muted)] sm:mx-0 sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]">
+      <div className="relative -mx-4 aspect-[4/5] max-h-[min(70svh,28rem)] overflow-hidden bg-[var(--bg-muted)] sm:mx-0 sm:aspect-square sm:max-h-none sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]">
         <AnimatePresence mode="sync" initial={false}>
           <motion.div
             key={current.url}
@@ -42,7 +42,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               alt={current.alt || name}
               referrerPolicy="no-referrer"
               decoding="async"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain p-3 sm:object-cover sm:p-0"
             />
           </motion.div>
         </AnimatePresence>
@@ -52,7 +52,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
             <button
               type="button"
               onClick={() => go(active - 1)}
-              className="absolute start-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:inline-flex"
+              className="absolute start-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:start-3 sm:h-10 sm:w-10"
               aria-label={t('ui.previousPage')}
             >
               <SiteIcon name="chevron-left" size={18} />
@@ -60,11 +60,25 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
             <button
               type="button"
               onClick={() => go(active + 1)}
-              className="absolute end-3 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:inline-flex"
+              className="absolute end-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:end-3 sm:h-10 sm:w-10"
               aria-label={t('ui.nextPage')}
             >
               <SiteIcon name="chevron-right" size={18} />
             </button>
+            <div className="absolute inset-x-0 bottom-2 z-10 flex justify-center gap-1.5 sm:hidden">
+              {list.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`${i + 1}`}
+                  onClick={() => setActive(i)}
+                  className={cn(
+                    'h-1.5 rounded-full transition',
+                    i === active ? 'w-4 bg-[var(--brand)]' : 'w-1.5 bg-[var(--fg)]/35'
+                  )}
+                />
+              ))}
+            </div>
           </>
         ) : null}
       </div>
@@ -83,7 +97,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               aria-selected={i === active}
               onClick={() => setActive(i)}
               className={cn(
-                'h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition duration-200 sm:h-16 sm:w-16',
+                'h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[var(--bg-muted)] transition duration-200 sm:h-16 sm:w-16',
                 i === active
                   ? 'border-[var(--brand)] opacity-100'
                   : 'border-transparent opacity-60 hover:opacity-100'
@@ -94,7 +108,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
                 alt={img.alt || `${name} ${i + 1}`}
                 referrerPolicy="no-referrer"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-1 sm:object-cover sm:p-0"
               />
             </button>
           ))}

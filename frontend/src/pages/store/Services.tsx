@@ -85,11 +85,11 @@ export function Services() {
             <p className="kicker">{copy.services.heroKicker}</p>
             <h1
               id="services-hero-title"
-              className="mt-2 max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-5xl"
+              className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-5xl"
             >
               {copy.services.heroTitle}
             </h1>
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
+            <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
               {copy.services.heroBody}
             </p>
             <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
@@ -122,7 +122,7 @@ export function Services() {
             <p className="kicker">{t('services.policies')}</p>
             <h2
               id="services-grid-heading"
-              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+              className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
             >
               {t('services.howHandled')}
             </h2>
@@ -214,7 +214,7 @@ export function Services() {
                   </p>
                   <h2
                     id={`${service.id}-heading`}
-                    className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+                    className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
                   >
                     {service.title}
                   </h2>
@@ -273,7 +273,7 @@ export function Services() {
             <p className="kicker">{t('services.moreKicker')}</p>
             <h2
               id="more-services-heading"
-              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+              className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
             >
               {t('services.moreTitle')}
             </h2>
@@ -325,7 +325,7 @@ export function Services() {
             <p className="kicker">{t('ui.faq')}</p>
             <h2
               id="services-faq-heading"
-              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+              className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
             >
               {t('ui.commonQuestions')}
             </h2>
@@ -390,7 +390,7 @@ export function Services() {
                 <p className="kicker">{t('services.ctaKicker')}</p>
                 <h2
                   id="services-cta-heading"
-                  className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
                 >
                   {t('services.ctaTitle')}
                 </h2>

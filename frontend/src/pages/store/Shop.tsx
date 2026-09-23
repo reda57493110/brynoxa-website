@@ -185,11 +185,11 @@ export function Shop() {
           <p className="kicker">{t('shop.kicker')}</p>
           <h1
             id="shop-heading"
-            className="mt-2 max-w-3xl font-display text-3xl font-semibold tracking-tight text-balance sm:mt-3 sm:text-5xl md:text-[3.25rem]"
+            className="mt-2 max-w-3xl font-display text-2xl font-semibold tracking-tight text-balance sm:mt-3 sm:text-5xl md:text-[3.25rem]"
           >
             {activeCategoryName ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-lg">
+          <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-lg">
             {filters.q ? (
               <>
                 {t('shop.resultsFor', { q: filters.q })}

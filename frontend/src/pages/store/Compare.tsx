@@ -62,7 +62,7 @@ export function Compare() {
     <Container className="py-10">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold">{t('compare.heading')}</h1>
+          <h1 className="font-display text-2xl font-semibold sm:text-3xl">{t('compare.heading')}</h1>
           <p className="text-sm text-[var(--fg-muted)]">
             {t('compare.count', { count: list.length, max: COMPARE_MAX })}
           </p>

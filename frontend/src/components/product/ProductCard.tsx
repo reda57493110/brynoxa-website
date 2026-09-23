@@ -127,7 +127,9 @@ export function ProductCard({
       <div
         className={cn(
           'relative overflow-hidden bg-[var(--bg-muted)]',
-          spotlight ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]' : 'aspect-square'
+          spotlight
+            ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]'
+            : 'aspect-[4/5] sm:aspect-square'
         )}
       >
         <Link to={`/product/${product.slug}`} className="block h-full w-full">
@@ -142,9 +144,14 @@ export function ProductCard({
             sizes={
               spotlight
                 ? '(min-width: 1024px) 52vw, 100vw'
-                : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, 50vw'
+                : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 46vw'
             }
-            className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
+            className={cn(
+              'h-full w-full transition duration-500 ease-out group-hover:scale-[1.03]',
+              spotlight
+                ? 'object-cover'
+                : 'object-contain p-2.5 sm:object-cover sm:p-0'
+            )}
           />
         </Link>
         <div className="pointer-events-none absolute start-2 top-2 z-10 flex max-w-[calc(100%-3rem)] flex-wrap gap-1 sm:start-3 sm:top-3 sm:max-w-none sm:gap-2">
@@ -182,13 +189,13 @@ export function ProductCard({
       <div
         className={cn(
           'flex flex-1 flex-col',
-          spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1.5 p-3 sm:gap-2 sm:p-4'
+          spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1 p-2.5 sm:gap-2 sm:p-4'
         )}
       >
         <p
           className={cn(
             'font-medium uppercase tracking-[0.12em] text-[var(--fg-muted)]',
-            spotlight ? 'text-[11px]' : 'min-h-[1.1rem] text-[10px] sm:min-h-[1.2rem] sm:text-[11px]'
+            spotlight ? 'text-[11px]' : 'min-h-[1rem] text-[9px] sm:min-h-[1.2rem] sm:text-[11px]'
           )}
         >
           {meta || '\u00A0'}
@@ -198,8 +205,8 @@ export function ProductCard({
           className={cn(
             'font-display font-semibold leading-snug text-[var(--fg)] transition duration-200 hover:text-[var(--brand-text)]',
             spotlight
-              ? 'text-lg sm:text-xl lg:text-2xl'
-              : 'line-clamp-2 min-h-[2.5rem] text-[0.9375rem] leading-snug sm:min-h-[2.75rem] sm:text-base'
+              ? 'text-base sm:text-xl lg:text-2xl'
+              : 'line-clamp-2 min-h-[2.25rem] text-[0.8125rem] leading-snug sm:min-h-[2.75rem] sm:text-base'
           )}
         >
           {product.name}
@@ -209,7 +216,7 @@ export function ProductCard({
             'font-medium leading-relaxed text-[var(--fg-muted)]',
             spotlight
               ? 'line-clamp-2 max-w-md text-sm'
-              : 'line-clamp-2 min-h-[2.25rem] text-xs sm:min-h-[2.5rem] sm:text-sm'
+              : 'line-clamp-2 min-h-[2rem] text-[11px] sm:min-h-[2.5rem] sm:text-sm'
           )}
         >
           {blurb || '\u00A0'}
@@ -232,8 +239,8 @@ export function ProductCard({
             showDiscountBadge={spotlight}
             className={
               spotlight
-                ? '[&>span:first-child]:text-xl sm:[&>span:first-child]:text-2xl'
-                : 'min-h-[1.75rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-base sm:[&>span:first-child]:text-lg'
+                ? '[&>span:first-child]:text-lg sm:[&>span:first-child]:text-2xl'
+                : 'min-h-[1.5rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-sm sm:[&>span:first-child]:text-lg'
             }
           />
           <div className="flex items-center gap-2">

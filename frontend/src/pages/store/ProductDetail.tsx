@@ -401,7 +401,7 @@ export function ProductDetail() {
               ) : null}
             </div>
 
-            <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl lg:text-4xl">
+            <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl lg:text-4xl">
               {p.name}
             </h1>
 
@@ -413,13 +413,13 @@ export function ProductDetail() {
             </div>
 
             <Price
-              className="mt-4 [&>span:first-child]:text-2xl sm:[&>span:first-child]:text-[1.75rem]"
+              className="mt-3 [&>span:first-child]:text-xl sm:mt-4 sm:[&>span:first-child]:text-[1.75rem]"
               price={p.price}
               compareAt={p.compareAtPrice}
             />
 
             {p.shortDescription ? (
-              <p className="mt-3 text-sm font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base sm:leading-7">
+              <p className="mt-2.5 text-[13px] font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base sm:leading-7">
                 {p.shortDescription}
               </p>
             ) : null}
@@ -501,7 +501,7 @@ export function ProductDetail() {
         {related.data?.length ? (
           <motion.section {...fade(0.14)} className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12">
             <p className="kicker">{t('common.shop')}</p>
-            <h2 className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">
+            <h2 className="mt-2 font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">
               {t('productPage.moreInCategory', { name: categoryName || t('shop.category') })}
             </h2>
             <div className="mt-6">

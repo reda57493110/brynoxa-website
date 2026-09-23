@@ -120,6 +120,13 @@ html[lang="ar"] {
     -moz-osx-font-smoothing: grayscale;
   }
 
+  @media (max-width: 639px) {
+    body {
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+  }
+
   body::after {
     content: '';
     pointer-events: none;

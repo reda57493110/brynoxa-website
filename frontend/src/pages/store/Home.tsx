@@ -124,7 +124,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="mt-3 max-w-2xl font-display text-3xl font-semibold tracking-tight text-balance text-white sm:mt-4 sm:text-5xl md:text-6xl"
+            className="mt-3 max-w-2xl font-display text-2xl font-semibold tracking-tight text-balance text-white sm:mt-4 sm:text-5xl md:text-6xl"
           >
             {t('home.heroTitleLead')}
             <span className="block text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
@@ -132,7 +132,7 @@ export function Home() {
 
           <motion.p
             {...fadeUp(reduceMotion, 0.16)}
-            className="mt-4 max-w-lg text-sm leading-relaxed text-white/80 sm:mt-5 sm:text-lg"
+            className="mt-3 max-w-lg text-[13px] leading-relaxed text-white/80 sm:mt-5 sm:text-lg"
           >
             {t('home.heroBody')}
           </motion.p>
@@ -172,7 +172,7 @@ export function Home() {
               </p>
               <h2
                 id="home-featured-heading"
-                className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
               >
                 {t('home.featuredTitle')}
               </h2>
@@ -262,7 +262,7 @@ export function Home() {
               </p>
               <h2
                 id="home-categories-heading"
-                className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
               >
                 {t('home.categoriesTitle')}
               </h2>
@@ -357,7 +357,7 @@ export function Home() {
                               <h3
                                 className={cn(
                                   'font-display font-semibold tracking-tight text-[var(--fg)]',
-                                  featuredTile ? 'text-2xl sm:text-3xl' : 'text-xl'
+                                  featuredTile ? 'text-xl sm:text-3xl' : 'text-base sm:text-xl'
                                 )}
                               >
                                 {name}
@@ -408,7 +408,7 @@ export function Home() {
               <p className="kicker">{t('home.ctaKicker')}</p>
               <h2
                 id="home-cta-heading"
-                className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl"
+                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
               >
                 {t('home.ctaTitle')}
               </h2>

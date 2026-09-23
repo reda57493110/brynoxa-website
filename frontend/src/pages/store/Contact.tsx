@@ -145,11 +145,11 @@ export function Contact() {
             <p className="kicker">{t('contact.heroKicker')}</p>
             <h1
               id="contact-hero-title"
-              className="mt-2 max-w-2xl font-display text-3xl font-semibold tracking-tight sm:text-5xl"
+              className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-5xl"
             >
               {t('contact.heroTitle')}
             </h1>
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
+            <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
               {t('contact.heroBody')}
             </p>
             <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
@@ -187,11 +187,11 @@ export function Contact() {
               <p className="kicker">{t('contact.messageKicker')}</p>
               <h2
                 id="contact-form-heading"
-                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl"
+                className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
               >
                 {t('contact.sendMessage')}
               </h2>
-              <p className="mt-2 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+              <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
                 {t('contact.formBody')}
               </p>
 
@@ -408,11 +408,11 @@ export function Contact() {
             <p className="kicker">{t('ui.faq')}</p>
             <h2
               id="contact-faq-heading"
-              className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-3xl"
+              className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
             >
               {t('ui.commonQuestions')}
             </h2>
-            <p className="mt-2 text-sm text-[var(--fg-muted)]">{t('contact.faqBody')}</p>
+            <p className="mt-2 text-[13px] text-[var(--fg-muted)] sm:text-sm">{t('contact.faqBody')}</p>
             <ul className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
               {contact.faqs.map((item, i) => {
                 const open = openFaq === i
@@ -474,11 +474,11 @@ export function Contact() {
                 <p className="kicker">{t('contact.newsletter')}</p>
                 <h2
                   id="newsletter-heading"
-                  className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
                 >
                   {t('contact.newsTitle')}
                 </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
+                <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
                   {t('contact.newsBody')}
                 </p>
               </div>

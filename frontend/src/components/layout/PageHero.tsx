@@ -20,17 +20,17 @@ export function PageHero({
   return (
     <section aria-labelledby={titleId} className={cn('page-hero', className)}>
       <Container className="relative z-10 py-5 sm:py-10">
-        <p className="kicker text-reveal">{kicker}</p>
+        <p className="kicker text-reveal text-[11px] sm:text-xs">{kicker}</p>
         <h1
           id={titleId}
-          className="text-reveal mt-2 font-display text-3xl font-semibold tracking-tight text-[var(--fg)] sm:mt-3 sm:text-4xl md:text-[2.75rem]"
+          className="text-reveal mt-1.5 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] sm:mt-3 sm:text-3xl md:text-[2.75rem]"
           style={{ animationDelay: '40ms' }}
         >
           {title}
         </h1>
         {description ? (
           <div
-            className="text-reveal mt-2 max-w-xl text-sm font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-base sm:leading-7"
+            className="text-reveal mt-1.5 max-w-xl text-[13px] font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-base sm:leading-7"
             style={{ animationDelay: '80ms' }}
           >
             {description}
