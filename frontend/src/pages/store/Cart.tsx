@@ -14,7 +14,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 
 export function Cart() {
   const t = useT()
-  usePageTitle(t('cart.title'))
+  usePageTitle(t('cart.title'), { noIndex: true })
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const updateQty = useCartStore((s) => s.updateQty)

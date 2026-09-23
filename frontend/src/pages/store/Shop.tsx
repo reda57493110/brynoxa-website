@@ -14,6 +14,7 @@ import { Drawer } from '@/components/ui/Drawer'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useSeo } from '@/hooks/useSeo'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
@@ -116,17 +117,22 @@ export function Shop() {
     ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description)
     : undefined
 
-  useEffect(() => {
-    const previous = document.title
-    document.title = activeCategoryName
-      ? `${activeCategoryName} — ${t('shop.title')} · Brynoxa`
-      : filters.q
-        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
-        : `${t('shop.title')} — Brynoxa`
-    return () => {
-      document.title = previous
-    }
-  }, [activeCategoryName, filters.q, t])
+  const shopTitle = activeCategoryName
+    ? `${activeCategoryName} — ${t('shop.title')} · Brynoxa`
+    : filters.q
+      ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
+      : t('meta.shopTitle')
+
+  useSeo({
+    title: shopTitle,
+    description:
+      activeCategoryDescription ||
+      (filters.q
+        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}`
+        : t('meta.shopDescription')),
+    path: '/shop',
+  })
+
   const activeBrand = brandList.find((b) => b.slug === filters.brand)
   const total = products.data?.meta?.total ?? 0
   const pages = products.data?.meta?.pages || 1

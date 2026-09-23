@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -14,6 +13,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { useSeo } from '@/hooks/useSeo'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
@@ -79,13 +79,12 @@ export function Home() {
     queryFn: async () => (await categoriesApi.list()).data.data,
   })
 
-  useEffect(() => {
-    const previous = document.title
-    document.title = t('meta.homeTitle')
-    return () => {
-      document.title = previous
-    }
-  }, [t])
+  useSeo({
+    title: t('meta.homeTitle'),
+    description: t('meta.homeDescription'),
+    path: '/',
+    image: HERO_IMAGE,
+  })
 
   const categoryList = (categories.data ?? []).filter(
     (c) => c.slug !== 'office' && c.slug !== 'networking'

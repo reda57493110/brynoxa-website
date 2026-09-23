@@ -5,7 +5,16 @@ export const ar: Messages = {
     homeTitle: 'Brynoxa — حواسيب محمولة ومكتبية ومكوّنات',
     contactTitle: 'اتصل بنا — Brynoxa',
     servicesTitle: 'الضمان والإرجاع والتوصيل — Brynoxa',
+    shopTitle: 'المتجر — Brynoxa',
     siteDescription: 'Brynoxa — حواسيب محمولة ومكتبية ومكوّنات. الدفع عند الاستلام في المغرب.',
+    homeDescription:
+      'اشترِ حواسيب ومكوّنات من Brynoxa. الدفع عند الاستلام في المغرب، دعم واتساب وضمان 6 أشهر.',
+    shopDescription:
+      'تصفّح كتالوج Brynoxa من الحواسيب والمكوّنات. صفِّ حسب الفئة والعلامة — ادفع عند الاستلام.',
+    contactDescription:
+      'تواصل مع Brynoxa عبر واتساب أو الهاتف أو البريد. طلبات وأسئلة التوافق والدعم في المغرب.',
+    servicesDescription:
+      'ضمان Brynoxa (6 أشهر)، إرجاع خلال 14 يومًا، الدفع عند الاستلام والتوصيل في أنحاء المغرب.',
   },
   common: {
     shop: 'المتجر',

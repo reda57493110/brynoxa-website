@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
-import { usePageTitle } from '@/hooks/usePageTitle'
+import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
@@ -51,11 +51,13 @@ export function CategoryPage() {
       ) || t('shop.categoryFallback')
     : ''
 
-  usePageTitle(
-    category.data
+  useSeo({
+    title: category.data
       ? `${displayName} — ${t('shop.title')} · Brynoxa`
-      : `${t('shop.title')} — Brynoxa`
-  )
+      : t('meta.shopTitle'),
+    description: displayDescription || t('meta.shopDescription'),
+    path: slug ? `/category/${slug}` : '/shop',
+  })
 
   if (category.isError) {
     return (

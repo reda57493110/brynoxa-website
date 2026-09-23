@@ -26,7 +26,7 @@ import type { Address } from '@/types'
 
 export function Checkout() {
   const t = useT()
-  usePageTitle(t('checkout.title'))
+  usePageTitle(t('checkout.title'), { noIndex: true })
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const clear = useCartStore((s) => s.clear)

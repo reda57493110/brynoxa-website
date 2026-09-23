@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
@@ -13,6 +13,7 @@ import { getErrorMessage } from '@/api/client'
 import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
+import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
@@ -68,13 +69,11 @@ export function Contact() {
   const [newsLoading, setNewsLoading] = useState(false)
   const [newsDone, setNewsDone] = useState(false)
 
-  useEffect(() => {
-    const prev = document.title
-    document.title = t('meta.contactTitle')
-    return () => {
-      document.title = prev
-    }
-  }, [t])
+  useSeo({
+    title: t('meta.contactTitle'),
+    description: t('meta.contactDescription'),
+    path: '/contact',
+  })
 
   const validate = (): boolean => {
     const next: FormErrors = {}

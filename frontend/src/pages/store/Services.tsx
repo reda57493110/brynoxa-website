@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
@@ -7,6 +7,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
+import { useSeo } from '@/hooks/useSeo'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
 
@@ -63,13 +64,11 @@ export function Services() {
     { icon: 'mail' as const, label: t('ui.email'), hint: CONTACT.email.value, href: CONTACT.email.href },
   ]
 
-  useEffect(() => {
-    const prev = document.title
-    document.title = t('meta.servicesTitle')
-    return () => {
-      document.title = prev
-    }
-  }, [t])
+  useSeo({
+    title: t('meta.servicesTitle'),
+    description: t('meta.servicesDescription'),
+    path: '/services',
+  })
 
   const policies = catalog.filter((s) =>
     POLICY_IDS.includes(s.id as (typeof POLICY_IDS)[number])

@@ -28,7 +28,7 @@ import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
-import { usePageTitle } from '@/hooks/usePageTitle'
+import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
@@ -65,7 +65,51 @@ export function ProductDetail() {
     enabled: Boolean(slug),
   })
 
-  usePageTitle(product.data ? `${product.data.name} — Brynoxa` : t('productPage.titleFallback'))
+  const productImage = product.data ? primaryImage(product.data) : undefined
+  const productDescription =
+    product.data?.shortDescription ||
+    product.data?.description?.slice(0, 160) ||
+    t('meta.shopDescription')
+
+  useSeo({
+    title: product.data ? `${product.data.name} — Brynoxa` : t('productPage.titleFallback'),
+    description: productDescription,
+    image: productImage || '/brand/brynoxa-logo-social.png',
+    type: product.data ? 'product' : 'website',
+    path: slug ? `/product/${slug}` : undefined,
+    jsonLd: product.data
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.data.name,
+          description: productDescription,
+          image: productImage ? [productImage] : undefined,
+          sku: product.data.sku,
+          brand: product.data.brand
+            ? {
+                '@type': 'Brand',
+                name:
+                  typeof product.data.brand === 'string'
+                    ? product.data.brand
+                    : (product.data.brand as Brand).name,
+              }
+            : undefined,
+          offers: {
+            '@type': 'Offer',
+            priceCurrency: 'MAD',
+            price: product.data.price,
+            availability:
+              product.data.stock > 0
+                ? 'https://schema.org/InStock'
+                : 'https://schema.org/OutOfStock',
+            url:
+              typeof window !== 'undefined'
+                ? `${window.location.origin}/product/${product.data.slug}`
+                : undefined,
+          },
+        }
+      : null,
+  })
 
   const reviews = useQuery({
     queryKey: ['reviews', product.data?._id],

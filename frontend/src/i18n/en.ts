@@ -3,7 +3,16 @@ export const en = {
     homeTitle: 'Brynoxa — PCs, laptops, and components',
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Warranty, returns & delivery — Brynoxa',
+    shopTitle: 'Shop — Brynoxa',
     siteDescription: 'Brynoxa — PCs, laptops, and components. Cash on delivery across Morocco.',
+    homeDescription:
+      'Buy PCs, laptops, and components from Brynoxa. Cash on delivery across Morocco, WhatsApp support, and 6-month warranty.',
+    shopDescription:
+      'Browse Brynoxa’s catalog of PCs, laptops, and components. Filter by category, brand, and stock — pay on delivery in Morocco.',
+    contactDescription:
+      'Contact Brynoxa by WhatsApp, phone, or email. Order help, compatibility questions, and support across Morocco.',
+    servicesDescription:
+      'Brynoxa warranty (6 months), 14-day returns, cash on delivery, and nationwide shipping in Morocco.',
   },
   common: {
     shop: 'Shop',

@@ -1,11 +1,9 @@
-import { useEffect } from 'react'
+import { useSeo, type SeoInput } from './useSeo'
 
-export function usePageTitle(title: string) {
-  useEffect(() => {
-    const previous = document.title
-    document.title = title
-    return () => {
-      document.title = previous
-    }
-  }, [title])
+/** Title helper for account/auth pages. Marketing pages should use useSeo. */
+export function usePageTitle(title: string, options?: Omit<SeoInput, 'title'>) {
+  useSeo({ title, ...options })
 }
+
+export { useSeo }
+export type { SeoInput }

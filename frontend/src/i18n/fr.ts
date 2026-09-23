@@ -5,8 +5,17 @@ export const fr: Messages = {
     homeTitle: 'Brynoxa — PC, ordinateurs portables et composants',
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Garantie, retours et livraison — Brynoxa',
+    shopTitle: 'Boutique — Brynoxa',
     siteDescription:
       'Brynoxa — PC, ordinateurs portables et composants. Paiement à la livraison au Maroc.',
+    homeDescription:
+      'Achetez PC, portables et composants chez Brynoxa. Paiement à la livraison au Maroc, support WhatsApp et garantie 6 mois.',
+    shopDescription:
+      'Parcourez le catalogue Brynoxa : PC, portables et composants. Filtrez par catégorie et marque — paiement à la livraison.',
+    contactDescription:
+      'Contactez Brynoxa par WhatsApp, téléphone ou e-mail. Commandes, compatibilité et support au Maroc.',
+    servicesDescription:
+      'Garantie Brynoxa (6 mois), retours 14 jours, paiement à la livraison et livraison nationale au Maroc.',
   },
   common: {
     shop: 'Boutique',
