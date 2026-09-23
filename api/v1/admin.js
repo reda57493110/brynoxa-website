@@ -195,6 +195,89 @@ async function handleUpload(req, res) {
   sendJson(res, 201, { success: true, message: 'Uploaded', data: result });
 }
 
+async function handleCouponRoutes(req, res, route) {
+  const user = await requireStaff(req, res, ['coupons']);
+  if (!user) return;
+
+  const couponService = require('../../backend/dist/services/coupon.service');
+
+  if (route === 'coupons' && req.method === 'GET') {
+    const items = await couponService.listCoupons();
+    sendJson(res, 200, { success: true, message: 'Success', data: items });
+    return;
+  }
+
+  if (route === 'coupons' && req.method === 'POST') {
+    const body = await readJsonBody(req);
+    const item = await couponService.createCoupon(body);
+    sendJson(res, 201, { success: true, message: 'Coupon created', data: item });
+    return;
+  }
+
+  const match = route.match(/^coupons\/([^/]+)$/);
+  if (!match) {
+    sendJson(res, 405, { success: false, message: 'Method not allowed' });
+    return;
+  }
+
+  const id = match[1];
+  if (req.method === 'PATCH') {
+    const body = await readJsonBody(req);
+    const item = await couponService.updateCoupon(id, body);
+    sendJson(res, 200, { success: true, message: 'Coupon updated', data: item });
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    await couponService.deleteCoupon(id);
+    sendJson(res, 200, { success: true, message: 'Coupon deleted', data: null });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
+async function handleOrderRoutes(req, res, route, query) {
+  const orderService = require('../../backend/dist/services/order.service');
+
+  if (route === 'orders' && req.method === 'GET') {
+    const user = await requireStaff(req, res, ['orders:read']);
+    if (!user) return;
+    const page = Number(query.page || 1);
+    const limit = Number(query.limit || 20);
+    const result = await orderService.listAllOrders(page, limit, query.status, query.q);
+    sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
+    return;
+  }
+
+  const statusMatch = route.match(/^orders\/([^/]+)\/status$/);
+  if (statusMatch && req.method === 'PATCH') {
+    const user = await requireStaff(req, res, ['orders:write']);
+    if (!user) return;
+    const body = await readJsonBody(req);
+    const order = await orderService.updateOrderStatus(
+      statusMatch[1],
+      body.orderStatus,
+      body.note,
+      body.adminNote
+    );
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Order updated', data: order });
+    return;
+  }
+
+  const match = route.match(/^orders\/([^/]+)$/);
+  if (match && req.method === 'GET') {
+    const user = await requireStaff(req, res, ['orders:read']);
+    if (!user) return;
+    const item = await orderService.getOrderById(match[1]);
+    sendJson(res, 200, { success: true, message: 'Success', data: item });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -240,6 +323,18 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Coupons list + CRUD
+    if (route === 'coupons' || route.startsWith('coupons/')) {
+      await handleCouponRoutes(req, res, route);
+      return;
+    }
+
+    // Orders list/detail + status updates
+    if (route === 'orders' || route.startsWith('orders/')) {
+      await handleOrderRoutes(req, res, route, query);
+      return;
+    }
+
     if (req.method !== 'GET') {
       sendJson(res, 405, { success: false, message: 'Method not allowed' });
       return;
@@ -270,24 +365,6 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (route === 'orders') {
-      const user = await requireStaff(req, res, ['orders:read']);
-      if (!user) return;
-      const { listAllOrders } = require('../../backend/dist/services/order.service');
-      const result = await listAllOrders(page, limit, query.status, query.q);
-      sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
-      return;
-    }
-
-    if (route.startsWith('orders/')) {
-      const user = await requireStaff(req, res, ['orders:read']);
-      if (!user) return;
-      const { getOrderById } = require('../../backend/dist/services/order.service');
-      const item = await getOrderById(route.slice('orders/'.length));
-      sendJson(res, 200, { success: true, message: 'Success', data: item });
-      return;
-    }
-
     if (route === 'customers') {
       const user = await requireStaff(req, res, ['customers:read']);
       if (!user) return;
@@ -312,15 +389,6 @@ module.exports = async (req, res) => {
       const { listAllReviews } = require('../../backend/dist/services/review.service');
       const result = await listAllReviews(page, limit);
       sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
-      return;
-    }
-
-    if (route === 'coupons') {
-      const user = await requireStaff(req, res, ['coupons']);
-      if (!user) return;
-      const { listCoupons } = require('../../backend/dist/services/coupon.service');
-      const items = await listCoupons();
-      sendJson(res, 200, { success: true, message: 'Success', data: items });
       return;
     }
 
