@@ -52,8 +52,9 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // GET /categories
-    const items = await catalog.listCategories(query.all === 'true');
+    // GET /categories — `?all=true` returns inactive too (admin); storefront omits them.
+    const activeOnly = query.all !== 'true';
+    const items = await catalog.listCategories(activeOnly);
     sendJson(res, 200, {
       success: true,
       message: 'Success',
