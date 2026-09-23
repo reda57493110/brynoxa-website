@@ -282,6 +282,7 @@ export const en = {
     fullName: 'Full name',
     address: 'Address',
     city: 'City',
+    shippingForCity: 'Shipping to this city: {amount}',
     couponTitle: 'Coupon & note',
     couponCode: 'Coupon code',
     apply: 'Apply',

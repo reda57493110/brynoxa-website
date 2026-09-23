@@ -210,10 +210,31 @@ export const getStoreSettings = asyncHandler(async (_req: Request, res: Response
 
 export const updateStoreSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSettings();
-  Object.assign(settings, req.body);
+  const body = { ...req.body } as Record<string, unknown>;
+  if (Array.isArray(body.shippingByCity)) {
+    body.shippingByCity = sanitizeShippingByCity(body.shippingByCity);
+  }
+  Object.assign(settings, body);
   await settings.save();
   sendSuccess(res, settings, 'Settings updated');
 });
+
+function sanitizeShippingByCity(rows: unknown): { city: string; rate: number }[] {
+  if (!Array.isArray(rows)) return [];
+  const seen = new Set<string>();
+  const out: { city: string; rate: number }[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const city = String((row as { city?: unknown }).city || '').trim();
+    const rate = Number((row as { rate?: unknown }).rate);
+    if (city.length < 2 || !Number.isFinite(rate) || rate < 0) continue;
+    const key = city.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ city, rate });
+  }
+  return out.slice(0, 200);
+}
 
 export const submitContact = asyncHandler(async (req: Request, res: Response) => {
   const doc = await ContactMessage.create(req.body);

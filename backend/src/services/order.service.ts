@@ -4,6 +4,7 @@ import { Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { getSettings } from '../models/Settings';
+import { resolveShippingFee } from '../utils/shipping';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
@@ -116,7 +117,7 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
   return { orderItems, subtotal };
 }
 
-async function priceOrder(subtotal: number, couponCode?: string) {
+async function priceOrder(subtotal: number, couponCode?: string, city?: string) {
   const settings = await getSettings();
   let discount = 0;
   let couponMeta: { code: string; couponId: Types.ObjectId } | undefined;
@@ -127,10 +128,7 @@ async function priceOrder(subtotal: number, couponCode?: string) {
     couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
   }
 
-  const shipping =
-    settings.freeShippingMin > 0 && subtotal >= settings.freeShippingMin
-      ? 0
-      : settings.shippingFlatRate;
+  const shipping = resolveShippingFee(settings, city, subtotal);
   const taxable = Math.max(subtotal - discount, 0);
   const tax = (taxable * settings.taxRate) / 100;
   const total = taxable + shipping + tax;
@@ -152,7 +150,11 @@ export async function createCodOrder(input: {
   if (!settings.codEnabled) throw new ApiError(400, 'Cash on delivery is disabled');
 
   const { orderItems, subtotal } = await buildOrderLines(input.items);
-  const { pricing, couponMeta } = await priceOrder(subtotal, input.couponCode);
+  const { pricing, couponMeta } = await priceOrder(
+    subtotal,
+    input.couponCode,
+    input.shippingAddress?.city
+  );
 
   let couponClaimed = false;
   if (couponMeta) {

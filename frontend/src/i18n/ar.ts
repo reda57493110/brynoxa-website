@@ -284,6 +284,7 @@ export const ar: Messages = {
     fullName: 'الاسم الكامل',
     address: 'العنوان',
     city: 'المدينة',
+    shippingForCity: 'الشحن إلى هذه المدينة: {amount}',
     couponTitle: 'قسيمة وملاحظة',
     couponCode: 'رمز القسيمة',
     apply: 'تطبيق',

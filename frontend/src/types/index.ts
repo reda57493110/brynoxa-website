@@ -246,6 +246,7 @@ export interface StoreSettings {
   currency: string
   shippingFlatRate: number
   freeShippingMin: number
+  shippingByCity?: { city: string; rate: number }[]
   taxRate: number
   supportEmail: string
   codEnabled: boolean

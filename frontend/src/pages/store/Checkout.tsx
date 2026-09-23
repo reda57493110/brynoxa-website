@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { saveGuestReceipt } from '@/lib/guestReceipt'
 import { formatCurrency } from '@/lib/format'
+import { resolveShippingFee } from '@/lib/shipping'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -109,15 +110,13 @@ export function Checkout() {
   })
 
   const taxRate = settings.data?.taxRate ?? 0
-  const shippingRate = settings.data?.shippingFlatRate ?? 0
-  const freeShippingMin = settings.data?.freeShippingMin ?? 0
+  const shipping = resolveShippingFee(settings.data, address.city, subtotal)
   const taxable = Math.max(0, subtotal - discount)
-  const shipping =
-    freeShippingMin > 0 && subtotal >= freeShippingMin
-      ? 0
-      : shippingRate
   const tax = (taxable * taxRate) / 100
   const total = taxable + shipping + tax
+  const cityRateOptions = settings.data?.shippingByCity ?? []
+  const freeShippingMin = settings.data?.freeShippingMin ?? 0
+  const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
 
   const placeOrder = useMutation({
     mutationFn: () =>
@@ -412,8 +411,23 @@ export function Checkout() {
                   label={t('checkout.city')}
                   value={address.city}
                   onChange={(e) => set('city', e.target.value)}
+                  list={cityRateOptions.length ? 'checkout-city-rates' : undefined}
                   required
                 />
+                {cityRateOptions.length ? (
+                  <datalist id="checkout-city-rates">
+                    {cityRateOptions.map((row) => (
+                      <option key={row.city} value={row.city} />
+                    ))}
+                  </datalist>
+                ) : null}
+                {!qualifiesFreeShipping && address.city.trim() ? (
+                  <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
+                    {t('checkout.shippingForCity', {
+                      amount: formatCurrency(shipping),
+                    })}
+                  </p>
+                ) : null}
               </div>
             </section>
 

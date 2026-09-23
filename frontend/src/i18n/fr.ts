@@ -285,6 +285,7 @@ export const fr: Messages = {
     fullName: 'Nom complet',
     address: 'Adresse',
     city: 'Ville',
+    shippingForCity: 'Livraison vers cette ville : {amount}',
     couponTitle: 'Coupon et note',
     couponCode: 'Code promo',
     apply: 'Appliquer',

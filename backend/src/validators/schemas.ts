@@ -178,6 +178,15 @@ export const settingsSchema = z.object({
   currency: z.string().optional(),
   shippingFlatRate: z.number().min(0).optional(),
   freeShippingMin: z.number().min(0).optional(),
+  shippingByCity: z
+    .array(
+      z.object({
+        city: z.string().trim().min(2).max(80),
+        rate: z.number().min(0),
+      })
+    )
+    .max(200)
+    .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
   codEnabled: z.boolean().optional(),

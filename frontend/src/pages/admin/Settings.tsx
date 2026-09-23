@@ -31,6 +31,7 @@ export function Settings() {
     currency: 'MAD',
     shippingFlatRate: 0,
     freeShippingMin: 0,
+    shippingByCity: [] as { city: string; rate: number }[],
     taxRate: 0,
     supportEmail: 'brynoxa.com@gmail.com',
     codEnabled: true,
@@ -39,6 +40,8 @@ export function Settings() {
   const [catName, setCatName] = useState('')
   const [catDescription, setCatDescription] = useState('')
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null)
+  const [newCity, setNewCity] = useState('')
+  const [newCityRate, setNewCityRate] = useState(0)
 
   useEffect(() => {
     if (settings.data) {
@@ -47,6 +50,7 @@ export function Settings() {
         currency: settings.data.currency,
         shippingFlatRate: settings.data.shippingFlatRate,
         freeShippingMin: settings.data.freeShippingMin,
+        shippingByCity: settings.data.shippingByCity ?? [],
         taxRate: settings.data.taxRate,
         supportEmail: settings.data.supportEmail,
         codEnabled: settings.data.codEnabled,
@@ -140,6 +144,9 @@ export function Settings() {
             value={form.shippingFlatRate}
             onChange={(e) => setForm({ ...form, shippingFlatRate: Number(e.target.value) })}
           />
+          <p className="-mt-2 text-xs text-[var(--fg-muted)]">
+            Default fee for cities without a custom rate below.
+          </p>
           <Input
             label="Free shipping minimum (DH)"
             type="number"
@@ -147,6 +154,102 @@ export function Settings() {
             value={form.freeShippingMin}
             onChange={(e) => setForm({ ...form, freeShippingMin: Number(e.target.value) })}
           />
+
+          <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
+            <div>
+              <h3 className="text-sm font-semibold">City shipping rates</h3>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                Optional overrides (e.g. Casablanca cheaper than remote cities). Matching is
+                case-insensitive.
+              </p>
+            </div>
+            <ul className="space-y-2">
+              {form.shippingByCity.map((row, idx) => (
+                <li key={`${row.city}-${idx}`} className="flex flex-wrap items-end gap-2">
+                  <Input
+                    label={idx === 0 ? 'City' : undefined}
+                    value={row.city}
+                    onChange={(e) => {
+                      const next = [...form.shippingByCity]
+                      next[idx] = { ...next[idx], city: e.target.value }
+                      setForm({ ...form, shippingByCity: next })
+                    }}
+                    className="min-w-[8rem] flex-1"
+                  />
+                  <Input
+                    label={idx === 0 ? 'Rate (DH)' : undefined}
+                    type="number"
+                    min={0}
+                    value={row.rate}
+                    onChange={(e) => {
+                      const next = [...form.shippingByCity]
+                      next[idx] = { ...next[idx], rate: Number(e.target.value) }
+                      setForm({ ...form, shippingByCity: next })
+                    }}
+                    className="w-28"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mb-0.5"
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        shippingByCity: form.shippingByCity.filter((_, i) => i !== idx),
+                      })
+                    }
+                  >
+                    Remove
+                  </Button>
+                </li>
+              ))}
+              {!form.shippingByCity.length ? (
+                <p className="text-xs text-[var(--fg-muted)]">No city overrides yet.</p>
+              ) : null}
+            </ul>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <Input
+                label="Add city"
+                value={newCity}
+                onChange={(e) => setNewCity(e.target.value)}
+                placeholder="e.g. Casablanca"
+                className="flex-1"
+              />
+              <Input
+                label="Rate (DH)"
+                type="number"
+                min={0}
+                value={newCityRate}
+                onChange={(e) => setNewCityRate(Number(e.target.value))}
+                className="w-28"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const city = newCity.trim()
+                  if (city.length < 2) return
+                  const exists = form.shippingByCity.some(
+                    (r) => r.city.trim().toLowerCase() === city.toLowerCase()
+                  )
+                  if (exists) {
+                    toast('That city is already listed', 'error')
+                    return
+                  }
+                  setForm({
+                    ...form,
+                    shippingByCity: [...form.shippingByCity, { city, rate: Math.max(0, newCityRate) }],
+                  })
+                  setNewCity('')
+                  setNewCityRate(form.shippingFlatRate)
+                }}
+              >
+                Add city
+              </Button>
+            </div>
+          </div>
+
           <Input
             label="Tax rate (%)"
             type="number"

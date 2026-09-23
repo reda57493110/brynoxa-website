@@ -13,6 +13,7 @@ const ALLOWED_FIELDS = [
   'currency',
   'shippingFlatRate',
   'freeShippingMin',
+  'shippingByCity',
   'taxRate',
   'supportEmail',
   'codEnabled',
@@ -38,7 +39,7 @@ module.exports = async (req, res) => {
 
       for (const key of ALLOWED_FIELDS) {
         if (body[key] !== undefined) {
-          settings[key] = body[key];
+          settings[key] = key === 'shippingByCity' ? sanitizeShippingByCity(body[key]) : body[key];
         }
       }
       await settings.save();
@@ -61,3 +62,20 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+function sanitizeShippingByCity(rows) {
+  if (!Array.isArray(rows)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const row of rows) {
+    if (!row || typeof row !== 'object') continue;
+    const city = String(row.city || '').trim();
+    const rate = Number(row.rate);
+    if (city.length < 2 || !Number.isFinite(rate) || rate < 0) continue;
+    const key = city.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ city, rate });
+  }
+  return out.slice(0, 200);
+}
