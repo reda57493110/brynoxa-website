@@ -21,6 +21,23 @@ async function resolveBrandId(brand: string) {
   return doc?._id?.toString() || null;
 }
 
+/** Storefront-only: products must belong to an active category. */
+async function activeCategoryObjectIds() {
+  const cats = await Category.find({
+    isActive: true,
+    slug: { $nin: ['office', 'networking'] },
+  }).select('_id');
+  return cats.map((c) => c._id);
+}
+
+function categoryIsActive(category: unknown): boolean {
+  if (!category || typeof category !== 'object') return false;
+  const doc = category as { isActive?: boolean; slug?: string };
+  if (doc.slug === 'office' || doc.slug === 'networking') return false;
+  // Missing isActive on lean/partial populate → assume active only if not explicitly false
+  return doc.isActive !== false;
+}
+
 export async function listCategories(activeOnly = true) {
   const filter: Record<string, unknown> = {
     slug: { $nin: ['office', 'networking'] },
@@ -157,7 +174,24 @@ export async function listProducts(query: ProductQuery) {
     if (!categoryId) {
       return { items: [], total: 0, page: query.page, limit: query.limit };
     }
+    // Hidden categories are not browsable on the storefront.
+    if (!query.admin) {
+      const active = await Category.findOne({
+        _id: categoryId,
+        isActive: true,
+        slug: { $nin: ['office', 'networking'] },
+      }).select('_id');
+      if (!active) {
+        return { items: [], total: 0, page: query.page, limit: query.limit };
+      }
+    }
     filter.category = categoryId;
+  } else if (!query.admin) {
+    const activeIds = await activeCategoryObjectIds();
+    if (!activeIds.length) {
+      return { items: [], total: 0, page: query.page, limit: query.limit };
+    }
+    filter.category = { $in: activeIds };
   }
   if (query.brand) {
     const brandId = await resolveBrandId(query.brand);
@@ -208,7 +242,7 @@ export async function listProducts(query: ProductQuery) {
       .sort(sort)
       .skip(skip)
       .limit(query.limit)
-      .populate('category', 'name slug')
+      .populate('category', 'name slug isActive')
       .populate('brand', 'name slug logo'),
     Product.countDocuments(filter),
   ]);
@@ -218,15 +252,18 @@ export async function listProducts(query: ProductQuery) {
 
 export async function getProductBySlug(slug: string) {
   const product = await Product.findOne({ slug, isActive: true })
-    .populate('category', 'name slug')
+    .populate('category', 'name slug isActive')
     .populate('brand', 'name slug logo');
   if (!product) throw new ApiError(404, 'Product not found');
+  if (!categoryIsActive(product.category)) {
+    throw new ApiError(404, 'Product not found');
+  }
   return product;
 }
 
 export async function getProductById(id: string) {
   const product = await Product.findById(id)
-    .populate('category', 'name slug')
+    .populate('category', 'name slug isActive')
     .populate('brand', 'name slug logo');
   if (!product) throw new ApiError(404, 'Product not found');
   return product;
@@ -326,7 +363,13 @@ export async function updateInventory(
 }
 
 export async function getProductsByIds(ids: string[]) {
-  return Product.find({ _id: { $in: ids }, isActive: true })
-    .populate('category', 'name slug')
+  const activeIds = await activeCategoryObjectIds();
+  if (!activeIds.length) return [];
+  return Product.find({
+    _id: { $in: ids },
+    isActive: true,
+    category: { $in: activeIds },
+  })
+    .populate('category', 'name slug isActive')
     .populate('brand', 'name slug');
 }

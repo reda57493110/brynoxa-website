@@ -178,7 +178,8 @@ export function Settings() {
         <div>
           <h2 className="font-display text-lg font-semibold">Categories</h2>
           <p className="text-sm text-[var(--fg-muted)]">
-            Add categories for your products. They appear in the shop and product form.
+            Add categories for your products. Hide removes a category and its products from the
+            shop (admin catalog still shows them).
           </p>
         </div>
 

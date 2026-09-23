@@ -12,11 +12,22 @@ export async function getWishlist(userId: string) {
   const wishlist = await getOrCreate(userId);
   await wishlist.populate({
     path: 'products',
+    match: { isActive: true },
     populate: [
-      { path: 'category', select: 'name slug' },
+      { path: 'category', select: 'name slug isActive' },
       { path: 'brand', select: 'name slug' },
     ],
   });
+  // Drop products whose category was hidden from the storefront.
+  const products = (wishlist.products || []).filter((p) => {
+    if (!p || typeof p !== 'object') return false;
+    const cat = (p as { category?: { isActive?: boolean; slug?: string } }).category;
+    if (!cat) return true;
+    if (cat.isActive === false) return false;
+    if (cat.slug === 'office' || cat.slug === 'networking') return false;
+    return true;
+  });
+  wishlist.products = products as typeof wishlist.products;
   return wishlist;
 }
 
