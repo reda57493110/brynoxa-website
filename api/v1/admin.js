@@ -104,6 +104,72 @@ async function handleBrandMutation(req, res, route) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
+async function handleProductRoutes(req, res, route) {
+  const catalog = require('../../backend/dist/services/catalog.service');
+
+  if (req.method === 'POST' && route === 'products') {
+    const user = await requireStaff(req, res, ['products:write']);
+    if (!user) return;
+    const body = await readJsonBody(req);
+    const item = await catalog.createProduct(body);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 201, { success: true, message: 'Product created', data: item });
+    return;
+  }
+
+  const inventoryMatch = route.match(/^products\/([^/]+)\/inventory$/);
+  if (inventoryMatch && req.method === 'PATCH') {
+    const user = await requireStaff(req, res, ['inventory:write']);
+    if (!user) return;
+    const body = await readJsonBody(req);
+    const item = await catalog.updateInventory(
+      inventoryMatch[1],
+      Number(body.stock),
+      body.lowStockThreshold !== undefined ? Number(body.lowStockThreshold) : undefined
+    );
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Inventory updated', data: item });
+    return;
+  }
+
+  const match = route.match(/^products\/([^/]+)$/);
+  if (!match) {
+    sendJson(res, 405, { success: false, message: 'Method not allowed' });
+    return;
+  }
+
+  const id = match[1];
+
+  if (req.method === 'GET') {
+    const user = await requireStaff(req, res, ['products:read']);
+    if (!user) return;
+    const item = await catalog.getProductById(id);
+    sendJson(res, 200, { success: true, message: 'Success', data: item });
+    return;
+  }
+
+  if (req.method === 'PATCH') {
+    const user = await requireStaff(req, res, ['products:write']);
+    if (!user) return;
+    const body = await readJsonBody(req);
+    const item = await catalog.updateProduct(id, body);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Product updated', data: item });
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    const user = await requireStaff(req, res, ['products:delete']);
+    if (!user) return;
+    await catalog.deleteProduct(id);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Product deleted', data: null });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -134,6 +200,12 @@ module.exports = async (req, res) => {
         return;
       }
       await handleBrandMutation(req, res, route);
+      return;
+    }
+
+    // Admin product CRUD + inventory — keep off the slow Express lambda.
+    if (route === 'products' || route.startsWith('products/')) {
+      await handleProductRoutes(req, res, route);
       return;
     }
 
