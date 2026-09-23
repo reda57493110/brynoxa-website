@@ -4,6 +4,7 @@
   "buildCommand": "npm run build --prefix backend && npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin?__route=$1" },
     { "source": "/api/v1/products/(.*)", "destination": "/api/v1/products?__route=$1" },
     { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
@@ -25,6 +26,10 @@
     "api/index.js": {
       "includeFiles": "backend/dist/**",
       "maxDuration": 60
+    },
+    "api/sitemap.js": {
+      "includeFiles": "backend/dist/**",
+      "maxDuration": 30
     },
     "api/v1/health.js": {
       "maxDuration": 10
