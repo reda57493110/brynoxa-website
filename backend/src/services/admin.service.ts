@@ -222,6 +222,7 @@ export async function setCustomerActive(id: string, isActive: boolean) {
     { isActive },
     { new: true }
   );
+  if (!user) throw new ApiError(404, 'Customer not found');
   return user;
 }
 

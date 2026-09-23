@@ -278,6 +278,32 @@ async function handleOrderRoutes(req, res, route, query) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
+async function handleCustomerRoutes(req, res, route, query) {
+  const adminService = require('../../backend/dist/services/admin.service');
+
+  if (route === 'customers' && req.method === 'GET') {
+    const user = await requireStaff(req, res, ['customers:read']);
+    if (!user) return;
+    const page = Number(query.page || 1);
+    const limit = Number(query.limit || 20);
+    const result = await adminService.listCustomers(page, limit, query.q);
+    sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
+    return;
+  }
+
+  const match = route.match(/^customers\/([^/]+)$/);
+  if (match && req.method === 'PATCH') {
+    const user = await requireStaff(req, res, ['customers:write']);
+    if (!user) return;
+    const body = await readJsonBody(req);
+    const item = await adminService.setCustomerActive(match[1], Boolean(body.isActive));
+    sendJson(res, 200, { success: true, message: 'Customer updated', data: item });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -335,6 +361,12 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Customers list + enable/disable
+    if (route === 'customers' || route.startsWith('customers/')) {
+      await handleCustomerRoutes(req, res, route, query);
+      return;
+    }
+
     if (req.method !== 'GET') {
       sendJson(res, 405, { success: false, message: 'Method not allowed' });
       return;
@@ -362,15 +394,6 @@ module.exports = async (req, res) => {
       const stats = await getDashboardStats();
       dashboardCache = { at: now, data: stats };
       sendJson(res, 200, { success: true, message: 'Success', data: stats });
-      return;
-    }
-
-    if (route === 'customers') {
-      const user = await requireStaff(req, res, ['customers:read']);
-      if (!user) return;
-      const { listCustomers } = require('../../backend/dist/services/admin.service');
-      const result = await listCustomers(page, limit, query.q);
-      sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
       return;
     }
 
