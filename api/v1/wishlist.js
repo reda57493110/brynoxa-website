@@ -16,11 +16,45 @@ function parseUrl(url = '') {
   };
 }
 
-function resolveRoute(pathname, query) {
+function resolveRoute(pathname, query, resource = 'wishlist') {
   if (query.__route) {
     return String(query.__route).replace(/^\/+|\/+$/g, '');
   }
-  return pathname.replace(/^\/api\/v1\/wishlist\/?/, '').replace(/\/$/, '');
+  const prefix =
+    resource === 'notifications' ? /^\/api\/v1\/notifications\/?/ : /^\/api\/v1\/wishlist\/?/;
+  return pathname.replace(prefix, '').replace(/\/$/, '');
+}
+
+async function handleNotifications(req, res, userId, route) {
+  const notificationService = require('../../backend/dist/services/notification.service');
+
+  if (!route && req.method === 'GET') {
+    const [items, unread] = await Promise.all([
+      notificationService.listNotifications(userId),
+      notificationService.unreadCount(userId),
+    ]);
+    sendJson(res, 200, {
+      success: true,
+      message: 'Success',
+      data: { items, unread },
+    });
+    return;
+  }
+
+  if (route === 'read-all' && req.method === 'POST') {
+    const items = await notificationService.markAllRead(userId);
+    sendJson(res, 200, { success: true, message: 'Success', data: items });
+    return;
+  }
+
+  const readMatch = route.match(/^([^/]+)\/read$/);
+  if (readMatch && req.method === 'PATCH') {
+    const item = await notificationService.markRead(userId, readMatch[1]);
+    sendJson(res, 200, { success: true, message: 'Success', data: item });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
 module.exports = async (req, res) => {
@@ -32,7 +66,15 @@ module.exports = async (req, res) => {
 
     const userId = user._id.toString();
     const { pathname, query } = parseUrl(req.url || '');
-    const route = resolveRoute(pathname, query);
+    const resource = query.__resource === 'notifications' ? 'notifications' : 'wishlist';
+    const route = resolveRoute(pathname, query, resource);
+
+    // Notifications rewritten here to stay under the Hobby 12-function limit.
+    if (resource === 'notifications') {
+      await handleNotifications(req, res, userId, route);
+      return;
+    }
+
     const wishlistService = require('../../backend/dist/services/wishlist.service');
 
     // GET /wishlist
