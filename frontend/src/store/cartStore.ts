@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CartItem } from '@/types'
+import { trackAddToCart } from '@/lib/analytics'
 
 interface CartState {
   items: CartItem[]
@@ -32,6 +33,13 @@ export const useCartStore = create<CartState>()(
           return {
             items: [...state.items, { ...item, qty: Math.min(qty, item.stock) }],
           }
+        })
+        trackAddToCart({
+          item_id: item.productId,
+          item_name: item.name,
+          item_sku: item.sku,
+          price: item.price,
+          quantity: qty,
         })
       },
       removeItem: (productId) =>

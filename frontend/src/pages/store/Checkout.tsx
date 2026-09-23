@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { saveGuestReceipt } from '@/lib/guestReceipt'
 import { formatCurrency } from '@/lib/format'
+import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
@@ -34,6 +35,22 @@ export function Checkout() {
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)
   const isAuth = Boolean(user)
+  const beganCheckout = useRef(false)
+
+  useEffect(() => {
+    if (!items.length || beganCheckout.current) return
+    beganCheckout.current = true
+    trackBeginCheckout(
+      items.map((i) => ({
+        item_id: i.productId,
+        item_name: i.name,
+        item_sku: i.sku,
+        price: i.price,
+        quantity: i.qty,
+      })),
+      subtotal
+    )
+  }, [items, subtotal])
 
   const emptyAddress: Address = {
     label: t('account.homeLabel'),
@@ -125,6 +142,18 @@ export function Checkout() {
     onSuccess: (res) => {
       const payload = res.data.data
       const order = payload.order
+      trackPurchase({
+        transactionId: order.orderNumber,
+        value: order.pricing?.total ?? subtotal,
+        coupon: appliedCoupon || undefined,
+        items: items.map((i) => ({
+          item_id: i.productId,
+          item_name: i.name,
+          item_sku: i.sku,
+          price: i.price,
+          quantity: i.qty,
+        })),
+      })
       if (payload.user && payload.accessToken) {
         setAuth(payload.user, payload.accessToken)
       } else if (!isAuth && payload.receiptToken) {

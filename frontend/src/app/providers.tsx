@@ -8,6 +8,7 @@ import { useWishlistStore } from '@/store/wishlistStore'
 import { restoreSession } from '@/api/client'
 import { wishlistApi } from '@/api/wishlistApi'
 import { Toaster } from '@/components/ui/Toaster'
+import { AnalyticsListener } from '@/components/analytics/AnalyticsListener'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,6 +66,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <BrowserRouter>
         <BootstrapAuth>
           {children}
+          <AnalyticsListener />
           <Toaster />
         </BootstrapAuth>
       </BrowserRouter>

@@ -9,6 +9,7 @@ import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore, type WhatsAppTopic } from '@/store/whatsappStore'
 import { composeWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp'
+import { trackWhatsApp } from '@/lib/analytics'
 import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT } from '@/lib/site'
 import { useT } from '@/hooks/useT'
@@ -178,6 +179,11 @@ export function WhatsAppHost() {
 
   const startChat = () => {
     if (!selected || !preview) return
+    trackWhatsApp({
+      stage: 'send',
+      topic: selected,
+      productName: productName || undefined,
+    })
     close()
     openWhatsApp(preview)
   }

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { trackWhatsApp } from '@/lib/analytics'
 
 export type WhatsAppTopic = 'product' | 'order' | 'advice' | 'warranty' | 'return' | 'other'
 
@@ -27,6 +28,11 @@ export const useWhatsAppStore = create<WhatsAppState>((set) => ({
   productName: '',
   open: (opts?: OpenOpts) => {
     const next = readOpenOpts(opts)
+    trackWhatsApp({
+      stage: 'open',
+      topic: next.topic ?? null,
+      productName: next.productName,
+    })
     set({
       isOpen: true,
       topic: next.topic ?? null,

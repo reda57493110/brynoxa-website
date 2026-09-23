@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
+import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
@@ -132,6 +133,10 @@ export function Shop() {
         : t('meta.shopDescription')),
     path: '/shop',
   })
+
+  useEffect(() => {
+    if (filters.q) trackSearch(filters.q)
+  }, [filters.q])
 
   const activeBrand = brandList.find((b) => b.slug === filters.brand)
   const total = products.data?.meta?.total ?? 0

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -28,6 +28,7 @@ import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
+import { trackViewItem } from '@/lib/analytics'
 import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
@@ -64,6 +65,17 @@ export function ProductDetail() {
     queryFn: async () => (await productsApi.getBySlug(slug)).data.data,
     enabled: Boolean(slug),
   })
+
+  useEffect(() => {
+    if (!product.data) return
+    trackViewItem({
+      item_id: product.data._id,
+      item_name: product.data.name,
+      item_sku: product.data.sku,
+      price: product.data.price,
+      quantity: 1,
+    })
+  }, [product.data?._id])
 
   const productImage = product.data ? primaryImage(product.data) : undefined
   const productDescription =
