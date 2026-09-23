@@ -7,6 +7,11 @@ import { getSettings } from '../models/Settings';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
+import {
+  notifyOrderPlaced,
+  notifyOrderStatusChanged,
+  statusNotificationCopy,
+} from './orderNotify.service';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -181,16 +186,21 @@ export async function createCodOrder(input: {
   }
 
   try {
+    const copy = statusNotificationCopy('pending');
     await Notification.create({
       user: input.userId,
       type: 'order',
-      title: 'Order placed',
-      message: `Your order ${order.orderNumber} has been placed. Pay cash on delivery.`,
+      title: copy.title,
+      message: `${copy.customerLine} (${order.orderNumber})`,
       link: `/account/orders/${order.orderNumber}`,
     });
   } catch (error) {
     console.error('Order notification failed', error);
   }
+
+  void notifyOrderPlaced(order).catch((error) => {
+    console.error('Order placed email failed', error);
+  });
 
   return { order, receiptToken };
 }
@@ -346,16 +356,21 @@ export async function updateOrderStatus(
   await order.save();
 
   try {
+    const copy = statusNotificationCopy(orderStatus);
     await Notification.create({
       user: order.user,
       type: 'order',
-      title: 'Order updated',
-      message: `Order ${order.orderNumber} is now ${orderStatus}.`,
+      title: copy.title,
+      message: `${copy.customerLine} (${order.orderNumber})`,
       link: `/account/orders/${order.orderNumber}`,
     });
   } catch (error) {
     console.error('Order status notification failed', error);
   }
+
+  void notifyOrderStatusChanged(order, orderStatus).catch((error) => {
+    console.error('Order status email failed', error);
+  });
 
   return order;
 }
