@@ -29,6 +29,8 @@ const ACCOUNT_ACTIONS = new Set([
   'mfa/login',
 ]);
 
+const MFA_MANAGE_ACTIONS = new Set(['mfa/setup', 'mfa/verify', 'mfa/disable']);
+
 module.exports = async (req, res) => {
   const { pathname, query } = parseUrl(req.url || '');
   const route = resolveRoute(pathname, query);
@@ -49,6 +51,11 @@ module.exports = async (req, res) => {
   if (ACCOUNT_ACTIONS.has(fullAction)) {
     req.__authAction = fullAction;
     return require('../_lib/auth-routes/account')(req, res);
+  }
+
+  if (MFA_MANAGE_ACTIONS.has(fullAction)) {
+    req.__authAction = fullAction;
+    return require('../_lib/auth-routes/mfa')(req, res);
   }
 
   const handlers = {
