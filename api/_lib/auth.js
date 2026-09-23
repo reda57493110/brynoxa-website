@@ -8,9 +8,31 @@ if (!module.paths.includes(backendNodeModules)) {
   module.paths.unshift(backendNodeModules);
 }
 
-async function requireUser(req, res) {
+async function loadUserFromAuthHeader(req) {
   await connectMongo();
 
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Bearer ')) return null;
+
+  let payload;
+  try {
+    payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET);
+  } catch {
+    return null;
+  }
+
+  const { User } = require('../../backend/dist/models/User');
+  const user = await User.findById(payload.userId);
+  if (!user || !user.isActive) return null;
+  return user;
+}
+
+/** Optional auth — returns null when missing/invalid (no 401). */
+async function optionalUser(req) {
+  return loadUserFromAuthHeader(req);
+}
+
+async function requireUser(req, res) {
   const header = req.headers.authorization || '';
   if (!header.startsWith('Bearer ')) {
     sendJson(res, 401, { success: false, message: 'Authentication required' });
@@ -25,6 +47,7 @@ async function requireUser(req, res) {
     return null;
   }
 
+  await connectMongo();
   const { User } = require('../../backend/dist/models/User');
   const user = await User.findById(payload.userId);
   if (!user || !user.isActive) {
@@ -52,4 +75,4 @@ async function requireStaff(req, res, permissions = []) {
   return user;
 }
 
-module.exports = { requireUser, requireStaff };
+module.exports = { optionalUser, requireUser, requireStaff };
