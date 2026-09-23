@@ -9,9 +9,10 @@
     { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
     { "source": "/api/v1/orders/(.*)", "destination": "/api/v1/orders?__route=$1" },
     { "source": "/api/v1/coupons/validate", "destination": "/api/v1/orders?__route=coupons/validate" },
+    { "source": "/api/v1/wishlist/(.*)", "destination": "/api/v1/wishlist?__route=$1" },
     { "source": "/api/v1/auth/me/(.*)", "destination": "/api/v1/auth?__route=me/$1" },
     { "source": "/api/v1/auth/(login|csrf|refresh|logout|change-password|me)", "destination": "/api/v1/auth?__route=$1" },
-    { "source": "/api/v1/((?!health$|db-ping$|auth$|products$|categories$|settings$|admin$|orders$).*)", "destination": "/api" },
+    { "source": "/api/v1/((?!health$|db-ping$|auth$|products$|categories$|settings$|admin$|orders$|wishlist$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
@@ -40,6 +41,10 @@
     },
     "api/v1/orders.js": {
       "maxDuration": 60,
+      "includeFiles": "backend/dist/**"
+    },
+    "api/v1/wishlist.js": {
+      "maxDuration": 30,
       "includeFiles": "backend/dist/**"
     },
     "api/v1/settings.js": {
