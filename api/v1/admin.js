@@ -68,6 +68,42 @@ async function handleCategoryMutation(req, res, route) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
+async function handleBrandMutation(req, res, route) {
+  const user = await requireStaff(req, res, ['products:write']);
+  if (!user) return;
+
+  const catalog = require('../../backend/dist/services/catalog.service');
+
+  if (req.method === 'POST' && route === 'brands') {
+    const body = await readJsonBody(req);
+    const item = await catalog.createBrand(body);
+    sendJson(res, 201, { success: true, message: 'Brand created', data: item });
+    return;
+  }
+
+  const match = route.match(/^brands\/([^/]+)$/);
+  if (!match) {
+    sendJson(res, 405, { success: false, message: 'Method not allowed' });
+    return;
+  }
+
+  const id = match[1];
+  if (req.method === 'PATCH') {
+    const body = await readJsonBody(req);
+    const item = await catalog.updateBrand(id, body);
+    sendJson(res, 200, { success: true, message: 'Brand updated', data: item });
+    return;
+  }
+
+  if (req.method === 'DELETE') {
+    await catalog.deleteBrand(id);
+    sendJson(res, 200, { success: true, message: 'Brand deleted', data: null });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -88,6 +124,16 @@ module.exports = async (req, res) => {
         return;
       }
       await handleCategoryMutation(req, res, route);
+      return;
+    }
+
+    // Product form brand create/update — keep off the slow Express lambda.
+    if (route === 'brands' || route.startsWith('brands/')) {
+      if (req.method === 'GET') {
+        sendJson(res, 405, { success: false, message: 'Use GET /brands' });
+        return;
+      }
+      await handleBrandMutation(req, res, route);
       return;
     }
 

@@ -8,6 +8,7 @@
     { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin?__route=$1" },
     { "source": "/api/v1/products/(.*)", "destination": "/api/v1/products?__route=$1" },
     { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
+    { "source": "/api/v1/brands/(.*)", "destination": "/api/v1/brands?__route=$1" },
     { "source": "/api/v1/orders/(.*)", "destination": "/api/v1/orders?__route=$1" },
     { "source": "/api/v1/coupons/validate", "destination": "/api/v1/orders?__route=coupons/validate" },
     { "source": "/api/v1/wishlist/(.*)", "destination": "/api/v1/wishlist?__route=$1" },
@@ -19,7 +20,7 @@
     { "source": "/api/v1/auth/verification/(.*)", "destination": "/api/v1/auth?__route=verification/$1" },
     { "source": "/api/v1/auth/mfa/login", "destination": "/api/v1/auth?__route=mfa/login" },
     { "source": "/api/v1/auth/(login|csrf|refresh|logout|change-password|me|register)", "destination": "/api/v1/auth?__route=$1" },
-    { "source": "/api/v1/((?!health$|db-ping$|auth$|products$|categories$|settings$|admin$|orders$|wishlist$|contact$|reviews$|notifications$).*)", "destination": "/api" },
+    { "source": "/api/v1/((?!health$|db-ping$|auth$|products$|categories$|brands$|settings$|admin$|orders$|wishlist$|contact$|reviews$|notifications$).*)", "destination": "/api" },
     { "source": "/api/v1", "destination": "/api" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
@@ -48,6 +49,10 @@
     },
     "api/v1/categories.js": {
       "maxDuration": 60,
+      "includeFiles": "backend/dist/**"
+    },
+    "api/v1/brands.js": {
+      "maxDuration": 30,
       "includeFiles": "backend/dist/**"
     },
     "api/v1/orders.js": {
