@@ -42,7 +42,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               alt={current.alt || name}
               referrerPolicy="no-referrer"
               decoding="async"
-              className="h-full w-full object-contain p-3 sm:object-cover sm:p-0"
+              className="h-full w-full object-cover"
             />
           </motion.div>
         </AnimatePresence>
