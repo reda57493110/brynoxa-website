@@ -136,6 +136,11 @@ export const setCustomerActive = asyncHandler(async (req: Request, res: Response
   sendSuccess(res, user, 'Customer updated');
 });
 
+export const deleteCustomer = asyncHandler(async (req: Request, res: Response) => {
+  await adminService.deleteCustomer(param(req, 'id'));
+  sendSuccess(res, null, 'Customer deleted');
+});
+
 export const users = asyncHandler(async (req: Request, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;

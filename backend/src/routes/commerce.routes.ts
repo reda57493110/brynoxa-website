@@ -60,6 +60,12 @@ router.patch(
   validate(updateOrderStatusSchema),
   order.updateOrderStatus
 );
+router.delete(
+  '/admin/orders/:id',
+  requireAuth,
+  requirePermission('orders:write'),
+  order.deleteOrder
+);
 
 router.get('/products/:id/reviews', misc.productReviews);
 router.post('/reviews', requireAuth, validate(reviewSchema), misc.createReview);
@@ -123,6 +129,12 @@ router.patch(
   requireAuth,
   requirePermission('customers:write'),
   misc.setCustomerActive
+);
+router.delete(
+  '/admin/customers/:id',
+  requireAuth,
+  requirePermission('customers:write'),
+  misc.deleteCustomer
 );
 router.get('/admin/users', requireAuth, requirePermission('users:manage'), misc.users);
 router.post(

@@ -1,25 +1,32 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
+import { getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
 import { useAdminStats } from '@/hooks/useAdminStats'
+import { toast } from '@/store/toastStore'
 import type { OrderStatus, User } from '@/types'
 import { cn } from '@/lib/cn'
 
 export function Orders() {
+  const qc = useQueryClient()
   const stats = useAdminStats()
   const [params, setParams] = useSearchParams()
   const status = (params.get('status') || '') as OrderStatus | ''
   const [q, setQ] = useState(params.get('q') || '')
   const page = Number(params.get('page') || 1)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     setQ(params.get('q') || '')
@@ -37,6 +44,16 @@ export function Orders() {
       return { items: res.data.data, meta: res.data.meta }
     },
     placeholderData: keepPreviousData,
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: string) => adminApi.orders.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-orders'] })
+      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      toast.success('Order deleted')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const setFilter = (patch: Record<string, string | undefined>) => {
@@ -114,37 +131,50 @@ export function Orders() {
             {items.map((o) => {
               const user = o.user as User
               return (
-                <Link
+                <div
                   key={o._id}
-                  to={`/admin/orders/${o._id}`}
-                  className="block min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 transition active:border-[var(--brand)]"
+                  className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
                 >
-                  <div className="flex min-w-0 items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <p className="truncate text-sm font-medium text-[var(--brand-text)]">
-                        #{o.orderNumber}
+                  <Link
+                    to={`/admin/orders/${o._id}`}
+                    className="block transition active:border-[var(--brand)]"
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1 overflow-hidden">
+                        <p className="truncate text-sm font-medium text-[var(--brand-text)]">
+                          #{o.orderNumber}
+                        </p>
+                        <p className="mt-0.5 truncate text-sm text-[var(--fg)]">
+                          {user?.name || '—'}
+                        </p>
+                        <p className="truncate text-[11px] text-[var(--fg-muted)]">{user?.email}</p>
+                      </div>
+                      <p className="shrink-0 text-sm font-semibold tabular-nums">
+                        {formatCurrency(o.pricing.total)}
                       </p>
-                      <p className="mt-0.5 truncate text-sm text-[var(--fg)]">
-                        {user?.name || '—'}
-                      </p>
-                      <p className="truncate text-[11px] text-[var(--fg-muted)]">{user?.email}</p>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold tabular-nums">
-                      {formatCurrency(o.pricing.total)}
+                    <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+                      <Badge variant={orderStatusVariant(o.orderStatus)}>
+                        {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+                      </Badge>
+                      <span className="text-[11px] uppercase text-[var(--fg-muted)]">
+                        {o.paymentMethod} · {o.paymentStatus}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
+                      {formatDateTime(o.createdAt)}
                     </p>
+                  </Link>
+                  <div className="mt-2.5 flex justify-end">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDeleteId(o._id)}
+                    >
+                      <SiteIcon name="trash" size={14} /> Delete
+                    </Button>
                   </div>
-                  <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
-                    <Badge variant={orderStatusVariant(o.orderStatus)}>
-                      {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
-                    </Badge>
-                    <span className="text-[11px] uppercase text-[var(--fg-muted)]">
-                      {o.paymentMethod} · {o.paymentStatus}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
-                    {formatDateTime(o.createdAt)}
-                  </p>
-                </Link>
+                </div>
               )
             })}
             {!items.length ? (
@@ -155,7 +185,7 @@ export function Orders() {
           </div>
 
           <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[780px] text-left text-sm">
               <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
                 <tr>
                   <th className="px-4 py-3">Order</th>
@@ -164,6 +194,7 @@ export function Orders() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Pay</th>
                   <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody>
@@ -195,6 +226,16 @@ export function Orders() {
                       <td className="px-4 py-3 font-medium tabular-nums">
                         {formatCurrency(o.pricing.total)}
                       </td>
+                      <td className="px-4 py-3 text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label="Delete order"
+                          onClick={() => setDeleteId(o._id)}
+                        >
+                          <SiteIcon name="trash" size={16} />
+                        </Button>
+                      </td>
                     </tr>
                   )
                 })}
@@ -208,6 +249,18 @@ export function Orders() {
           />
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteId)}
+        title="Delete order?"
+        description="This permanently removes the order. Reserved stock is restored when needed."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) remove.mutate(deleteId, { onSuccess: () => setDeleteId(null) })
+        }}
+      />
     </div>
   )
 }

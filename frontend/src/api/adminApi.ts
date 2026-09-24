@@ -61,6 +61,7 @@ export const adminApi = {
       id: string,
       payload: { orderStatus: OrderStatus; adminNote?: string; note?: string }
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
+    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/orders/${id}`),
   },
 
   customers: {
@@ -68,6 +69,7 @@ export const adminApi = {
       api.get<ApiResponse<User[]>>('/admin/customers', { params }),
     setActive: (id: string, isActive: boolean) =>
       api.patch<ApiResponse<User>>(`/admin/customers/${id}`, { isActive }),
+    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/customers/${id}`),
   },
 
   users: {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -16,9 +17,11 @@ import type { OrderStatus, User } from '@/types'
 
 export function OrderDetail() {
   const { id = '' } = useParams()
+  const navigate = useNavigate()
   const qc = useQueryClient()
   const [status, setStatus] = useState<OrderStatus>('pending')
   const [note, setNote] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const order = useQuery({
     queryKey: ['admin-order', id],
@@ -47,6 +50,17 @@ export function OrderDetail() {
       qc.invalidateQueries({ queryKey: ['admin-orders'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       toast.success('Order updated')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.orders.remove(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-orders'] })
+      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      toast.success('Order deleted')
+      navigate('/admin/orders', { replace: true })
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -97,13 +111,22 @@ export function OrderDetail() {
           onChange={(e) => setStatus(e.target.value as OrderStatus)}
           options={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
         />
-        <Button
-          className="w-full lg:w-auto"
-          onClick={() => update.mutate()}
-          loading={update.isPending}
-        >
-          Update status
-        </Button>
+        <div className="flex w-full flex-col gap-2 lg:w-auto">
+          <Button
+            className="w-full"
+            onClick={() => update.mutate()}
+            loading={update.isPending}
+          >
+            Update status
+          </Button>
+          <Button
+            className="w-full"
+            variant="danger"
+            onClick={() => setConfirmDelete(true)}
+          >
+            Delete order
+          </Button>
+        </div>
         <Textarea
           className="lg:col-span-2"
           label="Internal note"
@@ -192,6 +215,16 @@ export function OrderDetail() {
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete order?"
+        description="This permanently removes the order. Reserved stock is restored when needed."
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => remove.mutate()}
+      />
     </div>
   )
 }

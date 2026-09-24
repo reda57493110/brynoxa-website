@@ -473,3 +473,31 @@ export async function getOrderById(id: string) {
   if (!order) throw new ApiError(404, 'Order not found');
   return order;
 }
+
+export async function deleteOrder(id: string) {
+  const order = await Order.findById(id);
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  if (order.stockReserved) {
+    await adjustStock(order, 'restore');
+    order.stockReserved = false;
+  }
+
+  if (order.coupon?.couponId && order.orderStatus !== 'cancelled') {
+    await Coupon.updateOne(
+      { _id: order.coupon.couponId, usedCount: { $gt: 0 } },
+      { $inc: { usedCount: -1 } }
+    );
+  }
+
+  await Order.deleteOne({ _id: order._id });
+  await Notification.deleteMany({
+    $or: [
+      { link: `/account/orders/${order.orderNumber}` },
+      { link: `/admin/orders/${order._id}` },
+      { message: new RegExp(order.orderNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) },
+    ],
+  });
+
+  invalidateDashboardCache();
+}

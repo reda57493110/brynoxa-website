@@ -117,3 +117,8 @@ export const updateOrderStatus = asyncHandler(async (req: AuthRequest, res: Resp
   );
   sendSuccess(res, order, 'Order updated');
 });
+
+export const deleteOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+  await orderService.deleteOrder(param(req, 'id'));
+  sendSuccess(res, null, 'Order deleted');
+});

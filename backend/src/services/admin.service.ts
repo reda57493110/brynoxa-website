@@ -2,6 +2,8 @@ import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { User } from '../models/User';
 import { Review } from '../models/Review';
+import { Wishlist } from '../models/Wishlist';
+import { Notification } from '../models/Notification';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { ApiError } from '../utils/ApiError';
 import { isProd } from '../config/env';
@@ -224,6 +226,20 @@ export async function setCustomerActive(id: string, isActive: boolean) {
   );
   if (!user) throw new ApiError(404, 'Customer not found');
   return user;
+}
+
+export async function deleteCustomer(id: string) {
+  const user = await User.findOne({ _id: id, role: 'customer' });
+  if (!user) throw new ApiError(404, 'Customer not found');
+
+  await Promise.all([
+    Wishlist.deleteMany({ user: user._id }),
+    Notification.deleteMany({ user: user._id }),
+    Review.deleteMany({ user: user._id }),
+    User.deleteOne({ _id: user._id, role: 'customer' }),
+  ]);
+
+  invalidateDashboardCache();
 }
 
 export async function listUsers(

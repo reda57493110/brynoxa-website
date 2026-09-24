@@ -275,6 +275,15 @@ async function handleOrderRoutes(req, res, route, query) {
     return;
   }
 
+  if (match && req.method === 'DELETE') {
+    const user = await requireStaff(req, res, ['orders:write']);
+    if (!user) return;
+    await orderService.deleteOrder(match[1]);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Order deleted', data: null });
+    return;
+  }
+
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
@@ -298,6 +307,15 @@ async function handleCustomerRoutes(req, res, route, query) {
     const body = await readJsonBody(req);
     const item = await adminService.setCustomerActive(match[1], Boolean(body.isActive));
     sendJson(res, 200, { success: true, message: 'Customer updated', data: item });
+    return;
+  }
+
+  if (match && req.method === 'DELETE') {
+    const user = await requireStaff(req, res, ['customers:write']);
+    if (!user) return;
+    await adminService.deleteCustomer(match[1]);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Customer deleted', data: null });
     return;
   }
 
