@@ -144,13 +144,17 @@ export function Security() {
             }}
           >
             <Input
-              label="Current authenticator code"
+              label="Authenticator or recovery code"
               value={code}
               onChange={(event) => setCode(event.target.value)}
-              inputMode="numeric"
+              inputMode="text"
               autoComplete="one-time-code"
+              placeholder="6-digit app code, or a recovery code"
               required
             />
+            <p className="text-sm text-[var(--fg-muted)]">
+              Prefer the 6-digit code from your authenticator app. A unused recovery code also works.
+            </p>
             <Button type="submit" variant="danger" loading={loading}>
               Disable MFA
             </Button>

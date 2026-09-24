@@ -265,13 +265,21 @@ export async function verifyMfaSetup(userId: string, code: string) {
 }
 
 export async function disableMfa(userId: string, code: string) {
-  const user = await User.findById(userId).select('+mfaSecretEncrypted');
+  const user = await User.findById(userId).select('+mfaSecretEncrypted +mfaRecoveryCodeHashes');
   if (!user?.mfaEnabled || !user.mfaSecretEncrypted) {
     throw new ApiError(400, 'MFA is not enabled');
   }
-  if (!(await verifyTotp(decryptMfaSecret(user.mfaSecretEncrypted), code))) {
-    throw new ApiError(400, 'Invalid authentication code');
+
+  let valid = await verifyTotp(decryptMfaSecret(user.mfaSecretEncrypted), code);
+  if (!valid) {
+    const recoveryHash = hashRecoveryCode(code);
+    const consumed = await User.updateOne(
+      { _id: user._id, mfaEnabled: true, mfaRecoveryCodeHashes: recoveryHash },
+      { $pull: { mfaRecoveryCodeHashes: recoveryHash } }
+    );
+    valid = consumed.modifiedCount === 1;
   }
+  if (!valid) throw new ApiError(400, 'Invalid authentication code');
 
   user.mfaEnabled = false;
   user.mfaSecretEncrypted = undefined;
