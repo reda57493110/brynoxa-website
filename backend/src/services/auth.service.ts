@@ -233,11 +233,17 @@ export async function setupMfa(userId: string) {
   if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff account not found');
   if (user.mfaEnabled) throw new ApiError(409, 'MFA is already enabled');
 
-  const secret = await createTotpSecret(20);
-  const uri = await createTotpUri({ issuer: 'Brynoxa', label: user.email, secret });
-  user.mfaPendingSecretEncrypted = encryptMfaSecret(secret);
-  await user.save({ validateBeforeSave: false });
+  // Reuse an existing pending secret so re-opening setup doesn't invalidate a scanned QR.
+  let secret: string;
+  if (user.mfaPendingSecretEncrypted) {
+    secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
+  } else {
+    secret = await createTotpSecret(20);
+    user.mfaPendingSecretEncrypted = encryptMfaSecret(secret);
+    await user.save({ validateBeforeSave: false });
+  }
 
+  const uri = await createTotpUri({ issuer: 'Brynoxa', label: user.email, secret });
   return { secret, qrCodeDataUrl: await QRCode.toDataURL(uri) };
 }
 

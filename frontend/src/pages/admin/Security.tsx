@@ -74,6 +74,10 @@ export function Security() {
               className="h-48 w-48 rounded-xl border border-[var(--border)] bg-white p-2"
             />
             <p className="text-sm text-[var(--fg-muted)]">
+              Scan with your authenticator app, then enter the 6-digit code currently shown.
+              If an older Brynoxa entry exists, delete it and scan this QR again.
+            </p>
+            <p className="text-sm text-[var(--fg-muted)]">
               If you cannot scan the QR code, enter this key manually:
             </p>
             <code className="block break-all rounded-xl bg-[var(--bg-muted)] p-3 text-sm">
