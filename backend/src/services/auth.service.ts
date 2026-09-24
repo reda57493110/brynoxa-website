@@ -228,14 +228,14 @@ function sanitizeUser(user: InstanceType<typeof User>) {
   };
 }
 
-export async function setupMfa(userId: string) {
+export async function setupMfa(userId: string, options?: { rotate?: boolean }) {
   const user = await User.findById(userId).select('+mfaPendingSecretEncrypted +mfaSecretEncrypted');
   if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff account not found');
   if (user.mfaEnabled) throw new ApiError(409, 'MFA is already enabled');
 
-  // Reuse an existing pending secret so re-opening setup doesn't invalidate a scanned QR.
+  const rotate = options?.rotate !== false;
   let secret: string;
-  if (user.mfaPendingSecretEncrypted) {
+  if (!rotate && user.mfaPendingSecretEncrypted) {
     secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
   } else {
     secret = await createTotpSecret(20);
@@ -252,7 +252,12 @@ export async function verifyMfaSetup(userId: string, code: string) {
   if (!user?.mfaPendingSecretEncrypted) throw new ApiError(400, 'Start MFA setup first');
 
   const secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
-  if (!(await verifyTotp(secret, code))) throw new ApiError(400, 'Invalid authentication code');
+  if (!(await verifyTotp(secret, code))) {
+    throw new ApiError(
+      400,
+      'Invalid authenticator code. Delete any old Brynoxa entries in your app, scan this QR again, and enter the newest 6-digit code (not a recovery code).'
+    );
+  }
 
   const recoveryCodes = Array.from({ length: 10 }, () => randomBytes(5).toString('hex').toUpperCase());
   user.mfaEnabled = true;

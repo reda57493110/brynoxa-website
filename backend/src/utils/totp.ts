@@ -24,13 +24,13 @@ export async function createTotpUri(options: {
   return toTotp(options.secret, options).toString();
 }
 
-/** Verify a 6-digit TOTP with ±2 step (30s) window. */
+/** Verify a 6-digit TOTP with ±3 step (30s) window. */
 export async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
-  const cleaned = code.replace(/\s+/g, '').trim();
+  const cleaned = code.replace(/\D/g, '');
   if (!/^\d{6}$/.test(cleaned)) return false;
 
   try {
-    const delta = toTotp(secret).validate({ token: cleaned, window: 2 });
+    const delta = toTotp(secret).validate({ token: cleaned, window: 3 });
     return delta !== null;
   } catch {
     return false;

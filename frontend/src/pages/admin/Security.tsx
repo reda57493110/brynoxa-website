@@ -73,13 +73,15 @@ export function Security() {
               alt="Scan this QR code with your authenticator app"
               className="h-48 w-48 rounded-xl border border-[var(--border)] bg-white p-2"
             />
+            <ol className="list-decimal space-y-1 pl-5 text-sm text-[var(--fg-muted)]">
+              <li>In your authenticator app, delete any old Brynoxa accounts.</li>
+              <li>Scan this QR (or type the key below).</li>
+              <li>Enter only the 6-digit code your phone shows now.</li>
+            </ol>
             <p className="text-sm text-[var(--fg-muted)]">
-              Scan with your authenticator app, then enter the 6-digit code currently shown.
-              If an older Brynoxa entry exists, delete it and scan this QR again.
+              The 10 recovery codes appear after this succeeds — you do not need them here.
             </p>
-            <p className="text-sm text-[var(--fg-muted)]">
-              If you cannot scan the QR code, enter this key manually:
-            </p>
+            <p className="text-sm text-[var(--fg-muted)]">Manual key:</p>
             <code className="block break-all rounded-xl bg-[var(--bg-muted)] p-3 text-sm">
               {setup.secret}
             </code>
@@ -97,16 +99,33 @@ export function Security() {
               }}
             >
               <Input
-                label="Authenticator code"
+                label="6-digit code from your phone"
                 value={code}
-                onChange={(event) => setCode(event.target.value)}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                 inputMode="numeric"
                 autoComplete="one-time-code"
+                placeholder="000000"
+                maxLength={6}
                 required
               />
-              <Button type="submit" loading={loading}>
-                Verify and enable MFA
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" loading={loading}>
+                  Verify and enable MFA
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  loading={loading}
+                  onClick={() =>
+                    void run(async () => {
+                      setCode('')
+                      setSetup((await authApi.setupMfa()).data.data)
+                    })
+                  }
+                >
+                  New QR code
+                </Button>
+              </div>
             </form>
           </div>
         ) : null}
