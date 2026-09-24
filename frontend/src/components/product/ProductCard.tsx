@@ -147,10 +147,7 @@ export function ProductCard({
                 : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 46vw'
             }
             className={cn(
-              'h-full w-full transition duration-500 ease-out group-hover:scale-[1.03]',
-              spotlight
-                ? 'object-cover'
-                : 'object-contain p-2.5 sm:object-cover sm:p-0'
+              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]'
             )}
           />
         </Link>
