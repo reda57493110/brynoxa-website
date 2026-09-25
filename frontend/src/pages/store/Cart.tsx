@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -7,6 +8,8 @@ import { PageHero } from '@/components/layout/PageHero'
 import { pillGhost, pillPrimary, surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { formatCurrency } from '@/lib/format'
+import { resolveShippingFee } from '@/lib/shipping'
+import { settingsApi } from '@/api/settingsApi'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
@@ -20,6 +23,21 @@ export function Cart() {
   const updateQty = useCartStore((s) => s.updateQty)
   const removeItem = useCartStore((s) => s.removeItem)
   const subtotal = useCartStore((s) => s.subtotal())
+
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => (await settingsApi.get()).data.data,
+    staleTime: 60_000,
+  })
+
+  const flatRate = settings.data?.shippingFlatRate ?? 0
+  const freeShippingMin = settings.data?.freeShippingMin ?? 0
+  const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
+  const estimatedShipping = resolveShippingFee(settings.data, undefined, subtotal)
+  const remainingForFree =
+    freeShippingMin > 0 && !qualifiesFreeShipping
+      ? Math.max(0, freeShippingMin - subtotal)
+      : 0
 
   if (!items.length) {
     return (
@@ -41,6 +59,18 @@ export function Cart() {
     )
   }
 
+  const shippingLabel =
+    qualifiesFreeShipping || estimatedShipping === 0
+      ? t('checkout.free')
+      : t('cart.shippingFrom', { amount: formatCurrency(flatRate || estimatedShipping) })
+
+  const shippingNote =
+    freeShippingMin > 0
+      ? qualifiesFreeShipping
+        ? t('cart.freeShippingUnlocked')
+        : t('cart.freeShippingRemaining', { amount: formatCurrency(remainingForFree) })
+      : t('cart.shippingHint')
+
   return (
     <>
       <PageHero
@@ -61,7 +91,7 @@ export function Cart() {
         </Link>
       </PageHero>
 
-      <Container className="pb-28 pt-5 sm:py-10 lg:pb-10">
+      <Container className="pb-32 pt-5 sm:py-10 lg:pb-10">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-8">
           <div className="space-y-3 sm:space-y-4">
             {items.map((item) => (
@@ -128,6 +158,11 @@ export function Cart() {
               <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
               <span className="font-semibold">{formatCurrency(subtotal)}</span>
             </div>
+            <div className="mt-3 flex justify-between text-sm">
+              <span className="text-[var(--fg-muted)]">{t('cart.shipping')}</span>
+              <span className="font-medium">{shippingLabel}</span>
+            </div>
+            <p className="mt-2 text-xs text-[var(--fg-muted)]">{shippingNote}</p>
             <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
               <li className="flex items-center gap-2">
                 <SiteIcon name="package-check" size={14} className="text-[var(--brand-text)]" />
@@ -157,6 +192,7 @@ export function Cart() {
           <div className="min-w-0">
             <p className="text-[11px] text-[var(--fg-muted)]">{t('cart.subtotal')}</p>
             <p className="font-display text-base font-semibold">{formatCurrency(subtotal)}</p>
+            <p className="truncate text-[10px] text-[var(--fg-muted)]">{shippingNote}</p>
           </div>
           <Link to="/checkout" className={cn(pillPrimary, 'h-11 flex-1 px-4 text-sm')}>
             {t('cart.checkout')}

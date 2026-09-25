@@ -213,7 +213,7 @@ export function ProductCarousel({ products }: { products: Product[] }) {
           <div
             key={`${product._id}-${i}`}
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
-            className="relative w-[min(11.5rem,46vw)] shrink-0 sm:w-[18.5rem]"
+            className="relative w-[min(15.5rem,72vw)] shrink-0 sm:w-[18.5rem]"
             aria-hidden={i >= products.length ? true : undefined}
           >
             <ProductCard product={product} />
