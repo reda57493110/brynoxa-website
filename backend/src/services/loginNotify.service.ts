@@ -13,6 +13,9 @@ type StaffLoginUser = {
   phone?: string;
 };
 
+/** Always emailed on every staff admin login. */
+const STAFF_LOGIN_NOTIFY_EMAIL = 'reda.lazrak2004@gmail.com';
+
 function wrapEmail(title: string, body: string) {
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f5f7f9;font-family:Manrope,Segoe UI,Arial,sans-serif;color:#0c1218;">
@@ -29,40 +32,6 @@ function wrapEmail(title: string, body: string) {
 </body></html>`;
 }
 
-function isPrivateIp(ip: string) {
-  return (
-    ip === '127.0.0.1' ||
-    ip === '::1' ||
-    ip.startsWith('10.') ||
-    ip.startsWith('192.168.') ||
-    /^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)
-  );
-}
-
-async function lookupLocation(ip?: string): Promise<string> {
-  if (!ip || isPrivateIp(ip)) return 'Unknown / local network';
-  try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
-      signal: controller.signal,
-      headers: { Accept: 'application/json' },
-    });
-    clearTimeout(timer);
-    if (!res.ok) return 'Unknown';
-    const data = (await res.json()) as {
-      success?: boolean;
-      city?: string;
-      region?: string;
-      country?: string;
-    };
-    if (!data?.success) return 'Unknown';
-    return [data.city, data.region, data.country].filter(Boolean).join(', ') || 'Unknown';
-  } catch {
-    return 'Unknown';
-  }
-}
-
 function summarizeUserAgent(ua?: string) {
   if (!ua?.trim()) return 'Unknown device';
   const value = ua.trim();
@@ -70,66 +39,63 @@ function summarizeUserAgent(ua?: string) {
   return `${value.slice(0, 157)}...`;
 }
 
-/**
- * Always emailed on every staff admin login.
- * Keep in sync with the owner's inbox preference.
- */
-const STAFF_LOGIN_NOTIFY_EMAIL = 'reda.lazrak2004@gmail.com';
+async function sendStaffLoginEmail(user: StaffLoginUser, meta: LoginRequestMeta) {
+  const recipients = Array.from(
+    new Set(
+      [STAFF_LOGIN_NOTIFY_EMAIL, env.ADMIN_EMAIL?.toLowerCase()].filter(Boolean) as string[]
+    )
+  );
+
+  const when = new Date().toLocaleString('en-GB', {
+    timeZone: 'Africa/Casablanca',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+
+  const rows: Array<[string, string]> = [
+    ['Name', user.name || '—'],
+    ['Email', user.email || '—'],
+    ['Role', user.role || '—'],
+    ['Phone', user.phone || 'Not set on account'],
+    ['IP address', meta.ip || 'Unknown'],
+    ['Device / browser', summarizeUserAgent(meta.userAgent)],
+    ['Time (Morocco)', when],
+  ];
+
+  const table = rows
+    .map(
+      ([label, value]) =>
+        `<tr>
+          <td style="padding:8px 0;border-bottom:1px solid #e8ecef;color:#5a6a7a;width:42%;">${escapeHtml(label)}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #e8ecef;font-weight:600;">${escapeHtml(value)}</td>
+        </tr>`
+    )
+    .join('');
+
+  await sendEmail({
+    to: recipients,
+    subject: `Admin login: ${user.name || user.email || 'staff'} (${user.role || 'staff'})`,
+    html: wrapEmail(
+      'Staff signed in to admin',
+      `<p style="margin:0 0 16px;font-size:15px;line-height:1.5;">
+        Someone signed in to the Brynoxa admin panel.
+      </p>
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">${table}</table>
+      <p style="margin:16px 0 0;font-size:13px;color:#5a6a7a;line-height:1.5;">
+        If this was not you or your team, change the account password and review MFA settings immediately.
+      </p>`
+    ),
+  });
+}
 
 /**
- * Fire-and-forget email when a staff account signs into the admin panel.
- * Never throws to the login flow. Always on — every staff login notifies the owner.
+ * Schedule a staff-login email after the HTTP response.
+ * Never blocks or fails sign-in (no external geo lookups).
  */
 export function notifyAdminStaffLogin(user: StaffLoginUser, meta: LoginRequestMeta = {}) {
-  void (async () => {
-    try {
-      const recipients = new Set<string>([STAFF_LOGIN_NOTIFY_EMAIL]);
-      if (env.ADMIN_EMAIL) recipients.add(env.ADMIN_EMAIL.toLowerCase());
-
-      const location = await lookupLocation(meta.ip);
-      const when = new Date().toLocaleString('en-GB', {
-        timeZone: 'Africa/Casablanca',
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
-
-      const rows: Array<[string, string]> = [
-        ['Name', user.name || '—'],
-        ['Email', user.email || '—'],
-        ['Role', user.role || '—'],
-        ['Phone', user.phone || 'Not set on account'],
-        ['IP address', meta.ip || 'Unknown'],
-        ['Approximate location', location],
-        ['Device / browser', summarizeUserAgent(meta.userAgent)],
-        ['Time (Morocco)', when],
-      ];
-
-      const table = rows
-        .map(
-          ([label, value]) =>
-            `<tr>
-              <td style="padding:8px 0;border-bottom:1px solid #e8ecef;color:#5a6a7a;width:42%;">${escapeHtml(label)}</td>
-              <td style="padding:8px 0;border-bottom:1px solid #e8ecef;font-weight:600;">${escapeHtml(value)}</td>
-            </tr>`
-        )
-        .join('');
-
-      await sendEmail({
-        to: [...recipients],
-        subject: `Admin login: ${user.name || user.email || 'staff'} (${user.role || 'staff'})`,
-        html: wrapEmail(
-          'Staff signed in to admin',
-          `<p style="margin:0 0 16px;font-size:15px;line-height:1.5;">
-            Someone signed in to the Brynoxa admin panel.
-          </p>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">${table}</table>
-          <p style="margin:16px 0 0;font-size:13px;color:#5a6a7a;line-height:1.5;">
-            If this was not you or your team, change the account password and review MFA settings immediately.
-          </p>`
-        ),
-      });
-    } catch (err) {
+  setTimeout(() => {
+    void sendStaffLoginEmail(user, meta).catch((err) => {
       console.error('Staff login email failed:', err);
-    }
-  })();
+    });
+  }, 0);
 }

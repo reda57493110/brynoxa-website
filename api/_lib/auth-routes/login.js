@@ -105,19 +105,6 @@ module.exports = async (req, res) => {
 
     setAuthCookies(res, refreshToken, crypto.randomBytes(32).toString('hex'));
 
-    if (STAFF_ROLES.has(user.role)) {
-      try {
-        const { notifyAdminStaffLogin } = require('../../../backend/dist/services/loginNotify.service');
-        const { getRequestMeta } = require('../../../backend/dist/utils/requestMeta');
-        notifyAdminStaffLogin(
-          { name: user.name, email: user.email, role: user.role, phone: user.phone },
-          getRequestMeta(req)
-        );
-      } catch (notifyErr) {
-        console.error('Staff login notify failed:', notifyErr);
-      }
-    }
-
     sendJson(res, 200, {
       success: true,
       message: 'Logged in',
@@ -139,11 +126,31 @@ module.exports = async (req, res) => {
         accessToken,
       },
     });
+
+    if (STAFF_ROLES.has(user.role)) {
+      setTimeout(() => {
+        try {
+          const { notifyAdminStaffLogin } = require('../../../backend/dist/services/loginNotify.service');
+          const { getRequestMeta } = require('../../../backend/dist/utils/requestMeta');
+          notifyAdminStaffLogin(
+            { name: user.name, email: user.email, role: user.role, phone: user.phone },
+            getRequestMeta(req)
+          );
+        } catch (notifyErr) {
+          console.error('Staff login notify failed:', notifyErr);
+        }
+      }, 0);
+    }
   } catch (err) {
     console.error('Fast login failed:', err);
+    const raw = err instanceof Error ? err.message : 'Server error';
+    const message =
+      /SSL|tlsv|CERT|ECONN|Mongo|server selection/i.test(raw)
+        ? 'Sign in temporarily unavailable. Please try again in a moment.'
+        : raw;
     sendJson(res, 500, {
       success: false,
-      message: err instanceof Error ? err.message : 'Server error',
+      message,
     });
   }
 };

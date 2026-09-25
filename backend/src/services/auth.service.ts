@@ -10,7 +10,18 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
-import { notifyAdminStaffLogin, type LoginRequestMeta } from './loginNotify.service';
+import type { LoginRequestMeta } from './loginNotify.service';
+
+function scheduleStaffLoginNotify(
+  user: { name?: string; email?: string; role?: string; phone?: string },
+  meta: LoginRequestMeta = {}
+) {
+  setTimeout(() => {
+    void import('./loginNotify.service')
+      .then(({ notifyAdminStaffLogin }) => notifyAdminStaffLogin(user, meta))
+      .catch((err) => console.error('Staff login notify failed:', err));
+  }, 0);
+}
 
 const REFRESH_COOKIE = 'brynoxa_refresh';
 const CSRF_COOKIE = 'brynoxa_csrf';
@@ -502,7 +513,7 @@ export async function loginUser(
   await user.save({ validateBeforeSave: false });
 
   if (isStaffRole(user.role)) {
-    notifyAdminStaffLogin(
+    scheduleStaffLoginNotify(
       { name: user.name, email: user.email, role: user.role, phone: user.phone },
       meta
     );
@@ -556,7 +567,7 @@ export async function completeMfaLogin(
   user.refreshToken = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
 
-  notifyAdminStaffLogin(
+  scheduleStaffLoginNotify(
     { name: user.name, email: user.email, role: user.role, phone: user.phone },
     meta
   );
