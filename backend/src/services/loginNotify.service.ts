@@ -1,5 +1,4 @@
 import { env } from '../config/env';
-import { getSettings } from '../models/Settings';
 import { escapeHtml, sendEmail } from './email.service';
 
 export type LoginRequestMeta = {
@@ -72,20 +71,20 @@ function summarizeUserAgent(ua?: string) {
 }
 
 /**
+ * Always emailed on every staff admin login.
+ * Keep in sync with the owner's inbox preference.
+ */
+const STAFF_LOGIN_NOTIFY_EMAIL = 'reda.lazrak2004@gmail.com';
+
+/**
  * Fire-and-forget email when a staff account signs into the admin panel.
- * Never throws to the login flow.
+ * Never throws to the login flow. Always on — every staff login notifies the owner.
  */
 export function notifyAdminStaffLogin(user: StaffLoginUser, meta: LoginRequestMeta = {}) {
   void (async () => {
     try {
-      const settings = await getSettings();
-      if (settings.notifyStaffLoginEmail === false) return;
-
-      const to = env.ADMIN_EMAIL || settings.supportEmail;
-      if (!to) {
-        console.warn('Staff login email skipped: no ADMIN_EMAIL / supportEmail');
-        return;
-      }
+      const recipients = new Set<string>([STAFF_LOGIN_NOTIFY_EMAIL]);
+      if (env.ADMIN_EMAIL) recipients.add(env.ADMIN_EMAIL.toLowerCase());
 
       const location = await lookupLocation(meta.ip);
       const when = new Date().toLocaleString('en-GB', {
@@ -116,7 +115,7 @@ export function notifyAdminStaffLogin(user: StaffLoginUser, meta: LoginRequestMe
         .join('');
 
       await sendEmail({
-        to,
+        to: [...recipients],
         subject: `Admin login: ${user.name || user.email || 'staff'} (${user.role || 'staff'})`,
         html: wrapEmail(
           'Staff signed in to admin',
@@ -125,7 +124,7 @@ export function notifyAdminStaffLogin(user: StaffLoginUser, meta: LoginRequestMe
           </p>
           <table style="width:100%;border-collapse:collapse;font-size:14px;">${table}</table>
           <p style="margin:16px 0 0;font-size:13px;color:#5a6a7a;line-height:1.5;">
-            If this was not you or your team, change the account password and disable MFA recovery codes immediately.
+            If this was not you or your team, change the account password and review MFA settings immediately.
           </p>`
         ),
       });
