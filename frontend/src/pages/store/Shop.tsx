@@ -379,7 +379,7 @@ export function Shop() {
                 <ProductGrid
                   products={products.data?.items}
                   loading={productsLoading}
-                  className="grid-cols-2 sm:grid-cols-3 xl:grid-cols-4"
+                  className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                   emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
                     hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')
