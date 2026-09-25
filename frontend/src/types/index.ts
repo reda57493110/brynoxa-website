@@ -250,6 +250,7 @@ export interface StoreSettings {
   taxRate: number
   supportEmail: string
   codEnabled: boolean
+  notifyStaffLoginEmail?: boolean
 }
 
 export interface Notification {

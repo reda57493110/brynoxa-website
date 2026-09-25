@@ -105,6 +105,19 @@ module.exports = async (req, res) => {
 
     setAuthCookies(res, refreshToken, crypto.randomBytes(32).toString('hex'));
 
+    if (STAFF_ROLES.has(user.role)) {
+      try {
+        const { notifyAdminStaffLogin } = require('../../../backend/dist/services/loginNotify.service');
+        const { getRequestMeta } = require('../../../backend/dist/utils/requestMeta');
+        notifyAdminStaffLogin(
+          { name: user.name, email: user.email, role: user.role, phone: user.phone },
+          getRequestMeta(req)
+        );
+      } catch (notifyErr) {
+        console.error('Staff login notify failed:', notifyErr);
+      }
+    }
+
     sendJson(res, 200, {
       success: true,
       message: 'Logged in',

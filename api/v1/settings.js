@@ -17,6 +17,7 @@ const ALLOWED_FIELDS = [
   'taxRate',
   'supportEmail',
   'codEnabled',
+  'notifyStaffLoginEmail',
 ];
 
 module.exports = async (req, res) => {

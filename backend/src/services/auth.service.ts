@@ -10,6 +10,7 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
+import { notifyAdminStaffLogin, type LoginRequestMeta } from './loginNotify.service';
 
 const REFRESH_COOKIE = 'brynoxa_refresh';
 const CSRF_COOKIE = 'brynoxa_csrf';
@@ -468,7 +469,11 @@ export async function registerUser(input: {
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 
-export async function loginUser(email: string, password: string) {
+export async function loginUser(
+  email: string,
+  password: string,
+  meta: LoginRequestMeta = {}
+) {
   const user = await User.findOne({ email: email.toLowerCase() }).select(
     '+password +refreshToken +failedLoginAttempts +lockedUntil'
   );
@@ -496,10 +501,21 @@ export async function loginUser(email: string, password: string) {
   user.refreshToken = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
 
+  if (isStaffRole(user.role)) {
+    notifyAdminStaffLogin(
+      { name: user.name, email: user.email, role: user.role, phone: user.phone },
+      meta
+    );
+  }
+
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 
-export async function completeMfaLogin(mfaToken: string, code: string) {
+export async function completeMfaLogin(
+  mfaToken: string,
+  code: string,
+  meta: LoginRequestMeta = {}
+) {
   let payload;
   try {
     payload = verifyMfaChallenge(mfaToken);
@@ -539,6 +555,12 @@ export async function completeMfaLogin(mfaToken: string, code: string) {
   user.lockedUntil = undefined;
   user.refreshToken = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
+
+  notifyAdminStaffLogin(
+    { name: user.name, email: user.email, role: user.role, phone: user.phone },
+    meta
+  );
+
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 

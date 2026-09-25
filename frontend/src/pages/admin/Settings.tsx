@@ -35,6 +35,7 @@ export function Settings() {
     taxRate: 0,
     supportEmail: 'brynoxa.com@gmail.com',
     codEnabled: true,
+    notifyStaffLoginEmail: true,
   })
 
   const [catName, setCatName] = useState('')
@@ -54,6 +55,7 @@ export function Settings() {
         taxRate: settings.data.taxRate,
         supportEmail: settings.data.supportEmail,
         codEnabled: settings.data.codEnabled,
+        notifyStaffLoginEmail: settings.data.notifyStaffLoginEmail !== false,
       })
     }
   }, [settings.data])
@@ -270,6 +272,20 @@ export function Settings() {
               onChange={(e) => setForm({ ...form, codEnabled: e.target.checked })}
             />
             Cash on delivery enabled
+          </label>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={form.notifyStaffLoginEmail}
+              onChange={(e) => setForm({ ...form, notifyStaffLoginEmail: e.target.checked })}
+            />
+            <span>
+              Email me when someone signs into the admin panel
+              <span className="mt-0.5 block text-[var(--fg-muted)]">
+                Sent to your admin email with account phone, IP, and approximate location.
+              </span>
+            </span>
           </label>
           <Button type="submit" loading={save.isPending}>
             Save settings

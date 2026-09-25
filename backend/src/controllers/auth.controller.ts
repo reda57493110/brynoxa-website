@@ -5,6 +5,7 @@ import * as authService from '../services/auth.service';
 import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
 import { param } from '../utils/params';
+import { getRequestMeta } from '../utils/requestMeta';
 
 export const csrf = asyncHandler(async (req: Request, res: Response) => {
   const token = authService.issueCsrfToken(res, req.cookies?.[authService.CSRF_COOKIE]);
@@ -43,7 +44,11 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.loginUser(req.body.email, req.body.password);
+  const result = await authService.loginUser(
+    req.body.email,
+    req.body.password,
+    getRequestMeta(req)
+  );
   if ('mfaRequired' in result) {
     sendSuccess(res, result, 'MFA verification required');
     return;
@@ -53,7 +58,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const completeMfaLogin = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.completeMfaLogin(req.body.mfaToken, req.body.code);
+  const result = await authService.completeMfaLogin(
+    req.body.mfaToken,
+    req.body.code,
+    getRequestMeta(req)
+  );
   authService.setRefreshCookie(res, result.refreshToken);
   sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Logged in');
 });

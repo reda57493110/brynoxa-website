@@ -15,6 +15,8 @@ export interface ISettings extends Document {
   taxRate: number;
   supportEmail: string;
   codEnabled: boolean;
+  /** Email ADMIN_EMAIL when a staff account signs into admin. */
+  notifyStaffLoginEmail: boolean;
   catalogVersion?: number;
 }
 
@@ -36,6 +38,7 @@ const settingsSchema = new Schema<ISettings>(
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: 'brynoxa.com@gmail.com' },
     codEnabled: { type: Boolean, default: true },
+    notifyStaffLoginEmail: { type: Boolean, default: true },
     catalogVersion: { type: Number, default: 0 },
   },
   { timestamps: true }

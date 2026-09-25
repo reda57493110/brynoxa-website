@@ -92,7 +92,12 @@ module.exports = async (req, res) => {
 
     if (action === 'mfa/login') {
       const data = parseBody(schemas.mfaLoginSchema, body);
-      const result = await authService.completeMfaLogin(data.mfaToken, data.code);
+      const { getRequestMeta } = require('../../../backend/dist/utils/requestMeta');
+      const result = await authService.completeMfaLogin(
+        data.mfaToken,
+        data.code,
+        getRequestMeta(req)
+      );
       setAuthCookies(res, result.refreshToken);
       sendJson(res, 200, {
         success: true,
