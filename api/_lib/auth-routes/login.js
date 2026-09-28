@@ -68,7 +68,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (user.emailVerified === false) {
+    if (user.emailVerified === false && STAFF_ROLES.has(user.role)) {
       sendJson(res, 403, { success: false, message: 'Please verify your email before signing in' });
       return;
     }

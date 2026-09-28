@@ -371,7 +371,7 @@ export async function resolveCheckoutCustomer(input: {
       user.phone = input.phone || user.phone;
       user.password = input.password;
       user.isGuest = false;
-      user.emailVerified = !isProd;
+      user.emailVerified = true;
     } else {
       user = await User.create({
         name: input.name,
@@ -379,7 +379,7 @@ export async function resolveCheckoutCustomer(input: {
         password: input.password,
         phone: input.phone,
         isGuest: false,
-        emailVerified: !isProd,
+        emailVerified: true,
       });
     }
 
@@ -396,12 +396,6 @@ export async function resolveCheckoutCustomer(input: {
         phone: input.shippingAddress.phone,
         isDefault: true,
       });
-    }
-
-    if (isProd) {
-      await user.save();
-      await sendVerificationEmail(user);
-      return { userId: user._id.toString(), auth: null as null };
     }
 
     const { accessToken, refreshToken } = issueTokens(user);
@@ -471,7 +465,7 @@ export async function registerUser(input: {
     user.password = input.password;
     user.phone = input.phone || user.phone;
     user.isGuest = false;
-    user.emailVerified = !isProd;
+    user.emailVerified = true;
   } else {
     user = await User.create({
       name: input.name,
@@ -479,14 +473,8 @@ export async function registerUser(input: {
       password: input.password,
       phone: input.phone,
       isGuest: false,
-      emailVerified: !isProd,
+      emailVerified: true,
     });
-  }
-
-  if (isProd) {
-    await user.save();
-    await sendVerificationEmail(user);
-    return { verificationRequired: true as const, user: sanitizeUser(user) };
   }
 
   const { accessToken, refreshToken } = issueTokens(user);
@@ -512,7 +500,7 @@ export async function loginUser(
     throw new ApiError(401, 'Invalid email or password');
   }
   if (!user.isActive) throw new ApiError(403, 'Account is disabled');
-  if (user.emailVerified === false) {
+  if (user.emailVerified === false && isStaffRole(user.role)) {
     throw new ApiError(403, 'Please verify your email before signing in');
   }
   user.failedLoginAttempts = 0;
