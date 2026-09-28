@@ -5,6 +5,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { usePush } from '@/hooks/usePush'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { loadGuestReceipt } from '@/lib/guestReceipt'
 import {
   PUSH_ENGAGED_EVENT,
   dismissPushPrompt,
@@ -15,8 +16,33 @@ import {
 import { cn } from '@/lib/cn'
 
 const SHOW_DELAY_MS = 1500
+const ORDER_ASKED_KEY = 'brynoxa-push-order-asked'
 
-/** Soft, in-page ask shown after the shopper has shown interest; the native prompt opens only on "Yes". */
+function orderNumberFromPath(pathname: string) {
+  const match = pathname.match(/^\/order-confirmation\/([^/]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function wasAskedForOrder(orderNumber: string) {
+  try {
+    return localStorage.getItem(ORDER_ASKED_KEY) === orderNumber
+  } catch {
+    return true
+  }
+}
+
+function markAskedForOrder(orderNumber: string) {
+  try {
+    localStorage.setItem(ORDER_ASKED_KEY, orderNumber)
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/**
+ * Soft, in-page ask shown after the shopper has shown interest (or right after an order,
+ * offering delivery updates). The native permission prompt opens only on "Yes".
+ */
 export function PushPrompt() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
@@ -24,6 +50,8 @@ export function PushPrompt() {
   const { status, ready, busy, enable } = usePush()
   const [engaged, setEngaged] = useState(hasEngagedEnough)
   const [visible, setVisible] = useState(false)
+
+  const orderNumber = orderNumberFromPath(pathname)
 
   useEffect(() => {
     void syncPushLocale(locale).catch(() => undefined)
@@ -36,13 +64,16 @@ export function PushPrompt() {
   }, [])
 
   useEffect(() => {
-    if (!ready || !engaged || status !== 'available' || isPushPromptSnoozed()) {
+    const eligible = orderNumber
+      ? !wasAskedForOrder(orderNumber)
+      : engaged && !isPushPromptSnoozed()
+    if (!ready || status !== 'available' || !eligible) {
       setVisible(false)
       return
     }
     const timer = window.setTimeout(() => setVisible(true), SHOW_DELAY_MS)
     return () => window.clearTimeout(timer)
-  }, [ready, engaged, status])
+  }, [ready, engaged, status, orderNumber])
 
   const onCheckout = pathname.startsWith('/checkout')
   if (!visible || onCheckout) return null
@@ -50,12 +81,19 @@ export function PushPrompt() {
   const aboveStickyBar = pathname.startsWith('/product/') || pathname === '/cart'
 
   const later = () => {
+    if (orderNumber) markAskedForOrder(orderNumber)
     dismissPushPrompt()
     setVisible(false)
   }
 
   const allow = async () => {
-    await enable()
+    let order: { orderNumber: string; token: string } | undefined
+    if (orderNumber) {
+      markAskedForOrder(orderNumber)
+      const receipt = loadGuestReceipt(orderNumber)
+      if (receipt) order = { orderNumber, token: receipt.receiptToken }
+    }
+    await enable(order)
     setVisible(false)
   }
 
@@ -74,14 +112,14 @@ export function PushPrompt() {
     >
       <div className="flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--brand)_15%,transparent)] text-[var(--brand-text)]">
-          <SiteIcon name="bell" size={18} />
+          <SiteIcon name={orderNumber ? 'truck' : 'bell'} size={18} />
         </span>
         <div className="min-w-0 flex-1">
           <p id="push-prompt-title" className="font-display text-sm font-semibold text-[var(--fg)]">
-            {t('push.promptTitle')}
+            {orderNumber ? t('push.orderPromptTitle') : t('push.promptTitle')}
           </p>
           <p id="push-prompt-body" className="mt-1 text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
-            {t('push.promptBody')}
+            {orderNumber ? t('push.orderPromptBody') : t('push.promptBody')}
           </p>
         </div>
         <button
@@ -98,7 +136,7 @@ export function PushPrompt() {
           {t('push.notNow')}
         </Button>
         <Button size="sm" onClick={allow} loading={busy}>
-          {t('push.allow')}
+          {orderNumber ? t('push.orderAllow') : t('push.allow')}
         </Button>
       </div>
     </div>

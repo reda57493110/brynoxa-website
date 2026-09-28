@@ -299,10 +299,13 @@ export interface NewsletterSub {
   createdAt: string
 }
 
+export type PushTranslations = Partial<Record<'en' | 'fr' | 'ar', { title: string; body: string }>>
+
 export interface PushCampaign {
   _id: string
   title: string
   body: string
+  translations?: PushTranslations
   url?: string
   image?: string
   sentByName?: string
@@ -310,12 +313,22 @@ export interface PushCampaign {
   delivered: number
   failed: number
   removed: number
+  clicks?: number
   createdAt: string
+}
+
+export interface PushSendPayload {
+  title: string
+  body: string
+  url?: string
+  image?: string
+  translations?: PushTranslations
 }
 
 export interface PushOverview {
   configured: boolean
   subscribers: number
+  myDevices: number
   byLocale: Partial<Record<'en' | 'fr' | 'ar', number>>
   campaigns: PushCampaign[]
 }

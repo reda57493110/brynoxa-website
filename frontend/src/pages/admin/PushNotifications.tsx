@@ -13,10 +13,26 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToastStore } from '@/store/toastStore'
+import { usePush } from '@/hooks/usePush'
 import { formatDateTime } from '@/lib/format'
+import type { PushOverview, PushSendPayload } from '@/types'
 
 const TITLE_MAX = 80
 const BODY_MAX = 240
+
+type Lang = 'fr' | 'ar'
+type Draft = { title: string; body: string }
+
+const EMPTY_TRANSLATIONS: Record<Lang, Draft> = {
+  fr: { title: '', body: '' },
+  ar: { title: '', body: '' },
+}
+
+const PRODUCT_COPY = {
+  main: { title: (name: string) => `New: ${name}`, body: 'Now available at Brynoxa. Tap to see price and details.' },
+  fr: { title: (name: string) => `Nouveau : ${name}`, body: 'Disponible maintenant chez Brynoxa. Touchez pour voir le prix et les détails.' },
+  ar: { title: (name: string) => `جديد: ${name}`, body: 'متوفر الآن لدى برينوكسا. اضغط لرؤية السعر والتفاصيل.' },
+}
 
 export function PushNotifications() {
   const qc = useQueryClient()
@@ -26,6 +42,8 @@ export function PushNotifications() {
   const [url, setUrl] = useState('')
   const [image, setImage] = useState('')
   const [productId, setProductId] = useState('')
+  const [showLanguages, setShowLanguages] = useState(false)
+  const [translations, setTranslations] = useState(EMPTY_TRANSLATIONS)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const overview = useQuery({
@@ -39,23 +57,30 @@ export function PushNotifications() {
     staleTime: 60_000,
   })
 
+  const payload = (): PushSendPayload => ({
+    title: title.trim(),
+    body: body.trim(),
+    url: url.trim() || undefined,
+    image: image.trim() || undefined,
+    translations: showLanguages ? translations : undefined,
+  })
+
+  const resetForm = () => {
+    setTitle('')
+    setBody('')
+    setUrl('')
+    setImage('')
+    setProductId('')
+    setTranslations(EMPTY_TRANSLATIONS)
+  }
+
   const send = useMutation({
-    mutationFn: () =>
-      adminApi.push.send({
-        title: title.trim(),
-        body: body.trim(),
-        url: url.trim() || undefined,
-        image: image.trim() || undefined,
-      }),
+    mutationFn: () => adminApi.push.send(payload()),
     onSuccess: (res) => {
       const result = res.data.data
       qc.invalidateQueries({ queryKey: ['admin', 'push'] })
       setConfirmOpen(false)
-      setTitle('')
-      setBody('')
-      setUrl('')
-      setImage('')
-      setProductId('')
+      resetForm()
       toast(`Sent to ${result.delivered} of ${result.targeted} subscribers`, 'success')
     },
     onError: (e) => {
@@ -64,6 +89,22 @@ export function PushNotifications() {
     },
   })
 
+  const test = useMutation({
+    mutationFn: () => adminApi.push.test(payload()),
+    onSuccess: (res) => {
+      const result = res.data.data
+      qc.invalidateQueries({ queryKey: ['admin', 'push'] })
+      toast(
+        `Test sent to ${result.delivered} of your ${result.targeted} ${result.targeted === 1 ? 'device' : 'devices'}`,
+        result.delivered ? 'success' : 'error'
+      )
+    },
+    onError: (e) => toast(getErrorMessage(e), 'error'),
+  })
+
+  const setTranslation = (lang: Lang, field: keyof Draft, value: string) =>
+    setTranslations((prev) => ({ ...prev, [lang]: { ...prev[lang], [field]: value } }))
+
   const pickProduct = (id: string) => {
     setProductId(id)
     const product = products.data?.find((p) => p._id === id)
@@ -71,8 +112,18 @@ export function PushNotifications() {
     const picture = product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url || ''
     setUrl(`/product/${product.slug}`)
     setImage(picture.startsWith('https://') ? picture : '')
-    if (!title.trim()) setTitle(`New: ${product.name}`.slice(0, TITLE_MAX))
-    if (!body.trim()) setBody('Now available at Brynoxa. Tap to see price and details.')
+    if (!title.trim()) setTitle(PRODUCT_COPY.main.title(product.name).slice(0, TITLE_MAX))
+    if (!body.trim()) setBody(PRODUCT_COPY.main.body)
+    setTranslations((prev) => {
+      const next = { ...prev }
+      for (const lang of ['fr', 'ar'] as const) {
+        next[lang] = {
+          title: prev[lang].title || PRODUCT_COPY[lang].title(product.name).slice(0, TITLE_MAX),
+          body: prev[lang].body || PRODUCT_COPY[lang].body,
+        }
+      }
+      return next
+    })
   }
 
   if (overview.isLoading) {
@@ -89,11 +140,9 @@ export function PushNotifications() {
 
   const data = overview.data
   const subscribers = data?.subscribers ?? 0
-  const canSend =
-    Boolean(data?.configured) &&
-    subscribers > 0 &&
-    title.trim().length >= 2 &&
-    body.trim().length >= 2
+  const hasDraft = title.trim().length >= 2 && body.trim().length >= 2
+  const canSend = Boolean(data?.configured) && subscribers > 0 && hasDraft
+  const canTest = Boolean(data?.configured) && (data?.myDevices ?? 0) > 0 && hasDraft
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -133,6 +182,8 @@ export function PushNotifications() {
         </div>
       </section>
 
+      {data?.configured ? <ThisDeviceCard data={data} /> : null}
+
       <section className="space-y-4">
         <h2 className="font-display text-lg font-semibold">New notification</h2>
         <form
@@ -166,6 +217,55 @@ export function PushNotifications() {
             className="min-h-24"
             required
           />
+
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
+            <label className="flex cursor-pointer items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={showLanguages}
+                onChange={(e) => setShowLanguages(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
+              />
+              <span>
+                <span className="font-medium">Write French and Arabic versions</span>
+                <span className="block text-xs text-[var(--fg-muted)]">
+                  Shoppers get the version in the language they use on the site. Anyone without a
+                  version below gets the main message above.
+                </span>
+              </span>
+            </label>
+
+            {showLanguages ? (
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {(
+                  [
+                    { lang: 'fr', label: 'Français', dir: 'ltr' },
+                    { lang: 'ar', label: 'العربية', dir: 'rtl' },
+                  ] as const
+                ).map(({ lang, label, dir }) => (
+                  <div key={lang} className="space-y-3" dir={dir}>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+                      {label}
+                    </p>
+                    <Input
+                      label={`${lang.toUpperCase()} · Title`}
+                      value={translations[lang].title}
+                      maxLength={TITLE_MAX}
+                      onChange={(e) => setTranslation(lang, 'title', e.target.value)}
+                    />
+                    <Textarea
+                      label={`${lang.toUpperCase()} · Message`}
+                      value={translations[lang].body}
+                      maxLength={BODY_MAX}
+                      onChange={(e) => setTranslation(lang, 'body', e.target.value)}
+                      className="min-h-20"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
           <Input
             label="Link when tapped (optional)"
             value={url}
@@ -210,12 +310,23 @@ export function PushNotifications() {
               <SiteIcon name="send" size={14} />
               Send to {subscribers} {subscribers === 1 ? 'subscriber' : 'subscribers'}
             </Button>
-            {subscribers === 0 && data?.configured ? (
-              <p className="text-xs text-[var(--fg-muted)]">
-                No subscribers yet — shoppers are asked after they view a few products.
-              </p>
-            ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canTest}
+              loading={test.isPending}
+              onClick={() => test.mutate()}
+              title={data?.myDevices ? undefined : 'Turn on notifications on this device first'}
+            >
+              Send test to my devices
+            </Button>
           </div>
+          {subscribers === 0 && data?.configured ? (
+            <p className="text-xs text-[var(--fg-muted)]">
+              No subscribers yet — shoppers are asked after they view a few products or place an
+              order.
+            </p>
+          ) : null}
         </form>
       </section>
 
@@ -223,28 +334,39 @@ export function PushNotifications() {
         <h2 className="font-display text-lg font-semibold">History</h2>
         {data?.campaigns?.length ? (
           <ul className="space-y-2">
-            {data.campaigns.map((c) => (
-              <li
-                key={c._id}
-                className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium">{c.title}</p>
-                    <p className="line-clamp-2 text-sm text-[var(--fg-muted)]">{c.body}</p>
+            {data.campaigns.map((c) => {
+              const clicks = c.clicks ?? 0
+              const rate = c.delivered ? Math.round((clicks / c.delivered) * 100) : 0
+              return (
+                <li
+                  key={c._id}
+                  className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium">{c.title}</p>
+                      <p className="line-clamp-2 text-sm text-[var(--fg-muted)]">{c.body}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge variant={c.delivered > 0 ? 'success' : 'default'}>
+                        {c.delivered}/{c.targeted} delivered
+                      </Badge>
+                      <Badge variant={clicks > 0 ? 'brand' : 'default'}>
+                        {clicks} {clicks === 1 ? 'tap' : 'taps'}
+                        {c.delivered ? ` · ${rate}%` : ''}
+                      </Badge>
+                    </div>
                   </div>
-                  <Badge variant={c.delivered > 0 ? 'success' : 'default'}>
-                    {c.delivered}/{c.targeted} delivered
-                  </Badge>
-                </div>
-                <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
-                  {formatDateTime(c.createdAt)}
-                  {c.sentByName ? ` · ${c.sentByName}` : ''}
-                  {c.url ? ` · ${c.url}` : ''}
-                  {c.removed ? ` · ${c.removed} expired removed` : ''}
-                </p>
-              </li>
-            ))}
+                  <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
+                    {formatDateTime(c.createdAt)}
+                    {c.sentByName ? ` · ${c.sentByName}` : ''}
+                    {c.url ? ` · ${c.url}` : ''}
+                    {c.translations?.fr || c.translations?.ar ? ' · FR/AR versions' : ''}
+                    {c.removed ? ` · ${c.removed} expired removed` : ''}
+                  </p>
+                </li>
+              )
+            })}
           </ul>
         ) : (
           <p className="text-sm text-[var(--fg-muted)]">No notifications sent yet.</p>
@@ -263,5 +385,59 @@ export function PushNotifications() {
         onConfirm={() => send.mutate()}
       />
     </div>
+  )
+}
+
+/** Lets staff turn on push for the current browser so they get new-order alerts and test sends. */
+function ThisDeviceCard({ data }: { data: PushOverview }) {
+  const qc = useQueryClient()
+  const { status, ready, busy, enable, disable } = usePush()
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ['admin', 'push'] })
+  const linked = status === 'subscribed' && data.myDevices > 0
+
+  let description: string
+  if (!ready) description = 'Checking this browser…'
+  else if (status === 'unsupported')
+    description =
+      'This browser cannot receive notifications. On iPhone, add the site to your home screen first.'
+  else if (status === 'denied')
+    description = 'Notifications are blocked for this site in your browser settings.'
+  else if (linked)
+    description = `On — this device gets new-order alerts and your test sends. Your account has ${data.myDevices} ${
+      data.myDevices === 1 ? 'device' : 'devices'
+    } turned on.`
+  else if (status === 'subscribed')
+    description = 'Notifications are on, but this device is not linked to your account yet.'
+  else description = 'Turn on to get an alert here for every new order, and to receive test sends.'
+
+  return (
+    <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--brand)_15%,transparent)] text-[var(--brand-text)]">
+          <SiteIcon name="bell" size={18} />
+        </span>
+        <div className="min-w-0">
+          <p className="font-medium">This device · new-order alerts</p>
+          <p className="text-sm text-[var(--fg-muted)]">{description}</p>
+        </div>
+      </div>
+      {ready && status !== 'unsupported' && status !== 'denied' ? (
+        linked ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            loading={busy}
+            onClick={() => void disable().then(refresh)}
+          >
+            Turn off here
+          </Button>
+        ) : (
+          <Button size="sm" loading={busy} onClick={() => void enable().then(refresh)}>
+            {status === 'subscribed' ? 'Link to my account' : 'Turn on for this device'}
+          </Button>
+        )
+      ) : null}
+    </section>
   )
 }

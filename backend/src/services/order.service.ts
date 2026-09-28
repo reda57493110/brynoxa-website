@@ -8,6 +8,7 @@ import { resolveShippingFee } from '../utils/shipping';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
+import { waitUntil } from '@vercel/functions';
 import {
   notifyOrderPlaced,
   notifyOrderStatusChanged,
@@ -201,9 +202,11 @@ export async function createCodOrder(input: {
     console.error('Order notification failed', error);
   }
 
-  void notifyOrderPlaced(order).catch((error) => {
-    console.error('Order placed email failed', error);
-  });
+  waitUntil(
+    notifyOrderPlaced(order).catch((error) => {
+      console.error('Order placed email failed', error);
+    })
+  );
 
   return { order, receiptToken };
 }
@@ -414,9 +417,11 @@ export async function updateOrderStatus(
     console.error('Order status notification failed', error);
   }
 
-  void notifyOrderStatusChanged(order, orderStatus).catch((error) => {
-    console.error('Order status email failed', error);
-  });
+  waitUntil(
+    notifyOrderStatusChanged(order, orderStatus).catch((error) => {
+      console.error('Order status email failed', error);
+    })
+  );
 
   return order;
 }

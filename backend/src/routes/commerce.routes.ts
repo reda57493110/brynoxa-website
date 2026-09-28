@@ -18,6 +18,7 @@ import {
   newsletterSchema,
   pushSubscribeSchema,
   pushUnsubscribeSchema,
+  pushClickSchema,
   pushSendSchema,
   setUserRoleSchema,
   createStaffUserSchema,
@@ -186,7 +187,15 @@ router.post(
   misc.pushSubscribe
 );
 router.post('/push/unsubscribe', contactLimiter, validate(pushUnsubscribeSchema), misc.pushUnsubscribe);
+router.post('/push/click', validate(pushClickSchema), misc.pushClick);
 router.get('/admin/push', requireAuth, requirePermission('push'), misc.adminPushOverview);
+router.post(
+  '/admin/push/test',
+  requireAuth,
+  requirePermission('push'),
+  validate(pushSendSchema),
+  misc.adminPushTest
+);
 router.post(
   '/admin/push/send',
   requireAuth,

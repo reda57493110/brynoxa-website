@@ -9,6 +9,7 @@ import {
   unsubscribeFromPush,
   type PushStatus,
 } from '@/lib/push'
+import type { PushOrderLink } from '@/api/pushApi'
 import { useLocaleStore } from '@/store/localeStore'
 import { toast } from '@/store/toastStore'
 import { useT } from '@/hooks/useT'
@@ -41,10 +42,10 @@ export function usePush() {
     }
   }, [])
 
-  const enable = useCallback(async () => {
+  const enable = useCallback(async (order?: PushOrderLink) => {
     setBusy(true)
     try {
-      const next = await subscribeToPush(locale)
+      const next = await subscribeToPush(locale, order)
       if (next === 'subscribed') toast.success(t('push.enabled'))
       else if (next === 'denied') toast.info(t('push.blocked'))
       else dismissPushPrompt()

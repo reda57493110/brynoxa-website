@@ -235,13 +235,38 @@ export const pushSubscribeSchema = z.object({
     }),
   }),
   locale: z.enum(['en', 'fr', 'ar']).optional(),
+  /** Links this browser to an order's customer so they get status updates (works for guests). */
+  order: z
+    .object({
+      orderNumber: z.string().trim().min(6).max(40),
+      token: z.string().regex(/^[a-f0-9]{64}$/i),
+    })
+    .optional(),
 });
 
 export const pushUnsubscribeSchema = z.object({
   endpoint: z.string().max(1000),
 });
 
+export const pushClickSchema = z.object({
+  campaignId: z.string().regex(/^[a-f0-9]{24}$/i),
+});
+
+const pushTranslationSchema = z
+  .object({
+    title: z.string().trim().max(80).default(''),
+    body: z.string().trim().max(240).default(''),
+  })
+  .optional();
+
 export const pushSendSchema = z.object({
+  translations: z
+    .object({
+      en: pushTranslationSchema,
+      fr: pushTranslationSchema,
+      ar: pushTranslationSchema,
+    })
+    .optional(),
   title: z.string().trim().min(2).max(80),
   body: z.string().trim().min(2).max(240),
   url: z

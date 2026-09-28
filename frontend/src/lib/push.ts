@@ -1,4 +1,4 @@
-import { pushApi } from '@/api/pushApi'
+import { pushApi, type PushOrderLink } from '@/api/pushApi'
 import type { Locale } from '@/i18n'
 
 const DISMISSED_KEY = 'brynoxa-push-dismissed-at'
@@ -77,7 +77,7 @@ function base64UrlToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
 }
 
 /** Shows the native browser prompt — call only from a user click. */
-export async function subscribeToPush(locale: Locale): Promise<PushStatus> {
+export async function subscribeToPush(locale: Locale, order?: PushOrderLink): Promise<PushStatus> {
   if (!isPushSupported()) return 'unsupported'
 
   const permission = await Notification.requestPermission()
@@ -97,9 +97,22 @@ export async function subscribeToPush(locale: Locale): Promise<PushStatus> {
     })
   }
 
-  await pushApi.subscribe(subscription.toJSON(), locale)
+  await pushApi.subscribe(subscription.toJSON(), locale, order)
   rememberSyncedLocale(locale)
   return 'subscribed'
+}
+
+/**
+ * After checkout: if this browser already has notifications on, attach it to the new order's
+ * customer (via the receipt token for guests, or the signed-in session otherwise).
+ */
+export async function linkPushToOrder(locale: Locale, order?: PushOrderLink): Promise<void> {
+  if (!isPushSupported() || Notification.permission !== 'granted') return
+  const registration = await navigator.serviceWorker.getRegistration('/')
+  const subscription = await registration?.pushManager.getSubscription()
+  if (!subscription) return
+  await pushApi.subscribe(subscription.toJSON(), locale, order)
+  rememberSyncedLocale(locale)
 }
 
 export async function unsubscribeFromPush(): Promise<void> {

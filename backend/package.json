@@ -19,6 +19,7 @@
   ],
   "license": "ISC",
   "dependencies": {
+    "@vercel/functions": "^3.9.9",
     "bcryptjs": "^3.0.2",
     "brynoxa-website": "file:..",
     "cloudinary": "^2.6.1",

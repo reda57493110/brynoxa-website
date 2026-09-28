@@ -16,8 +16,10 @@ import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
+import { useLocaleStore } from '@/store/localeStore'
 import { toast } from '@/store/toastStore'
 import { saveGuestReceipt } from '@/lib/guestReceipt'
+import { linkPushToOrder } from '@/lib/push'
 import { formatCurrency } from '@/lib/format'
 import { resolveShippingFee } from '@/lib/shipping'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
@@ -28,6 +30,7 @@ import type { Address } from '@/types'
 
 export function Checkout() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   usePageTitle(t('checkout.title'), { noIndex: true })
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
@@ -158,6 +161,12 @@ export function Checkout() {
       } else if (!isAuth && payload.receiptToken) {
         saveGuestReceipt(order.orderNumber, payload.receiptToken, order)
       }
+      void linkPushToOrder(
+        locale,
+        payload.receiptToken
+          ? { orderNumber: order.orderNumber, token: payload.receiptToken }
+          : undefined
+      ).catch(() => undefined)
       clear()
       toast.success(t('checkout.orderPlaced'))
       navigate(`/order-confirmation/${order.orderNumber}`)

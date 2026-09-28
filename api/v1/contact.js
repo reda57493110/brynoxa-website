@@ -67,8 +67,16 @@ async function handlePushRoutes(req, res, route) {
       locale: data.locale,
       userId: user ? String(user._id) : undefined,
       userAgent: getUserAgent(req),
+      order: data.order,
     });
     sendJson(res, 201, { success: true, message: 'Subscribed', data: null });
+    return;
+  }
+
+  if (route === 'push/click') {
+    const data = parseBody(schemas.pushClickSchema, body);
+    await pushService.recordClick(data.campaignId);
+    sendJson(res, 200, { success: true, message: 'Recorded', data: null });
     return;
   }
 

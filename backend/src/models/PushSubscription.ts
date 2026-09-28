@@ -29,9 +29,14 @@ export const PushSubscription = mongoose.model<IPushSubscription>(
   pushSubscriptionSchema
 );
 
+pushSubscriptionSchema.index({ user: 1 });
+
+export type PushLocale = 'en' | 'fr' | 'ar';
+
 export interface IPushCampaign extends Document {
   title: string;
   body: string;
+  translations?: Partial<Record<PushLocale, { title: string; body: string }>>;
   url?: string;
   image?: string;
   sentBy?: Types.ObjectId;
@@ -40,13 +45,24 @@ export interface IPushCampaign extends Document {
   delivered: number;
   failed: number;
   removed: number;
+  clicks: number;
   createdAt: Date;
 }
+
+const translationSchema = new Schema(
+  { title: String, body: String },
+  { _id: false }
+);
 
 const pushCampaignSchema = new Schema<IPushCampaign>(
   {
     title: { type: String, required: true },
     body: { type: String, required: true },
+    translations: {
+      en: translationSchema,
+      fr: translationSchema,
+      ar: translationSchema,
+    },
     url: String,
     image: String,
     sentBy: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -55,6 +71,7 @@ const pushCampaignSchema = new Schema<IPushCampaign>(
     delivered: { type: Number, default: 0 },
     failed: { type: Number, default: 0 },
     removed: { type: Number, default: 0 },
+    clicks: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

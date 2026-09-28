@@ -2,6 +2,7 @@ import { env } from '../config/env';
 import { User } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
 import { escapeHtml, sendEmail } from './email.service';
+import { notifyCustomerOrderStatus, notifyStaffNewOrder } from './push.service';
 
 const STATUS_COPY: Record<
   OrderStatus,
@@ -92,8 +93,16 @@ export function statusNotificationCopy(status: OrderStatus) {
   return STATUS_COPY[status];
 }
 
-/** Customer + admin emails after a new COD order (non-blocking). */
+/** Customer + admin emails (and staff push alerts) after a new COD order (non-blocking). */
 export async function notifyOrderPlaced(order: InstanceType<typeof Order>) {
+  const staffPush = notifyStaffNewOrder(order).catch((error) => {
+    console.error('Staff order push failed', error);
+  });
+  await notifyOrderPlacedEmails(order);
+  await staffPush;
+}
+
+async function notifyOrderPlacedEmails(order: InstanceType<typeof Order>) {
   const user = await resolveCustomerEmail(order);
   const copy = STATUS_COPY.pending;
   const total = formatMad(order.pricing.total);
@@ -142,12 +151,17 @@ export async function notifyOrderPlaced(order: InstanceType<typeof Order>) {
   }
 }
 
-/** Customer email when admin (or system) changes order status. */
+/** Customer email + push when admin (or system) changes order status. */
 export async function notifyOrderStatusChanged(
   order: InstanceType<typeof Order>,
   status: OrderStatus
 ) {
   const user = await resolveCustomerEmail(order);
+  await notifyCustomerOrderStatus(order, status, { isGuest: Boolean(user?.isGuest) }).catch(
+    (error) => {
+      console.error('Customer order push failed', error);
+    }
+  );
   if (!user?.email) return;
 
   const copy = STATUS_COPY[status];

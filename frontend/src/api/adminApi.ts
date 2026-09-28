@@ -13,6 +13,7 @@ import type {
   ProductFilters,
   PushCampaign,
   PushOverview,
+  PushSendPayload,
   Review,
   StoreSettings,
   User,
@@ -121,8 +122,13 @@ export const adminApi = {
 
   push: {
     overview: () => api.get<ApiResponse<PushOverview>>('/admin/push'),
-    send: (payload: { title: string; body: string; url?: string; image?: string }) =>
+    send: (payload: PushSendPayload) =>
       api.post<ApiResponse<PushCampaign>>('/admin/push/send', payload),
+    test: (payload: PushSendPayload) =>
+      api.post<ApiResponse<{ targeted: number; delivered: number; failed: number }>>(
+        '/admin/push/test',
+        payload
+      ),
   },
 
   settings: {

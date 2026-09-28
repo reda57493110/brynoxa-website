@@ -11,6 +11,7 @@
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.9",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.6.1",
     "compression": "^1.8.0",

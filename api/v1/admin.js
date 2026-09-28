@@ -329,12 +329,12 @@ async function handlePushRoutes(req, res, route) {
   const pushService = require('../../backend/dist/services/push.service');
 
   if (route === 'push' && req.method === 'GET') {
-    const data = await pushService.getPushOverview();
+    const data = await pushService.getPushOverview(String(user._id));
     sendJson(res, 200, { success: true, message: 'Success', data });
     return;
   }
 
-  if (route === 'push/send' && req.method === 'POST') {
+  if ((route === 'push/send' || route === 'push/test') && req.method === 'POST') {
     const { pushSendSchema } = require('../../backend/dist/validators/schemas');
     const parsed = pushSendSchema.safeParse(await readJsonBody(req));
     if (!parsed.success) {
@@ -344,6 +344,13 @@ async function handlePushRoutes(req, res, route) {
       });
       return;
     }
+
+    if (route === 'push/test') {
+      const result = await pushService.sendTestPush(parsed.data, String(user._id));
+      sendJson(res, 200, { success: true, message: 'Test sent', data: result });
+      return;
+    }
+
     const campaign = await pushService.sendPushCampaign(parsed.data, {
       id: String(user._id),
       name: user.name,

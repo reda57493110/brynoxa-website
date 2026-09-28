@@ -274,6 +274,7 @@ export const pushSubscribe = asyncHandler(async (req: Request, res: Response) =>
     locale: req.body.locale,
     userId: req.user?.userId,
     userAgent: getUserAgent(req),
+    order: req.body.order,
   });
   sendSuccess(res, null, 'Subscribed', 201);
 });
@@ -283,8 +284,17 @@ export const pushUnsubscribe = asyncHandler(async (req: Request, res: Response) 
   sendSuccess(res, null, 'Unsubscribed');
 });
 
-export const adminPushOverview = asyncHandler(async (_req: Request, res: Response) => {
-  sendSuccess(res, await pushService.getPushOverview());
+export const pushClick = asyncHandler(async (req: Request, res: Response) => {
+  await pushService.recordClick(req.body.campaignId);
+  sendSuccess(res, null, 'Recorded');
+});
+
+export const adminPushOverview = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await pushService.getPushOverview(req.user!.userId));
+});
+
+export const adminPushTest = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await pushService.sendTestPush(req.body, req.user!.userId), 'Test sent');
 });
 
 export const adminPushSend = asyncHandler(async (req: Request, res: Response) => {
