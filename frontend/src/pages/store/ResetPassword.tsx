@@ -19,7 +19,7 @@ export function ResetPassword() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    if (password.length < 12 || password !== confirmPassword) {
+    if (password.length < 6 || password !== confirmPassword) {
       setError(t('account.passwordMismatch'))
       return
     }
@@ -46,7 +46,7 @@ export function ResetPassword() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           autoComplete="new-password"
-          minLength={12}
+          minLength={6}
           required
         />
         <Input
@@ -55,7 +55,7 @@ export function ResetPassword() {
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
           autoComplete="new-password"
-          minLength={12}
+          minLength={6}
           required
         />
         {error ? <p className="text-sm text-[var(--danger)]" role="alert">{error}</p> : null}

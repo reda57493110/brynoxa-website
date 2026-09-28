@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
     const body = await readJsonBody(req);
     const currentPassword = String(body.currentPassword || '');
     const newPassword = String(body.newPassword || '');
-    if (!currentPassword || !newPassword || newPassword.length < 8) {
+    if (!currentPassword || !newPassword || newPassword.length > 100) {
       sendJson(res, 400, { success: false, message: 'Invalid password payload' });
       return;
     }

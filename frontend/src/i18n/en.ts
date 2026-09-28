@@ -226,7 +226,7 @@ export const en = {
     registerFailed: 'Registration failed',
     nameTooShort: 'Enter your name (at least 2 characters)',
     emailInvalid: 'Enter a valid email address',
-    passwordTooShort: 'Password must be at least 12 characters',
+    passwordTooShort: 'Password must be at least 6 characters',
     mfaKicker: 'Security check',
     mfaTitle: 'Verify your identity',
     mfaBody: 'Enter the code from your authenticator app, or use a recovery code.',
@@ -316,7 +316,7 @@ export const en = {
     stockChanged: 'Stock changed for “{name}”. Please return to cart and adjust your quantity.',
     stockCheckFailed: 'We could not verify stock. Please try again.',
     emailRequired: 'Enter a valid email address',
-    passwordMin: 'Password must be at least 12 characters',
+    passwordMin: 'Password must be at least 6 characters',
     passwordMismatch: 'Passwords do not match',
   },
   orders: {

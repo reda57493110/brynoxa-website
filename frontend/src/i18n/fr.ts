@@ -229,7 +229,7 @@ export const fr: Messages = {
     registerFailed: 'Échec de l’inscription',
     nameTooShort: 'Entrez votre nom (au moins 2 caractères)',
     emailInvalid: 'Entrez une adresse e-mail valide',
-    passwordTooShort: 'Le mot de passe doit contenir au moins 12 caractères',
+    passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
     mfaKicker: 'Contrôle de sécurité',
     mfaTitle: 'Vérifiez votre identité',
     mfaBody: 'Entrez le code de votre application d’authentification ou un code de récupération.',
@@ -320,7 +320,7 @@ export const fr: Messages = {
     stockChanged: 'Le stock de « {name} » a changé. Revenez au panier et ajustez la quantité.',
     stockCheckFailed: 'Impossible de vérifier le stock. Veuillez réessayer.',
     emailRequired: 'Entrez une adresse e-mail valide',
-    passwordMin: 'Le mot de passe doit contenir au moins 12 caractères',
+    passwordMin: 'Le mot de passe doit contenir au moins 6 caractères',
     passwordMismatch: 'Les mots de passe ne correspondent pas',
   },
   orders: {

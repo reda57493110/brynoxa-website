@@ -181,7 +181,7 @@ export function AccountSettings() {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           autoComplete="new-password"
-          minLength={12}
+          minLength={6}
           required
         />
         <Input
@@ -190,7 +190,7 @@ export function AccountSettings() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           autoComplete="new-password"
-          minLength={12}
+          minLength={6}
           required
         />
         <Button type="submit" className="rounded-full" loading={changePassword.isPending}>

@@ -131,12 +131,28 @@ export async function verifyEmail(token: string) {
   await user.save({ validateBeforeSave: false });
 }
 
+const CUSTOMER_PASSWORD_MIN = 6;
+const STAFF_PASSWORD_MIN = 12;
+
+function assertPasswordLength(role: string | undefined, password: string) {
+  const min = isStaffRole(role) ? STAFF_PASSWORD_MIN : CUSTOMER_PASSWORD_MIN;
+  if (password.length < min) {
+    throw new ApiError(
+      400,
+      isStaffRole(role)
+        ? `Staff passwords must be at least ${min} characters`
+        : `Password must be at least ${min} characters`
+    );
+  }
+}
+
 export async function resetPassword(token: string, newPassword: string) {
   const user = await User.findOne({
     passwordResetTokenHash: hashOneTimeToken(token),
     passwordResetExpires: { $gt: new Date() },
   }).select('+passwordResetTokenHash +passwordResetExpires');
   if (!user) throw new ApiError(400, 'Reset link is invalid or expired');
+  assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
   user.refreshToken = undefined;
   user.passwordResetTokenHash = undefined;
@@ -611,6 +627,7 @@ export async function changePassword(userId: string, currentPassword: string, ne
   if (!user || !(await user.comparePassword(currentPassword))) {
     throw new ApiError(401, 'Current password is incorrect');
   }
+  assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
   user.refreshToken = undefined;
   await user.save();

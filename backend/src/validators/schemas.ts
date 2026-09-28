@@ -1,9 +1,16 @@
 import { z } from 'zod';
 
+/** Customers; staff accounts are held to 12 in auth.service. */
+const CUSTOMER_PASSWORD_MIN = 6;
+const customerPassword = z
+  .string()
+  .min(CUSTOMER_PASSWORD_MIN, `Password must be at least ${CUSTOMER_PASSWORD_MIN} characters`)
+  .max(100);
+
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email(),
-  password: z.string().min(12).max(100),
+  password: customerPassword,
   phone: z
     .string()
     .trim()
@@ -27,7 +34,7 @@ export const mfaLoginSchema = z.object({
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1).max(100),
-  newPassword: z.string().min(12).max(100),
+  newPassword: customerPassword,
 });
 
 const oneTimeToken = z.string().regex(/^[a-f0-9]{64}$/i, 'Invalid token');
@@ -42,7 +49,7 @@ export const verifyEmailSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: oneTimeToken,
-  newPassword: z.string().min(12).max(100),
+  newPassword: customerPassword,
 });
 
 export const updateProfileSchema = z.object({
@@ -128,7 +135,7 @@ export const createOrderSchema = z.object({
   /** Guest checkout — required when not logged in */
   email: z.string().trim().email().optional(),
   /** Optional: create / upgrade account at checkout */
-  password: z.string().min(12).max(100).optional(),
+  password: customerPassword.optional(),
 });
 
 export const guestOrderReceiptSchema = z.object({

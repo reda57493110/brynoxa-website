@@ -228,7 +228,7 @@ export const ar: Messages = {
     registerFailed: 'فشل إنشاء الحساب',
     nameTooShort: 'أدخل اسمك (حرفان على الأقل)',
     emailInvalid: 'أدخل بريداً إلكترونياً صالحاً',
-    passwordTooShort: 'كلمة المرور يجب أن تكون 12 حرفاً على الأقل',
+    passwordTooShort: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
     mfaKicker: 'فحص أمني',
     mfaTitle: 'تحقق من هويتك',
     mfaBody: 'أدخل الرمز من تطبيق المصادقة أو استخدم رمز استرداد.',
@@ -318,7 +318,7 @@ export const ar: Messages = {
     stockChanged: 'تغيّر مخزون «{name}». عُد إلى السلة وعدّل الكمية.',
     stockCheckFailed: 'تعذر التحقق من المخزون. يرجى المحاولة مجدداً.',
     emailRequired: 'أدخل بريداً إلكترونياً صالحاً',
-    passwordMin: 'يجب أن تكون كلمة المرور 12 حرفاً على الأقل',
+    passwordMin: 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
     passwordMismatch: 'كلمتا المرور غير متطابقتين',
   },
   orders: {

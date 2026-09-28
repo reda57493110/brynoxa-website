@@ -231,7 +231,7 @@ export function Checkout() {
         return
       }
       if (createAccount) {
-        if (password.length < 12) {
+        if (password.length < 6) {
           setFormError(t('checkout.passwordMin'))
           return
         }
@@ -342,7 +342,7 @@ export function Checkout() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        minLength={12}
+                        minLength={6}
                       />
                       <Input
                         label={t('checkout.confirmPassword')}
@@ -351,7 +351,7 @@ export function Checkout() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
-                        minLength={12}
+                        minLength={6}
                       />
                     </div>
                   ) : null}
