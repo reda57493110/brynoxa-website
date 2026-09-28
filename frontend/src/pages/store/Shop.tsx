@@ -188,7 +188,7 @@ export function Shop() {
         titleId="shop-heading"
         image={SHOP_HERO_IMAGE}
         imagePosition="object-[50%_40%]"
-        containerClassName="max-w-[96rem]"
+        maxWidthClassName="max-w-[96rem]"
         kicker={t('shop.kicker')}
         titleLead={
           filters.q
