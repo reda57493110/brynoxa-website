@@ -18,7 +18,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { StoreHero, heroChip } from '@/components/layout/StoreHero'
+import { StoreHero, heroChip, heroInput } from '@/components/layout/StoreHero'
 
 const SHOP_HERO_IMAGE =
   'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
@@ -226,7 +226,7 @@ export function Shop() {
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             placeholder={t('shop.searchShopPlaceholder')}
-            className="h-10 min-w-0 flex-1 rounded-full border border-white/20 bg-white/10 px-4 text-sm text-white outline-none backdrop-blur-sm placeholder:text-white/55 focus:border-[var(--brand)] sm:h-11"
+            className={heroInput}
           />
           <button
             type="submit"

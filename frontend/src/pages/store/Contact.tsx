@@ -132,6 +132,7 @@ export function Contact() {
         titleId="contact-hero-title"
         image={CONTACT_HERO_IMAGE}
         imagePosition="object-[60%_88%]"
+        framePosition="object-[55%_80%]"
         kicker={t('contact.heroKicker')}
         titleLead={t('contact.heroTitle')}
         titleAccent={t('contact.heroTitleAccent')}
