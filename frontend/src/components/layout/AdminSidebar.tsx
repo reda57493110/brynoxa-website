@@ -31,6 +31,7 @@ const items: {
   { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },
   { to: '/admin/reviews', label: 'Reviews', icon: 'star' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'ticket' },
+  { to: '/admin/notifications', label: 'Notifications', icon: 'bell' },
   { to: '/admin/security', label: 'Security', icon: 'shield' },
   { to: '/admin/settings', label: 'Settings', icon: 'settings' },
 ]

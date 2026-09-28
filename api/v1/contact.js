@@ -35,17 +35,70 @@ function parseBody(schema, body) {
   return parsed.data;
 }
 
-module.exports = async (req, res) => {
+async function handlePushRoutes(req, res, route) {
+  const pushService = require('../../backend/dist/services/push.service');
+
+  if (route === 'push/public-key' && req.method === 'GET') {
+    res.setHeader('Cache-Control', 'public, max-age=300');
+    sendJson(res, 200, {
+      success: true,
+      message: 'Success',
+      data: { publicKey: pushService.getPushPublicKey() },
+    });
+    return;
+  }
+
   if (req.method !== 'POST') {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
     return;
   }
 
-  try {
-    await connectMongo();
+  await connectMongo();
+  const schemas = require('../../backend/dist/validators/schemas');
+  const body = await readJsonBody(req);
 
+  if (route === 'push/subscribe') {
+    const data = parseBody(schemas.pushSubscribeSchema, body);
+    const { optionalUser } = require('../_lib/auth');
+    const { getUserAgent } = require('../../backend/dist/utils/requestMeta');
+    const user = await optionalUser(req).catch(() => null);
+    await pushService.saveSubscription({
+      subscription: data.subscription,
+      locale: data.locale,
+      userId: user ? String(user._id) : undefined,
+      userAgent: getUserAgent(req),
+    });
+    sendJson(res, 201, { success: true, message: 'Subscribed', data: null });
+    return;
+  }
+
+  if (route === 'push/unsubscribe') {
+    const data = parseBody(schemas.pushUnsubscribeSchema, body);
+    await pushService.removeSubscription(data.endpoint);
+    sendJson(res, 200, { success: true, message: 'Unsubscribed', data: null });
+    return;
+  }
+
+  sendJson(res, 404, { success: false, message: 'Not found' });
+}
+
+module.exports = async (req, res) => {
+  try {
     const { pathname, query } = parseUrl(req.url || '');
     const route = resolveRoute(pathname, query);
+
+    if (route.startsWith('push/')) {
+      await handlePushRoutes(req, res, route);
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      sendJson(res, 405, { success: false, message: 'Method not allowed' });
+      return;
+    }
+
+    await connectMongo();
+
     const schemas = require('../../backend/dist/validators/schemas');
     const { ContactMessage, NewsletterSubscriber } = require('../../backend/dist/models/Contact');
     const body = await readJsonBody(req);

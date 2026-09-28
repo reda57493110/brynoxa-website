@@ -11,6 +11,8 @@ import type {
   OrderStatus,
   Product,
   ProductFilters,
+  PushCampaign,
+  PushOverview,
   Review,
   StoreSettings,
   User,
@@ -115,6 +117,12 @@ export const adminApi = {
 
   subscribers: {
     list: () => api.get<ApiResponse<NewsletterSub[]>>('/admin/subscribers'),
+  },
+
+  push: {
+    overview: () => api.get<ApiResponse<PushOverview>>('/admin/push'),
+    send: (payload: { title: string; body: string; url?: string; image?: string }) =>
+      api.post<ApiResponse<PushCampaign>>('/admin/push/send', payload),
   },
 
   settings: {

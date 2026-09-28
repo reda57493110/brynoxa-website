@@ -8,7 +8,10 @@ import * as couponService from '../services/coupon.service';
 import * as adminService from '../services/admin.service';
 import { getSettings, Settings } from '../models/Settings';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
+import { User } from '../models/User';
+import * as pushService from '../services/push.service';
 import { param } from '../utils/params';
+import { getUserAgent } from '../utils/requestMeta';
 
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
   const result = await reviewService.createReview({
@@ -259,6 +262,38 @@ export const subscribeNewsletter = asyncHandler(async (req: Request, res: Respon
   }
   await NewsletterSubscriber.create({ email });
   sendSuccess(res, { email }, 'Subscribed', 201);
+});
+
+export const pushPublicKey = asyncHandler(async (_req: Request, res: Response) => {
+  sendSuccess(res, { publicKey: pushService.getPushPublicKey() });
+});
+
+export const pushSubscribe = asyncHandler(async (req: Request, res: Response) => {
+  await pushService.saveSubscription({
+    subscription: req.body.subscription,
+    locale: req.body.locale,
+    userId: req.user?.userId,
+    userAgent: getUserAgent(req),
+  });
+  sendSuccess(res, null, 'Subscribed', 201);
+});
+
+export const pushUnsubscribe = asyncHandler(async (req: Request, res: Response) => {
+  await pushService.removeSubscription(req.body.endpoint);
+  sendSuccess(res, null, 'Unsubscribed');
+});
+
+export const adminPushOverview = asyncHandler(async (_req: Request, res: Response) => {
+  sendSuccess(res, await pushService.getPushOverview());
+});
+
+export const adminPushSend = asyncHandler(async (req: Request, res: Response) => {
+  const sender = await User.findById(req.user!.userId).select('name').lean();
+  const campaign = await pushService.sendPushCampaign(req.body, {
+    id: req.user!.userId,
+    name: sender?.name,
+  });
+  sendSuccess(res, campaign, 'Notification sent', 201);
 });
 
 void Settings;

@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { WhatsAppHost } from '@/components/contact/WhatsAppHost'
+import { PushPrompt } from '@/components/push/PushPrompt'
 import { useT } from '@/hooks/useT'
 
 const scrollPositions = new Map<string, number>()
@@ -107,6 +108,7 @@ export function StoreLayout() {
       </motion.main>
       <Footer />
       <WhatsAppHost />
+      <PushPrompt />
     </div>
   )
 }

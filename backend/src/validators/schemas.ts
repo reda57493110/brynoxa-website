@@ -209,6 +209,51 @@ export const newsletterSchema = z.object({
   email: z.string().email(),
 });
 
+/** Push services we accept endpoints from (Chrome/Edge/Firefox/Safari). */
+const PUSH_HOST_PATTERN =
+  /(^|\.)(fcm\.googleapis\.com|push\.services\.mozilla\.com|notify\.windows\.com|push\.apple\.com)$/i;
+
+const pushEndpointSchema = z
+  .string()
+  .url()
+  .max(1000)
+  .refine((value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' && PUSH_HOST_PATTERN.test(url.hostname);
+    } catch {
+      return false;
+    }
+  }, 'Unsupported push endpoint');
+
+export const pushSubscribeSchema = z.object({
+  subscription: z.object({
+    endpoint: pushEndpointSchema,
+    keys: z.object({
+      p256dh: z.string().min(1).max(200),
+      auth: z.string().min(1).max(100),
+    }),
+  }),
+  locale: z.enum(['en', 'fr', 'ar']).optional(),
+});
+
+export const pushUnsubscribeSchema = z.object({
+  endpoint: z.string().max(1000),
+});
+
+export const pushSendSchema = z.object({
+  title: z.string().trim().min(2).max(80),
+  body: z.string().trim().min(2).max(240),
+  url: z
+    .string()
+    .trim()
+    .max(300)
+    .regex(/^\/(?!\/)/, 'Link must be a page on this site, starting with /')
+    .optional()
+    .or(z.literal('')),
+  image: z.string().trim().url().max(500).startsWith('https://').optional().or(z.literal('')),
+});
+
 export const setUserRoleSchema = z.object({
   // Owner (admin) cannot be assigned via API — only hireable staff roles + customer (remove)
   role: z.enum(['customer', 'orders', 'catalog', 'support', 'marketing']),

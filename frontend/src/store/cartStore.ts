@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CartItem } from '@/types'
 import { trackAddToCart } from '@/lib/analytics'
+import { recordAddToCart } from '@/lib/push'
 
 interface CartState {
   items: CartItem[]
@@ -41,6 +42,7 @@ export const useCartStore = create<CartState>()(
           price: item.price,
           quantity: qty,
         })
+        recordAddToCart()
       },
       removeItem: (productId) =>
         set((state) => ({ items: state.items.filter((i) => i.productId !== productId) })),

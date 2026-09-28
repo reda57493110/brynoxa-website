@@ -4,6 +4,7 @@ import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SocialGlyph } from '@/components/contact/BrandIcons'
 import { PhoneText } from '@/components/ui/PhoneText'
+import { PushToggle } from '@/components/push/PushToggle'
 import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -132,6 +133,9 @@ export function Footer() {
                 <SiteIcon name="mail" size={14} className="shrink-0 text-[var(--brand-text)]" />
                 <span className="truncate">{CONTACT.email.value}</span>
               </a>
+            </li>
+            <li className="empty:hidden">
+              <PushToggle className={linkClass} />
             </li>
           </ul>
         </div>

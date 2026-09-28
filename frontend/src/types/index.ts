@@ -299,6 +299,27 @@ export interface NewsletterSub {
   createdAt: string
 }
 
+export interface PushCampaign {
+  _id: string
+  title: string
+  body: string
+  url?: string
+  image?: string
+  sentByName?: string
+  targeted: number
+  delivered: number
+  failed: number
+  removed: number
+  createdAt: string
+}
+
+export interface PushOverview {
+  configured: boolean
+  subscribers: number
+  byLocale: Partial<Record<'en' | 'fr' | 'ar', number>>
+  campaigns: PushCampaign[]
+}
+
 export interface CartItem {
   productId: string
   slug: string

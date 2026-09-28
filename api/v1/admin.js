@@ -322,6 +322,39 @@ async function handleCustomerRoutes(req, res, route, query) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
+async function handlePushRoutes(req, res, route) {
+  const user = await requireStaff(req, res, ['push']);
+  if (!user) return;
+
+  const pushService = require('../../backend/dist/services/push.service');
+
+  if (route === 'push' && req.method === 'GET') {
+    const data = await pushService.getPushOverview();
+    sendJson(res, 200, { success: true, message: 'Success', data });
+    return;
+  }
+
+  if (route === 'push/send' && req.method === 'POST') {
+    const { pushSendSchema } = require('../../backend/dist/validators/schemas');
+    const parsed = pushSendSchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, {
+        success: false,
+        message: parsed.error.issues?.[0]?.message || 'Validation failed',
+      });
+      return;
+    }
+    const campaign = await pushService.sendPushCampaign(parsed.data, {
+      id: String(user._id),
+      name: user.name,
+    });
+    sendJson(res, 201, { success: true, message: 'Notification sent', data: campaign });
+    return;
+  }
+
+  sendJson(res, 405, { success: false, message: 'Method not allowed' });
+}
+
 module.exports = async (req, res) => {
   try {
     const { pathname, query } = parseUrl(req.url || '');
@@ -382,6 +415,12 @@ module.exports = async (req, res) => {
     // Customers list + enable/disable
     if (route === 'customers' || route.startsWith('customers/')) {
       await handleCustomerRoutes(req, res, route, query);
+      return;
+    }
+
+    // Browser push notifications: overview + send
+    if (route === 'push' || route.startsWith('push/')) {
+      await handlePushRoutes(req, res, route);
       return;
     }
 

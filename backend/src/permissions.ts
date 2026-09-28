@@ -17,6 +17,7 @@ export type Permission =
   | 'messages'
   | 'reviews'
   | 'coupons'
+  | 'push'
   | 'settings';
 
 const ALL_PERMISSIONS: Permission[] = [
@@ -33,6 +34,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'messages',
   'reviews',
   'coupons',
+  'push',
   'settings',
 ];
 
@@ -41,7 +43,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   orders: ['orders:read', 'orders:write', 'customers:read'],
   catalog: ['products:read', 'products:write', 'products:delete', 'inventory:write'],
   support: ['orders:read', 'orders:write', 'messages', 'customers:read'],
-  marketing: ['coupons', 'reviews'],
+  marketing: ['coupons', 'reviews', 'push'],
 };
 
 export function isStaffRole(role: string | undefined | null): role is StaffRole {

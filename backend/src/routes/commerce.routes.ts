@@ -16,6 +16,9 @@ import {
   settingsSchema,
   contactSchema,
   newsletterSchema,
+  pushSubscribeSchema,
+  pushUnsubscribeSchema,
+  pushSendSchema,
   setUserRoleSchema,
   createStaffUserSchema,
 } from '../validators/schemas';
@@ -173,5 +176,23 @@ router.patch(
 
 router.post('/contact', contactLimiter, validate(contactSchema), misc.submitContact);
 router.post('/newsletter', contactLimiter, validate(newsletterSchema), misc.subscribeNewsletter);
+
+router.get('/push/public-key', misc.pushPublicKey);
+router.post(
+  '/push/subscribe',
+  contactLimiter,
+  optionalAuth,
+  validate(pushSubscribeSchema),
+  misc.pushSubscribe
+);
+router.post('/push/unsubscribe', contactLimiter, validate(pushUnsubscribeSchema), misc.pushUnsubscribe);
+router.get('/admin/push', requireAuth, requirePermission('push'), misc.adminPushOverview);
+router.post(
+  '/admin/push/send',
+  requireAuth,
+  requirePermission('push'),
+  validate(pushSendSchema),
+  misc.adminPushSend
+);
 
 export default router;

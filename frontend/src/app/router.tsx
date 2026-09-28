@@ -89,6 +89,9 @@ const AdminReviews = lazy(() =>
 const AdminCoupons = lazy(() =>
   import('@/pages/admin/Coupons').then((m) => ({ default: m.Coupons }))
 )
+const AdminPushNotifications = lazy(() =>
+  import('@/pages/admin/PushNotifications').then((m) => ({ default: m.PushNotifications }))
+)
 const AdminSettings = lazy(() =>
   import('@/pages/admin/Settings').then((m) => ({ default: m.Settings }))
 )
@@ -195,6 +198,7 @@ export function AppRouter() {
         <Route path="messages" element={<S><AdminMessages /></S>} />
         <Route path="reviews" element={<S><AdminReviews /></S>} />
         <Route path="coupons" element={<S><AdminCoupons /></S>} />
+        <Route path="notifications" element={<S><AdminPushNotifications /></S>} />
         <Route path="security" element={<S><AdminSecurity /></S>} />
         <Route path="settings" element={<S><AdminSettings /></S>} />
       </Route>

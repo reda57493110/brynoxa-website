@@ -16,7 +16,7 @@ export const STAFF_ROLE_DESCRIPTIONS: Record<StaffRole, string> = {
   orders: 'Orders pipeline and customer lookup',
   catalog: 'Products, inventory, and categories',
   support: 'Inbox, order updates, and customer lookup',
-  marketing: 'Coupons and product reviews',
+  marketing: 'Coupons, product reviews, and push notifications',
 }
 
 /** Capability keys used by API + sidebar. */
@@ -34,6 +34,7 @@ export type Permission =
   | 'messages'
   | 'reviews'
   | 'coupons'
+  | 'push'
   | 'settings'
 
 const ALL_PERMISSIONS: Permission[] = [
@@ -50,6 +51,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'messages',
   'reviews',
   'coupons',
+  'push',
   'settings',
 ]
 
@@ -59,7 +61,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   orders: ['orders:read', 'orders:write', 'customers:read'],
   catalog: ['products:read', 'products:write', 'products:delete', 'inventory:write'],
   support: ['orders:read', 'orders:write', 'messages', 'customers:read'],
-  marketing: ['coupons', 'reviews'],
+  marketing: ['coupons', 'reviews', 'push'],
 }
 
 /** First page each role opens after login. */
@@ -108,5 +110,6 @@ export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin/messages': 'messages',
   '/admin/reviews': 'reviews',
   '/admin/coupons': 'coupons',
+  '/admin/notifications': 'push',
   '/admin/settings': 'settings',
 }

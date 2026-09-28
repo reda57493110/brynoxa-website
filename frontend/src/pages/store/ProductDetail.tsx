@@ -29,6 +29,7 @@ import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import { formatDate } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
+import { recordProductView } from '@/lib/push'
 import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
@@ -75,6 +76,7 @@ export function ProductDetail() {
       price: product.data.price,
       quantity: 1,
     })
+    recordProductView()
   }, [product.data?._id])
 
   const productImage = product.data ? primaryImage(product.data) : undefined
