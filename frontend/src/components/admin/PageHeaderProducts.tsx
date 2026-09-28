@@ -15,8 +15,6 @@ import type { HeroPage, Product } from '@/types'
 
 const PAGES: { page: HeroPage; label: string; path: string }[] = [
   { page: 'shop', label: 'Shop page', path: '/shop' },
-  { page: 'services', label: 'Services page', path: '/services' },
-  { page: 'contact', label: 'Contact page', path: '/contact' },
 ]
 
 function primaryImage(p: Product) {

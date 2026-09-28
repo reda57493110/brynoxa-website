@@ -46,23 +46,17 @@ function HeroProductCard({ product }: { product: Product }) {
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[var(--bg-muted)] lg:aspect-[16/9]">
         <SafeImage
-          src={sizedImageUrl(image, 240)}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full max-w-none scale-125 object-cover opacity-70 blur-2xl saturate-150"
-        />
-        <div
-          className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.18)_100%)]"
-          aria-hidden="true"
-        />
-        <SafeImage
           src={sizedImageUrl(image, 1600)}
           alt={product.name}
           width={1600}
           height={1000}
           sizes="(min-width: 768px) 60vw, 100vw"
-          className="relative h-full w-full max-w-none object-contain p-3 drop-shadow-[0_18px_30px_rgba(0,0,0,0.35)] transition duration-500 group-hover:scale-[1.04] sm:p-5"
+          className="absolute inset-0 h-full w-full max-w-none object-cover transition duration-500 group-hover:scale-[1.04]"
           fetchPriority="high"
+        />
+        <div
+          className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/25 to-transparent"
+          aria-hidden="true"
         />
 
       <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2 sm:inset-x-4 sm:top-4">
@@ -126,8 +120,8 @@ export function StoreHero({
   maxWidthClassName = 'max-w-7xl',
   children,
 }: {
-  /** Which Admin → Settings → Page headers product to feature. */
-  page: HeroPage
+  /** Feature the Admin → Settings → Page header product; omit to show the photo. */
+  page?: HeroPage
   kicker: string
   titleLead: ReactNode
   titleAccent?: ReactNode

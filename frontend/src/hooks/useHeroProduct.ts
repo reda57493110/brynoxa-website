@@ -3,19 +3,19 @@ import { settingsApi } from '@/api/settingsApi'
 import { productsApi } from '@/api/productsApi'
 import type { HeroPage, Product } from '@/types'
 
-const AUTO_ORDER: Record<HeroPage, number> = { shop: 0, services: 1, contact: 2 }
-
 /**
- * Product chosen in Admin → Settings → Page headers. When none is chosen, each page
- * shows a different featured product (or a newest product if nothing is featured).
+ * Product chosen in Admin → Settings → Page header. When none is chosen, shows the
+ * first featured product (or the newest one if nothing is featured).
+ * Pass no page to disable (the header then shows its default photo).
  */
-export function useHeroProduct(page: HeroPage): { product: Product | null; pending: boolean } {
+export function useHeroProduct(page?: HeroPage): { product: Product | null; pending: boolean } {
   const settings = useQuery({
     queryKey: ['settings'],
     queryFn: async () => (await settingsApi.get()).data.data,
     staleTime: 60_000,
+    enabled: Boolean(page),
   })
-  const id = settings.data?.pageHeroProducts?.[page] || ''
+  const id = (page && settings.data?.pageHeroProducts?.[page]) || ''
 
   const chosen = useQuery({
     queryKey: ['hero-product', id],
@@ -24,7 +24,8 @@ export function useHeroProduct(page: HeroPage): { product: Product | null; pendi
     staleTime: 5 * 60_000,
   })
 
-  const needAuto = settings.isSuccess && (!id || (chosen.isSuccess && !chosen.data))
+  const needAuto =
+    Boolean(page) && settings.isSuccess && (!id || (chosen.isSuccess && !chosen.data))
   const auto = useQuery({
     queryKey: ['hero-auto-products'],
     queryFn: async () => {
@@ -36,11 +37,10 @@ export function useHeroProduct(page: HeroPage): { product: Product | null; pendi
     staleTime: 5 * 60_000,
   })
 
-  const autoList = auto.data ?? []
-  const autoProduct = autoList.length ? autoList[AUTO_ORDER[page] % autoList.length] : null
+  if (!page) return { product: null, pending: false }
 
   return {
-    product: (id && chosen.data) || (needAuto ? autoProduct : null),
+    product: (id && chosen.data) || (needAuto ? (auto.data?.[0] ?? null) : null),
     pending:
       settings.isPending || (Boolean(id) && chosen.isPending) || (needAuto && auto.isPending),
   }

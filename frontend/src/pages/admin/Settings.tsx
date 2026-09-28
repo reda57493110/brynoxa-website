@@ -99,12 +99,12 @@ export function Settings() {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-display text-lg font-semibold">Page headers</h2>
+          <h2 className="font-display text-lg font-semibold">Shop page header</h2>
           <p className="text-sm text-[var(--fg-muted)]">
-            The product shown at the top of the Shop, Services, and Contact pages, with its price
-            and a “View product” button. By default each page shows one of your featured products
-            (mark products as Featured when editing them). Choose a product to pin it; Remove goes
-            back to automatic. Changes are live right away.
+            The product shown at the top of the Shop page, with its price and a “View product”
+            button. By default it shows your first featured product (mark products as Featured when
+            editing them). Choose a product to pin it; Remove goes back to automatic. Changes are
+            live right away.
           </p>
         </div>
         <PageHeaderProducts value={settings.data?.pageHeroProducts} />
