@@ -20,7 +20,7 @@ import { cn } from '@/lib/cn'
 import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 
 const CONTACT_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?auto=format&fit=crop&w=2560&q=80'
+  'https://images.unsplash.com/photo-1553775282-20af80779df7?auto=format&fit=crop&w=2560&q=80'
 
 type FormErrors = Partial<Record<'name' | 'email' | 'subject' | 'message', string>>
 
@@ -131,7 +131,7 @@ export function Contact() {
       <StoreHero
         titleId="contact-hero-title"
         image={CONTACT_HERO_IMAGE}
-        imagePosition="object-[50%_78%]"
+        imagePosition="object-[60%_88%]"
         kicker={t('contact.heroKicker')}
         titleLead={t('contact.heroTitle')}
         titleAccent={t('contact.heroTitleAccent')}

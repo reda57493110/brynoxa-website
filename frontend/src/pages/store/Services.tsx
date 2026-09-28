@@ -33,7 +33,7 @@ const pillGhost =
   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
 
 const SERVICES_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&w=2560&q=80'
+  'https://images.unsplash.com/photo-1555617981-dac3880eac6e?auto=format&fit=crop&w=2560&q=80'
 
 const jumpChip =
   'inline-flex h-8 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-9 sm:px-3.5 sm:text-sm'
@@ -77,7 +77,7 @@ export function Services() {
       <StoreHero
         titleId="services-hero-title"
         image={SERVICES_HERO_IMAGE}
-        imagePosition="object-[50%_60%]"
+        imagePosition="object-[50%_45%]"
         kicker={copy.services.heroKicker}
         titleLead={copy.services.heroTitle}
         titleAccent={copy.services.heroTitleAccent}

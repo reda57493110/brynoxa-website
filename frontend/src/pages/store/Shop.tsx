@@ -21,7 +21,7 @@ import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { StoreHero, heroChip } from '@/components/layout/StoreHero'
 
 const SHOP_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=2560&q=80'
+  'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
 
 export function Shop() {
   const t = useT()
@@ -187,7 +187,7 @@ export function Shop() {
       <StoreHero
         titleId="shop-heading"
         image={SHOP_HERO_IMAGE}
-        imagePosition="object-[60%_55%]"
+        imagePosition="object-[50%_40%]"
         containerClassName="max-w-[96rem]"
         kicker={t('shop.kicker')}
         titleLead={
