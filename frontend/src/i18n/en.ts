@@ -161,9 +161,11 @@ export const en = {
   },
   shop: {
     title: 'Shop',
-    kicker: 'Morocco',
+    kicker: 'Shop · Morocco',
+    heroTitleLead: 'Shop the',
+    heroTitleAccent: 'Brynoxa catalog',
     searchTitle: 'Search',
-    body: 'Browse by category — laptops, PCs, screens, peripherals, and upgrades. Prices in DH.',
+    body: 'Laptops, gaming PCs, monitors, and accessories — prices in DH, cash on delivery across Morocco.',
     resultsFor: 'Results for “{q}”',
     resultsIn: ' in {name}',
     shopByCategory: 'Shop by category',
@@ -535,7 +537,8 @@ export const en = {
   },
   contact: {
     heroKicker: 'Contact',
-    heroTitle: 'Contact us',
+    heroTitle: 'We’re here',
+    heroTitleAccent: 'to help you',
     heroBody:
       'Orders, warranty, or a product question — WhatsApp is fastest. The form reaches the same team.',
     sendMessage: 'Send a message',
@@ -667,7 +670,8 @@ export const en = {
   },
   services: {
     heroKicker: 'Services',
-    heroTitle: 'Warranty, returns, delivery',
+    heroTitle: 'Warranty, returns,',
+    heroTitleAccent: 'and fast delivery',
     heroBody: 'Six months of coverage, 14 days to send it back, cash on delivery across Morocco.',
     proofReturns: '14-day returns',
     proofPay: 'Pay on arrival',

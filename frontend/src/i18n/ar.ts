@@ -163,9 +163,11 @@ export const ar: Messages = {
   },
   shop: {
     title: 'المتجر',
-    kicker: 'المغرب',
+    kicker: 'المتجر · المغرب',
+    heroTitleLead: 'تسوّق من',
+    heroTitleAccent: 'تشكيلة برينوكسا',
     searchTitle: 'بحث',
-    body: 'تصفّح حسب الفئة — حواسيب محمولة وأجهزة وأشاشات وملحقات وترقيات. الأسعار بالدرهم.',
+    body: 'حواسيب محمولة وأجهزة ألعاب وشاشات وملحقات — الأسعار بالدرهم والدفع عند الاستلام في كل المغرب.',
     resultsFor: 'نتائج « {q} »',
     resultsIn: ' في {name}',
     shopByCategory: 'تسوق حسب الفئة',
@@ -537,7 +539,8 @@ export const ar: Messages = {
   },
   contact: {
     heroKicker: 'اتصل بنا',
-    heroTitle: 'تواصل معنا',
+    heroTitle: 'نحن هنا',
+    heroTitleAccent: 'لمساعدتك',
     heroBody:
       'طلب أو ضمان أو سؤال عن منتج — واتساب الأسرع. النموذج يصل إلى الفريق نفسه.',
     sendMessage: 'أرسل رسالة',
@@ -669,7 +672,8 @@ export const ar: Messages = {
   },
   services: {
     heroKicker: 'الخدمات',
-    heroTitle: 'الضمان والإرجاع والتوصيل',
+    heroTitle: 'الضمان والإرجاع',
+    heroTitleAccent: 'والتوصيل السريع',
     heroBody: 'ستة أشهر تغطية، 14 يوماً للإرجاع، والدفع عند الاستلام في المغرب.',
     proofReturns: 'إرجاع خلال 14 يوماً',
     proofPay: 'ادفع عند الوصول',

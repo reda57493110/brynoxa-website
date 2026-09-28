@@ -17,23 +17,12 @@ import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
+import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 
-const pillPrimary =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
-
-const pillGhost =
-  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
+const CONTACT_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1423666639041-f56000c27a9a?auto=format&fit=crop&w=2560&q=80'
 
 type FormErrors = Partial<Record<'name' | 'email' | 'subject' | 'message', string>>
-
-function fadeIn(reduce: boolean | null, delay = 0) {
-  if (reduce) return { initial: false as const, animate: { opacity: 1 } }
-  return {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] as const },
-  }
-}
 
 export function Contact() {
   const reduceMotion = useReducedMotion()
@@ -139,42 +128,33 @@ export function Contact() {
 
   return (
     <>
-      <section aria-labelledby="contact-hero-title" className="page-hero">
-        <Container className="relative py-5 sm:py-10">
-          <motion.div {...fadeIn(reduceMotion)}>
-            <p className="kicker">{t('contact.heroKicker')}</p>
-            <h1
-              id="contact-hero-title"
-              className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-5xl"
-            >
-              {t('contact.heroTitle')}
-            </h1>
-            <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
-              {t('contact.heroBody')}
-            </p>
-            <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <button type="button" onClick={() => openWhatsAppPicker()} className={pillPrimary}>
-                {t('contact.whatsapp')}
-                <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-              </button>
-              <a href="#message" className={pillGhost}>
-                {t('contact.sendMessage')}
-              </a>
-            </div>
-            <ul className="mt-5 flex flex-wrap gap-2 sm:mt-8">
-              {HERO_PROOF.map(({ icon, label }) => (
-                <li
-                  key={label}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-sm"
-                >
-                  <SiteIcon name={icon} size={14} className="text-[var(--brand-text)]" />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        </Container>
-      </section>
+      <StoreHero
+        titleId="contact-hero-title"
+        image={CONTACT_HERO_IMAGE}
+        imagePosition="object-[50%_78%]"
+        kicker={t('contact.heroKicker')}
+        titleLead={t('contact.heroTitle')}
+        titleAccent={t('contact.heroTitleAccent')}
+        description={t('contact.heroBody')}
+      >
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <button type="button" onClick={() => openWhatsAppPicker()} className={heroPrimaryPill}>
+            {t('contact.whatsapp')}
+            <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+          </button>
+          <a href="#message" className={heroGhostPill}>
+            {t('contact.sendMessage')}
+          </a>
+        </div>
+        <ul className="mt-5 flex flex-wrap gap-2 sm:mt-6">
+          {HERO_PROOF.map(({ icon, label }) => (
+            <li key={label} className={heroChip}>
+              <SiteIcon name={icon} size={14} className="text-[var(--brand)]" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </StoreHero>
 
       <section
         id="message"

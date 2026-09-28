@@ -18,6 +18,10 @@ import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
+import { StoreHero, heroChip } from '@/components/layout/StoreHero'
+
+const SHOP_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=2560&q=80'
 
 export function Shop() {
   const t = useT()
@@ -180,72 +184,73 @@ export function Shop() {
 
   return (
     <>
-      <section aria-labelledby="shop-heading" className="page-hero">
-        <Container className="relative z-10 max-w-[96rem] py-5 sm:py-10">
-          <p className="kicker">{t('shop.kicker')}</p>
-          <h1
-            id="shop-heading"
-            className="mt-2 max-w-3xl font-display text-2xl font-semibold tracking-tight text-balance sm:mt-3 sm:text-5xl md:text-[3.25rem]"
+      <StoreHero
+        titleId="shop-heading"
+        image={SHOP_HERO_IMAGE}
+        imagePosition="object-[60%_55%]"
+        containerClassName="max-w-[96rem]"
+        kicker={t('shop.kicker')}
+        titleLead={
+          filters.q
+            ? t('shop.searchTitle')
+            : activeCategoryName
+              ? t('shop.title')
+              : t('shop.heroTitleLead')
+        }
+        titleAccent={
+          filters.q ? `“${filters.q}”` : activeCategoryName ?? t('shop.heroTitleAccent')
+        }
+        description={
+          filters.q ? (
+            <>
+              {t('shop.resultsFor', { q: filters.q })}
+              {activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : null}
+            </>
+          ) : (
+            activeCategoryDescription || t('shop.body')
+          )
+        }
+      >
+        <form
+          className="flex max-w-xl gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            update({ q: searchDraft.trim() || undefined })
+          }}
+        >
+          <label className="sr-only" htmlFor="shop-search">
+            {t('shop.searchShop')}
+          </label>
+          <input
+            id="shop-search"
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
+            placeholder={t('shop.searchShopPlaceholder')}
+            className="h-11 min-w-0 flex-1 rounded-full border border-white/20 bg-white/10 px-4 text-sm text-white outline-none backdrop-blur-sm placeholder:text-white/55 focus:border-[var(--brand)] sm:h-12"
+          />
+          <button
+            type="submit"
+            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-5"
           >
-            {activeCategoryName ?? (filters.q ? t('shop.searchTitle') : t('shop.title'))}
-          </h1>
-          <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-lg">
-            {filters.q ? (
-              <>
-                {t('shop.resultsFor', { q: filters.q })}
-                {activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : null}
-              </>
-            ) : activeCategoryDescription ? (
-              activeCategoryDescription
-            ) : (
-              t('shop.body')
-            )}
-          </p>
+            <SiteIcon name="search" size={16} />
+            {t('shop.searchAction')}
+          </button>
+        </form>
 
-          <ul className="mt-3 flex gap-2 sm:mt-5" aria-label={t('shop.filterNote')}>
-            {(
-              [
-                { icon: 'banknote' as const, label: t('shop.heroProofCod') },
-                { icon: 'shield' as const, label: t('shop.heroProofWarranty') },
-              ] as const
-            ).map((item) => (
-              <li
-                key={item.label}
-                className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-xs"
-              >
-                <SiteIcon name={item.icon} size={14} className="text-[var(--brand-text)]" />
-                {item.label}
-              </li>
-            ))}
-          </ul>
-
-          <form
-            className="mt-4 flex max-w-xl gap-2 sm:mt-6"
-            onSubmit={(e) => {
-              e.preventDefault()
-              update({ q: searchDraft.trim() || undefined })
-            }}
-          >
-            <label className="sr-only" htmlFor="shop-search">
-              {t('shop.searchShop')}
-            </label>
-            <input
-              id="shop-search"
-              value={searchDraft}
-              onChange={(e) => setSearchDraft(e.target.value)}
-              placeholder={t('shop.searchShopPlaceholder')}
-              className="h-11 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm outline-none ring-brand"
-            />
-            <button
-              type="submit"
-              className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)]"
-            >
-              <SiteIcon name="search" size={16} />
-              {t('shop.searchAction')}
-            </button>
-          </form>
-        </Container>
-      </section>
+        <ul className="mt-4 flex flex-wrap gap-2 sm:mt-5" aria-label={t('shop.filterNote')}>
+          {(
+            [
+              { icon: 'banknote' as const, label: t('shop.heroProofCod') },
+              { icon: 'shield' as const, label: t('shop.heroProofWarranty') },
+            ] as const
+          ).map((item) => (
+            <li key={item.label} className={heroChip}>
+              <SiteIcon name={item.icon} size={14} className="text-[var(--brand)]" />
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      </StoreHero>
 
       <Container className="max-w-[96rem] py-5 sm:py-10">
         <div

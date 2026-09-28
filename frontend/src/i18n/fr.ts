@@ -164,9 +164,11 @@ export const fr: Messages = {
   },
   shop: {
     title: 'Boutique',
-    kicker: 'Maroc',
+    kicker: 'Boutique · Maroc',
+    heroTitleLead: 'Découvrez le',
+    heroTitleAccent: 'catalogue Brynoxa',
     searchTitle: 'Recherche',
-    body: 'Parcourez par catégorie — portables, PC, écrans, périphériques et upgrades. Prix en DH.',
+    body: 'Portables, PC gaming, écrans et accessoires — prix en DH, paiement à la livraison partout au Maroc.',
     resultsFor: 'Résultats pour « {q} »',
     resultsIn: ' dans {name}',
     shopByCategory: 'Acheter par catégorie',
@@ -542,7 +544,8 @@ export const fr: Messages = {
   },
   contact: {
     heroKicker: 'Contact',
-    heroTitle: 'Contactez-nous',
+    heroTitle: 'Nous sommes là',
+    heroTitleAccent: 'pour vous aider',
     heroBody:
       'Commande, garantie ou question produit — WhatsApp est le plus rapide. Le formulaire arrive à la même équipe.',
     sendMessage: 'Envoyer un message',
@@ -674,7 +677,8 @@ export const fr: Messages = {
   },
   services: {
     heroKicker: 'Services',
-    heroTitle: 'Garantie, retours, livraison',
+    heroTitle: 'Garantie, retours,',
+    heroTitleAccent: 'et livraison rapide',
     heroBody: 'Six mois de couverture, 14 jours pour renvoyer, paiement à la livraison au Maroc.',
     proofReturns: 'Retours 14 jours',
     proofPay: 'Payer à l’arrivée',

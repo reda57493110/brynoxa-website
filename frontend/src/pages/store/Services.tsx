@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 import { PhoneText } from '@/components/ui/PhoneText'
 import { CONTACT, CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
@@ -31,14 +32,8 @@ const pillPrimary =
 const pillGhost =
   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
 
-function fadeIn(reduce: boolean | null, delay = 0) {
-  if (reduce) return { initial: false as const, animate: { opacity: 1 } }
-  return {
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] as const },
-  }
-}
+const SERVICES_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1566576721346-d4a3b4eaeb55?auto=format&fit=crop&w=2560&q=80'
 
 const jumpChip =
   'inline-flex h-8 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-9 sm:px-3.5 sm:text-sm'
@@ -79,42 +74,33 @@ export function Services() {
 
   return (
     <>
-      <section aria-labelledby="services-hero-title" className="page-hero">
-        <Container className="relative py-5 sm:py-10">
-          <motion.div {...fadeIn(reduceMotion)}>
-            <p className="kicker">{copy.services.heroKicker}</p>
-            <h1
-              id="services-hero-title"
-              className="mt-2 max-w-2xl font-display text-2xl font-semibold tracking-tight sm:text-5xl"
-            >
-              {copy.services.heroTitle}
-            </h1>
-            <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-lg">
-              {copy.services.heroBody}
-            </p>
-            <div className="mt-5 flex flex-col gap-2.5 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              <Link to="/shop" className={pillPrimary}>
-                {t('common.shopNow')}
-                <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-              </Link>
-              <Link to="/contact" className={pillGhost}>
-                {t('common.contact')}
-              </Link>
-            </div>
-            <ul className="mt-5 flex flex-wrap gap-2 sm:mt-8">
-              {HERO_PROOF.map(({ icon, label }) => (
-                <li
-                  key={label}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-sm"
-                >
-                  <SiteIcon name={icon} size={14} className="text-[var(--brand-text)]" />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        </Container>
-      </section>
+      <StoreHero
+        titleId="services-hero-title"
+        image={SERVICES_HERO_IMAGE}
+        imagePosition="object-[50%_60%]"
+        kicker={copy.services.heroKicker}
+        titleLead={copy.services.heroTitle}
+        titleAccent={copy.services.heroTitleAccent}
+        description={copy.services.heroBody}
+      >
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+          <Link to="/shop" className={heroPrimaryPill}>
+            {t('common.shopNow')}
+            <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+          </Link>
+          <Link to="/contact" className={heroGhostPill}>
+            {t('common.contact')}
+          </Link>
+        </div>
+        <ul className="mt-5 flex flex-wrap gap-2 sm:mt-6">
+          {HERO_PROOF.map(({ icon, label }) => (
+            <li key={label} className={heroChip}>
+              <SiteIcon name={icon} size={14} className="text-[var(--brand)]" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </StoreHero>
 
       <section aria-labelledby="services-grid-heading" className="py-6 sm:py-10">
         <Container>
