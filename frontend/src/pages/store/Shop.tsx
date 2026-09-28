@@ -226,18 +226,18 @@ export function Shop() {
             value={searchDraft}
             onChange={(e) => setSearchDraft(e.target.value)}
             placeholder={t('shop.searchShopPlaceholder')}
-            className="h-11 min-w-0 flex-1 rounded-full border border-white/20 bg-white/10 px-4 text-sm text-white outline-none backdrop-blur-sm placeholder:text-white/55 focus:border-[var(--brand)] sm:h-12"
+            className="h-10 min-w-0 flex-1 rounded-full border border-white/20 bg-white/10 px-4 text-sm text-white outline-none backdrop-blur-sm placeholder:text-white/55 focus:border-[var(--brand)] sm:h-11"
           />
           <button
             type="submit"
-            className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-5"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-11 sm:px-5"
           >
             <SiteIcon name="search" size={16} />
             {t('shop.searchAction')}
           </button>
         </form>
 
-        <ul className="mt-4 flex flex-wrap gap-2 sm:mt-5" aria-label={t('shop.filterNote')}>
+        <ul className="mt-3 flex flex-wrap gap-2 sm:mt-4" aria-label={t('shop.filterNote')}>
           {(
             [
               { icon: 'banknote' as const, label: t('shop.heroProofCod') },
@@ -245,7 +245,7 @@ export function Shop() {
             ] as const
           ).map((item) => (
             <li key={item.label} className={heroChip}>
-              <SiteIcon name={item.icon} size={14} className="text-[var(--brand)]" />
+              <SiteIcon name={item.icon} size={13} className="text-[var(--brand)]" />
               {item.label}
             </li>
           ))}

@@ -137,7 +137,7 @@ export function Contact() {
         titleAccent={t('contact.heroTitleAccent')}
         description={t('contact.heroBody')}
       >
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button type="button" onClick={() => openWhatsAppPicker()} className={heroPrimaryPill}>
             {t('contact.whatsapp')}
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
@@ -146,10 +146,10 @@ export function Contact() {
             {t('contact.sendMessage')}
           </a>
         </div>
-        <ul className="mt-5 flex flex-wrap gap-2 sm:mt-6">
+        <ul className="mt-3 flex flex-wrap gap-2 sm:mt-4">
           {HERO_PROOF.map(({ icon, label }) => (
             <li key={label} className={heroChip}>
-              <SiteIcon name={icon} size={14} className="text-[var(--brand)]" />
+              <SiteIcon name={icon} size={13} className="text-[var(--brand)]" />
               {label}
             </li>
           ))}
