@@ -6,7 +6,7 @@ import * as wishlistService from '../services/wishlist.service';
 import * as notificationService from '../services/notification.service';
 import * as couponService from '../services/coupon.service';
 import * as adminService from '../services/admin.service';
-import { getSettings, Settings } from '../models/Settings';
+import { getSettings, sanitizePageHeroProducts, Settings } from '../models/Settings';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { User } from '../models/User';
 import * as pushService from '../services/push.service';
@@ -221,6 +221,9 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   const body = { ...req.body } as Record<string, unknown>;
   if (Array.isArray(body.shippingByCity)) {
     body.shippingByCity = sanitizeShippingByCity(body.shippingByCity);
+  }
+  if (body.pageHeroProducts !== undefined) {
+    body.pageHeroProducts = sanitizePageHeroProducts(body.pageHeroProducts, settings.pageHeroProducts);
   }
   Object.assign(settings, body);
   await settings.save();

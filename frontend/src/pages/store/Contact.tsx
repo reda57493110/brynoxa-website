@@ -129,6 +129,7 @@ export function Contact() {
   return (
     <>
       <StoreHero
+        page="contact"
         titleId="contact-hero-title"
         image={CONTACT_HERO_IMAGE}
         imagePosition="object-[60%_88%]"

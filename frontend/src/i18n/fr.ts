@@ -103,6 +103,7 @@ export const fr: Messages = {
   },
   product: {
     featuredPick: 'Sélection',
+    viewProduct: 'Voir le produit',
     outOfStock: 'Rupture de stock',
     addedToCart: 'Ajouté au panier',
     savedWishlist: 'Ajouté aux favoris',

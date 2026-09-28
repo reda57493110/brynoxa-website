@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
+import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
 import { useToastStore } from '@/store/toastStore'
 
 export function Settings() {
@@ -91,8 +92,22 @@ export function Settings() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="font-display text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-[var(--fg-muted)]">Store name and catalog categories</p>
+        <p className="text-sm text-[var(--fg-muted)]">
+          Store name, page header products, and catalog categories
+        </p>
       </div>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="font-display text-lg font-semibold">Page headers</h2>
+          <p className="text-sm text-[var(--fg-muted)]">
+            Pick one of your products to show at the top of each page, with its price and a
+            “View product” button. Remove it to go back to the default picture. Changes are live
+            right away.
+          </p>
+        </div>
+        <PageHeaderProducts value={settings.data?.pageHeroProducts} />
+      </section>
 
       <section className="space-y-4">
         <h2 className="font-display text-lg font-semibold">Store</h2>

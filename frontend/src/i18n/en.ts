@@ -100,6 +100,7 @@ export const en = {
   },
   product: {
     featuredPick: 'Featured pick',
+    viewProduct: 'View product',
     outOfStock: 'Out of stock',
     addedToCart: 'Added to cart',
     savedWishlist: 'Saved to wishlist',

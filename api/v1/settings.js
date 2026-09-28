@@ -17,6 +17,7 @@ const ALLOWED_FIELDS = [
   'taxRate',
   'supportEmail',
   'notifyStaffLoginEmail',
+  'pageHeroProducts',
 ];
 
 module.exports = async (req, res) => {
@@ -34,12 +35,17 @@ module.exports = async (req, res) => {
       if (!user) return;
 
       const body = await readJsonBody(req);
-      const { getSettings } = require('../../backend/dist/models/Settings');
+      const { getSettings, sanitizePageHeroProducts } = require('../../backend/dist/models/Settings');
       const settings = await getSettings();
 
       for (const key of ALLOWED_FIELDS) {
-        if (body[key] !== undefined) {
-          settings[key] = key === 'shippingByCity' ? sanitizeShippingByCity(body[key]) : body[key];
+        if (body[key] === undefined) continue;
+        if (key === 'shippingByCity') {
+          settings[key] = sanitizeShippingByCity(body[key]);
+        } else if (key === 'pageHeroProducts') {
+          settings[key] = sanitizePageHeroProducts(body[key], settings.pageHeroProducts);
+        } else {
+          settings[key] = body[key];
         }
       }
       await settings.save();

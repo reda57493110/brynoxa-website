@@ -102,6 +102,7 @@ export const ar: Messages = {
   },
   product: {
     featuredPick: 'اختيار مميز',
+    viewProduct: 'عرض المنتج',
     outOfStock: 'غير متوفر',
     addedToCart: 'أُضيف إلى السلة',
     savedWishlist: 'أُضيف إلى المفضلة',

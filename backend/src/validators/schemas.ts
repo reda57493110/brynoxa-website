@@ -197,6 +197,13 @@ export const settingsSchema = z.object({
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
+  pageHeroProducts: z
+    .object({
+      shop: z.string().max(24).optional(),
+      services: z.string().max(24).optional(),
+      contact: z.string().max(24).optional(),
+    })
+    .optional(),
 });
 
 export const inventorySchema = z.object({

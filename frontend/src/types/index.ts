@@ -251,7 +251,10 @@ export interface StoreSettings {
   supportEmail: string
   codEnabled: boolean
   notifyStaffLoginEmail?: boolean
+  pageHeroProducts?: Partial<Record<HeroPage, string>>
 }
+
+export type HeroPage = 'shop' | 'services' | 'contact'
 
 export interface Notification {
   _id: string

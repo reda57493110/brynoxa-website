@@ -75,6 +75,7 @@ export function Services() {
   return (
     <>
       <StoreHero
+        page="services"
         titleId="services-hero-title"
         image={SERVICES_HERO_IMAGE}
         imagePosition="object-[50%_45%]"

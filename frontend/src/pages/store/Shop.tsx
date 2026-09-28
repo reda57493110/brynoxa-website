@@ -185,6 +185,7 @@ export function Shop() {
   return (
     <>
       <StoreHero
+        page="shop"
         titleId="shop-heading"
         image={SHOP_HERO_IMAGE}
         imagePosition="object-[50%_40%]"
