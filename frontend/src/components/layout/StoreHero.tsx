@@ -7,7 +7,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
-import { optimizedImageUrl } from '@/lib/image'
+import { sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { HeroPage, Product } from '@/types'
 
@@ -42,21 +42,28 @@ function HeroProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/product/${product.slug}`}
-      className="group relative block aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] lg:aspect-[16/10] dark:border-white/10"
+      className="group relative block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/10 dark:bg-[#0e1419]"
     >
-      <SafeImage
-        src={optimizedImageUrl(image, 1400)}
-        alt={product.name}
-        width={1600}
-        height={1000}
-        sizes="(min-width: 768px) 60vw, 100vw"
-        className="absolute inset-0 h-full w-full max-w-none object-cover transition duration-500 group-hover:scale-[1.03]"
-        fetchPriority="high"
-      />
-      <div
-        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent"
-        aria-hidden="true"
-      />
+      <div className="relative aspect-[16/10] overflow-hidden bg-[var(--bg-muted)] lg:aspect-[16/9]">
+        <SafeImage
+          src={sizedImageUrl(image, 240)}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full max-w-none scale-125 object-cover opacity-70 blur-2xl saturate-150"
+        />
+        <div
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.18)_100%)]"
+          aria-hidden="true"
+        />
+        <SafeImage
+          src={sizedImageUrl(image, 1600)}
+          alt={product.name}
+          width={1600}
+          height={1000}
+          sizes="(min-width: 768px) 60vw, 100vw"
+          className="relative h-full w-full max-w-none object-contain p-3 drop-shadow-[0_18px_30px_rgba(0,0,0,0.35)] transition duration-500 group-hover:scale-[1.04] sm:p-5"
+          fetchPriority="high"
+        />
 
       <div className="absolute inset-x-3 top-3 flex items-center justify-between gap-2 sm:inset-x-4 sm:top-4">
         <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3 text-[11px] font-semibold text-[var(--brand-fg)] shadow-glow sm:text-xs">
@@ -69,32 +76,38 @@ function HeroProductCard({ product }: { product: Product }) {
           </span>
         ) : null}
       </div>
+      </div>
 
-      <div className="absolute inset-x-2.5 bottom-2.5 flex items-center justify-between gap-3 rounded-xl border border-white/15 bg-black/45 px-3 py-2.5 backdrop-blur-md sm:inset-x-4 sm:bottom-4 sm:items-end sm:p-4">
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-3.5 py-3 sm:px-5 sm:py-3.5 dark:border-white/10">
         <div className="min-w-0">
           {brand ? (
-            <p className="hidden text-[11px] font-medium uppercase tracking-wider text-white/65 sm:block">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--fg-muted)] dark:text-white/60">
               {brand}
             </p>
           ) : null}
-          <p className="truncate font-display text-base font-semibold text-white sm:text-lg">
+          <p className="line-clamp-2 font-display text-[15px] font-semibold leading-snug text-[var(--fg)] sm:text-lg dark:text-white">
             {product.name}
           </p>
-          <p className="mt-0.5 flex items-baseline gap-2">
-            <span className="font-display text-lg font-semibold text-[var(--brand)] sm:text-xl">
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <p className="hidden flex-col items-end leading-tight sm:flex">
+            <span className="font-display text-lg font-semibold text-[var(--brand-text)] sm:text-xl dark:text-[var(--brand)]">
               {formatCurrency(product.price)}
             </span>
             {onSale ? (
-              <span className="text-xs text-white/60 line-through sm:text-sm">
+              <span className="text-xs text-[var(--fg-muted)] line-through dark:text-white/50">
                 {formatCurrency(product.compareAtPrice!)}
               </span>
             ) : null}
           </p>
-        </div>
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-white text-xs font-semibold text-[#0c1218] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:h-10 sm:w-auto sm:px-4 sm:text-sm">
+          <span className="font-display text-base font-semibold text-[var(--brand-text)] sm:hidden dark:text-[var(--brand)]">
+            {formatCurrency(product.price)}
+          </span>
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] text-xs font-semibold text-[var(--brand-fg)] shadow-glow transition group-hover:brightness-110 sm:h-10 sm:w-auto sm:px-4 sm:text-sm">
           <span className="sr-only sm:not-sr-only">{t('product.viewProduct')}</span>
           <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
         </span>
+        </div>
       </div>
     </Link>
   )
