@@ -16,7 +16,6 @@ const ALLOWED_FIELDS = [
   'shippingByCity',
   'taxRate',
   'supportEmail',
-  'codEnabled',
   'notifyStaffLoginEmail',
 ];
 

@@ -149,7 +149,6 @@ export async function createCodOrder(input: {
   customerNote?: string;
 }) {
   const settings = await getSettings();
-  if (!settings.codEnabled) throw new ApiError(400, 'Cash on delivery is disabled');
 
   const { orderItems, subtotal } = await buildOrderLines(input.items);
   const { pricing, couponMeta } = await priceOrder(

@@ -196,7 +196,6 @@ export const settingsSchema = z.object({
     .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
-  codEnabled: z.boolean().optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
 });
 
