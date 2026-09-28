@@ -47,7 +47,7 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
     onSuccess: (_res, next) => {
       qc.invalidateQueries({ queryKey: ['settings'] })
       const label = PAGES.find((p) => p.page === next.page)?.label ?? 'Page'
-      toast(next.id ? `${label} header updated` : `${label} header reset to default picture`, 'success')
+      toast(next.id ? `${label} header updated` : `${label} header set back to automatic`, 'success')
       setPicking(null)
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
@@ -114,16 +114,18 @@ function PageRow({
               <div className="mt-0.5 flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold tabular-nums">{formatCurrency(product.price)}</span>
                 {!product.isActive ? (
-                  <Badge variant="danger">Hidden — default picture shows</Badge>
+                  <Badge variant="danger">Hidden — a featured product shows instead</Badge>
                 ) : null}
               </div>
             </>
           ) : missing ? (
             <p className="text-sm text-[var(--fg-muted)]">
-              Product was deleted — the default picture shows.
+              Product was deleted — a featured product shows instead.
             </p>
           ) : (
-            <p className="text-sm text-[var(--fg-muted)]">No product — showing the default picture</p>
+            <p className="text-sm text-[var(--fg-muted)]">
+              Automatic — showing one of your featured products
+            </p>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">

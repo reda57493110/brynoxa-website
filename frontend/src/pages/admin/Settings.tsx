@@ -101,9 +101,10 @@ export function Settings() {
         <div>
           <h2 className="font-display text-lg font-semibold">Page headers</h2>
           <p className="text-sm text-[var(--fg-muted)]">
-            Pick one of your products to show at the top of each page, with its price and a
-            “View product” button. Remove it to go back to the default picture. Changes are live
-            right away.
+            The product shown at the top of the Shop, Services, and Contact pages, with its price
+            and a “View product” button. By default each page shows one of your featured products
+            (mark products as Featured when editing them). Choose a product to pin it; Remove goes
+            back to automatic. Changes are live right away.
           </p>
         </div>
         <PageHeaderProducts value={settings.data?.pageHeroProducts} />
