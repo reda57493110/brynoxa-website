@@ -87,7 +87,7 @@ export function StoreHero({
 
           <Container
             className={cn(
-              'relative z-10 grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-9 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-12 lg:px-10',
+              'relative z-10 grid items-center gap-8 px-5 py-7 sm:px-8 sm:py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8 dark:grid-cols-1!',
               'dark:px-4 dark:pb-8 dark:pt-[calc(var(--nav-height)+1.25rem)] sm:dark:px-6 sm:dark:pb-10 sm:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
               maxWidthClassName
             )}
@@ -133,13 +133,13 @@ export function StoreHero({
               aria-hidden="true"
             >
               <div className="absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)]" />
-              <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft lg:aspect-[16/10]">
                 <SafeImage
                   src={image}
                   alt=""
                   width={1600}
                   height={1000}
-                  sizes="(min-width: 768px) 45vw, 0px"
+                  sizes="(min-width: 768px) 60vw, 0px"
                   className={cn('h-full w-full max-w-none object-cover', framePosition)}
                 />
               </div>
