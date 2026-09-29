@@ -180,7 +180,7 @@ export function Contact() {
       <section
         id="message"
         aria-labelledby="contact-form-heading"
-        className="scroll-mt-[calc(var(--nav-height)+1rem)] py-6 sm:py-10"
+        className="scroll-mt-[calc(var(--nav-height)+1rem)] pb-4 pt-6 sm:pb-5 sm:pt-8"
       >
         <Container>
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 xl:gap-12">
@@ -192,11 +192,11 @@ export function Contact() {
               >
                 {t('contact.sendMessage')}
               </h2>
-              <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
+              <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
                 {t('contact.formBody')}
               </p>
 
-              <div className="mt-5 sm:mt-6">
+              <div className="mt-4 sm:mt-5">
                 {sent ? (
                   <motion.div
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
@@ -297,7 +297,7 @@ export function Contact() {
               </div>
             </div>
 
-            <aside className="space-y-6 lg:pt-1" aria-labelledby="contact-info-heading">
+            <aside className="space-y-4 lg:pt-1" aria-labelledby="contact-info-heading">
               <div>
                 <p className="kicker">{t('contact.hoursChannels')}</p>
                 <h2
@@ -337,41 +337,9 @@ export function Contact() {
                 />
               </div>
 
-              <div>
-                <p className="kicker">{t('contact.linksKicker')}</p>
-                <h3 className="mt-2 font-display text-lg font-semibold tracking-tight">
-                  {t('contact.policiesTitle')}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-[var(--fg-muted)]">
-                  {t('contact.policiesBody')}
-                </p>
-                <ul className="mt-3 grid gap-2">
-                  {[
-                    { to: '/account/orders', label: t('contact.trackOrder') },
-                    { to: '/services#warranty', label: t('footer.warranty') },
-                    { to: '/services#returns', label: t('footer.returns') },
-                    { to: '/shop', label: t('contact.browseShop') },
-                  ].map((item) => (
-                    <li key={item.to}>
-                      <Link
-                        to={item.to}
-                        className="group flex min-h-11 items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-                      >
-                        {item.label}
-                        <SiteIcon
-                          name="arrow-right"
-                          size={16}
-                          className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180"
-                        />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
                 <p className="text-sm font-semibold text-[var(--fg)]">{t('contact.social')}</p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {SOCIAL_LINKS.map((s) =>
                     s.id === 'whatsapp' ? (
                       <button
@@ -379,7 +347,7 @@ export function Contact() {
                         type="button"
                         onClick={() => openWhatsAppPicker()}
                         aria-label={t('nav.socialOpens', { name: s.name })}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                       >
                         <SocialGlyph id={s.id} size={16} />
                       </button>
@@ -390,7 +358,7 @@ export function Contact() {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={t('nav.socialOpens', { name: s.name })}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                       >
                         <SocialGlyph id={s.id} size={16} />
                       </a>
@@ -403,83 +371,117 @@ export function Contact() {
         </Container>
       </section>
 
-      <section aria-labelledby="contact-faq-heading" className="py-6 sm:py-10">
+      <section aria-labelledby="contact-faq-heading" className="py-4 sm:py-5">
         <Container>
-          <div className="max-w-3xl">
-            <p className="kicker">{t('ui.faq')}</p>
-            <h2
-              id="contact-faq-heading"
-              className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
-            >
-              {t('ui.commonQuestions')}
-            </h2>
-            <p className="mt-2 text-[13px] text-[var(--fg-muted)] sm:text-sm">{t('contact.faqBody')}</p>
-            <ul className="mt-5 space-y-2.5 sm:mt-6 sm:space-y-3">
-              {contact.faqs.map((item, i) => {
-                const open = openFaq === i
-                const panelId = `contact-faq-${i}`
-                return (
-                  <li
-                    key={item.q}
-                    className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
-                  >
-                    <button
-                      type="button"
-                      className="flex min-h-12 w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-[var(--bg-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--brand)] sm:px-5 sm:py-4"
-                      aria-expanded={open}
-                      aria-controls={panelId}
-                      onClick={() => setOpenFaq(open ? null : i)}
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 xl:gap-12">
+            <div>
+              <p className="kicker">{t('ui.faq')}</p>
+              <h2
+                id="contact-faq-heading"
+                className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
+              >
+                {t('ui.commonQuestions')}
+              </h2>
+              <p className="mt-2 text-[13px] text-[var(--fg-muted)] sm:text-sm">{t('contact.faqBody')}</p>
+              <ul className="mt-4 space-y-2.5 sm:mt-5">
+                {contact.faqs.map((item, i) => {
+                  const open = openFaq === i
+                  const panelId = `contact-faq-${i}`
+                  return (
+                    <li
+                      key={item.q}
+                      className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
                     >
-                      <span className="text-sm font-medium sm:text-base">{item.q}</span>
-                      <span
+                      <button
+                        type="button"
+                        className="flex min-h-12 w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-[var(--bg-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--brand)] sm:px-5 sm:py-4"
+                        aria-expanded={open}
+                        aria-controls={panelId}
+                        onClick={() => setOpenFaq(open ? null : i)}
+                      >
+                        <span className="text-sm font-medium sm:text-base">{item.q}</span>
+                        <span
+                          className={cn(
+                            'inline-flex shrink-0 text-[var(--fg-muted)] transition duration-300',
+                            open && 'rotate-180'
+                          )}
+                        >
+                          <SiteIcon name="chevron-down" size={16} />
+                        </span>
+                      </button>
+                      <div
+                        id={panelId}
                         className={cn(
-                          'inline-flex shrink-0 text-[var(--fg-muted)] transition duration-300',
-                          open && 'rotate-180'
+                          'grid transition-[grid-template-rows] duration-300 ease-out',
+                          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
                         )}
                       >
-                        <SiteIcon name="chevron-down" size={16} />
-                      </span>
-                    </button>
-                    <div
-                      id={panelId}
-                      className={cn(
-                        'grid transition-[grid-template-rows] duration-300 ease-out',
-                        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      )}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="px-4 pb-4 text-sm leading-relaxed text-[var(--fg-muted)] sm:px-5">
-                          {item.a}
-                        </p>
+                        <div className="overflow-hidden">
+                          <p className="px-4 pb-4 text-sm leading-relaxed text-[var(--fg-muted)] sm:px-5">
+                            {item.a}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <div className="lg:pt-1">
+              <p className="kicker">{t('contact.linksKicker')}</p>
+              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                {t('contact.policiesTitle')}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
+                {t('contact.policiesBody')}
+              </p>
+              <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
+                {[
+                  { to: '/account/orders', label: t('contact.trackOrder') },
+                  { to: '/services#warranty', label: t('footer.warranty') },
+                  { to: '/services#returns', label: t('footer.returns') },
+                  { to: '/shop', label: t('contact.browseShop') },
+                ].map((item) => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="group flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3.5 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:px-5 sm:text-base"
+                    >
+                      {item.label}
+                      <SiteIcon
+                        name="arrow-right"
+                        size={16}
+                        className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180"
+                      />
+                    </Link>
                   </li>
-                )
-              })}
-            </ul>
+                ))}
+              </ul>
+            </div>
           </div>
         </Container>
       </section>
 
-      <section aria-labelledby="newsletter-heading" className="pb-10 pt-6 sm:pb-14 sm:pt-10">
+      <section aria-labelledby="newsletter-heading" className="pb-10 pt-4 sm:pb-12 sm:pt-5">
         <Container>
           <motion.div
-            className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-8 shadow-soft sm:px-10 sm:py-12 lg:px-14 lg:py-14"
+            className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-6 shadow-soft sm:px-8 sm:py-8 lg:px-10"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="relative grid items-center gap-6 lg:grid-cols-[minmax(0,1fr)_min(22rem,100%)] lg:gap-16">
+            <div className="relative grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_min(26rem,100%)] lg:gap-10">
               <div>
                 <p className="kicker">{t('contact.newsletter')}</p>
                 <h2
                   id="newsletter-heading"
-                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-4xl"
+                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
                 >
                   {t('contact.newsTitle')}
                 </h2>
-                <p className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
+                <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
                   {t('contact.newsBody')}
                 </p>
               </div>
