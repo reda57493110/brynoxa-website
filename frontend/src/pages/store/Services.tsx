@@ -80,22 +80,22 @@ export function Services() {
         imagePosition="object-[50%_55%]"
         frameOverlay={
           <>
-            <div className="absolute end-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md sm:end-4 sm:top-4">
+            <div className="absolute end-2.5 top-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md sm:end-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-xs">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand)] opacity-60 motion-reduce:hidden" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand)]" />
               </span>
               {copy.services.heroTrustChip}
             </div>
-            <div className="absolute bottom-3 start-3 flex max-w-[17rem] items-center gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 text-[#0c1218] shadow-soft backdrop-blur-md sm:bottom-4 sm:start-4 dark:border-white/10 dark:bg-[#0e1419]/85 dark:text-white">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)]">
+            <div className="absolute bottom-2.5 start-2.5 flex max-w-[15rem] items-center gap-2.5 rounded-xl border border-white/60 bg-white/90 p-2 text-[#0c1218] shadow-soft backdrop-blur-md sm:bottom-4 sm:start-4 sm:max-w-[17rem] sm:gap-3 sm:rounded-2xl sm:p-3 dark:border-white/10 dark:bg-[#0e1419]/85 dark:text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)] text-[var(--brand-fg)] sm:h-10 sm:w-10 sm:rounded-xl">
                 <SiteIcon name="banknote" size={18} />
               </span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold leading-tight">
+                <span className="block text-xs font-semibold leading-tight sm:text-sm">
                   {copy.services.heroTrustTitle}
                 </span>
-                <span className="mt-0.5 block text-xs text-[#3d4d5c] dark:text-white/65">
+                <span className="mt-0.5 block text-[11px] text-[#3d4d5c] sm:text-xs dark:text-white/65">
                   {copy.services.heroTrustBody}
                 </span>
               </span>
