@@ -118,6 +118,7 @@ export function StoreHero({
   framePosition = 'object-center',
   titleId = 'page-heading',
   maxWidthClassName = 'max-w-7xl',
+  frameOverlay,
   children,
 }: {
   /** Feature the Admin → Settings → Page header product; omit to show the photo. */
@@ -134,6 +135,8 @@ export function StoreHero({
   titleId?: string
   /** Match the page's content width so the light-mode card lines up with it. */
   maxWidthClassName?: string
+  /** Decorative badges laid over the photo (absolutely positioned by the caller). */
+  frameOverlay?: ReactNode
   children?: ReactNode
 }) {
   const reduceMotion = useReducedMotion()
@@ -243,9 +246,19 @@ export function StoreHero({
                     sizes="(min-width: 768px) 60vw, 0px"
                     className={cn('h-full w-full max-w-none object-cover', framePosition)}
                   />
+                  {frameOverlay}
                 </div>
               </motion.div>
             )}
+
+            {frameOverlay && !showcase ? (
+              <div
+                className="pointer-events-none absolute bottom-8 end-4 top-[calc(var(--nav-height)+1.5rem)] hidden w-[26rem] lg:dark:block"
+                aria-hidden="true"
+              >
+                {frameOverlay}
+              </div>
+            ) : null}
           </Container>
         </div>
       </div>

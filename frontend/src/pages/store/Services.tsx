@@ -33,7 +33,7 @@ const pillGhost =
   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base'
 
 const SERVICES_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1555617981-dac3880eac6e?auto=format&fit=crop&w=2560&q=80'
+  'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=2560&q=80'
 
 const jumpChip =
   'inline-flex h-8 shrink-0 items-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-9 sm:px-3.5 sm:text-sm'
@@ -77,7 +77,31 @@ export function Services() {
       <StoreHero
         titleId="services-hero-title"
         image={SERVICES_HERO_IMAGE}
-        imagePosition="object-[50%_45%]"
+        imagePosition="object-[50%_55%]"
+        frameOverlay={
+          <>
+            <div className="absolute end-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md sm:end-4 sm:top-4">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand)] opacity-60 motion-reduce:hidden" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand)]" />
+              </span>
+              {copy.services.heroTrustChip}
+            </div>
+            <div className="absolute bottom-3 start-3 flex max-w-[17rem] items-center gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 text-[#0c1218] shadow-soft backdrop-blur-md sm:bottom-4 sm:start-4 dark:border-white/10 dark:bg-[#0e1419]/85 dark:text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)]">
+                <SiteIcon name="banknote" size={18} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold leading-tight">
+                  {copy.services.heroTrustTitle}
+                </span>
+                <span className="mt-0.5 block text-xs text-[#3d4d5c] dark:text-white/65">
+                  {copy.services.heroTrustBody}
+                </span>
+              </span>
+            </div>
+          </>
+        }
         kicker={copy.services.heroKicker}
         titleLead={copy.services.heroTitle}
         titleAccent={copy.services.heroTitleAccent}
