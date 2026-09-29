@@ -238,7 +238,7 @@ export function Shop() {
           </button>
         </form>
 
-        <ul className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-4 sm:gap-2" aria-label={t('shop.filterNote')}>
+        <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden" aria-label={t('shop.filterNote')}>
           {(
             [
               { icon: 'banknote' as const, label: t('shop.heroProofCod') },

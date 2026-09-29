@@ -116,7 +116,7 @@ export function Services() {
             {t('common.contact')}
           </Link>
         </div>
-        <ul className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-4 sm:gap-2">
+        <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden">
           {HERO_PROOF.map(({ icon, label }) => (
             <li key={label} className={heroChip}>
               <SiteIcon name={icon} size={13} className="text-[var(--brand)]" />

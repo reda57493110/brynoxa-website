@@ -42,7 +42,7 @@ function HeroProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/product/${product.slug}`}
-      className="group relative block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/10 dark:bg-[#0e1419]"
+      className="group relative block overflow-hidden transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] md:rounded-2xl md:border md:border-[var(--border)] md:bg-[var(--bg-elevated)] md:shadow-soft md:hover:border-[var(--brand)] md:dark:border-white/10 md:dark:bg-[#0e1419]"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]">
         <SafeImage
@@ -72,10 +72,10 @@ function HeroProductCard({ product }: { product: Product }) {
       </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-3.5 py-2.5 sm:px-5 sm:py-3.5 dark:border-white/10">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3 sm:px-6 md:border-t md:border-[var(--border)] md:px-5 md:py-3.5 md:dark:border-white/10">
         <div className="min-w-0">
           {brand ? (
-            <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--fg-muted)] dark:text-white/60">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--fg-muted)] max-md:hidden dark:text-white/60">
               {brand}
             </p>
           ) : null}
@@ -150,11 +150,11 @@ export function StoreHero({
     >
       <div
         className={cn(
-          'mx-auto px-4 sm:px-6 lg:px-8 dark:max-w-none dark:px-0',
+          'mx-auto md:px-6 lg:px-8 dark:max-w-none dark:px-0',
           maxWidthClassName
         )}
       >
-        <div className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft dark:rounded-none dark:border-0 dark:bg-[#080b0e] dark:shadow-none">
+        <div className="relative overflow-hidden md:rounded-[1.75rem] md:border md:border-[var(--border)] md:bg-[var(--bg-elevated)] md:shadow-soft dark:rounded-none dark:border-0 dark:shadow-none md:dark:bg-[#080b0e]">
           <div className="absolute inset-0 hidden dark:block" aria-hidden="true">
             {showcase ? (
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_30%,rgba(0,194,255,0.16),transparent_60%)] rtl:-scale-x-100" />
@@ -177,16 +177,16 @@ export function StoreHero({
 
           <Container
             className={cn(
-              'relative z-10 grid items-center gap-3.5 px-3 py-3 sm:gap-6 sm:px-8 sm:py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8',
+              'relative z-10 grid items-center gap-4 px-0 pb-4 pt-0 sm:px-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8 md:px-8 md:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8',
               !showcase && 'md:dark:grid-cols-1!',
-              'dark:px-3 dark:pb-6 dark:pt-[calc(var(--nav-height)+0.75rem)] sm:dark:px-6 sm:dark:pb-10 sm:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
+              'dark:px-0 dark:pb-4 dark:pt-[calc(var(--nav-height)+0.5rem)] sm:dark:px-0 md:dark:px-6 md:dark:pb-10 md:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
               maxWidthClassName
             )}
           >
-            <div className="min-w-0">
+            <div className="min-w-0 px-4 sm:px-6 md:px-0">
               <motion.p
                 {...fadeUp(reduceMotion, 0)}
-                className="kicker text-[10px] text-[var(--brand-text)] sm:text-xs dark:text-[var(--brand)]"
+                className="kicker text-xs text-[var(--brand-text)] max-md:hidden! dark:text-[var(--brand)]"
               >
                 {kicker}
               </motion.p>
@@ -194,7 +194,7 @@ export function StoreHero({
               <motion.h1
                 id={titleId}
                 {...fadeUp(reduceMotion, 0.06)}
-                className="mt-1.5 max-w-2xl font-display text-[1.125rem] font-semibold leading-[1.2] tracking-tight text-balance text-[var(--fg)] sm:mt-2 sm:text-4xl sm:leading-tight md:text-[2.625rem] dark:text-white"
+                className="max-w-2xl font-display text-[1.125rem] font-semibold leading-tight tracking-tight text-balance text-[var(--fg)] sm:text-2xl md:mt-2 md:text-[2.625rem] dark:text-white"
               >
                 {titleLead}
                 {titleAccent ? (
@@ -205,14 +205,14 @@ export function StoreHero({
               {description ? (
                 <motion.div
                   {...fadeUp(reduceMotion, 0.12)}
-                  className="mt-1.5 max-w-lg text-xs leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-[15px] dark:text-white/75"
+                  className="mt-3 max-w-lg text-[15px] leading-relaxed text-[var(--fg-muted)] max-md:hidden dark:text-white/75"
                 >
                   {description}
                 </motion.div>
               ) : null}
 
               {children ? (
-                <motion.div {...fadeUp(reduceMotion, 0.18)} className="mt-3 sm:mt-5">
+                <motion.div {...fadeUp(reduceMotion, 0.18)} className="mt-3 md:mt-5">
                   {children}
                 </motion.div>
               ) : null}
@@ -221,14 +221,14 @@ export function StoreHero({
             {product ? (
               <motion.div {...fadeUp(reduceMotion, 0.1)} className="relative order-first md:order-none">
                 <div
-                  className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] dark:block"
+                  className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] md:dark:block"
                   aria-hidden="true"
                 />
                 <HeroProductCard product={product} />
               </motion.div>
             ) : pending ? (
               <div
-                className="relative order-first aspect-[4/3.6] animate-pulse rounded-2xl bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] lg:aspect-[16/10] dark:bg-white/5"
+                className="relative order-first aspect-[4/3.5] animate-pulse bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5"
                 aria-hidden="true"
               />
             ) : (
@@ -237,17 +237,18 @@ export function StoreHero({
                 className="relative order-first md:order-none md:dark:hidden!"
                 aria-hidden="true"
               >
-                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft lg:aspect-[16/10] dark:border-white/10">
+                <div className="relative aspect-[4/3] overflow-hidden md:rounded-2xl md:border md:border-[var(--border)] md:bg-[var(--bg-muted)] md:shadow-soft lg:aspect-[16/10] md:dark:border-white/10">
                   <SafeImage
                     src={image}
                     alt=""
                     width={1600}
                     height={1000}
                     sizes="(min-width: 768px) 60vw, 100vw"
-                    className={cn('h-full w-full max-w-none object-cover', framePosition)}
+                    className={cn('block h-full w-full max-w-none object-cover', framePosition)}
                   />
-                  {frameOverlay}
+                  <div className="max-md:hidden">{frameOverlay}</div>
                 </div>
+                <div className="absolute inset-x-0 -bottom-1 h-1/3 bg-gradient-to-t from-[var(--bg)] from-15% to-transparent md:hidden" />
               </motion.div>
             )}
 
