@@ -152,11 +152,6 @@ export function StoreHero({
         )}
       >
         <div className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft dark:rounded-none dark:border-0 dark:bg-[#080b0e] dark:shadow-none">
-          <div
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_0%_0%,rgba(0,194,255,0.12),transparent_55%)] rtl:-scale-x-100 dark:hidden"
-            aria-hidden="true"
-          />
-
           <div className="absolute inset-0 hidden dark:block" aria-hidden="true">
             {showcase ? (
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_30%,rgba(0,194,255,0.16),transparent_60%)] rtl:-scale-x-100" />
@@ -223,7 +218,7 @@ export function StoreHero({
             {product ? (
               <motion.div {...fadeUp(reduceMotion, 0.1)} className="relative">
                 <div
-                  className="absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)]"
+                  className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] dark:block"
                   aria-hidden="true"
                 />
                 <HeroProductCard product={product} />
@@ -239,7 +234,6 @@ export function StoreHero({
                 className="relative hidden md:block dark:hidden!"
                 aria-hidden="true"
               >
-                <div className="absolute -inset-3 rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)]" />
                 <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft lg:aspect-[16/10]">
                   <SafeImage
                     src={image}
