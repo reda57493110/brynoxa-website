@@ -13,16 +13,16 @@ import type { HeroPage, Product } from '@/types'
 
 /** Light card in light mode, glass on the photo in dark mode. */
 export const heroGhostPill =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-5 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:hover:bg-white/15'
+  'inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3.5 text-[13px] font-medium sm:text-sm text-[var(--fg)] transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-5 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:hover:bg-white/15'
 
 export const heroPrimaryPill =
-  'inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-6'
+  'inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-4 text-[13px] font-semibold sm:text-sm text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-6'
 
 export const heroChip =
-  'inline-flex h-7 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-2.5 text-[11px] font-medium text-[var(--fg-muted)] sm:h-8 sm:px-3 sm:text-xs dark:border-white/15 dark:bg-black/30 dark:text-white dark:backdrop-blur-sm'
+  'inline-flex h-6 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-2 text-[10px] font-medium text-[var(--fg-muted)] sm:h-8 sm:px-3 sm:text-xs dark:border-white/15 dark:bg-black/30 dark:text-white dark:backdrop-blur-sm'
 
 export const heroInput =
-  'h-10 min-w-0 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-input)] px-4 text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-muted)] focus:border-[var(--brand)] sm:h-11 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:placeholder:text-white/55'
+  'h-9 min-w-0 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-input)] px-3.5 text-[13px] sm:text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-muted)] focus:border-[var(--brand)] sm:h-11 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:placeholder:text-white/55'
 
 const fadeUp = (reduce: boolean | null, delay = 0) =>
   reduce
@@ -44,7 +44,7 @@ function HeroProductCard({ product }: { product: Product }) {
       to={`/product/${product.slug}`}
       className="group relative block overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/10 dark:bg-[#0e1419]"
     >
-      <div className="relative aspect-[16/9] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]">
         <SafeImage
           src={sizedImageUrl(image, 1600)}
           alt={product.name}
@@ -177,16 +177,16 @@ export function StoreHero({
 
           <Container
             className={cn(
-              'relative z-10 grid items-center gap-4 px-4 py-4 sm:gap-6 sm:px-8 sm:py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8',
+              'relative z-10 grid items-center gap-3.5 px-3 py-3 sm:gap-6 sm:px-8 sm:py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8',
               !showcase && 'md:dark:grid-cols-1!',
-              'dark:px-4 dark:pb-6 dark:pt-[calc(var(--nav-height)+0.75rem)] sm:dark:px-6 sm:dark:pb-10 sm:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
+              'dark:px-3 dark:pb-6 dark:pt-[calc(var(--nav-height)+0.75rem)] sm:dark:px-6 sm:dark:pb-10 sm:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
               maxWidthClassName
             )}
           >
             <div className="min-w-0">
               <motion.p
                 {...fadeUp(reduceMotion, 0)}
-                className="kicker text-[11px] text-[var(--brand-text)] sm:text-xs dark:text-[var(--brand)]"
+                className="kicker text-[10px] text-[var(--brand-text)] sm:text-xs dark:text-[var(--brand)]"
               >
                 {kicker}
               </motion.p>
@@ -194,7 +194,7 @@ export function StoreHero({
               <motion.h1
                 id={titleId}
                 {...fadeUp(reduceMotion, 0.06)}
-                className="mt-1.5 max-w-2xl font-display text-[1.3rem] font-semibold leading-[1.2] tracking-tight text-balance text-[var(--fg)] sm:mt-2 sm:text-4xl sm:leading-tight md:text-[2.625rem] dark:text-white"
+                className="mt-1.5 max-w-2xl font-display text-[1.125rem] font-semibold leading-[1.2] tracking-tight text-balance text-[var(--fg)] sm:mt-2 sm:text-4xl sm:leading-tight md:text-[2.625rem] dark:text-white"
               >
                 {titleLead}
                 {titleAccent ? (
@@ -205,7 +205,7 @@ export function StoreHero({
               {description ? (
                 <motion.div
                   {...fadeUp(reduceMotion, 0.12)}
-                  className="mt-2 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-[15px] dark:text-white/75"
+                  className="mt-1.5 max-w-lg text-xs leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-[15px] dark:text-white/75"
                 >
                   {description}
                 </motion.div>
@@ -228,7 +228,7 @@ export function StoreHero({
               </motion.div>
             ) : pending ? (
               <div
-                className="relative order-first aspect-[16/11] animate-pulse rounded-2xl bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] lg:aspect-[16/10] dark:bg-white/5"
+                className="relative order-first aspect-[4/3.6] animate-pulse rounded-2xl bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] lg:aspect-[16/10] dark:bg-white/5"
                 aria-hidden="true"
               />
             ) : (
@@ -237,7 +237,7 @@ export function StoreHero({
                 className="relative order-first md:order-none md:dark:hidden!"
                 aria-hidden="true"
               >
-                <div className="relative aspect-[16/10] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft md:aspect-[4/3] lg:aspect-[16/10] dark:border-white/10">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] shadow-soft lg:aspect-[16/10] dark:border-white/10">
                   <SafeImage
                     src={image}
                     alt=""

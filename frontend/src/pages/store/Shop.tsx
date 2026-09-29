@@ -231,14 +231,14 @@ export function Shop() {
           />
           <button
             type="submit"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-11 sm:px-5"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 text-[13px] font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
           >
-            <SiteIcon name="search" size={16} />
+            <SiteIcon name="search" size={15} />
             {t('shop.searchAction')}
           </button>
         </form>
 
-        <ul className="mt-3 flex flex-wrap gap-2 sm:mt-4" aria-label={t('shop.filterNote')}>
+        <ul className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-4 sm:gap-2" aria-label={t('shop.filterNote')}>
           {(
             [
               { icon: 'banknote' as const, label: t('shop.heroProofCod') },
