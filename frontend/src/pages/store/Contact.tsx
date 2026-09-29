@@ -20,7 +20,7 @@ import { cn } from '@/lib/cn'
 import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 
 const CONTACT_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1553775282-20af80779df7?auto=format&fit=crop&w=2560&q=80'
+  'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=2560&q=80'
 
 type FormErrors = Partial<Record<'name' | 'email' | 'subject' | 'message', string>>
 
@@ -131,12 +131,32 @@ export function Contact() {
       <StoreHero
         titleId="contact-hero-title"
         image={CONTACT_HERO_IMAGE}
-        imagePosition="object-[60%_88%]"
-        framePosition="object-[55%_80%]"
+        imagePosition="object-[50%_45%]"
+        framePosition="object-[50%_40%]"
         kicker={t('contact.heroKicker')}
         titleLead={t('contact.heroTitle')}
         titleAccent={t('contact.heroTitleAccent')}
         description={t('contact.heroBody')}
+        frameOverlay={
+          <>
+            <div className="absolute end-3 top-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-md sm:end-4 sm:top-4">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand)] opacity-60 motion-reduce:hidden" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand)]" />
+              </span>
+              {contact.heroSupportChip}
+            </div>
+            <div className="absolute bottom-3 start-3 flex max-w-[17rem] items-center gap-3 rounded-2xl border border-white/60 bg-white/90 p-3 text-[#0c1218] shadow-soft backdrop-blur-md sm:bottom-4 sm:start-4 dark:border-white/10 dark:bg-[#0e1419]/85 dark:text-white">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)]">
+                <SiteIcon name="chat" size={18} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold leading-tight">{contact.heroSupportTitle}</span>
+                <span className="mt-0.5 block text-xs text-[#3d4d5c] dark:text-white/65">{contact.heroSupportBody}</span>
+              </span>
+            </div>
+          </>
+        }
       >
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button type="button" onClick={() => openWhatsAppPicker()} className={heroPrimaryPill}>
