@@ -57,8 +57,10 @@ const settingsSchema = new Schema<ISettings>(
 export const Settings = mongoose.model<ISettings>('Settings', settingsSchema);
 
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
+/** Stored instead of a product id when the page should show its photo, not a product. */
+export const HERO_NONE = 'none';
 
-/** Keeps only known pages with a valid product id (or '' to clear). */
+/** Keeps only known pages with a valid product id, HERO_NONE, or '' (automatic). */
 export function sanitizePageHeroProducts(
   input: unknown,
   current: Partial<Record<HeroPage, string>> = {}
@@ -71,7 +73,7 @@ export function sanitizePageHeroProducts(
       out[page] = current[page] || '';
     } else {
       const id = String(value ?? '').trim();
-      out[page] = OBJECT_ID.test(id) ? id : '';
+      out[page] = OBJECT_ID.test(id) || id === HERO_NONE ? id : '';
     }
   }
   return out;

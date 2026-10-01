@@ -9,7 +9,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
-import { useHeroProduct } from '@/hooks/useHeroProduct'
+import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { formatCurrency } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import type { HeroPage, Product } from '@/types'
@@ -45,8 +45,17 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
       adminApi.settings.update({ pageHeroProducts: { [next.page]: next.id } }),
     onSuccess: (_res, next) => {
       qc.invalidateQueries({ queryKey: ['settings'] })
+      qc.invalidateQueries({ queryKey: ['hero-product'] })
+      qc.invalidateQueries({ queryKey: ['hero-auto-products'] })
       const label = PAGES.find((p) => p.page === next.page)?.label ?? 'Page'
-      toast(next.id ? `${label} header updated` : `${label} header set back to automatic`, 'success')
+      toast(
+        next.id === HERO_NONE
+          ? `${label} header now shows its photo`
+          : next.id
+            ? `${label} header updated`
+            : `${label} header set back to automatic`,
+        'success',
+      )
       setPicking(null)
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
@@ -60,12 +69,13 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
           page={page}
           label={label}
           path={path}
-          productId={value?.[page] || ''}
+          setting={value?.[page] || ''}
           picking={picking === page}
           saving={save.isPending && save.variables?.page === page}
           onPick={() => setPicking(picking === page ? null : page)}
           onSelect={(id) => save.mutate({ page, id })}
-          onRemove={() => save.mutate({ page, id: '' })}
+          onRemove={() => save.mutate({ page, id: HERO_NONE })}
+          onAutomatic={() => save.mutate({ page, id: '' })}
         />
       ))}
     </ul>
@@ -76,23 +86,27 @@ function PageRow({
   page,
   label,
   path,
-  productId,
+  setting,
   picking,
   saving,
   onPick,
   onSelect,
   onRemove,
+  onAutomatic,
 }: {
   page: HeroPage
   label: string
   path: string
-  productId: string
+  setting: string
   picking: boolean
   saving: boolean
   onPick: () => void
   onSelect: (id: string) => void
   onRemove: () => void
+  onAutomatic: () => void
 }) {
+  const hidden = setting === HERO_NONE
+  const productId = hidden ? '' : setting
   const current = useQuery({
     queryKey: ['admin-product', productId],
     queryFn: async () => (await adminApi.products.get(productId)).data.data,
@@ -110,7 +124,15 @@ function PageRow({
         <Thumb product={product || autoProduct} />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{label}</p>
-          {productId && current.isPending ? (
+          {hidden ? (
+            <>
+              <p className="font-medium">No product</p>
+              <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
+                The header shows its normal photo. Choose a product, or use automatic to show your
+                first featured product.
+              </p>
+            </>
+          ) : productId && current.isPending ? (
             <p className="text-sm text-[var(--fg-muted)]">Loading…</p>
           ) : product ? (
             <>
@@ -127,7 +149,7 @@ function PageRow({
               <p className="truncate font-medium">{autoProduct.name}</p>
               <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
                 {missing ? 'The chosen product was deleted, so this' : 'Automatic — this'} is your
-                first featured product. Choose a product to lock a different one.
+                first featured product. Choose a different one, or remove it to show the photo.
               </p>
             </>
           ) : missing ? (
@@ -144,8 +166,13 @@ function PageRow({
           <Button size="sm" variant={picking ? 'ghost' : 'outline'} onClick={onPick}>
             {picking ? 'Cancel' : productId ? 'Change' : 'Choose product'}
           </Button>
-          {productId ? (
-            <Button size="sm" variant="ghost" onClick={onRemove} loading={saving && !picking}>
+          {hidden || productId ? (
+            <Button size="sm" variant="ghost" onClick={onAutomatic} loading={saving && !picking && hidden}>
+              Use automatic
+            </Button>
+          ) : null}
+          {!hidden && (product || autoProduct) ? (
+            <Button size="sm" variant="ghost" onClick={onRemove} loading={saving && !picking && !hidden}>
               Remove
             </Button>
           ) : null}

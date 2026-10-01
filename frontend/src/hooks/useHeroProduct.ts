@@ -3,16 +3,21 @@ import { settingsApi } from '@/api/settingsApi'
 import { productsApi } from '@/api/productsApi'
 import type { HeroPage, Product } from '@/types'
 
+/** Page-header setting meaning "no product — show the page photo". */
+export const HERO_NONE = 'none'
+
 /**
  * Product chosen in Admin → Settings → Page header. When none is chosen, shows the
- * first featured product (or the newest one if nothing is featured).
- * Pass no page to disable (the header then shows its default photo).
+ * first featured product (or the newest one if nothing is featured). HERO_NONE or
+ * no page disables it (the header then shows its default photo).
  */
 export function useHeroProduct(page?: HeroPage): {
   product: Product | null
   pending: boolean
   /** True when the product was picked in admin, false when it is the automatic fallback. */
   pinned: boolean
+  /** True when admin chose to show the page photo instead of any product. */
+  hidden: boolean
 } {
   const settings = useQuery({
     queryKey: ['settings'],
@@ -20,7 +25,9 @@ export function useHeroProduct(page?: HeroPage): {
     staleTime: 60_000,
     enabled: Boolean(page),
   })
-  const id = (page && settings.data?.pageHeroProducts?.[page]) || ''
+  const setting = (page && settings.data?.pageHeroProducts?.[page]) || ''
+  const hidden = setting === HERO_NONE
+  const id = hidden ? '' : setting
 
   const chosen = useQuery({
     queryKey: ['hero-product', id],
@@ -30,7 +37,10 @@ export function useHeroProduct(page?: HeroPage): {
   })
 
   const needAuto =
-    Boolean(page) && settings.isSuccess && (!id || (chosen.isSuccess && !chosen.data))
+    Boolean(page) &&
+    settings.isSuccess &&
+    !hidden &&
+    (!id || (chosen.isSuccess && !chosen.data))
   const auto = useQuery({
     queryKey: ['hero-auto-products'],
     queryFn: async () => {
@@ -42,7 +52,7 @@ export function useHeroProduct(page?: HeroPage): {
     staleTime: 5 * 60_000,
   })
 
-  if (!page) return { product: null, pending: false, pinned: false }
+  if (!page) return { product: null, pending: false, pinned: false, hidden: false }
 
   const pinnedProduct = (id && chosen.data) || null
   return {
@@ -50,5 +60,6 @@ export function useHeroProduct(page?: HeroPage): {
     pending:
       settings.isPending || (Boolean(id) && chosen.isPending) || (needAuto && auto.isPending),
     pinned: Boolean(pinnedProduct),
+    hidden,
   }
 }

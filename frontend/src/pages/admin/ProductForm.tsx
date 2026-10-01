@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
-import { settingsApi } from '@/api/settingsApi'
 import { uploadApi } from '@/api/uploadApi'
 import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
@@ -16,7 +15,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
-import { useHeroProduct } from '@/hooks/useHeroProduct'
+import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
 import type { Brand } from '@/types'
 
@@ -48,11 +47,6 @@ export function ProductForm() {
     queryFn: async () => (await adminApi.products.get(id!)).data.data,
     enabled: isEdit,
   })
-  const settings = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => (await settingsApi.get()).data.data,
-  })
-  const currentShopHero = settings.data?.pageHeroProducts?.shop || ''
   const shopHeroShown = useHeroProduct('shop')
   const isShownInShopHero = isEdit && shopHeroShown.product?._id === id
   const isAutoShopHero = isShownInShopHero && !shopHeroShown.pinned
@@ -156,8 +150,8 @@ export function ProductForm() {
       const savedId = res.data.data?._id || id
       if (savedId && shopHero && !isShownInShopHero) {
         await adminApi.settings.update({ pageHeroProducts: { shop: savedId } })
-      } else if (savedId && !shopHero && currentShopHero === savedId) {
-        await adminApi.settings.update({ pageHeroProducts: { shop: '' } })
+      } else if (savedId && !shopHero && isShownInShopHero) {
+        await adminApi.settings.update({ pageHeroProducts: { shop: HERO_NONE } })
       }
       return res
     },
@@ -520,7 +514,7 @@ export function ProductForm() {
                 {isAutoShopHero
                   ? 'It appears there automatically because it is your first featured product.'
                   : isShownInShopHero
-                    ? 'This product is the big picture at the top of the Shop page. Uncheck to go back to automatic.'
+                    ? 'This product is the big picture at the top of the Shop page.'
                     : shopHeroShown.product
                       ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
                       : 'The big picture at the top of the Shop page. Only one product can be there.'}{' '}
@@ -530,10 +524,9 @@ export function ProductForm() {
                 </Link>
                 .
               </span>
-              {isAutoShopHero && !shopHero ? (
-                <span className="mt-1 block text-xs text-[var(--danger)]">
-                  It will keep showing automatically while it is your first featured product. To show
-                  another product, open that product and check this box, or uncheck “Featured” here.
+              {isShownInShopHero && !shopHero ? (
+                <span className="mt-1 block text-xs text-[var(--fg-muted)]">
+                  After you save, it will be removed and the Shop header will show its normal photo.
                 </span>
               ) : null}
               {shopHero && !form.isActive ? (
