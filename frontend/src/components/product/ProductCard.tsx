@@ -246,7 +246,7 @@ export function ProductCard({
               className={cn(
                 'rounded-full',
                 spotlight
-                  ? 'h-9 px-4 text-sm sm:h-10 sm:px-5'
+                  ? 'h-8 px-3 text-xs sm:h-10 sm:px-5 sm:text-sm'
                   : 'h-8 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm'
               )}
               onClick={onAddCart}
