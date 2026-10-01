@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
+import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { formatCurrency } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import type { HeroPage, Product } from '@/types'
@@ -56,6 +57,7 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
       {PAGES.map(({ page, label, path }) => (
         <PageRow
           key={page}
+          page={page}
           label={label}
           path={path}
           productId={value?.[page] || ''}
@@ -71,6 +73,7 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
 }
 
 function PageRow({
+  page,
   label,
   path,
   productId,
@@ -80,6 +83,7 @@ function PageRow({
   onSelect,
   onRemove,
 }: {
+  page: HeroPage
   label: string
   path: string
   productId: string
@@ -95,13 +99,15 @@ function PageRow({
     enabled: Boolean(productId),
     retry: false,
   })
+  const shown = useHeroProduct(page)
   const product = productId ? current.data : null
   const missing = Boolean(productId) && current.isError
+  const autoProduct = !shown.pinned ? shown.product : null
 
   return (
     <li className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Thumb product={product} />
+        <Thumb product={product || autoProduct} />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{label}</p>
           {productId && current.isPending ? (
@@ -115,6 +121,14 @@ function PageRow({
                   <Badge variant="danger">Hidden — a featured product shows instead</Badge>
                 ) : null}
               </div>
+            </>
+          ) : autoProduct ? (
+            <>
+              <p className="truncate font-medium">{autoProduct.name}</p>
+              <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
+                {missing ? 'The chosen product was deleted, so this' : 'Automatic — this'} is your
+                first featured product. Choose a product to lock a different one.
+              </p>
             </>
           ) : missing ? (
             <p className="text-sm text-[var(--fg-muted)]">

@@ -8,7 +8,12 @@ import type { HeroPage, Product } from '@/types'
  * first featured product (or the newest one if nothing is featured).
  * Pass no page to disable (the header then shows its default photo).
  */
-export function useHeroProduct(page?: HeroPage): { product: Product | null; pending: boolean } {
+export function useHeroProduct(page?: HeroPage): {
+  product: Product | null
+  pending: boolean
+  /** True when the product was picked in admin, false when it is the automatic fallback. */
+  pinned: boolean
+} {
   const settings = useQuery({
     queryKey: ['settings'],
     queryFn: async () => (await settingsApi.get()).data.data,
@@ -37,11 +42,13 @@ export function useHeroProduct(page?: HeroPage): { product: Product | null; pend
     staleTime: 5 * 60_000,
   })
 
-  if (!page) return { product: null, pending: false }
+  if (!page) return { product: null, pending: false, pinned: false }
 
+  const pinnedProduct = (id && chosen.data) || null
   return {
-    product: (id && chosen.data) || (needAuto ? (auto.data?.[0] ?? null) : null),
+    product: pinnedProduct || (needAuto ? (auto.data?.[0] ?? null) : null),
     pending:
       settings.isPending || (Boolean(id) && chosen.isPending) || (needAuto && auto.isPending),
+    pinned: Boolean(pinnedProduct),
   }
 }

@@ -16,6 +16,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
+import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
 import type { Brand } from '@/types'
 
@@ -52,11 +53,14 @@ export function ProductForm() {
     queryFn: async () => (await settingsApi.get()).data.data,
   })
   const currentShopHero = settings.data?.pageHeroProducts?.shop || ''
+  const shopHeroShown = useHeroProduct('shop')
+  const isShownInShopHero = isEdit && shopHeroShown.product?._id === id
+  const isAutoShopHero = isShownInShopHero && !shopHeroShown.pinned
   const [shopHero, setShopHero] = useState(false)
 
   useEffect(() => {
-    if (isEdit && settings.data) setShopHero(currentShopHero === id)
-  }, [isEdit, settings.data, currentShopHero, id])
+    if (isEdit && !shopHeroShown.pending) setShopHero(isShownInShopHero)
+  }, [isEdit, shopHeroShown.pending, isShownInShopHero])
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [imageSource, setImageSource] = useState<ImageSource>('gallery')
@@ -150,7 +154,7 @@ export function ProductForm() {
         ? await adminApi.products.update(id!, payload)
         : await adminApi.products.create(payload)
       const savedId = res.data.data?._id || id
-      if (savedId && shopHero && currentShopHero !== savedId) {
+      if (savedId && shopHero && !isShownInShopHero) {
         await adminApi.settings.update({ pageHeroProducts: { shop: savedId } })
       } else if (savedId && !shopHero && currentShopHero === savedId) {
         await adminApi.settings.update({ pageHeroProducts: { shop: '' } })
@@ -162,6 +166,7 @@ export function ProductForm() {
       qc.invalidateQueries({ queryKey: ['brands'] })
       qc.invalidateQueries({ queryKey: ['settings'] })
       qc.invalidateQueries({ queryKey: ['hero-product'] })
+      qc.invalidateQueries({ queryKey: ['hero-auto-products'] })
       toast(isEdit ? 'Product updated' : 'Product created', 'success')
       navigate('/admin/products')
     },
@@ -503,18 +508,34 @@ export function ProductForm() {
               onChange={(e) => setShopHero(e.target.checked)}
             />
             <span>
-              <span className="block text-sm font-medium">Show in Shop page header</span>
+              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                Show in Shop page header
+                {isShownInShopHero ? (
+                  <span className="rounded-full bg-[color-mix(in_srgb,var(--success)_14%,transparent)] px-2 py-0.5 text-[11px] font-semibold text-[var(--success)]">
+                    Showing now{isAutoShopHero ? ' · automatic' : ''}
+                  </span>
+                ) : null}
+              </span>
               <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                The big picture at the top of the Shop page. Only one product can be there
-                {currentShopHero && currentShopHero !== id
-                  ? ' — checking this replaces the product shown now.'
-                  : '. Unchecked everywhere = one of your featured products shows automatically.'}{' '}
+                {isAutoShopHero
+                  ? 'It appears there automatically because it is your first featured product.'
+                  : isShownInShopHero
+                    ? 'This product is the big picture at the top of the Shop page. Uncheck to go back to automatic.'
+                    : shopHeroShown.product
+                      ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
+                      : 'The big picture at the top of the Shop page. Only one product can be there.'}{' '}
                 You can also change it in{' '}
                 <Link to="/admin/settings" className="text-[var(--brand-text)] hover:underline">
                   Settings
                 </Link>
                 .
               </span>
+              {isAutoShopHero && !shopHero ? (
+                <span className="mt-1 block text-xs text-[var(--danger)]">
+                  It will keep showing automatically while it is your first featured product. To show
+                  another product, open that product and check this box, or uncheck “Featured” here.
+                </span>
+              ) : null}
               {shopHero && !form.isActive ? (
                 <span className="mt-1 block text-xs text-[var(--danger)]">
                   Turn on “Active in shop”, otherwise customers won’t see it.
