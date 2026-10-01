@@ -590,26 +590,26 @@ export function ProductDetail() {
           <Button
             onClick={onAddCart}
             disabled={p.stock <= 0}
-            className="h-11 flex-1 rounded-full text-sm"
+            className="h-10 min-w-0 flex-1 gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px]"
           >
-            <SiteIcon name="cart" size={16} />
+            <SiteIcon name="cart" size={15} />
             {t('common.addToCart')}
           </Button>
           <Button
             variant={wishlisted ? 'primary' : 'outline'}
             onClick={onWishlist}
-            className="h-11 w-11 shrink-0 rounded-full !px-0"
+            className="h-10 w-10 shrink-0 rounded-full !px-0"
             aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
           >
-            <SiteIcon name="heart" size={16} />
+            <SiteIcon name="heart" size={15} />
           </Button>
           <Button
             variant="outline"
             onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
-            className="h-11 w-11 shrink-0 rounded-full !px-0"
+            className="h-10 w-10 shrink-0 rounded-full !px-0"
             aria-label={t('contact.whatsapp')}
           >
-            <WhatsAppIcon size={18} />
+            <WhatsAppIcon size={17} />
           </Button>
         </div>
       </div>
