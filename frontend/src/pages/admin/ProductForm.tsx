@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
+import { settingsApi } from '@/api/settingsApi'
 import { uploadApi } from '@/api/uploadApi'
 import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
@@ -46,6 +47,16 @@ export function ProductForm() {
     queryFn: async () => (await adminApi.products.get(id!)).data.data,
     enabled: isEdit,
   })
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => (await settingsApi.get()).data.data,
+  })
+  const currentShopHero = settings.data?.pageHeroProducts?.shop || ''
+  const [shopHero, setShopHero] = useState(false)
+
+  useEffect(() => {
+    if (isEdit && settings.data) setShopHero(currentShopHero === id)
+  }, [isEdit, settings.data, currentShopHero, id])
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [imageSource, setImageSource] = useState<ImageSource>('gallery')
@@ -135,12 +146,22 @@ export function ProductForm() {
           ? [{ url: form.imageUrl, isPrimary: true, alt: form.name }]
           : [],
       }
-      if (isEdit) return adminApi.products.update(id!, payload)
-      return adminApi.products.create(payload)
+      const res = isEdit
+        ? await adminApi.products.update(id!, payload)
+        : await adminApi.products.create(payload)
+      const savedId = res.data.data?._id || id
+      if (savedId && shopHero && currentShopHero !== savedId) {
+        await adminApi.settings.update({ pageHeroProducts: { shop: savedId } })
+      } else if (savedId && !shopHero && currentShopHero === savedId) {
+        await adminApi.settings.update({ pageHeroProducts: { shop: '' } })
+      }
+      return res
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-products'] })
       qc.invalidateQueries({ queryKey: ['brands'] })
+      qc.invalidateQueries({ queryKey: ['settings'] })
+      qc.invalidateQueries({ queryKey: ['hero-product'] })
       toast(isEdit ? 'Product updated' : 'Product created', 'success')
       navigate('/admin/products')
     },
@@ -472,6 +493,33 @@ export function ProductForm() {
               <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
                 Hidden products stay in admin but are not visible to customers.
               </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={shopHero}
+              onChange={(e) => setShopHero(e.target.checked)}
+            />
+            <span>
+              <span className="block text-sm font-medium">Show in Shop page header</span>
+              <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
+                The big picture at the top of the Shop page. Only one product can be there
+                {currentShopHero && currentShopHero !== id
+                  ? ' — checking this replaces the product shown now.'
+                  : '. Unchecked everywhere = one of your featured products shows automatically.'}{' '}
+                You can also change it in{' '}
+                <Link to="/admin/settings" className="text-[var(--brand-text)] hover:underline">
+                  Settings
+                </Link>
+                .
+              </span>
+              {shopHero && !form.isActive ? (
+                <span className="mt-1 block text-xs text-[var(--danger)]">
+                  Turn on “Active in shop”, otherwise customers won’t see it.
+                </span>
+              ) : null}
             </span>
           </label>
         </div>
