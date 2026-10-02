@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
+import { ImageSpinner, useImageLoaded } from '@/components/ui/ImageLoader'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { Spinner } from '@/components/ui/Spinner'
 import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
@@ -34,28 +34,13 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
         transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
       }
 
-function HeroLoading() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--bg-elevated)]/80 shadow-soft backdrop-blur-sm dark:bg-black/40">
-        <Spinner size="lg" />
-      </span>
-    </div>
-  )
-}
-
 function HeroProductCard({ product }: { product: Product }) {
   const t = useT()
   const image = product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
   const src = sizedImageUrl(image, 1600)
   const brand = typeof product.brand === 'object' ? product.brand?.name : undefined
   const onSale = product.compareAtPrice != null && product.compareAtPrice > product.price
-  const frameRef = useRef<HTMLDivElement>(null)
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    setLoaded(Boolean(frameRef.current?.querySelector('img')?.complete))
-  }, [src])
+  const photo = useImageLoaded(src)
 
   return (
     <Link
@@ -63,7 +48,7 @@ function HeroProductCard({ product }: { product: Product }) {
       className="group relative block overflow-hidden transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] md:rounded-2xl md:border md:border-[var(--border)] md:bg-[var(--bg-elevated)] md:shadow-soft md:hover:border-[var(--brand)] md:dark:border-white/10 md:dark:bg-[#0e1419]"
     >
       <div
-        ref={frameRef}
+        ref={photo.ref}
         className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]"
       >
         <SafeImage
@@ -74,14 +59,14 @@ function HeroProductCard({ product }: { product: Product }) {
           sizes="(min-width: 768px) 60vw, 100vw"
           className={cn(
             'absolute inset-0 h-full w-full max-w-none object-cover transition duration-500 group-hover:scale-[1.04]',
-            loaded ? 'opacity-100' : 'opacity-0'
+            photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
           loading="eager"
           fetchPriority="high"
-          onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onLoad={photo.onLoad}
+          onError={photo.onError}
         />
-        {loaded ? null : <HeroLoading />}
+        {photo.loaded ? null : <ImageSpinner />}
         <div
           className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/25 to-transparent"
           aria-hidden="true"
@@ -257,7 +242,7 @@ export function StoreHero({
             ) : pending ? (
               <div className="relative order-first aspect-[4/3.5] overflow-hidden bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5">
                 <div className="absolute inset-0 animate-pulse bg-[var(--bg-elevated)]/40" aria-hidden="true" />
-                <HeroLoading />
+                <ImageSpinner />
               </div>
             ) : (
               <motion.div

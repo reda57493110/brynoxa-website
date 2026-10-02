@@ -12,6 +12,7 @@ import { wishlistApi } from '@/api/wishlistApi'
 import { toast } from '@/store/toastStore'
 import { Button } from '@/components/ui/Button'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { ImageSpinner, useImageLoaded } from '@/components/ui/ImageLoader'
 import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
 import { optimizedImageUrl } from '@/lib/image'
@@ -65,6 +66,8 @@ export function ProductCard({
   const category = categoryName(product, locale)
   const meta = [brand, category].filter(Boolean).join(' · ')
   const blurb = product.shortDescription?.trim()
+  const imageSrc = optimizedImageUrl(primaryImage(product), spotlight ? 1200 : 640)
+  const photo = useImageLoaded(imageSrc)
 
   const onAddCart = () => {
     if (product.stock <= 0) {
@@ -125,6 +128,7 @@ export function ProductCard({
       )}
     >
       <div
+        ref={photo.ref}
         className={cn(
           'relative overflow-hidden bg-[var(--bg-muted)]',
           spotlight
@@ -134,7 +138,9 @@ export function ProductCard({
       >
         <Link to={`/product/${product.slug}`} className="block h-full w-full">
           <SafeImage
-            src={optimizedImageUrl(primaryImage(product), spotlight ? 1200 : 640)}
+            src={imageSrc}
+            onLoad={photo.onLoad}
+            onError={photo.onError}
             alt={product.name}
             referrerPolicy="no-referrer"
             decoding="async"
@@ -147,10 +153,12 @@ export function ProductCard({
                 : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 46vw'
             }
             className={cn(
-              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]'
+              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]',
+              photo.loaded ? 'opacity-100' : 'opacity-0'
             )}
           />
         </Link>
+        {photo.loaded ? null : <ImageSpinner size={spotlight ? 'lg' : 'md'} />}
         <div className="pointer-events-none absolute start-2 top-2 z-10 flex max-w-[calc(100%-3rem)] flex-wrap gap-1 sm:start-3 sm:top-3 sm:max-w-none sm:gap-2">
           {spotlight ? (
             <span className="rounded-full bg-[var(--brand)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-fg)]">
