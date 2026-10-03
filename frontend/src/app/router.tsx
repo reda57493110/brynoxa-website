@@ -57,6 +57,7 @@ const OrderConfirmation = lazy(() =>
 )
 const Contact = lazy(() => import('@/pages/store/Contact').then((m) => ({ default: m.Contact })))
 const Services = lazy(() => import('@/pages/store/Services').then((m) => ({ default: m.Services })))
+const Legal = lazy(() => import('@/pages/store/Legal').then((m) => ({ default: m.Legal })))
 
 const AdminDashboard = lazy(() =>
   import('@/pages/admin/Dashboard').then((m) => ({ default: m.Dashboard }))
@@ -126,6 +127,8 @@ export function AppRouter() {
         />
         <Route path="contact" element={<S><Contact /></S>} />
         <Route path="services" element={<S><Services /></S>} />
+        <Route path="privacy" element={<S><Legal page="privacy" /></S>} />
+        <Route path="terms" element={<S><Legal page="terms" /></S>} />
         <Route
           path="account"
           element={

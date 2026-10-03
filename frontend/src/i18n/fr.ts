@@ -16,6 +16,12 @@ export const fr: Messages = {
       'Contactez Brynoxa par WhatsApp, téléphone ou e-mail. Commandes, compatibilité et support au Maroc.',
     servicesDescription:
       'Garantie Brynoxa (6 mois), retours 14 jours, paiement à la livraison et livraison nationale au Maroc.',
+    privacyTitle: 'Politique de confidentialité — Brynoxa',
+    privacyDescription:
+      'Comment Brynoxa collecte, utilise et protège vos informations personnelles, et vos droits selon la loi marocaine 09-08.',
+    termsTitle: 'Conditions générales de vente — Brynoxa',
+    termsDescription:
+      'CGV Brynoxa : prix, paiement à la livraison, livraison au Maroc, retours sous 14 jours et garantie 6 mois.',
   },
   common: {
     shop: 'Boutique',
@@ -66,6 +72,26 @@ export const fr: Messages = {
     warrantyBadge: 'Garantie 6 mois',
     noCard: 'Pas de carte nécessaire',
     backToTop: 'Haut de page',
+    legal: 'Mentions légales',
+  },
+  legal: {
+    kicker: 'Mentions légales',
+    privacyTitle: 'Politique de confidentialité',
+    termsTitle: 'Conditions générales de vente',
+    updated: 'Dernière mise à jour : {date}',
+    onThisPage: 'Sur cette page',
+    businessTitle: 'Informations sur l’entreprise',
+    businessName: 'Nom commercial',
+    address: 'Adresse',
+    email: 'E-mail',
+    phone: 'Téléphone et WhatsApp',
+    ice: 'ICE',
+    rc: 'Registre du commerce (RC)',
+    questionsTitle: 'Une question sur cette page ?',
+    questionsBody: 'Notre équipe répond par WhatsApp, téléphone ou e-mail.',
+    contactUs: 'Nous contacter',
+    agreeOrder: 'En passant commande, vous acceptez nos {terms} et notre {privacy}.',
+    agreeRegister: 'En créant un compte, vous acceptez nos {terms} et notre {privacy}.',
   },
   home: {
     kicker: 'Maroc',
@@ -674,7 +700,7 @@ export const fr: Messages = {
       },
       {
         q: 'Proposez-vous des commandes professionnelles / en volume ?',
-        a: 'Oui. Écrivez à brynoxa.com@gmail.com avec vos besoins et nous préparerons un devis.',
+        a: 'Oui. Écrivez à brynoxa.shop@gmail.com avec vos besoins et nous préparerons un devis.',
       },
     ],
   },

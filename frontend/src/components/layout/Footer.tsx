@@ -143,9 +143,17 @@ export function Footer() {
 
       <div className="border-t border-[var(--border)]">
         <Container className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 py-3">
-          <p className="text-[11px] text-[var(--fg-muted)] sm:text-xs">
-            {t('footer.copyright', { year: new Date().getFullYear() })}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:text-xs">
+            <p>{t('footer.copyright', { year: new Date().getFullYear() })}</p>
+            <nav aria-label={t('footer.legal')} className="flex items-center gap-3">
+              <Link to="/terms" className="transition hover:text-[var(--brand-text)]">
+                {t('legal.termsTitle')}
+              </Link>
+              <Link to="/privacy" className="transition hover:text-[var(--brand-text)]">
+                {t('legal.privacyTitle')}
+              </Link>
+            </nav>
+          </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:gap-x-3 sm:text-xs">
             <span>{t('footer.warrantyBadge')}</span>
             <span className="hidden h-1 w-1 rounded-full bg-[var(--border)] sm:inline" aria-hidden="true" />

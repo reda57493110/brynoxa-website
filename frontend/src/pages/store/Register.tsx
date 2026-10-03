@@ -5,6 +5,7 @@ import { wishlistApi } from '@/api/wishlistApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { LegalConsent } from '@/components/legal/LegalConsent'
 import { useAuthStore } from '@/store/authStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
@@ -143,6 +144,7 @@ export function Register() {
         <Button type="submit" className="w-full rounded-full" loading={loading}>
           {t('auth.createAccount')}
         </Button>
+        <LegalConsent action="register" className="text-center" />
       </form>
       <p className="mt-6 text-center text-sm text-[var(--fg-muted)]">
         {t('auth.hasAccount')}{' '}

@@ -15,8 +15,8 @@ export const CONTACT = {
   },
   email: {
     label: 'Email',
-    value: 'brynoxa.com@gmail.com',
-    href: 'mailto:brynoxa.com@gmail.com',
+    value: 'brynoxa.shop@gmail.com',
+    href: 'mailto:brynoxa.shop@gmail.com',
   },
   address: {
     label: 'Address',
@@ -27,6 +27,22 @@ export const CONTACT = {
     label: 'Working hours',
     value: 'Mon–Fri 9:00–18:00 · Sat 10:00–16:00 · Sun closed',
   },
+} as const
+
+/**
+ * Business identity shown on the Terms of Sale and Privacy Policy pages.
+ * Empty fields are hidden — fill them in once the business is registered.
+ */
+export const LEGAL = {
+  businessName: 'Brynoxa',
+  /** Registered business address. */
+  address: '',
+  /** Identifiant Commun de l’Entreprise. */
+  ice: '',
+  /** Registre du Commerce number and city, e.g. "RC 12345 Casablanca". */
+  rc: '',
+  /** Date the legal pages were last changed (YYYY-MM-DD). */
+  updated: '2026-10-03',
 } as const
 
 export const SOCIAL_LINKS = [
@@ -65,7 +81,7 @@ export const CONTACT_FAQS = [
   },
   {
     q: 'Do you offer business / bulk orders?',
-    a: 'Absolutely. Email brynoxa.com@gmail.com with your requirements and our team will prepare a custom quote.',
+    a: 'Absolutely. Email brynoxa.shop@gmail.com with your requirements and our team will prepare a custom quote.',
   },
 ] as const
 

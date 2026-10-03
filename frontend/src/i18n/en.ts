@@ -13,6 +13,12 @@ export const en = {
       'Contact Brynoxa by WhatsApp, phone, or email. Order help, compatibility questions, and support across Morocco.',
     servicesDescription:
       'Brynoxa warranty (6 months), 14-day returns, cash on delivery, and nationwide shipping in Morocco.',
+    privacyTitle: 'Privacy Policy — Brynoxa',
+    privacyDescription:
+      'How Brynoxa collects, uses and protects your personal information, and your rights under Moroccan Law 09-08.',
+    termsTitle: 'Terms of Sale — Brynoxa',
+    termsDescription:
+      'Brynoxa terms of sale: prices, cash on delivery, delivery across Morocco, 14-day returns and 6-month warranty.',
   },
   common: {
     shop: 'Shop',
@@ -63,6 +69,26 @@ export const en = {
     warrantyBadge: '6-month warranty',
     noCard: 'No card needed',
     backToTop: 'Back to top',
+    legal: 'Legal',
+  },
+  legal: {
+    kicker: 'Legal',
+    privacyTitle: 'Privacy Policy',
+    termsTitle: 'Terms of Sale',
+    updated: 'Last updated: {date}',
+    onThisPage: 'On this page',
+    businessTitle: 'Business information',
+    businessName: 'Business name',
+    address: 'Address',
+    email: 'Email',
+    phone: 'Phone & WhatsApp',
+    ice: 'ICE',
+    rc: 'Trade register (RC)',
+    questionsTitle: 'Questions about this page?',
+    questionsBody: 'Our team answers by WhatsApp, phone or email.',
+    contactUs: 'Contact us',
+    agreeOrder: 'By placing your order, you accept our {terms} and {privacy}.',
+    agreeRegister: 'By creating an account, you accept our {terms} and {privacy}.',
   },
   home: {
     kicker: 'Morocco',
@@ -667,7 +693,7 @@ export const en = {
       },
       {
         q: 'Do you offer business / bulk orders?',
-        a: 'Absolutely. Email brynoxa.com@gmail.com with your requirements and our team will prepare a custom quote.',
+        a: 'Absolutely. Email brynoxa.shop@gmail.com with your requirements and our team will prepare a custom quote.',
       },
     ],
   },

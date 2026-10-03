@@ -58,7 +58,7 @@ function wrapEmail(title: string, body: string) {
     <div style="padding:24px;">${body}</div>
     <div style="padding:16px 24px;border-top:1px solid #e8ecef;font-size:12px;color:#5a6a7a;">
       Questions? WhatsApp <a href="https://wa.me/212779318061" style="color:#0077a8;">07 79 31 80 61</a>
-      · <a href="mailto:brynoxa.com@gmail.com" style="color:#0077a8;">brynoxa.com@gmail.com</a>
+      · <a href="mailto:brynoxa.shop@gmail.com" style="color:#0077a8;">brynoxa.shop@gmail.com</a>
     </div>
   </div>
 </body></html>`;

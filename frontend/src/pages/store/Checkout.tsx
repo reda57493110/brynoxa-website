@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
+import { LegalConsent } from '@/components/legal/LegalConsent'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useLocaleStore } from '@/store/localeStore'
@@ -544,6 +545,7 @@ export function Checkout() {
             >
               {t('checkout.placeOrder')}
             </Button>
+            <LegalConsent action="order" className="mt-3 text-center" />
             <Link
               to="/cart"
               className="mt-3 block text-center text-sm font-medium text-[var(--brand-text)]"

@@ -41,7 +41,7 @@ const settingsSchema = new Schema<ISettings>(
       default: [],
     },
     taxRate: { type: Number, default: 0 },
-    supportEmail: { type: String, default: 'brynoxa.com@gmail.com' },
+    supportEmail: { type: String, default: 'brynoxa.shop@gmail.com' },
     codEnabled: { type: Boolean, default: true },
     notifyStaffLoginEmail: { type: Boolean, default: true },
     pageHeroProducts: {

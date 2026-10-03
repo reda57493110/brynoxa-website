@@ -15,6 +15,12 @@ export const ar: Messages = {
       'تواصل مع Brynoxa عبر واتساب أو الهاتف أو البريد. طلبات وأسئلة التوافق والدعم في المغرب.',
     servicesDescription:
       'ضمان Brynoxa (6 أشهر)، إرجاع خلال 14 يومًا، الدفع عند الاستلام والتوصيل في أنحاء المغرب.',
+    privacyTitle: 'سياسة الخصوصية — Brynoxa',
+    privacyDescription:
+      'كيف تجمع Brynoxa معلوماتك الشخصية وتستخدمها وتحميها، وحقوقك وفق القانون المغربي 09-08.',
+    termsTitle: 'شروط البيع — Brynoxa',
+    termsDescription:
+      'شروط البيع لدى Brynoxa: الأسعار، الدفع عند الاستلام، التوصيل في المغرب، الإرجاع خلال 14 يومًا وضمان 6 أشهر.',
   },
   common: {
     shop: 'المتجر',
@@ -65,6 +71,26 @@ export const ar: Messages = {
     warrantyBadge: 'ضمان 6 أشهر',
     noCard: 'بدون بطاقة',
     backToTop: 'إلى الأعلى',
+    legal: 'معلومات قانونية',
+  },
+  legal: {
+    kicker: 'معلومات قانونية',
+    privacyTitle: 'سياسة الخصوصية',
+    termsTitle: 'شروط البيع',
+    updated: 'آخر تحديث: {date}',
+    onThisPage: 'في هذه الصفحة',
+    businessTitle: 'معلومات المتجر',
+    businessName: 'الاسم التجاري',
+    address: 'العنوان',
+    email: 'البريد الإلكتروني',
+    phone: 'الهاتف وواتساب',
+    ice: 'المعرّف الموحد للمقاولة (ICE)',
+    rc: 'السجل التجاري (RC)',
+    questionsTitle: 'لديك سؤال حول هذه الصفحة؟',
+    questionsBody: 'يجيبك فريقنا عبر واتساب أو الهاتف أو البريد الإلكتروني.',
+    contactUs: 'تواصل معنا',
+    agreeOrder: 'بتأكيد طلبك، فإنك توافق على {terms} و{privacy}.',
+    agreeRegister: 'بإنشاء حساب، فإنك توافق على {terms} و{privacy}.',
   },
   home: {
     kicker: 'المغرب',
@@ -669,7 +695,7 @@ export const ar: Messages = {
       },
       {
         q: 'هل تقدمون طلبات للشركات أو بالجملة؟',
-        a: 'نعم. راسلوا brynoxa.com@gmail.com باحتياجاتكم وسنعد عرض سعر مخصصًا.',
+        a: 'نعم. راسلوا brynoxa.shop@gmail.com باحتياجاتكم وسنعد عرض سعر مخصصًا.',
       },
     ],
   },
