@@ -5,6 +5,7 @@ import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
 import { uploadApi } from '@/api/uploadApi'
+import { prepareImageForUpload } from '@/lib/prepareImage'
 import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -20,6 +21,9 @@ import { cn } from '@/lib/cn'
 import type { Brand } from '@/types'
 
 type ImageSource = 'gallery' | 'url'
+type FormImage = { url: string; publicId?: string }
+
+const MAX_IMAGES = 8
 
 async function resolveBrandId(name: string) {
   const trimmed = name.trim()
@@ -58,8 +62,24 @@ export function ProductForm() {
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [imageSource, setImageSource] = useState<ImageSource>('gallery')
-  const [uploading, setUploading] = useState(false)
-  const [form, setForm] = useState({
+  const [uploading, setUploading] = useState<{ done: number; total: number } | null>(null)
+  const [urlDraft, setUrlDraft] = useState('')
+  const [form, setForm] = useState<{
+    name: string
+    sku: string
+    description: string
+    shortDescription: string
+    category: string
+    brand: string
+    price: number
+    compareAtPrice: number
+    stock: number
+    tags: string
+    isFeatured: boolean
+    isCarousel: boolean
+    isActive: boolean
+    images: FormImage[]
+  }>({
     name: '',
     sku: '',
     description: '',
@@ -73,14 +93,16 @@ export function ProductForm() {
     isFeatured: false,
     isCarousel: false,
     isActive: true,
-    imageUrl: '',
+    images: [],
   })
   const initialFormRef = useRef(JSON.stringify(form))
 
   useEffect(() => {
     if (existing.data) {
       const p = existing.data
-      const url = p.images?.[0]?.url || ''
+      const images = [...(p.images || [])]
+        .sort((a, b) => Number(Boolean(b.isPrimary)) - Number(Boolean(a.isPrimary)))
+        .map(({ url, publicId }) => ({ url, publicId }))
       const brandName =
         typeof p.brand === 'string' ? '' : (p.brand as Brand)?.name || ''
       const nextForm = {
@@ -97,11 +119,10 @@ export function ProductForm() {
         isFeatured: p.isFeatured,
         isCarousel: Boolean(p.isCarousel),
         isActive: p.isActive,
-        imageUrl: url,
+        images,
       }
       initialFormRef.current = JSON.stringify(nextForm)
       setForm(nextForm)
-      if (url) setImageSource('url')
     }
   }, [existing.data])
 
@@ -140,9 +161,12 @@ export function ProductForm() {
         isFeatured: form.isFeatured,
         isCarousel: form.isCarousel,
         isActive: form.isActive,
-        images: form.imageUrl
-          ? [{ url: form.imageUrl, isPrimary: true, alt: form.name }]
-          : [],
+        images: form.images.map((img, i) => ({
+          url: img.url,
+          publicId: img.publicId,
+          alt: form.name,
+          isPrimary: i === 0,
+        })),
       }
       const res = isEdit
         ? await adminApi.products.update(id!, payload)
@@ -167,23 +191,67 @@ export function ProductForm() {
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
 
-  const onUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast('Please choose an image file', 'error')
+  const room = MAX_IMAGES - form.images.length
+
+  const onUpload = async (fileList: FileList) => {
+    const all = Array.from(fileList)
+    const files = all.slice(0, room)
+    if (fileRef.current) fileRef.current.value = ''
+    if (!files.length) {
+      toast(`A product can have up to ${MAX_IMAGES} photos`, 'error')
       return
     }
-    setUploading(true)
-    try {
-      const res = await uploadApi.image(file)
-      setForm((f) => ({ ...f, imageUrl: res.data.data.url }))
-      toast('Image uploaded', 'success')
-    } catch (e) {
-      toast(getErrorMessage(e), 'error')
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
+    if (all.length > files.length) {
+      toast(`Only the first ${files.length} photos were added (max ${MAX_IMAGES})`, 'info')
     }
+    let added = 0
+    setUploading({ done: 0, total: files.length })
+    for (const [i, file] of files.entries()) {
+      try {
+        const { blob, filename } = await prepareImageForUpload(file)
+        const res = await uploadApi.image(blob, filename)
+        const { url, publicId } = res.data.data
+        setForm((f) => ({ ...f, images: [...f.images, { url, publicId }].slice(0, MAX_IMAGES) }))
+        added += 1
+      } catch (e) {
+        toast(`${file.name}: ${getErrorMessage(e)}`, 'error')
+      }
+      setUploading({ done: i + 1, total: files.length })
+    }
+    setUploading(null)
+    if (added) toast(added === 1 ? 'Photo added' : `${added} photos added`, 'success')
   }
+
+  const addImageUrl = (raw: string) => {
+    const url = raw.trim()
+    if (!url) return
+    if (!/^https?:\/\//i.test(url)) {
+      toast('Paste a full image address starting with https://', 'error')
+      return
+    }
+    if (room <= 0) {
+      toast(`A product can have up to ${MAX_IMAGES} photos`, 'error')
+      return
+    }
+    if (form.images.some((img) => img.url === url)) {
+      toast('This photo is already added', 'info')
+      return
+    }
+    setForm((f) => ({ ...f, images: [...f.images, { url }] }))
+    setUrlDraft('')
+  }
+
+  const removeImage = (index: number) =>
+    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== index) }))
+
+  const moveImage = (index: number, to: number) =>
+    setForm((f) => {
+      if (to < 0 || to >= f.images.length) return f
+      const images = [...f.images]
+      const [item] = images.splice(index, 1)
+      images.splice(to, 0, item)
+      return { ...f, images }
+    })
 
   if (isEdit && existing.isLoading) {
     return (
@@ -343,7 +411,81 @@ export function ProductForm() {
           onChange={(e) => setForm({ ...form, tags: e.target.value })}
         />
         <div className="sm:col-span-2 space-y-3">
-          <p className="text-sm font-medium">Product image</p>
+          <div>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-sm font-medium">Product photos</p>
+              <span className="text-xs tabular-nums text-[var(--fg-muted)]">
+                {form.images.length}/{MAX_IMAGES}
+              </span>
+            </div>
+            <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
+              The first photo is the main one shown in the shop. Use the arrows to change the order.
+            </p>
+          </div>
+
+          {form.images.length || uploading ? (
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+              {form.images.map((img, i) => (
+                <li
+                  key={img.url}
+                  className="relative aspect-square overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]"
+                >
+                  <SafeImage
+                    src={img.url}
+                    alt={`Photo ${i + 1}`}
+                    referrerPolicy="no-referrer"
+                    className="h-full w-full object-cover"
+                  />
+                  {i === 0 ? (
+                    <span className="absolute start-1.5 top-1.5 rounded-full bg-[var(--brand)] px-2 py-0.5 text-[10px] font-semibold text-[var(--brand-fg)]">
+                      Main
+                    </span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute end-1.5 top-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[var(--danger)]"
+                    aria-label={`Remove photo ${i + 1}`}
+                  >
+                    <SiteIcon name="close" size={14} />
+                  </button>
+                  {form.images.length > 1 ? (
+                    <div className="absolute inset-x-1.5 bottom-1.5 flex justify-between">
+                      <button
+                        type="button"
+                        onClick={() => moveImage(i, i - 1)}
+                        disabled={i === 0}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 disabled:invisible"
+                        aria-label={`Move photo ${i + 1} earlier`}
+                      >
+                        <SiteIcon name="chevron-left" size={14} className="rtl:rotate-180" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveImage(i, i + 1)}
+                        disabled={i === form.images.length - 1}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 disabled:invisible"
+                        aria-label={`Move photo ${i + 1} later`}
+                      >
+                        <SiteIcon name="chevron-right" size={14} className="rtl:rotate-180" />
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              ))}
+              {uploading
+                ? Array.from({ length: uploading.total - uploading.done }).map((_, i) => (
+                    <li
+                      key={`uploading-${i}`}
+                      className="flex aspect-square items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-muted)]/60"
+                    >
+                      {i === 0 ? <Spinner /> : <SiteIcon name="clock" size={16} className="text-[var(--fg-muted)]" />}
+                    </li>
+                  ))
+                : null}
+            </ul>
+          ) : null}
+
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -379,77 +521,66 @@ export function ProductForm() {
                 ref={fileRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
-                onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
+                onChange={(e) => e.target.files?.length && onUpload(e.target.files)}
               />
               <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm font-medium">Choose a photo from your device</p>
+                  <p className="text-sm font-medium">
+                    {uploading
+                      ? `Uploading ${Math.min(uploading.done + 1, uploading.total)} of ${uploading.total}…`
+                      : 'Choose photos from your phone or computer'}
+                  </p>
                   <p className="mt-1 text-xs text-[var(--fg-muted)]">
-                    JPG, PNG, or WebP — uploads to your store and fills the image for this product.
+                    You can select several at once. Big phone photos are resized automatically.
                   </p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  loading={uploading}
+                  loading={Boolean(uploading)}
+                  disabled={room <= 0}
                   onClick={() => fileRef.current?.click()}
                 >
                   <SiteIcon name="plus" size={14} />
-                  Browse gallery
+                  {form.images.length ? 'Add more photos' : 'Add photos'}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-2">
-              <Input
-                label="Image address (URL)"
-                placeholder="https://… or paste copied image link"
-                value={form.imageUrl}
-                onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
-                onPaste={(e) => {
-                  const text = e.clipboardData.getData('text').trim()
-                  if (text) {
-                    e.preventDefault()
-                    setForm((f) => ({ ...f, imageUrl: text }))
-                  }
-                }}
-              />
+              <div className="flex items-end gap-2">
+                <Input
+                  label="Image address (URL)"
+                  placeholder="https://… or paste copied image link"
+                  value={urlDraft}
+                  onChange={(e) => setUrlDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      addImageUrl(urlDraft)
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0"
+                  disabled={!urlDraft.trim() || room <= 0}
+                  onClick={() => addImageUrl(urlDraft)}
+                >
+                  <SiteIcon name="plus" size={14} />
+                  Add
+                </Button>
+              </div>
               <p className="text-xs text-[var(--fg-muted)]">
                 Some shops (like joutech.ma) block pasted links. If the preview breaks, use{' '}
                 <strong className="text-[var(--fg)]">From my gallery</strong> instead.
               </p>
             </div>
           )}
-
-          {form.imageUrl ? (
-            <div className="flex items-start gap-4 rounded-2xl border border-[var(--border)] p-3">
-              <SafeImage
-                src={form.imageUrl}
-                alt="Product preview"
-                referrerPolicy="no-referrer"
-                className="h-24 w-24 rounded-xl object-cover bg-[var(--bg-muted)]"
-                onError={(e) => {
-                  ;(e.target as HTMLImageElement).style.opacity = '0.35'
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">Preview</p>
-                <p className="mt-1 truncate text-xs text-[var(--fg-muted)]">{form.imageUrl}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setForm((f) => ({ ...f, imageUrl: '' }))}
-                >
-                  <SiteIcon name="trash" size={14} />
-                  Remove image
-                </Button>
-              </div>
-            </div>
-          ) : null}
         </div>
         <div className="sm:col-span-2 space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4">
           <label className="flex cursor-pointer items-start gap-3">

@@ -40,9 +40,27 @@ module.exports = async (req, res) => {
 
   try {
     await connectMongo();
-    await ensureCatalog();
 
     const { pathname, query: raw } = parseUrl(req.url || '');
+
+    // GET /images/:id — uploaded product photos stored in MongoDB
+    if (raw.__resource === 'images') {
+      const { getStoredImage, STORED_IMAGE_CACHE } = require('../../backend/dist/services/upload.service');
+      const image = await getStoredImage(String(raw.__route || ''));
+      if (!image) {
+        sendJson(res, 404, { success: false, message: 'Image not found' });
+        return;
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', image.contentType);
+      res.setHeader('Content-Length', String(image.data.length));
+      res.setHeader('Cache-Control', STORED_IMAGE_CACHE);
+      res.end(image.data);
+      return;
+    }
+
+    await ensureCatalog();
+
     const route = resolveRoute(pathname, raw);
     const catalog = require('../../backend/dist/services/catalog.service');
 

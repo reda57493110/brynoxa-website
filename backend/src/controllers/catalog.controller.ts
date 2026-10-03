@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
-import { uploadProductImage } from '../services/upload.service';
+import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../services/upload.service';
 import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
 import { param } from '../utils/params';
@@ -113,6 +113,14 @@ export const uploadImage = asyncHandler(async (req: Request, res: Response) => {
   }
   const result = await uploadProductImage(req.file.buffer, req.file.mimetype);
   sendSuccess(res, result, 'Uploaded', 201);
+});
+
+export const getImage = asyncHandler(async (req: Request, res: Response) => {
+  const image = await getStoredImage(String(req.params.id));
+  if (!image) throw new ApiError(404, 'Image not found');
+  res.setHeader('Content-Type', image.contentType);
+  res.setHeader('Cache-Control', STORED_IMAGE_CACHE);
+  res.send(image.data);
 });
 
 export const compareProducts = asyncHandler(async (req: Request, res: Response) => {

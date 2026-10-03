@@ -95,7 +95,7 @@ export const productSchema = z.object({
   images: z
     .array(
       z.object({
-        url: z.string().url(),
+        url: z.union([z.string().url(), z.string().regex(/^\/api\/v1\/images\/[a-f0-9]{24}$/i)]),
         publicId: z.string().optional(),
         alt: z.string().optional(),
         isPrimary: z.boolean().optional(),

@@ -12,6 +12,7 @@
     { "source": "/api/v1/notifications/(.*)", "destination": "/api/v1/wishlist?__resource=notifications&__route=$1" },
     { "source": "/api/v1/admin/(.*)", "destination": "/api/v1/admin?__route=$1" },
     { "source": "/api/v1/products/(.*)", "destination": "/api/v1/products?__route=$1" },
+    { "source": "/api/v1/images/(.*)", "destination": "/api/v1/products?__resource=images&__route=$1" },
     { "source": "/api/v1/categories/(.*)", "destination": "/api/v1/categories?__route=$1" },
     { "source": "/api/v1/orders/(.*)", "destination": "/api/v1/orders?__route=$1" },
     { "source": "/api/v1/coupons/validate", "destination": "/api/v1/orders?__route=coupons/validate" },
