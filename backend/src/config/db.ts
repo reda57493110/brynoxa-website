@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 import { env } from './env';
 
-function isMemoryUri(uri: string): boolean {
-  return uri === 'memory' || process.env.USE_MEMORY_DB === 'true';
-}
-
 declare global {
   // eslint-disable-next-line no-var
   var __mongooseCache:
@@ -23,18 +19,9 @@ export async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   }
 
-  let uri = env.MONGODB_URI;
-
-  if (isMemoryUri(uri)) {
-    const { MongoMemoryServer } = await import('mongodb-memory-server');
-    const mongod = await MongoMemoryServer.create();
-    uri = mongod.getUri('brynoxa');
-    console.log('Using in-memory MongoDB');
-  }
-
   if (!cached.promise) {
     cached.promise = mongoose
-      .connect(uri, {
+      .connect(env.MONGODB_URI, {
         serverSelectionTimeoutMS: 30000,
         connectTimeoutMS: 30000,
         socketTimeoutMS: 45000,
@@ -42,7 +29,7 @@ export async function connectDB(): Promise<typeof mongoose> {
       })
       .then((connection) => {
       const host = connection.connection.host || 'unknown';
-      console.log(`MongoDB connected (${isMemoryUri(env.MONGODB_URI) ? 'in-memory' : host})`);
+      console.log(`MongoDB connected (${host})`);
       return connection;
     });
   }
@@ -68,10 +55,7 @@ export async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   } catch (err) {
     cached.promise = null;
-    if (isMemoryUri(env.MONGODB_URI)) {
-      throw err;
-    }
-    console.error('MongoDB Atlas/local connection failed. In-memory fallback is disabled.');
+    console.error('MongoDB connection failed.');
     throw err;
   }
 }

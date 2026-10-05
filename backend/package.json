@@ -54,13 +54,11 @@
     "@types/node": "^22.15.3",
     "@types/qrcode": "^1.5.6",
     "@types/web-push": "^3.6.4",
-    "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.10",
     "tsx": "^4.19.4",
     "typescript": "^5.9.3"
   },
   "allowScripts": {
-    "esbuild": true,
-    "mongodb-memory-server": true
+    "esbuild": true
   }
 }
