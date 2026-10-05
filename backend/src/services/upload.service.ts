@@ -1,20 +1,12 @@
 import { cloudinary, cloudinaryConfigured } from '../config/cloudinary';
 import { ApiError } from '../utils/ApiError';
+import { Product } from '../models/Product';
 import { StoredImage, STORED_IMAGE_PATH } from '../models/StoredImage';
 
-export async function uploadImageBuffer(
-  buffer: Buffer,
-  folder = 'brynoxa'
-): Promise<{ url: string; publicId: string }> {
-  if (!cloudinaryConfigured) {
-    // Dev fallback: data URL is not ideal for production lists; use placeholder host
-    const base64 = buffer.toString('base64');
-    return {
-      url: `data:image/jpeg;base64,${base64.slice(0, 100)}...`,
-      publicId: `local_${Date.now()}`,
-    };
-  }
+/** Uploads older than this that no product uses are treated as abandoned (form closed without saving). */
+const ABANDONED_UPLOAD_MS = 24 * 60 * 60 * 1000;
 
+function uploadToCloudinary(buffer: Buffer, folder = 'brynoxa'): Promise<{ url: string; publicId: string }> {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder, resource_type: 'image' },
@@ -46,7 +38,42 @@ export async function uploadProductImage(buffer: Buffer, mimetype: string) {
     const id = String(doc._id);
     return { url: `${STORED_IMAGE_PATH}${id}`, publicId: `db_${id}` };
   }
-  return uploadImageBuffer(buffer);
+  return uploadToCloudinary(buffer);
+}
+
+/** Deletes the given photos unless a product still uses them. Never throws. */
+export async function deleteUnusedImages(images: { url: string; publicId?: string }[]) {
+  for (const { url, publicId } of images) {
+    if (!publicId) continue;
+    try {
+      const inUse = await Product.exists({
+        $or: [{ 'images.publicId': publicId }, { 'images.url': url }],
+      });
+      if (!inUse) await deleteImage(publicId);
+    } catch (err) {
+      console.error('Image cleanup failed', err);
+    }
+  }
+}
+
+/** Deletes stored uploads that were never attached to any product. Never throws. */
+export async function deleteAbandonedUploads() {
+  try {
+    const cutoff = new Date(Date.now() - ABANDONED_UPLOAD_MS);
+    const old = await StoredImage.find({ createdAt: { $lt: cutoff } }).select('_id').lean();
+    if (!old.length) return;
+    const [publicIds, urls] = await Promise.all([
+      Product.distinct('images.publicId'),
+      Product.distinct('images.url'),
+    ]);
+    const used = new Set<string>([...publicIds, ...urls].map(String));
+    const abandoned = old
+      .map((doc) => String(doc._id))
+      .filter((id) => !used.has(`db_${id}`) && !used.has(`${STORED_IMAGE_PATH}${id}`));
+    if (abandoned.length) await StoredImage.deleteMany({ _id: { $in: abandoned } });
+  } catch (err) {
+    console.error('Abandoned upload cleanup failed', err);
+  }
 }
 
 /** Stored photos never change once uploaded, so browsers and the CDN may keep them. */

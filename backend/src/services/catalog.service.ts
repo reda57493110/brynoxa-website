@@ -4,6 +4,7 @@ import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
 import { slugify, uniqueSlug } from '../utils/slugify';
+import { deleteAbandonedUploads, deleteUnusedImages } from './upload.service';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -321,7 +322,7 @@ export async function createProduct(data: Record<string, unknown>) {
 
   const isFeatured = Boolean(data.isFeatured);
   const isCarousel = Boolean(data.isCarousel);
-  return Product.create({
+  const product = await Product.create({
     ...data,
     slug,
     sku,
@@ -330,11 +331,14 @@ export async function createProduct(data: Record<string, unknown>) {
     isCarousel,
     carouselAt: isCarousel ? new Date() : null,
   });
+  await deleteAbandonedUploads();
+  return product;
 }
 
 export async function updateProduct(id: string, data: Record<string, unknown>) {
   const product = await Product.findById(id);
   if (!product) throw new ApiError(404, 'Product not found');
+  const previousImages = product.images.map(({ url, publicId }) => ({ url, publicId }));
 
   if (data.name && data.name !== product.name) {
     product.name = data.name as string;
@@ -383,12 +387,18 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   }
 
   await product.save();
+
+  const currentUrls = new Set(product.images.map((img) => img.url));
+  await deleteUnusedImages(previousImages.filter((img) => !currentUrls.has(img.url)));
+  await deleteAbandonedUploads();
+
   return product.populate(['category', 'brand']);
 }
 
 export async function deleteProduct(id: string) {
   const product = await Product.findByIdAndDelete(id);
   if (!product) throw new ApiError(404, 'Product not found');
+  await deleteUnusedImages(product.images);
   return product;
 }
 
