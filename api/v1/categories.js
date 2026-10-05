@@ -23,15 +23,6 @@ function resolveRoute(pathname, query) {
   return pathname.replace(/^\/api\/v1\/categories\/?/, '').replace(/\/$/, '');
 }
 
-async function ensureCatalog() {
-  try {
-    const { syncCatalogIfNeeded } = require('../../backend/dist/seed/seed');
-    await syncCatalogIfNeeded();
-  } catch (err) {
-    console.error('Catalog sync skipped:', err);
-  }
-}
-
 async function handleBrands(req, res, query) {
   if (req.method !== 'GET') {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
@@ -55,7 +46,6 @@ async function handleBrands(req, res, query) {
 module.exports = async (req, res) => {
   try {
     await connectMongo();
-    await ensureCatalog();
 
     const { pathname, query } = parseUrl(req.url || '');
 

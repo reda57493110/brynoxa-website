@@ -23,15 +23,6 @@ function resolveRoute(pathname, query) {
   return pathname.replace(/^\/api\/v1\/products\/?/, '').replace(/\/$/, '');
 }
 
-async function ensureCatalog() {
-  try {
-    const { syncCatalogIfNeeded } = require('../../backend/dist/seed/seed');
-    await syncCatalogIfNeeded();
-  } catch (err) {
-    console.error('Catalog sync skipped:', err);
-  }
-}
-
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
@@ -58,8 +49,6 @@ module.exports = async (req, res) => {
       res.end(image.data);
       return;
     }
-
-    await ensureCatalog();
 
     const route = resolveRoute(pathname, raw);
     const catalog = require('../../backend/dist/services/catalog.service');

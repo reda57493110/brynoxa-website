@@ -4,7 +4,6 @@ import { User } from '../models/User';
 import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
-import { Coupon } from '../models/Coupon';
 import { getSettings } from '../models/Settings';
 import { slugify } from '../utils/slugify';
 import { migrateCurrencyToMad } from '../config/migrateCurrency';
@@ -25,21 +24,8 @@ export async function ensureAdmin() {
     console.warn('ADMIN_EMAIL and ADMIN_PASSWORD are not configured; skipping admin bootstrap');
     return null;
   }
-  const existing = await User.findOne({ email: env.ADMIN_EMAIL }).select('+password');
-  if (existing) {
-    if (existing.role !== 'admin') {
-      existing.role = 'admin';
-      await existing.save();
-      console.log(`Promoted ${env.ADMIN_EMAIL} to admin`);
-    } else if (env.ADMIN_PASSWORD && !(await existing.comparePassword(env.ADMIN_PASSWORD))) {
-      existing.password = env.ADMIN_PASSWORD;
-      existing.failedLoginAttempts = 0;
-      existing.lockedUntil = undefined;
-      await existing.save();
-      console.log(`Synced admin password for ${env.ADMIN_EMAIL}`);
-    }
-    return existing;
-  }
+  const existing = await User.findOne({ role: 'admin' });
+  if (existing) return existing;
 
   const admin = await User.create({
     name: 'Brynoxa Admin',
@@ -154,18 +140,6 @@ export async function runSeed(force = false) {
   }
 
   await syncCatalogIfNeeded();
-
-  const couponExists = await Coupon.findOne({ code: 'BRYNOXA10' });
-  if (!couponExists) {
-    await Coupon.create({
-      code: 'BRYNOXA10',
-      type: 'percent',
-      value: 10,
-      minOrder: 1000,
-      maxUses: 1000,
-      isActive: true,
-    });
-  }
 
   console.log('Seed complete.');
 }
