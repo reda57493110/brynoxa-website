@@ -6,7 +6,6 @@ import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
-import { isStaffRole, staffHomePath } from '@/lib/permissions'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { MobileNav } from './MobileNav'
 import { LanguageSwitcher } from './LanguageSwitcher'
@@ -205,11 +204,9 @@ export function Navbar() {
 
               {user ? (
                 <Link
-                  to={isStaffRole(user.role) ? staffHomePath(user.role) : '/account'}
+                  to="/account"
                   className={cn(iconBtn, 'hidden sm:inline-flex')}
-                  aria-label={
-                    isStaffRole(user.role) ? t('common.adminDashboard') : t('common.account')
-                  }
+                  aria-label={t('common.account')}
                 >
                   <SiteIcon name="user" size={17} />
                 </Link>

@@ -10,7 +10,6 @@ import { useCompareStore } from '@/store/compareStore'
 import { useThemeStore } from '@/store/themeStore'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
-import { isStaffRole, staffHomePath } from '@/lib/permissions'
 import { useT } from '@/hooks/useT'
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -33,12 +32,8 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
     { to: '/compare', label: t('compare.heading'), icon: 'layers', count: compareCount },
     { to: '/cart', label: t('common.cart'), icon: 'cart', count: cartCount },
     {
-      to: user ? (isStaffRole(user.role) ? staffHomePath(user.role) : '/account') : '/login',
-      label: user
-        ? isStaffRole(user.role)
-          ? t('common.adminDashboard')
-          : t('common.account')
-        : t('common.signIn'),
+      to: user ? '/account' : '/login',
+      label: user ? t('common.account') : t('common.signIn'),
       icon: 'user',
     },
   ]
