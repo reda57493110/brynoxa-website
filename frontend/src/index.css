@@ -5,21 +5,6 @@
 @theme {
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --color-brand: #00c2ff;
-  --color-brand-dim: #0099cc;
-  --color-graphite-50: #f4f6f8;
-  --color-graphite-100: #e8ecef;
-  --color-graphite-200: #d1d9e0;
-  --color-graphite-300: #a8b4c0;
-  --color-graphite-400: #7a8a9a;
-  --color-graphite-500: #5a6a7a;
-  --color-graphite-600: #3d4a56;
-  --color-graphite-700: #2a343d;
-  --color-graphite-800: #1a2229;
-  --color-graphite-900: #0f1419;
-  --color-graphite-950: #080b0e;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
 }
 
 html[lang="ar"] {
@@ -282,38 +267,12 @@ html[lang="ar"] {
     box-shadow: var(--shadow-soft-lg);
   }
 
-  .bg-page {
-    background: var(--bg);
-  }
-
   .bg-elevated {
     background: var(--bg-elevated);
   }
 
   .bg-muted {
     background: var(--bg-muted);
-  }
-
-  .text-fg {
-    color: var(--fg);
-  }
-
-  .text-muted {
-    color: var(--fg-muted);
-  }
-
-  .text-body {
-    color: var(--fg);
-    font-size: 0.9375rem;
-    font-weight: 500;
-    line-height: 1.7;
-  }
-
-  .text-body-lg {
-    color: var(--fg);
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.75;
   }
 
   .text-reveal {
@@ -324,18 +283,6 @@ html[lang="ar"] {
     .text-reveal {
       animation: none;
     }
-  }
-
-  .border-token {
-    border-color: var(--border);
-  }
-
-  .text-brand {
-    color: var(--brand-text);
-  }
-
-  .bg-brand {
-    background: var(--brand);
   }
 
   .shadow-glow {

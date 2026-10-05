@@ -20,24 +20,6 @@ export type Permission =
   | 'push'
   | 'settings';
 
-const ALL_PERMISSIONS: Permission[] = [
-  'dashboard',
-  'orders:read',
-  'orders:write',
-  'products:read',
-  'products:write',
-  'products:delete',
-  'inventory:write',
-  'customers:read',
-  'customers:write',
-  'users:manage',
-  'messages',
-  'reviews',
-  'coupons',
-  'push',
-  'settings',
-];
-
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   admin: ['*'],
   orders: ['orders:read', 'orders:write', 'customers:read'],
@@ -55,11 +37,4 @@ export function hasPermission(role: string | undefined | null, permission: Permi
   const perms = ROLE_PERMISSIONS[role];
   if (perms[0] === '*') return true;
   return (perms as Permission[]).includes(permission);
-}
-
-export function permissionsFor(role: string | undefined | null): Permission[] {
-  if (!isStaffRole(role)) return [];
-  const perms = ROLE_PERMISSIONS[role];
-  if (perms[0] === '*') return ALL_PERMISSIONS;
-  return perms as Permission[];
 }

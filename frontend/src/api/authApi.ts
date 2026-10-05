@@ -1,5 +1,5 @@
 import api, { resetSessionCheck } from './client'
-import type { Address, ApiResponse, AuthPayload, SessionPayload, User } from '@/types'
+import type { Address, ApiResponse, AuthPayload, User } from '@/types'
 
 export const authApi = {
   register: (payload: { name: string; email: string; password: string; phone?: string }) =>
@@ -10,9 +10,6 @@ export const authApi = {
 
   requestPasswordReset: (email: string) =>
     api.post<ApiResponse<null>>('/auth/password-reset/request', { email }),
-
-  resendVerification: (email: string) =>
-    api.post<ApiResponse<null>>('/auth/verification/resend', { email }),
 
   verifyEmail: (token: string) =>
     api.post<ApiResponse<null>>('/auth/verification/confirm', { token }),
@@ -32,8 +29,6 @@ export const authApi = {
   disableMfa: (code: string) =>
     api.post<ApiResponse<null>>('/auth/mfa/disable', { code }),
 
-  refresh: () => api.post<ApiResponse<SessionPayload>>('/auth/refresh'),
-
   logout: async () => {
     try {
       return await api.post<ApiResponse<null>>('/auth/logout')
@@ -52,9 +47,6 @@ export const authApi = {
 
   addAddress: (payload: Omit<Address, '_id'>) =>
     api.post<ApiResponse<User>>('/auth/me/addresses', payload),
-
-  updateAddress: (id: string, payload: Partial<Address>) =>
-    api.patch<ApiResponse<User>>(`/auth/me/addresses/${id}`, payload),
 
   deleteAddress: (id: string) =>
     api.delete<ApiResponse<User>>(`/auth/me/addresses/${id}`),

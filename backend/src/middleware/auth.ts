@@ -33,11 +33,6 @@ export function requireStaff(req: AuthRequest, _res: Response, next: NextFunctio
   next();
 }
 
-/** @deprecated use requireStaff — kept for older imports */
-export function requireAdmin(req: AuthRequest, _res: Response, next: NextFunction) {
-  return requireStaff(req, _res, next);
-}
-
 export function requirePermission(...permissions: Permission[]) {
   return (req: AuthRequest, _res: Response, next: NextFunction) => {
     if (!req.user || !isStaffRole(req.user.role)) {

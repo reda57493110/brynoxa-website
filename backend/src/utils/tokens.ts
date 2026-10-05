@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { Types } from 'mongoose';
 import type { AppRole } from '../permissions';
 
 export type TokenPayload = {
@@ -41,8 +40,4 @@ export function verifyMfaChallenge(token: string): MfaChallengePayload {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as MfaChallengePayload;
   if (payload.purpose !== 'mfa' || !payload.userId) throw new Error('Invalid MFA challenge');
   return payload;
-}
-
-export function toObjectIdString(id: Types.ObjectId | string): string {
-  return typeof id === 'string' ? id : id.toString();
 }

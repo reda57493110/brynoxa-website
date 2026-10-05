@@ -51,9 +51,6 @@ export const adminApi = {
   brands: {
     create: (payload: Partial<Brand>) =>
       api.post<ApiResponse<Brand>>('/admin/brands', payload),
-    update: (id: string, payload: Partial<Brand>) =>
-      api.patch<ApiResponse<Brand>>(`/admin/brands/${id}`, payload),
-    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/brands/${id}`),
   },
 
   orders: {

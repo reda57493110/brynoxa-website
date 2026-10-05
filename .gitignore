@@ -11,8 +11,6 @@ uploads/
 .DS_Store
 coverage/
 .vite/
-test-results/
-playwright-report/
 *.local
 
 .vercel
