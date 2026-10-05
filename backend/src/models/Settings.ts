@@ -22,7 +22,6 @@ export interface ISettings extends Document {
   notifyStaffLoginEmail: boolean;
   /** Product id featured in each store page header; empty shows the default photo. */
   pageHeroProducts: Record<HeroPage, string>;
-  catalogVersion?: number;
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -49,7 +48,6 @@ const settingsSchema = new Schema<ISettings>(
       services: { type: String, default: '' },
       contact: { type: String, default: '' },
     },
-    catalogVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

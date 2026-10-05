@@ -1,6 +1,3 @@
-export const TAGLINE =
-  'PCs, laptops, and components — delivered across Morocco, paid on arrival.'
-
 export const CONTACT = {
   whatsapp: {
     label: 'WhatsApp',
@@ -66,25 +63,6 @@ export const SOCIAL_LINKS = [
   },
 ] as const
 
-export const CONTACT_FAQS = [
-  {
-    q: 'How long does COD delivery take?',
-    a: 'Most orders ship within 1–2 business days after confirmation. Delivery typically takes 2–5 business days depending on your city.',
-  },
-  {
-    q: 'Can I change or cancel my order?',
-    a: 'Yes — while an order is still pending, open it from your account and choose Cancel order. Once it is confirmed or packed, contact support with your order number.',
-  },
-  {
-    q: 'What is your return policy?',
-    a: 'Eligible unused products can be returned within 14 days of delivery in original packaging. Contact support to start a return.',
-  },
-  {
-    q: 'Do you offer business / bulk orders?',
-    a: 'Absolutely. Email brynoxa.shop@gmail.com with your requirements and our team will prepare a custom quote.',
-  },
-] as const
-
 export const CUSTOMER_SERVICES = [
   {
     id: 'warranty',
@@ -133,49 +111,5 @@ export const CUSTOMER_SERVICES = [
     summary: 'If it fails under warranty, we diagnose it and fix or replace it.',
     details:
       'Send a short video of the issue. After we approve the claim, we arrange pickup. Keep the product sealed if you can — opening it yourself can void coverage.',
-  },
-] as const
-
-export const SERVICE_STEPS = {
-  warranty: [
-    'Save your order number. That is your warranty card.',
-    'Message us with a photo or a 10-second video of the problem.',
-    'We confirm coverage and book pickup or a drop-off.',
-    'We repair, replace, or credit you after diagnosis.',
-  ],
-  returns: [
-    'Ask for a return within 14 days of delivery.',
-    'Wait for our confirmation before handing the box to anyone.',
-    'Give the courier the sealed original packaging.',
-    'We inspect it, then exchange it or refund you.',
-  ],
-  cod: [
-    'Place the order — no card, no deposit.',
-    'We confirm, then pack within 1–2 business days.',
-    'The courier brings it to your city in Morocco.',
-    'Inspect the box, pay cash, or refuse if something is wrong.',
-  ],
-} as const
-
-export const SERVICE_FAQS = [
-  {
-    q: 'How long is the warranty?',
-    a: 'Six months from the delivery date — always under one year. After that, repairs can be quoted separately.',
-  },
-  {
-    q: 'Does warranty cover drops or liquid?',
-    a: 'No. Warranty is for manufacturing defects only — not accidents, water, or repairs done outside Brynoxa.',
-  },
-  {
-    q: 'Who pays for return shipping?',
-    a: 'If the product is defective or we sent the wrong one, pickup is free. If you simply changed your mind, a small courier fee may apply.',
-  },
-  {
-    q: 'How do refunds work with COD?',
-    a: 'After inspection, we refund by bank transfer or store credit, usually within 3–7 business days.',
-  },
-  {
-    q: 'Can I swap for a different model?',
-    a: 'Yes, if it is in stock. You only pay (or receive) the difference in price.',
   },
 ] as const

@@ -8,13 +8,4 @@ export const SORT_OPTIONS = [
   { value: 'popular', label: 'Most Popular' },
 ] as const
 
-export const ORDER_STATUSES = [
-  'pending',
-  'confirmed',
-  'shipped',
-  'delivered',
-  'cancelled',
-] as const
-
-export const DEFAULT_PAGE_SIZE = 12
 export const COMPARE_MAX = 4

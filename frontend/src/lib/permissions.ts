@@ -11,14 +11,6 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   marketing: 'Marketing',
 }
 
-export const STAFF_ROLE_DESCRIPTIONS: Record<StaffRole, string> = {
-  admin: 'Full access — settings, roles, and every admin page',
-  orders: 'Orders pipeline and customer lookup',
-  catalog: 'Products, inventory, and categories',
-  support: 'Inbox, order updates, and customer lookup',
-  marketing: 'Coupons, product reviews, and push notifications',
-}
-
 /** Capability keys used by API + sidebar. */
 export type Permission =
   | 'dashboard'
@@ -36,24 +28,6 @@ export type Permission =
   | 'coupons'
   | 'push'
   | 'settings'
-
-const ALL_PERMISSIONS: Permission[] = [
-  'dashboard',
-  'orders:read',
-  'orders:write',
-  'products:read',
-  'products:write',
-  'products:delete',
-  'inventory:write',
-  'customers:read',
-  'customers:write',
-  'users:manage',
-  'messages',
-  'reviews',
-  'coupons',
-  'push',
-  'settings',
-]
 
 /** Owner alone gets the full dashboard; other roles land on their workspace. */
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
@@ -83,13 +57,6 @@ export function staffHomePath(role: string | undefined | null): string {
 
 export function isStaffRole(role: string | undefined | null): role is StaffRole {
   return Boolean(role && (STAFF_ROLES as readonly string[]).includes(role))
-}
-
-export function permissionsFor(role: string | undefined | null): Permission[] {
-  if (!isStaffRole(role)) return []
-  const perms = ROLE_PERMISSIONS[role]
-  if (perms[0] === '*') return ALL_PERMISSIONS
-  return perms as Permission[]
 }
 
 export function hasPermission(role: string | undefined | null, permission: Permission): boolean {

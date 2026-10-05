@@ -19,10 +19,6 @@ const MEASUREMENT_ID = (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undef
 
 let initialized = false
 
-export function isAnalyticsEnabled() {
-  return Boolean(MEASUREMENT_ID)
-}
-
 /** Load GA4 gtag when VITE_GA_MEASUREMENT_ID is set. Safe no-op otherwise. */
 export function initAnalytics() {
   if (initialized || typeof window === 'undefined' || !MEASUREMENT_ID) return
