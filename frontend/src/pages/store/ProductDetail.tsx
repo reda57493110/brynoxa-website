@@ -461,44 +461,43 @@ export function ProductDetail() {
                 </li>
               ))}
             </ul>
+
+            <section
+              className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12 sm:pt-10 lg:mt-8 lg:pt-8"
+              aria-labelledby="product-details-heading"
+            >
+              <p className="kicker">{t('productPage.specs')}</p>
+              <h2
+                id="product-details-heading"
+                className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
+              >
+                {t('productPage.details')}
+              </h2>
+
+              <div className="mt-6 grid gap-6">
+                <div>
+                  <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
+                    {t('productPage.description')}
+                  </h3>
+                  <div className="mt-3 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
+                    <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--fg)]/80 sm:text-[0.975rem] sm:leading-7">
+                      {p.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
+                    {t('productPage.specifications')}
+                  </h3>
+                  <div className="mt-3">
+                    <SpecTable specs={(p.specs as Record<string, string>) || {}} />
+                  </div>
+                </div>
+              </div>
+            </section>
           </motion.div>
         </div>
-
-        <motion.section
-          {...fade(0.12)}
-          className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12 sm:pt-10"
-          aria-labelledby="product-details-heading"
-        >
-          <p className="kicker">{t('productPage.specs')}</p>
-          <h2
-            id="product-details-heading"
-            className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
-          >
-            {t('productPage.details')}
-          </h2>
-
-          <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-2 lg:gap-8">
-            <div>
-              <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
-                {t('productPage.description')}
-              </h3>
-              <div className="mt-3 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
-                <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--fg)]/80 sm:text-[0.975rem] sm:leading-7">
-                  {p.description}
-                </p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
-                {t('productPage.specifications')}
-              </h3>
-              <div className="mt-3">
-                <SpecTable specs={(p.specs as Record<string, string>) || {}} />
-              </div>
-            </div>
-          </div>
-        </motion.section>
 
         {related.data?.length ? (
           <motion.section {...fade(0.14)} className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12">
