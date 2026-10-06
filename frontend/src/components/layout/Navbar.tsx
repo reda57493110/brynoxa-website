@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { useThemeStore } from '@/store/themeStore'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useCompareStore } from '@/store/compareStore'
@@ -27,8 +26,6 @@ export function Navbar() {
   const isHome = location.pathname === '/'
   const atTop = isHome && !scrolled
 
-  const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const cartCount = useCartStore((s) => s.itemCount())
   const wishCount = useWishlistStore((s) => s.ids.length)
   const compareCount = useCompareStore((s) => s.items.length)
@@ -147,15 +144,6 @@ export function Navbar() {
                 aria-expanded={searchOpen}
               >
                 {searchOpen ? <SiteIcon name="close" size={18} /> : <SiteIcon name="search" size={18} />}
-              </button>
-
-              <button
-                type="button"
-                className={cn(iconBtn, 'hidden sm:inline-flex')}
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
-              >
-                {theme === 'dark' ? <SiteIcon name="sun" size={17} /> : <SiteIcon name="moon" size={17} />}
               </button>
 
               <LanguageSwitcher className="hidden sm:inline-flex" />
