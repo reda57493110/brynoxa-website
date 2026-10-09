@@ -103,6 +103,9 @@ export interface Product {
   price: number
   compareAtPrice?: number
   deposit?: ProductDeposit | null
+  /** Hand-picked recommendations (ids; populated objects in the admin product view) */
+  recommended?: (string | Product)[]
+  recommendedOnly?: boolean
   stock: number
   lowStockThreshold: number
   specs: Record<string, string>

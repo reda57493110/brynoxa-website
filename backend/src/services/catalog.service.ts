@@ -305,10 +305,20 @@ export async function getProductBySlug(slug: string) {
   return product;
 }
 
+/** Valid, unique product ids (never the product itself), max 12, in the given order. */
+function sanitizeRecommended(input: unknown, selfId?: string): mongoose.Types.ObjectId[] {
+  if (!Array.isArray(input)) return [];
+  const ids = [...new Set(input.map((v) => String(v)))].filter(
+    (id) => looksLikeObjectId(id) && id !== selfId
+  );
+  return ids.slice(0, 12).map((id) => new mongoose.Types.ObjectId(id));
+}
+
 export async function getProductById(id: string) {
   const product = await Product.findById(id)
     .populate('category', 'name slug isActive')
-    .populate('brand', 'name slug logo');
+    .populate('brand', 'name slug logo')
+    .populate('recommended', 'name sku slug images price stock isActive');
   if (!product) throw new ApiError(404, 'Product not found');
   return product;
 }
@@ -326,6 +336,8 @@ export async function createProduct(data: Record<string, unknown>) {
   const product = await Product.create({
     ...data,
     deposit: sanitizeDepositRule(data.deposit) ?? undefined,
+    recommended: sanitizeRecommended(data.recommended),
+    recommendedOnly: Boolean(data.recommendedOnly),
     slug,
     sku,
     isFeatured,
@@ -371,6 +383,13 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     const deposit = sanitizeDepositRule(data.deposit);
     if (deposit) product.deposit = deposit;
     else product.set('deposit', undefined);
+  }
+
+  if (data.recommended !== undefined) {
+    product.recommended = sanitizeRecommended(data.recommended, String(product._id));
+  }
+  if (data.recommendedOnly !== undefined) {
+    product.recommendedOnly = Boolean(data.recommendedOnly);
   }
 
   if (data.isFeatured !== undefined) {

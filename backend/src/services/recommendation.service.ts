@@ -155,12 +155,43 @@ export async function getRecommendations(productId: string, limit = DEFAULT_LIMI
     .lean();
   if (!product) throw new ApiError(404, 'Product not found');
 
+  const activeCategories = await Category.find({ isActive: true }).select('_id slug').lean();
+  const activeCategoryIds = activeCategories.map((c) => c._id);
+
+  // Staff picks first, in the order chosen in the admin product form
+  const pickedIds = (product.recommended || []).map(String);
+  const pickedDocs = pickedIds.length
+    ? await Product.find({
+        _id: { $in: pickedIds, $ne: product._id },
+        isActive: true,
+        category: { $in: activeCategoryIds },
+      })
+        .select(CARD_FIELDS)
+        .populate('category', 'name slug isActive')
+        .populate('brand', 'name slug logo')
+        .lean()
+    : [];
+  const picks = pickedIds
+    .map((id) => pickedDocs.find((doc) => String(doc._id) === id))
+    .filter((doc): doc is NonNullable<typeof doc> => Boolean(doc));
+  // All picks are always shown (up to 12); automatic ones only fill the remaining spots
+  if (product.recommendedOnly || picks.length >= limit) return picks;
+
+  const automatic = await automaticRecommendations(product, activeCategories, limit + picks.length);
+  const pickedSet = new Set(picks.map((doc) => String(doc._id)));
+  return [...picks, ...automatic.filter((doc) => !pickedSet.has(String(doc._id)))].slice(0, limit);
+}
+
+async function automaticRecommendations(
+  product: Classifiable & { _id: unknown },
+  activeCategories: { _id: unknown; slug: string }[],
+  limit: number
+) {
   const { kind } = classifyProduct(product);
   const targets = COMPLEMENTS[kind];
   const allowFallback = FALLBACK_TO_ACCESSORIES.includes(kind);
   if (!targets.length && !allowFallback) return [];
 
-  const activeCategories = await Category.find({ isActive: true }).select('_id slug').lean();
   const targetCategorySlugs = Object.entries(CATEGORY_KINDS)
     .filter(([, kind]) => targets.includes(kind))
     .map(([slug]) => slug);

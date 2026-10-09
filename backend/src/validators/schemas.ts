@@ -108,6 +108,8 @@ export const productSchema = z.object({
     .object({ type: z.enum(['fixed', 'percent']), value: z.number().min(0) })
     .nullable()
     .optional(),
+  recommended: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
+  recommendedOnly: z.boolean().optional(),
   stock: z.number().int().min(0),
   lowStockThreshold: z.number().int().min(0).optional(),
   specs: z.record(z.string(), z.string()).optional(),

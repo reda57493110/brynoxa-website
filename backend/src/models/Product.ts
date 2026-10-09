@@ -21,6 +21,10 @@ export interface IProduct extends Document {
   compareAtPrice?: number;
   /** Optional upfront deposit for cash-on-delivery orders; absent means none. */
   deposit?: ProductDepositRule;
+  /** Hand-picked "Complete your setup" products, shown first in this order. */
+  recommended: Types.ObjectId[];
+  /** When true, only `recommended` is shown — no automatic suggestions. */
+  recommendedOnly: boolean;
   stock: number;
   lowStockThreshold: number;
   specs: Map<string, string> | Record<string, string>;
@@ -68,6 +72,8 @@ const productSchema = new Schema<IProduct>(
     price: { type: Number, required: true, min: 0 },
     compareAtPrice: { type: Number, min: 0 },
     deposit: { type: depositRuleSchema, default: undefined },
+    recommended: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
+    recommendedOnly: { type: Boolean, default: false },
     stock: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, default: 5 },
     specs: { type: Map, of: String, default: {} },

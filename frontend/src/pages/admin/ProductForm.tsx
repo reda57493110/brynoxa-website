@@ -18,7 +18,9 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
-import type { Brand } from '@/types'
+import type { Brand, Product } from '@/types'
+import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
+import { toPicked, type PickedProduct } from '@/lib/recommended'
 
 type ImageSource = 'gallery' | 'url'
 type FormImage = { url: string; publicId?: string }
@@ -81,6 +83,8 @@ export function ProductForm() {
     isCarousel: boolean
     isActive: boolean
     images: FormImage[]
+    recommended: PickedProduct[]
+    recommendedOnly: boolean
   }>({
     name: '',
     sku: '',
@@ -98,6 +102,8 @@ export function ProductForm() {
     isCarousel: false,
     isActive: true,
     images: [],
+    recommended: [],
+    recommendedOnly: false,
   })
   const initialFormRef = useRef(JSON.stringify(form))
 
@@ -126,6 +132,10 @@ export function ProductForm() {
         isCarousel: Boolean(p.isCarousel),
         isActive: p.isActive,
         images,
+        recommended: (p.recommended || [])
+          .filter((r): r is Product => typeof r === 'object' && r !== null)
+          .map(toPicked),
+        recommendedOnly: Boolean(p.recommendedOnly),
       }
       initialFormRef.current = JSON.stringify(nextForm)
       setForm(nextForm)
@@ -171,6 +181,8 @@ export function ProductForm() {
         isFeatured: form.isFeatured,
         isCarousel: form.isCarousel,
         isActive: form.isActive,
+        recommended: form.recommended.map((r) => r._id),
+        recommendedOnly: form.recommendedOnly,
         images: form.images.map((img, i) => ({
           url: img.url,
           publicId: img.publicId,
@@ -624,6 +636,13 @@ export function ProductForm() {
             </div>
           )}
         </div>
+        <RecommendedPicker
+          value={form.recommended}
+          onChange={(recommended) => setForm({ ...form, recommended })}
+          only={form.recommendedOnly}
+          onOnlyChange={(recommendedOnly) => setForm({ ...form, recommendedOnly })}
+          excludeId={id}
+        />
         <div className="sm:col-span-2 space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input
