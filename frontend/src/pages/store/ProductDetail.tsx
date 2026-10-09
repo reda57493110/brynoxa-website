@@ -415,16 +415,23 @@ export function ProductDetail() {
 
         <motion.div
           {...fade(0.12)}
-          className="mt-8 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8"
+          className="mt-6 sm:mt-8"
         >
-          <section aria-labelledby="product-description-heading">
+          <section
+            aria-labelledby="product-description-heading"
+            className="relative overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft sm:p-7"
+          >
+            <span className="absolute inset-y-0 start-0 w-1 bg-[var(--brand)]" aria-hidden="true" />
             <h2
               id="product-description-heading"
-              className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
+              className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
             >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--brand)]/15 text-[var(--brand-text)]">
+                <SiteIcon name="package" size={18} />
+              </span>
               {t('productPage.description')}
             </h2>
-            <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[0.95rem] sm:leading-7">
+            <p className="mt-4 max-w-4xl whitespace-pre-wrap text-[15px] font-medium leading-7 text-[var(--fg)] sm:text-base sm:leading-8">
               {p.description}
             </p>
           </section>
