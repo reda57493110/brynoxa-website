@@ -490,6 +490,7 @@ export const ar: Messages = {
   productPage: {
     buyNow: 'اشترِ الآن',
     completeSetup: 'أكمل تجهيزك',
+    completeSetupBody: 'إكسسوارات تناسب هذا المنتج',
     scrollBack: 'التمرير للخلف',
     scrollForward: 'التمرير للأمام',
     titleFallback: 'منتج — برينوكسا',

@@ -494,6 +494,7 @@ export const fr: Messages = {
   productPage: {
     buyNow: 'Acheter maintenant',
     completeSetup: 'Complétez votre équipement',
+    completeSetupBody: 'Des accessoires qui vont bien avec ce produit',
     scrollBack: 'Défiler en arrière',
     scrollForward: 'Défiler en avant',
     titleFallback: 'Produit — Brynoxa',

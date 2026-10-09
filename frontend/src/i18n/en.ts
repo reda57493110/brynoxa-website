@@ -488,6 +488,7 @@ export const en = {
   productPage: {
     buyNow: 'Buy now',
     completeSetup: 'Complete your setup',
+    completeSetupBody: 'Accessories that go well with this product',
     scrollBack: 'Scroll back',
     scrollForward: 'Scroll forward',
     titleFallback: 'Product — Brynoxa',
