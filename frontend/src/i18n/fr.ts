@@ -664,20 +664,13 @@ export const fr: Messages = {
     heroTrustBody: 'Paiement à la livraison partout au Maroc',
     heroTrustChip: 'Un vrai support humain',
     proofReturns: 'Retours 14 jours',
-    jump: 'Aller à une politique',
-    policies: 'Politiques',
     howHandled: 'Comment les commandes sont traitées',
-    howHandledBody: 'Garantie, retours, COD, livraison, support et réparation.',
-    readPolicy: 'Lire la politique',
     openRequest: 'Ouvrir une demande',
     howItWorks: 'Comment ça marche',
-    moreKicker: 'Livraison et réparation',
-    moreTitle: 'Expédition, support et RMA',
-    moreBody: 'Ce qui se passe après une commande COD.',
-    ctaKicker: 'Support',
-    ctaTitle: 'Retour ou réclamation ?',
-    ctaBody: 'Envoyez votre numéro de commande sur WhatsApp ou le formulaire. Le jour ouvré si possible.',
-    findOrder: 'Trouver ma commande',
+    backToServices: 'Retour aux services',
+    termsHeading: 'Conditions',
+    otherServices: 'Autres services',
+    learnMore: 'En savoir plus',
     steps: {
       warranty: [
         'Gardez votre numéro de commande. C’est votre carte de garantie.',
@@ -742,27 +735,19 @@ export const fr: Messages = {
           'Envoyez une courte vidéo du problème. Après validation, nous organisons l’enlèvement. Laissez le produit scellé si possible.',
       },
     },
-    faqs: [
-      {
-        q: 'Quelle est la durée de la garantie ?',
-        a: 'Six mois à compter de la date de livraison — toujours moins d’un an. Ensuite, les réparations peuvent être chiffrées à part.',
-      },
-      {
-        q: 'La garantie couvre-t-elle les chutes ou les liquides ?',
-        a: 'Non. La garantie concerne uniquement les défauts de fabrication — pas les accidents, l’eau ou les réparations hors Brynoxa.',
-      },
-      {
-        q: 'Qui paie le retour ?',
-        a: 'Si le produit est défectueux ou si nous avons envoyé le mauvais, l’enlèvement est gratuit. Si vous changez simplement d’avis, des frais de coursier peuvent s’appliquer.',
-      },
-      {
-        q: 'Comment fonctionnent les remboursements COD ?',
-        a: 'Après inspection, nous remboursons par virement ou avoir, en général sous 3 à 7 jours ouvrés.',
-      },
-      {
-        q: 'Puis-je échanger contre un autre modèle ?',
-        a: 'Oui, s’il est en stock. Vous ne payez (ou ne recevez) que la différence de prix.',
-      },
-    ],
+    faqs: {
+      warranty: [
+        {
+          q: 'Quelle est la durée de la garantie ?',
+          a: 'Six mois à compter de la date de livraison — toujours moins d’un an. Ensuite, les réparations peuvent être chiffrées à part.',
+        },
+      ],
+      returns: [
+        {
+          q: 'Puis-je échanger contre un autre modèle ?',
+          a: 'Oui, s’il est en stock. Vous ne payez (ou ne recevez) que la différence de prix.',
+        },
+      ],
+    },
   },
 }

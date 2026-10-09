@@ -18,8 +18,8 @@ const explore = [
 
 const support = [
   { to: '/track-order', key: 'orders.trackOrder' as const },
-  { to: '/services#warranty', key: 'footer.warranty' as const },
-  { to: '/services#returns', key: 'footer.returns' as const },
+  { to: '/services/warranty', key: 'footer.warranty' as const },
+  { to: '/services/returns', key: 'footer.returns' as const },
   { to: '/account', key: 'footer.myAccount' as const },
 ]
 

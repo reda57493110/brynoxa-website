@@ -63,53 +63,17 @@ export const SOCIAL_LINKS = [
   },
 ] as const
 
+/**
+ * Customer services, in display order. Copy lives in i18n `services.items`;
+ * `terms` is the matching Terms of Sale section shown on the service page.
+ */
 export const CUSTOMER_SERVICES = [
-  {
-    id: 'warranty',
-    title: 'Official warranty',
-    highlight: '6 months',
-    summary: 'Covered for manufacturing defects for six months from delivery.',
-    details:
-      'Every eligible product includes a 6-month Brynoxa warranty from the day it arrives. It covers manufacturing defects only. Your order number is your proof of purchase — no extra paperwork.',
-  },
-  {
-    id: 'returns',
-    title: 'Returns',
-    highlight: '14 days',
-    summary: 'Changed your mind? Send it back unused, in its original box.',
-    details:
-      'You have 14 days after delivery to return most products, as long as they are unused and complete. We approve the request first, then a courier picks it up. Defective or wrong items are collected free of charge.',
-  },
-  {
-    id: 'cod',
-    title: 'Cash on delivery',
-    highlight: 'Pay on arrival',
-    summary: 'Inspect the box, then pay the courier. No card needed.',
-    details:
-      'We deliver across Morocco with cash on delivery. Check the package when it arrives, then pay. If something looks wrong, refuse the shipment and contact us the same day.',
-  },
-  {
-    id: 'delivery',
-    title: 'Home delivery',
-    highlight: '2–5 days',
-    summary: 'Packed after confirmation, then shipped to your city.',
-    details:
-      'Once your COD order is confirmed, we pack it within 1–2 business days. Delivery usually takes 2–5 days depending on the city. Track everything from your account.',
-  },
-  {
-    id: 'support',
-    title: 'Live support',
-    highlight: 'WhatsApp & phone',
-    summary: 'Real people for setup, compatibility, and order help.',
-    details:
-      'Need the right RAM, GPU, or laptop for your work? Message us. For an existing order, send your order number on WhatsApp or the contact form and we reply the same business day.',
-  },
-  {
-    id: 'repair',
-    title: 'Repair service',
-    highlight: 'RMA pickup',
-    summary: 'If it fails under warranty, we diagnose it and fix or replace it.',
-    details:
-      'Send a short video of the issue. After we approve the claim, we arrange pickup. Keep the product sealed if you can — opening it yourself can void coverage.',
-  },
+  { id: 'warranty', slug: 'warranty', photo: '/services/warranty.jpg', terms: 'warranty' },
+  { id: 'returns', slug: 'returns', photo: '/services/returns.jpg', terms: 'returns' },
+  { id: 'cod', slug: 'cash-on-delivery', photo: '/services/cod.jpg', terms: 'payment' },
+  { id: 'delivery', slug: 'home-delivery', photo: '/services/delivery.jpg', terms: 'delivery' },
+  { id: 'support', slug: 'live-support', photo: '/services/support.jpg', terms: null },
+  { id: 'repair', slug: 'repair', photo: '/services/repair.jpg', terms: null },
 ] as const
+
+export type CustomerService = (typeof CUSTOMER_SERVICES)[number]

@@ -439,8 +439,8 @@ export function Contact() {
               <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
                 {[
                   { to: '/account/orders', label: t('contact.trackOrder') },
-                  { to: '/services#warranty', label: t('footer.warranty') },
-                  { to: '/services#returns', label: t('footer.returns') },
+                  { to: '/services/warranty', label: t('footer.warranty') },
+                  { to: '/services/returns', label: t('footer.returns') },
                   { to: '/shop', label: t('contact.browseShop') },
                 ].map((item) => (
                   <li key={item.to}>

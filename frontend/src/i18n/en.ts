@@ -658,20 +658,13 @@ export const en = {
     heroTrustBody: 'Cash on delivery across Morocco',
     heroTrustChip: 'Real people, real support',
     proofReturns: '14-day returns',
-    jump: 'Jump to a policy',
-    policies: 'Policies',
     howHandled: 'How orders are handled',
-    howHandledBody: 'Warranty, returns, COD, delivery, support, and repair.',
-    readPolicy: 'Read policy',
     openRequest: 'Open a request',
     howItWorks: 'How it works',
-    moreKicker: 'Delivery & repair',
-    moreTitle: 'Shipping, support, and RMA',
-    moreBody: 'What happens after you place a COD order.',
-    ctaKicker: 'Support',
-    ctaTitle: 'Need a return or a claim?',
-    ctaBody: 'Send your order number on WhatsApp or the contact form. Same business day when we can.',
-    findOrder: 'Find my order',
+    backToServices: 'Back to Services',
+    termsHeading: 'Terms & conditions',
+    otherServices: 'Other services',
+    learnMore: 'Learn more',
     steps: {
       warranty: [
         'Save your order number. That is your warranty card.',
@@ -736,28 +729,20 @@ export const en = {
           'Send a short video of the issue. After we approve the claim, we arrange pickup. Keep the product sealed if you can — opening it yourself can void coverage.',
       },
     },
-    faqs: [
-      {
-        q: 'How long is the warranty?',
-        a: 'Six months from the delivery date — always under one year. After that, repairs can be quoted separately.',
-      },
-      {
-        q: 'Does warranty cover drops or liquid?',
-        a: 'No. Warranty is for manufacturing defects only — not accidents, water, or repairs done outside Brynoxa.',
-      },
-      {
-        q: 'Who pays for return shipping?',
-        a: 'If the product is defective or we sent the wrong one, pickup is free. If you simply changed your mind, a small courier fee may apply.',
-      },
-      {
-        q: 'How do refunds work with COD?',
-        a: 'After inspection, we refund by bank transfer or store credit, usually within 3–7 business days.',
-      },
-      {
-        q: 'Can I swap for a different model?',
-        a: 'Yes, if it is in stock. You only pay (or receive) the difference in price.',
-      },
-    ],
+    faqs: {
+      warranty: [
+        {
+          q: 'How long is the warranty?',
+          a: 'Six months from the delivery date — always under one year. After that, repairs can be quoted separately.',
+        },
+      ],
+      returns: [
+        {
+          q: 'Can I swap for a different model?',
+          a: 'Yes, if it is in stock. You only pay (or receive) the difference in price.',
+        },
+      ],
+    },
   },
 } as const
 

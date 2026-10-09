@@ -7,13 +7,11 @@ import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { LEGAL_CONTENT, type LegalPage } from '@/lib/legal'
+import { LegalSectionContent } from '@/components/legal/LegalSectionContent'
 import { CONTACT, LEGAL } from '@/lib/site'
 import { cn } from '@/lib/cn'
 
 const DATE_LOCALES = { en: 'en-GB', fr: 'fr-MA', ar: 'ar-MA' } as const
-
-/** Keeps emails and phone numbers left-to-right inside Arabic sentences. */
-const isolate = (value: string) => `\u2066${value}\u2069`
 
 export function Legal({ page }: { page: LegalPage }) {
   const t = useT()
@@ -30,11 +28,6 @@ export function Legal({ page }: { page: LegalPage }) {
     description: t(isTerms ? 'meta.termsDescription' : 'meta.privacyDescription'),
     path: isTerms ? '/terms' : '/privacy',
   })
-
-  const fill = (text: string) =>
-    text
-      .replaceAll('{email}', isolate(CONTACT.email.value))
-      .replaceAll('{phone}', isolate(CONTACT.phone.value))
 
   const updated = new Intl.DateTimeFormat(DATE_LOCALES[locale], { dateStyle: 'long' }).format(
     new Date(`${LEGAL.updated}T12:00:00`)
@@ -125,30 +118,7 @@ export function Legal({ page }: { page: LegalPage }) {
                   <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl">
                     {section.title}
                   </h2>
-                  {section.paragraphs?.map((p) => (
-                    <p
-                      key={p}
-                      className="mt-3 text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[15px] sm:leading-7"
-                    >
-                      {fill(p)}
-                    </p>
-                  ))}
-                  {section.list ? (
-                    <ul className="mt-3 space-y-2">
-                      {section.list.map((item) => (
-                        <li
-                          key={item}
-                          className="flex gap-2.5 text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[15px] sm:leading-7"
-                        >
-                          <span
-                            className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]"
-                            aria-hidden="true"
-                          />
-                          <span>{fill(item)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <LegalSectionContent section={section} />
                 </section>
               ))}
             </div>
