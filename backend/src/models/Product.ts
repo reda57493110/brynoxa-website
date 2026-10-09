@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import type { ProductDepositRule } from '../utils/deposit';
 
 export interface IProductImage {
   url: string;
@@ -18,6 +19,8 @@ export interface IProduct extends Document {
   images: IProductImage[];
   price: number;
   compareAtPrice?: number;
+  /** Optional upfront deposit for cash-on-delivery orders; absent means none. */
+  deposit?: ProductDepositRule;
   stock: number;
   lowStockThreshold: number;
   specs: Map<string, string> | Record<string, string>;
@@ -44,6 +47,14 @@ const imageSchema = new Schema<IProductImage>(
   { _id: false }
 );
 
+const depositRuleSchema = new Schema<ProductDepositRule>(
+  {
+    type: { type: String, enum: ['fixed', 'percent'], required: true },
+    value: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
 const productSchema = new Schema<IProduct>(
   {
     name: { type: String, required: true, trim: true },
@@ -56,6 +67,7 @@ const productSchema = new Schema<IProduct>(
     images: [imageSchema],
     price: { type: Number, required: true, min: 0 },
     compareAtPrice: { type: Number, min: 0 },
+    deposit: { type: depositRuleSchema, default: undefined },
     stock: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, default: 5 },
     specs: { type: Map, of: String, default: {} },

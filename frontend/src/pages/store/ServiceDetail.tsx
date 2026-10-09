@@ -127,6 +127,17 @@ function ServiceDetailContent({ service }: { service: CustomerService }) {
           </section>
         ) : null}
 
+        {service.id === 'cod' ? (
+          <section aria-labelledby="service-deposit">
+            <h2 id="service-deposit" className={sectionHeading}>
+              {t('deposit.serviceTitle')}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[15px] sm:leading-7">
+              {t('deposit.serviceBody')}
+            </p>
+          </section>
+        ) : null}
+
         {service.id === 'support' ? (
           <ul className="grid gap-3 sm:grid-cols-2">
             <li>

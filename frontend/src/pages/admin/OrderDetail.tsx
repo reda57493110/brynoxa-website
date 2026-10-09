@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { OrderDepositPanel } from '@/components/admin/OrderDepositPanel'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -81,6 +82,8 @@ export function OrderDetail() {
 
   const o = order.data
   const user = o.user as User
+  const awaitingDeposit = o.deposit?.status === 'pending'
+  const confirmBlocked = status === 'confirmed' && o.orderStatus === 'pending' && awaitingDeposit
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -116,6 +119,8 @@ export function OrderDetail() {
             className="w-full"
             onClick={() => update.mutate()}
             loading={update.isPending}
+            disabled={confirmBlocked}
+            title={confirmBlocked ? 'Mark the deposit as received first' : undefined}
           >
             Update status
           </Button>
@@ -135,6 +140,8 @@ export function OrderDetail() {
           rows={3}
         />
       </div>
+
+      <OrderDepositPanel order={o} />
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">

@@ -73,6 +73,8 @@ export function ProductForm() {
     brand: string
     price: number
     compareAtPrice: number
+    depositType: 'none' | 'fixed' | 'percent'
+    depositValue: number
     stock: number
     tags: string
     isFeatured: boolean
@@ -88,6 +90,8 @@ export function ProductForm() {
     brand: '',
     price: 0,
     compareAtPrice: 0,
+    depositType: 'none',
+    depositValue: 0,
     stock: 0,
     tags: '',
     isFeatured: false,
@@ -114,6 +118,8 @@ export function ProductForm() {
         brand: brandName,
         price: p.price,
         compareAtPrice: p.compareAtPrice || 0,
+        depositType: p.deposit?.type ?? ('none' as const),
+        depositValue: p.deposit?.value ?? 0,
         stock: p.stock,
         tags: (p.tags || []).join(', '),
         isFeatured: p.isFeatured,
@@ -153,6 +159,10 @@ export function ProductForm() {
           form.compareAtPrice && form.compareAtPrice > Number(form.price)
             ? Number(form.compareAtPrice)
             : undefined,
+        deposit:
+          form.depositType !== 'none' && Number(form.depositValue) > 0
+            ? { type: form.depositType, value: Number(form.depositValue) }
+            : null,
         stock: Number(form.stock),
         tags: form.tags
           .split(',')
@@ -367,6 +377,38 @@ export function ProductForm() {
               </span>
             </div>
           ) : null}
+        </div>
+        <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
+          <Select
+            label="Deposit before confirmation"
+            value={form.depositType}
+            onChange={(e) =>
+              setForm({ ...form, depositType: e.target.value as typeof form.depositType })
+            }
+            options={[
+              { value: 'none', label: 'No deposit (standard cash on delivery)' },
+              { value: 'fixed', label: 'Fixed amount per unit (DH)' },
+              { value: 'percent', label: 'Percentage of the price (%)' },
+            ]}
+          />
+          {form.depositType !== 'none' ? (
+            <Input
+              label={form.depositType === 'percent' ? 'Deposit (%)' : 'Deposit per unit (DH)'}
+              type="number"
+              min={0}
+              max={form.depositType === 'percent' ? 100 : undefined}
+              step="0.01"
+              value={form.depositValue || ''}
+              onChange={(e) =>
+                setForm({ ...form, depositValue: e.target.value === '' ? 0 : Number(e.target.value) })
+              }
+              required
+            />
+          ) : null}
+          <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
+            Customers see the deposit on the product page and at checkout, and pay the rest on delivery.
+            The order can only be confirmed once you mark the deposit as received.
+          </p>
         </div>
         <Input
           label="Stock"

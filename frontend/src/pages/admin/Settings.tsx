@@ -5,6 +5,7 @@ import { categoriesApi } from '@/api/categoriesApi'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
@@ -28,16 +29,18 @@ export function Settings() {
   })
 
   const [storeName, setStoreName] = useState('Brynoxa')
+  const [depositInstructions, setDepositInstructions] = useState('')
   const [catName, setCatName] = useState('')
   const [catDescription, setCatDescription] = useState('')
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
     if (settings.data?.storeName) setStoreName(settings.data.storeName)
+    setDepositInstructions(settings.data?.depositInstructions ?? '')
   }, [settings.data])
 
   const save = useMutation({
-    mutationFn: () => adminApi.settings.update({ storeName }),
+    mutationFn: () => adminApi.settings.update({ storeName, depositInstructions }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['settings'] })
       toast('Settings saved', 'success')
@@ -124,6 +127,19 @@ export function Settings() {
             value={storeName}
             onChange={(e) => setStoreName(e.target.value)}
           />
+          <div>
+            <Textarea
+              label="Deposit payment instructions"
+              value={depositInstructions}
+              onChange={(e) => setDepositInstructions(e.target.value)}
+              rows={5}
+              maxLength={2000}
+              placeholder={'e.g. Bank transfer to RIB … (name: …), or Wafacash / CashPlus to … Then send the receipt on WhatsApp with your order number.'}
+            />
+            <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
+              Shown to customers whose order needs a deposit. Set a deposit per product in the product form, or per order on the order page.
+            </p>
+          </div>
           <Button type="submit" loading={save.isPending}>
             Save settings
           </Button>

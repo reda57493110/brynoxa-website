@@ -104,6 +104,10 @@ export const productSchema = z.object({
     .optional(),
   price: z.number().min(0),
   compareAtPrice: z.number().min(0).optional(),
+  deposit: z
+    .object({ type: z.enum(['fixed', 'percent']), value: z.number().min(0) })
+    .nullable()
+    .optional(),
   stock: z.number().int().min(0),
   lowStockThreshold: z.number().int().min(0).optional(),
   specs: z.record(z.string(), z.string()).optional(),
@@ -164,6 +168,16 @@ export const updateOrderStatusSchema = z.object({
   note: z.string().optional(),
 });
 
+/** Staff: set the deposit amount (0 removes it) and/or mark it received. */
+export const orderDepositSchema = z
+  .object({
+    amount: z.number().min(0).max(10_000_000).optional(),
+    received: z.boolean().optional(),
+  })
+  .refine((v) => v.amount !== undefined || v.received !== undefined, {
+    message: 'Nothing to update',
+  });
+
 export const couponSchema = z.object({
   code: z.string().min(3).max(32),
   type: z.enum(['percent', 'fixed']),
@@ -196,6 +210,7 @@ export const settingsSchema = z.object({
     .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
+  depositInstructions: z.string().max(2000).optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
   pageHeroProducts: z
     .object({

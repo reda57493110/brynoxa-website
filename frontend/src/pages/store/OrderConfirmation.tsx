@@ -6,6 +6,7 @@ import { Container } from '@/components/ui/Container'
 import { PageHero } from '@/components/layout/PageHero'
 import { pillGhost, pillPrimary, surfaceCard } from '@/components/layout/pageStyles'
 import { Spinner } from '@/components/ui/Spinner'
+import { DepositNotice } from '@/components/order/DepositNotice'
 import { formatCurrency } from '@/lib/format'
 import { loadGuestReceipt } from '@/lib/guestReceipt'
 import { useAuthStore } from '@/store/authStore'
@@ -76,6 +77,7 @@ export function OrderConfirmation() {
               {t('cart.warrantyFromDelivery')}
             </li>
           </ul>
+          {order.data ? <DepositNotice order={order.data} className="mt-5 sm:mt-6" /> : null}
           {order.data?.orderStatus === 'pending' && isAuth ? (
             <p className="mt-5 text-sm text-[var(--fg-muted)] sm:mt-6">{t('orders.cancelHint')}</p>
           ) : null}

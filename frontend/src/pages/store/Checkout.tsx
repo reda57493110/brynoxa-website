@@ -23,11 +23,12 @@ import { saveGuestReceipt } from '@/lib/guestReceipt'
 import { linkPushToOrder } from '@/lib/push'
 import { formatCurrency } from '@/lib/format'
 import { resolveShippingFee } from '@/lib/shipping'
+import { orderDeposit } from '@/lib/deposit'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
-import type { Address } from '@/types'
+import type { Address, Product } from '@/types'
 
 export function Checkout() {
   const t = useT()
@@ -121,6 +122,46 @@ export function Checkout() {
   const cityRateOptions = settings.data?.shippingByCity ?? []
   const freeShippingMin = settings.data?.freeShippingMin ?? 0
   const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
+
+  // Live product data: stock check on submit, and deposit rules shown before ordering
+  const productIds = items.map((item) => item.productId)
+  const currentProducts = useQuery({
+    queryKey: ['checkout-products', productIds.join(',')],
+    queryFn: async () =>
+      (
+        await Promise.all(
+          Array.from({ length: Math.ceil(productIds.length / 4) }, (_, index) =>
+            productsApi.compare(productIds.slice(index * 4, index * 4 + 4))
+          )
+        )
+      ).flatMap((response) => response.data.data),
+    enabled: productIds.length > 0,
+  })
+  const depositFor = (products: Product[]) =>
+    orderDeposit(
+      items.map((item) => {
+        const product = products.find((p) => p._id === item.productId)
+        return { rule: product?.deposit, price: product?.price ?? item.price, qty: item.qty }
+      }),
+      total
+    )
+  const deposit = depositFor(currentProducts.data ?? [])
+  const depositRows =
+    deposit > 0 ? (
+      <>
+        <div className="flex justify-between gap-3 text-[var(--fg)]">
+          <span>{t('deposit.payNow')}</span>
+          <span className="font-semibold">{formatCurrency(deposit)}</span>
+        </div>
+        <div className="flex justify-between gap-3">
+          <span className="text-[var(--fg-muted)]">{t('deposit.payOnDelivery')}</span>
+          <span>{formatCurrency(Math.max(0, total - deposit))}</span>
+        </div>
+        <p className="rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-xs leading-relaxed text-[var(--fg)]">
+          {t('deposit.checkoutNote')}
+        </p>
+      </>
+    ) : null
 
   const placeOrder = useMutation({
     mutationFn: () =>
@@ -245,21 +286,20 @@ export function Checkout() {
 
     setStockChecking(true)
     try {
-      const ids = items.map((item) => item.productId)
-      const currentProducts = (
-        await Promise.all(
-          Array.from({ length: Math.ceil(ids.length / 4) }, (_, index) =>
-            productsApi.compare(ids.slice(index * 4, index * 4 + 4))
-          )
-        )
-      ).flatMap((response) => response.data.data)
+      const fresh = await currentProducts.refetch({ throwOnError: true })
+      const latest = fresh.data ?? []
 
       const stockIssue = items.find((item) => {
-        const current = currentProducts.find((product) => product._id === item.productId)
+        const current = latest.find((product) => product._id === item.productId)
         return !current || current.stock < item.qty
       })
       if (stockIssue) {
         setFormError(t('checkout.stockChanged', { name: stockIssue.name }))
+        return
+      }
+      // Never place an order with a different deposit than the one on screen
+      if (depositFor(latest) !== deposit) {
+        setFormError(t('deposit.changed'))
         return
       }
 
@@ -526,6 +566,7 @@ export function Checkout() {
                 <span>{t('checkout.totalCod')}</span>
                 <span>{formatCurrency(total)}</span>
               </div>
+              {depositRows}
             </div>
             <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
               <li className="flex items-center gap-2">
@@ -540,8 +581,8 @@ export function Checkout() {
             <Button
               type="submit"
               className="mt-6 w-full rounded-full"
-              loading={placeOrder.isPending || stockChecking || settings.isLoading}
-              disabled={settings.isLoading}
+              loading={placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading}
+              disabled={settings.isLoading || currentProducts.isLoading}
             >
               {t('checkout.placeOrder')}
             </Button>
@@ -574,6 +615,7 @@ export function Checkout() {
             <span>{t('checkout.totalCod')}</span>
             <span>{formatCurrency(total)}</span>
           </div>
+          {depositRows ? <div className="mt-2 space-y-2 text-sm">{depositRows}</div> : null}
           <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--fg-muted)]">
             <li className="inline-flex items-center gap-1">
               <SiteIcon name="package-check" size={12} className="text-[var(--brand-text)]" />
@@ -592,13 +634,18 @@ export function Checkout() {
           <div className="min-w-0">
             <p className="text-[11px] text-[var(--fg-muted)]">{t('checkout.totalCod')}</p>
             <p className="font-display text-base font-semibold">{formatCurrency(total)}</p>
+            {deposit > 0 ? (
+              <p className="text-[11px] text-[var(--fg-muted)]">
+                {t('deposit.payNow')}: {formatCurrency(deposit)}
+              </p>
+            ) : null}
           </div>
           <Button
             type="submit"
             form="checkout-form"
             className="h-11 flex-1 rounded-full text-sm"
-            loading={placeOrder.isPending || stockChecking || settings.isLoading}
-            disabled={settings.isLoading}
+            loading={placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading}
+            disabled={settings.isLoading || currentProducts.isLoading}
           >
             {t('checkout.placeOrder')}
           </Button>

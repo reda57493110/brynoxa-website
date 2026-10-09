@@ -1,10 +1,11 @@
 import { Types } from 'mongoose';
 import { Product } from '../models/Product';
-import { Order, OrderStatus } from '../models/Order';
+import { IOrderDeposit, Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { getSettings } from '../models/Settings';
 import { resolveShippingFee } from '../utils/shipping';
+import { lineDeposit, roundMoney } from '../utils/deposit';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
@@ -98,6 +99,7 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
 
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
   let subtotal = 0;
+  let depositTotal = 0;
   const orderItems = uniqueItems.map((item) => {
     const product = productMap.get(item.productId);
     if (!product) throw new ApiError(400, 'Product not found');
@@ -106,6 +108,7 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
     }
     const primary = product.images.find((img) => img.isPrimary) || product.images[0];
     subtotal += product.price * item.qty;
+    depositTotal += lineDeposit(product.deposit, product.price, item.qty);
     return {
       product: product._id,
       name: product.name,
@@ -116,8 +119,16 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
     };
   });
 
-  return { orderItems, subtotal };
+  return { orderItems, subtotal, depositTotal: roundMoney(depositTotal) };
 }
+
+/** Deposit from product rules, capped at the order total; undefined when none applies. */
+function productsDeposit(depositTotal: number, total: number): IOrderDeposit | undefined {
+  const amount = roundMoney(Math.min(depositTotal, total));
+  return amount > 0 ? { amount, source: 'products', status: 'pending' } : undefined;
+}
+
+const formatDh = (amount: number) => `${amount.toLocaleString('en-US')} DH`;
 
 async function priceOrder(subtotal: number, couponCode?: string, city?: string) {
   const settings = await getSettings();
@@ -150,12 +161,13 @@ export async function createCodOrder(input: {
 }) {
   const settings = await getSettings();
 
-  const { orderItems, subtotal } = await buildOrderLines(input.items);
+  const { orderItems, subtotal, depositTotal } = await buildOrderLines(input.items);
   const { pricing, couponMeta } = await priceOrder(
     subtotal,
     input.couponCode,
     input.shippingAddress?.city
   );
+  const deposit = productsDeposit(depositTotal, pricing.total);
 
   let couponClaimed = false;
   if (couponMeta) {
@@ -176,8 +188,17 @@ export async function createCodOrder(input: {
       shippingAddress: input.shippingAddress,
       paymentMethod: 'cod',
       paymentStatus: 'pending',
+      deposit,
       orderStatus: 'pending',
-      timeline: [{ status: 'pending', note: 'Order placed — awaiting confirmation', at: new Date() }],
+      timeline: [
+        {
+          status: 'pending',
+          note: deposit
+            ? `Order placed — awaiting deposit of ${formatDh(deposit.amount)}`
+            : 'Order placed — awaiting confirmation',
+          at: new Date(),
+        },
+      ],
       customerNote: input.customerNote,
       stockReserved: false,
     });
@@ -264,14 +285,28 @@ export async function updateUserOrderItems(
   if (order.orderStatus !== 'pending') {
     throw new ApiError(400, 'Only pending orders can be edited');
   }
-  if (order.stockReserved) {
+  if (order.stockReserved || order.deposit?.status === 'received') {
     throw new ApiError(400, 'This order can no longer be edited');
   }
 
   const previousCouponCode = order.coupon?.code;
   const previousCouponId = order.coupon?.couponId;
-  const { orderItems, subtotal } = await buildOrderLines(items);
-  const { pricing, couponMeta } = await priceOrder(subtotal, previousCouponCode);
+  const { orderItems, subtotal, depositTotal } = await buildOrderLines(items);
+  const { pricing, couponMeta } = await priceOrder(
+    subtotal,
+    previousCouponCode,
+    order.shippingAddress?.city
+  );
+
+  // A deposit set by staff is kept (capped at the new total); otherwise follow the products.
+  const deposit: IOrderDeposit | undefined =
+    order.deposit?.source === 'admin'
+      ? {
+          amount: roundMoney(Math.min(order.deposit.amount, pricing.total)),
+          source: 'admin',
+          status: 'pending',
+        }
+      : productsDeposit(depositTotal, pricing.total);
 
   if (previousCouponId && !couponMeta) {
     await Coupon.updateOne(
@@ -285,6 +320,8 @@ export async function updateUserOrderItems(
 
   order.items = orderItems;
   order.pricing = pricing;
+  if (deposit) order.deposit = deposit;
+  else order.set('deposit', undefined);
   if (couponMeta) {
     order.coupon = couponMeta;
   } else {
@@ -367,6 +404,10 @@ export async function updateOrderStatus(
     throw new ApiError(400, `Cannot move an order from ${prev} to ${orderStatus}`);
   }
 
+  if (orderStatus === 'confirmed' && order.deposit && order.deposit.status !== 'received') {
+    throw new ApiError(400, 'Mark the deposit as received before confirming this order');
+  }
+
   if (orderStatus === 'confirmed' && !order.stockReserved) {
     await adjustStock(order, 'reserve');
     order.stockReserved = true;
@@ -425,6 +466,78 @@ export async function updateOrderStatus(
   return order;
 }
 
+/**
+ * Staff: set the deposit on a pending order (amount 0 removes it) and/or mark it received.
+ * Changing the amount resets it to "awaiting".
+ */
+export async function setOrderDeposit(
+  orderId: string,
+  input: { amount?: number; received?: boolean }
+) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (order.orderStatus !== 'pending') {
+    throw new ApiError(400, 'The deposit can only be changed while the order is pending');
+  }
+
+  const notes: string[] = [];
+  let customerMessage = '';
+
+  if (input.amount !== undefined) {
+    const amount = roundMoney(input.amount);
+    if (amount > order.pricing.total) {
+      throw new ApiError(400, 'The deposit cannot be more than the order total');
+    }
+    if (amount === 0) {
+      if (order.deposit) {
+        order.set('deposit', undefined);
+        notes.push('Deposit removed');
+        customerMessage = 'No deposit is needed for this order anymore';
+      }
+    } else if (amount !== order.deposit?.amount) {
+      order.deposit = { amount, source: 'admin', status: 'pending' };
+      notes.push(`Deposit of ${formatDh(amount)} requested`);
+      customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
+    }
+  }
+
+  if (input.received !== undefined) {
+    if (!order.deposit) throw new ApiError(400, 'This order has no deposit');
+    const status = input.received ? 'received' : 'pending';
+    if (order.deposit.status !== status) {
+      order.deposit.status = status;
+      order.deposit.receivedAt = input.received ? new Date() : undefined;
+      notes.push(input.received ? 'Deposit received' : 'Deposit marked as not received');
+      if (input.received) customerMessage = 'We received your deposit';
+    }
+  }
+
+  if (!notes.length) return order;
+
+  for (const note of notes) {
+    order.timeline.push({ status: 'pending', note, at: new Date() });
+  }
+  order.markModified('deposit');
+  await order.save();
+  invalidateDashboardCache();
+
+  if (customerMessage) {
+    try {
+      await Notification.create({
+        user: order.user,
+        type: 'order',
+        title: 'Order deposit',
+        message: `${customerMessage} (${order.orderNumber})`,
+        link: `/account/orders/${order.orderNumber}`,
+      });
+    } catch (error) {
+      console.error('Deposit notification failed', error);
+    }
+  }
+
+  return order;
+}
+
 export async function listUserOrders(userId: string, page = 1, limit = 10) {
   const filter = { user: userId };
   const [items, total] = await Promise.all([
@@ -445,6 +558,9 @@ export async function cancelUserOrder(userId: string, orderNumber: string) {
   if (!order) throw new ApiError(404, 'Order not found');
   if (order.orderStatus !== 'pending') {
     throw new ApiError(400, 'Only pending orders can be cancelled');
+  }
+  if (order.deposit?.status === 'received') {
+    throw new ApiError(400, 'Your deposit has been received. Contact us to cancel and arrange the refund.');
   }
   return updateOrderStatus(
     String(order._id),

@@ -61,6 +61,8 @@ export const adminApi = {
       id: string,
       payload: { orderStatus: OrderStatus; adminNote?: string; note?: string }
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
+    setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>
+      api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/orders/${id}`),
   },
 

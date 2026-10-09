@@ -3,6 +3,7 @@ import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
+import { sanitizeDepositRule } from '../utils/deposit';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteUnusedImages } from './upload.service';
 
@@ -324,6 +325,7 @@ export async function createProduct(data: Record<string, unknown>) {
   const isCarousel = Boolean(data.isCarousel);
   const product = await Product.create({
     ...data,
+    deposit: sanitizeDepositRule(data.deposit) ?? undefined,
     slug,
     sku,
     isFeatured,
@@ -363,6 +365,12 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     if (data[key] !== undefined) {
       (product as unknown as Record<string, unknown>)[key] = data[key];
     }
+  }
+
+  if (data.deposit !== undefined) {
+    const deposit = sanitizeDepositRule(data.deposit);
+    if (deposit) product.deposit = deposit;
+    else product.set('deposit', undefined);
   }
 
   if (data.isFeatured !== undefined) {

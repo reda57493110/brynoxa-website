@@ -7,6 +7,7 @@ import { productsApi } from '@/api/productsApi'
 import { getErrorMessage } from '@/api/client'
 import { Container } from '@/components/ui/Container'
 import { Badge } from '@/components/ui/Badge'
+import { DepositNotice } from '@/components/order/DepositNotice'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
@@ -70,7 +71,9 @@ export function OrderDetail() {
     if (order.data) setDraft(toDraft(order.data.items))
   }, [order.data])
 
-  const canEdit = order.data?.orderStatus === 'pending'
+  // Once the deposit is received, changes and cancellations go through the shop
+  const canEdit =
+    order.data?.orderStatus === 'pending' && order.data.deposit?.status !== 'received'
 
   const dirty = useMemo(() => {
     if (!order.data || !canEdit) return false
@@ -211,6 +214,7 @@ export function OrderDetail() {
         }
       />
       <Container className="pt-5 pb-8 sm:pb-10">
+        <DepositNotice order={o} className="mb-4" />
         {canEdit ? (
           <p className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-sm text-[var(--fg)]">
             {t('orders.editHint')}

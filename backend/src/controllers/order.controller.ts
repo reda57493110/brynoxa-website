@@ -118,6 +118,11 @@ export const updateOrderStatus = asyncHandler(async (req: AuthRequest, res: Resp
   sendSuccess(res, order, 'Order updated');
 });
 
+export const setOrderDeposit = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await orderService.setOrderDeposit(param(req, 'id'), req.body);
+  sendSuccess(res, order, 'Deposit updated');
+});
+
 export const deleteOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   await orderService.deleteOrder(param(req, 'id'));
   sendSuccess(res, null, 'Order deleted');

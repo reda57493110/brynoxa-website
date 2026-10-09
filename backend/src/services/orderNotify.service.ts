@@ -108,6 +108,11 @@ async function notifyOrderPlacedEmails(order: InstanceType<typeof Order>) {
   const total = formatMad(order.pricing.total);
   const orderUrl = customerOrderLink(order.orderNumber);
   const waCustomer = whatsappCustomerLink(order.shippingAddress?.phone || user?.phone, order.orderNumber);
+  const deposit = order.deposit?.amount ? order.deposit.amount : 0;
+  const depositLine = deposit
+    ? `<strong>Deposit to pay before confirmation</strong> ${formatMad(deposit)}<br/>
+         <strong>Pay on delivery</strong> ${formatMad(order.pricing.total - deposit)}<br/>`
+    : '';
 
   if (user?.email) {
     await sendEmail({
@@ -119,6 +124,7 @@ async function notifyOrderPlacedEmails(order: InstanceType<typeof Order>) {
          <p>${escapeHtml(copy.customerLine)}</p>
          <p><strong>Order</strong> ${escapeHtml(order.orderNumber)}<br/>
          <strong>Total</strong> ${total} (cash on delivery)<br/>
+         ${depositLine}
          <strong>City</strong> ${escapeHtml(order.shippingAddress.city)}</p>
          ${orderItemsHtml(order)}
          <p style="margin-top:20px;"><a href="${orderUrl}" style="display:inline-block;background:#00c2ff;color:#041018;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;">View order</a></p>`
@@ -135,6 +141,7 @@ async function notifyOrderPlacedEmails(order: InstanceType<typeof Order>) {
         'New order',
         `<p>A new cash-on-delivery order was placed.</p>
          <p><strong>${escapeHtml(order.orderNumber)}</strong> · ${total}<br/>
+         ${depositLine}
          ${escapeHtml(order.shippingAddress.fullName)} · ${escapeHtml(order.shippingAddress.phone)}<br/>
          ${escapeHtml(order.shippingAddress.line1)}, ${escapeHtml(order.shippingAddress.city)}</p>
          ${orderItemsHtml(order)}

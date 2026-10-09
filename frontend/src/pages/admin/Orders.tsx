@@ -157,6 +157,9 @@ export function Orders() {
                       <Badge variant={orderStatusVariant(o.orderStatus)}>
                         {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
                       </Badge>
+                      {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? (
+                        <Badge variant="warning">Awaiting deposit</Badge>
+                      ) : null}
                       <span className="text-[11px] uppercase text-[var(--fg-muted)]">
                         {o.paymentMethod} · {o.paymentStatus}
                       </span>
@@ -216,9 +219,14 @@ export function Orders() {
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">{formatDateTime(o.createdAt)}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={orderStatusVariant(o.orderStatus)}>
-                          {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge variant={orderStatusVariant(o.orderStatus)}>
+                            {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+                          </Badge>
+                          {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? (
+                            <Badge variant="warning">Awaiting deposit</Badge>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-4 py-3 uppercase text-[var(--fg-muted)]">
                         {o.paymentMethod} · {o.paymentStatus}

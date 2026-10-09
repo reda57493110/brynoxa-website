@@ -52,7 +52,7 @@ const en: Record<LegalPage, LegalDocument> = {
         id: 'payment',
         title: '4. Payment',
         paragraphs: [
-          'Payment is made in cash on delivery: you pay the courier when the package arrives. No card or deposit is required. Check that the package is intact before paying; if it is damaged or wrong, you can refuse it and contact us the same day.',
+          'Payment is made in cash on delivery: you pay the courier when the package arrives. No card is required. Some products or orders require a deposit before we confirm them: the amount is shown before you place the order, and the rest is paid on delivery. Check that the package is intact before paying; if it is damaged or wrong, you can refuse it and contact us the same day.',
         ],
       },
       {
@@ -246,7 +246,7 @@ const fr: Record<LegalPage, LegalDocument> = {
         id: 'payment',
         title: '4. Paiement',
         paragraphs: [
-          'Le paiement se fait en espèces à la livraison : vous payez le livreur à la réception du colis. Aucune carte ni acompte n’est demandé. Vérifiez que le colis est intact avant de payer ; s’il est endommagé ou ne correspond pas, vous pouvez le refuser et nous contacter le jour même.',
+          'Le paiement se fait en espèces à la livraison : vous payez le livreur à la réception du colis. Aucune carte n’est demandée. Certains produits ou commandes nécessitent un acompte avant confirmation : son montant est affiché avant de passer la commande, et le reste se paie à la livraison. Vérifiez que le colis est intact avant de payer ; s’il est endommagé ou ne correspond pas, vous pouvez le refuser et nous contacter le jour même.',
         ],
       },
       {
@@ -442,7 +442,7 @@ const ar: Record<LegalPage, LegalDocument> = {
         id: 'payment',
         title: '4. الدفع',
         paragraphs: [
-          'يتم الدفع نقدًا عند الاستلام: تدفع لعامل التوصيل عند وصول الطرد. لا حاجة لبطاقة بنكية أو عربون. تحقق من سلامة الطرد قبل الدفع؛ وإذا كان تالفًا أو غير مطابق، يمكنك رفضه والتواصل معنا في نفس اليوم.',
+          'يتم الدفع نقدًا عند الاستلام: تدفع لعامل التوصيل عند وصول الطرد. لا حاجة لبطاقة بنكية. بعض المنتجات أو الطلبات تتطلب عربونًا قبل تأكيدها: يظهر مبلغه قبل تقديم الطلب، ويُدفع الباقي عند الاستلام. تحقق من سلامة الطرد قبل الدفع؛ وإذا كان تالفًا أو غير مطابق، يمكنك رفضه والتواصل معنا في نفس اليوم.',
         ],
       },
       {

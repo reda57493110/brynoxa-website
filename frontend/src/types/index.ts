@@ -84,6 +84,12 @@ export interface ProductImage {
   isPrimary?: boolean
 }
 
+/** Optional upfront deposit for COD: fixed DH per unit, or % of the line price. */
+export interface ProductDeposit {
+  type: 'fixed' | 'percent'
+  value: number
+}
+
 export interface Product {
   _id: string
   name: string
@@ -96,6 +102,7 @@ export interface Product {
   images: ProductImage[]
   price: number
   compareAtPrice?: number
+  deposit?: ProductDeposit | null
   stock: number
   lowStockThreshold: number
   specs: Record<string, string>
@@ -136,6 +143,14 @@ export type OrderStatus =
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
+/** Paid before the order is confirmed; the rest of the total is paid on delivery. */
+export interface OrderDeposit {
+  amount: number
+  source: 'products' | 'admin'
+  status: 'pending' | 'received'
+  receivedAt?: string
+}
+
 export interface OrderItem {
   product: string | Product
   name: string
@@ -169,6 +184,7 @@ export interface Order {
   shippingAddress: Address
   paymentMethod: 'cod'
   paymentStatus: PaymentStatus
+  deposit?: OrderDeposit
   orderStatus: OrderStatus
   timeline: OrderTimeline[]
   customerNote?: string
@@ -250,6 +266,7 @@ export interface StoreSettings {
   taxRate: number
   supportEmail: string
   codEnabled: boolean
+  depositInstructions?: string
   notifyStaffLoginEmail?: boolean
   pageHeroProducts?: Partial<Record<HeroPage, string>>
 }

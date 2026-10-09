@@ -266,6 +266,22 @@ async function handleOrderRoutes(req, res, route, query) {
     return;
   }
 
+  const depositMatch = route.match(/^orders\/([^/]+)\/deposit$/);
+  if (depositMatch && req.method === 'PATCH') {
+    const user = await requireStaff(req, res, ['orders:write']);
+    if (!user) return;
+    const { orderDepositSchema } = require('../../backend/dist/validators/schemas');
+    const parsed = orderDepositSchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, { success: false, message: 'Invalid deposit details' });
+      return;
+    }
+    const order = await orderService.setOrderDeposit(depositMatch[1], parsed.data);
+    dashboardCache = { at: 0, data: null };
+    sendJson(res, 200, { success: true, message: 'Deposit updated', data: order });
+    return;
+  }
+
   const match = route.match(/^orders\/([^/]+)$/);
   if (match && req.method === 'GET') {
     const user = await requireStaff(req, res, ['orders:read']);

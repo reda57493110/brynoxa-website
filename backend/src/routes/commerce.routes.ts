@@ -8,6 +8,7 @@ import {
   createOrderSchema,
   updateOrderItemsSchema,
   updateOrderStatusSchema,
+  orderDepositSchema,
   validateCouponSchema,
   guestOrderReceiptSchema,
   trackOrderSchema,
@@ -63,6 +64,13 @@ router.patch(
   requirePermission('orders:write'),
   validate(updateOrderStatusSchema),
   order.updateOrderStatus
+);
+router.patch(
+  '/admin/orders/:id/deposit',
+  requireAuth,
+  requirePermission('orders:write'),
+  validate(orderDepositSchema),
+  order.setOrderDeposit
 );
 router.delete(
   '/admin/orders/:id',

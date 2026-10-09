@@ -18,6 +18,8 @@ export interface ISettings extends Document {
   taxRate: number;
   supportEmail: string;
   codEnabled: boolean;
+  /** Shown to customers whose order needs a deposit: how to pay it (bank RIB, transfer agency…). */
+  depositInstructions: string;
   /** Email ADMIN_EMAIL when a staff account signs into admin. */
   notifyStaffLoginEmail: boolean;
   /** Product id featured in each store page header; empty shows the default photo. */
@@ -42,6 +44,7 @@ const settingsSchema = new Schema<ISettings>(
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: 'brynoxa.shop@gmail.com' },
     codEnabled: { type: Boolean, default: true },
+    depositInstructions: { type: String, default: '', maxlength: 2000 },
     notifyStaffLoginEmail: { type: Boolean, default: true },
     pageHeroProducts: {
       shop: { type: String, default: '' },

@@ -7,6 +7,7 @@ import { Container } from '@/components/ui/Container'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { DepositNotice } from '@/components/order/DepositNotice'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -107,6 +108,8 @@ export function TrackOrder() {
                     {t(orderStatusKey(order.orderStatus))}
                   </Badge>
                 </div>
+
+                <DepositNotice order={order} />
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">

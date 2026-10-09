@@ -27,7 +27,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
-import { formatDate } from '@/lib/format'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
 import { recordProductView } from '@/lib/push'
 import { useSeo } from '@/hooks/useSeo'
@@ -423,6 +423,15 @@ export function ProductDetail() {
               price={p.price}
               compareAt={p.compareAtPrice}
             />
+
+            {p.deposit && p.deposit.value > 0 ? (
+              <p className="mt-2.5 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
+                <SiteIcon name="banknote" size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
+                {p.deposit.type === 'percent'
+                  ? t('deposit.productPercent', { percent: p.deposit.value })
+                  : t('deposit.productFixed', { amount: formatCurrency(p.deposit.value) })}
+              </p>
+            ) : null}
 
             {p.shortDescription ? (
               <p className="mt-2.5 text-[13px] font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base sm:leading-7">

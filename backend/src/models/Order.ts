@@ -19,6 +19,17 @@ export interface IOrderItem {
   qty: number;
 }
 
+/**
+ * Upfront deposit for a COD order. `products` = from product rules at checkout,
+ * `admin` = set by staff on the order. The rest is paid on delivery.
+ */
+export interface IOrderDeposit {
+  amount: number;
+  source: 'products' | 'admin';
+  status: 'pending' | 'received';
+  receivedAt?: Date;
+}
+
 export interface IOrderTimeline {
   status: OrderStatus;
   note?: string;
@@ -44,6 +55,7 @@ export interface IOrder extends Document {
   shippingAddress: IAddress;
   paymentMethod: 'cod';
   paymentStatus: PaymentStatus;
+  deposit?: IOrderDeposit;
   orderStatus: OrderStatus;
   timeline: IOrderTimeline[];
   customerNote?: string;
@@ -74,6 +86,16 @@ const timelineSchema = new Schema<IOrderTimeline>(
     },
     note: { type: String },
     at: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const depositSchema = new Schema<IOrderDeposit>(
+  {
+    amount: { type: Number, required: true, min: 0 },
+    source: { type: String, enum: ['products', 'admin'], required: true },
+    status: { type: String, enum: ['pending', 'received'], default: 'pending' },
+    receivedAt: { type: Date },
   },
   { _id: false }
 );
@@ -113,6 +135,7 @@ const orderSchema = new Schema<IOrder>(
       enum: ['pending', 'paid', 'failed', 'refunded'],
       default: 'pending',
     },
+    deposit: { type: depositSchema, default: undefined },
     orderStatus: {
       type: String,
       enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],

@@ -16,6 +16,7 @@ const ALLOWED_FIELDS = [
   'shippingByCity',
   'taxRate',
   'supportEmail',
+  'depositInstructions',
   'notifyStaffLoginEmail',
   'pageHeroProducts',
 ];
@@ -42,6 +43,8 @@ module.exports = async (req, res) => {
         if (body[key] === undefined) continue;
         if (key === 'shippingByCity') {
           settings[key] = sanitizeShippingByCity(body[key]);
+        } else if (key === 'depositInstructions') {
+          settings[key] = String(body[key]).slice(0, 2000);
         } else if (key === 'pageHeroProducts') {
           settings[key] = sanitizePageHeroProducts(body[key], settings.pageHeroProducts);
         } else {
