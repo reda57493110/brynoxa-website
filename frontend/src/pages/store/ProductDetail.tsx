@@ -21,7 +21,7 @@ import { RatingStars } from '@/components/product/RatingStars'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { SpecTable } from '@/components/product/SpecTable'
 import { StockBadge } from '@/components/product/StockBadge'
-import { ProductGrid } from '@/components/product/ProductGrid'
+import { CompleteSetup } from '@/components/product/CompleteSetup'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
@@ -136,23 +136,6 @@ export function ProductDetail() {
     enabled: Boolean(product.data?._id),
   })
 
-  const related = useQuery({
-    queryKey: [
-      'products',
-      'related',
-      typeof product.data?.category === 'object' ? product.data.category.slug : '',
-      product.data?._id,
-    ],
-    queryFn: async () => {
-      const category =
-        typeof product.data?.category === 'object' ? product.data.category.slug : undefined
-      if (!category) return []
-      const items = (await productsApi.list({ category, limit: 8, sort: 'popular' })).data.data
-      return items.filter((item) => item._id !== product.data!._id).slice(0, 4)
-    },
-    enabled: Boolean(product.data?._id),
-  })
-
   const reviewMutation = useMutation({
     mutationFn: () =>
       reviewsApi.create({
@@ -249,19 +232,31 @@ export function ProductDetail() {
     : null
   const wishlisted = isWish(p._id)
 
+  const cartLine = {
+    productId: p._id,
+    slug: p.slug,
+    name: p.name,
+    image: primaryImage(p),
+    price: p.price,
+    stock: p.stock,
+    sku: p.sku,
+    qty,
+  }
+
   const onAddCart = () => {
-    addItem({
-      productId: p._id,
-      slug: p.slug,
-      name: p.name,
-      image: primaryImage(p),
-      price: p.price,
-      stock: p.stock,
-      sku: p.sku,
-      qty,
-    })
+    addItem(cartLine)
     toast.success(t('product.addedToCart'))
   }
+
+  // Buy now: put this product in the cart (once) and go straight to checkout
+  const onBuyNow = () => {
+    if (!useCartStore.getState().items.some((item) => item.productId === p._id)) addItem(cartLine)
+    navigate('/checkout')
+  }
+
+  const specEntries = Object.entries((p.specs as Record<string, string>) || {})
+  const keySpecs = specEntries.slice(0, 4)
+  const outOfStock = p.stock <= 0
 
   const onWishlist = async () => {
     try {
@@ -365,10 +360,10 @@ export function ProductDetail() {
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
-      <Container className="pb-28 pt-4 sm:py-10 lg:pb-10">
+      <Container className="pb-24 pt-3 sm:pb-10 sm:pt-6">
         <motion.nav
           {...fade(0)}
-          className="mb-4 flex flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:mb-6 sm:gap-2 sm:text-sm"
+          className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:mb-4 sm:text-sm"
         >
           <Link to="/shop" className="hover:text-[var(--brand-text)]">
             {t('common.shop')}
@@ -385,13 +380,13 @@ export function ProductDetail() {
           <span className="line-clamp-1 text-[var(--fg)]">{p.name}</span>
         </motion.nav>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10 xl:gap-12">
-          <motion.div {...fade(0.05)} className="lg:sticky lg:top-[calc(var(--nav-height)+1rem)]">
+        <div className="grid items-start gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10">
+          <motion.div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
             <ImageGallery images={p.images || []} name={p.name} />
           </motion.div>
 
-          <motion.div {...fade(0.1)} className="flex flex-col">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--fg-muted)]">
+          <motion.div {...fade(0.1)} className="flex min-w-0 flex-col">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--fg-muted)] sm:text-sm">
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
               {brand && category ? <span aria-hidden="true">·</span> : null}
               {category ? (
@@ -402,30 +397,32 @@ export function ProductDetail() {
               {p.sku ? (
                 <>
                   <span aria-hidden="true">·</span>
-                  <span className="font-mono text-xs tracking-wide">{p.sku}</span>
+                  <span className="font-mono text-[11px] tracking-wide sm:text-xs">{p.sku}</span>
                 </>
               ) : null}
             </div>
 
-            <h1 className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-3xl lg:text-4xl">
+            <h1 className="mt-1.5 font-display text-xl font-semibold leading-tight tracking-tight text-[var(--fg)] sm:text-2xl lg:text-3xl">
               {p.name}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
               {p.reviewCount > 0 ? (
-                <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
+                <a href="#product-reviews-heading" className="hover:opacity-80">
+                  <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
+                </a>
               ) : null}
               <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
             </div>
 
             <Price
-              className="mt-3 [&>span:first-child]:text-xl sm:mt-4 sm:[&>span:first-child]:text-[1.75rem]"
+              className="mt-3 [&>span:first-child]:text-2xl sm:[&>span:first-child]:text-[1.75rem]"
               price={p.price}
               compareAt={p.compareAtPrice}
             />
 
             {p.deposit && p.deposit.value > 0 ? (
-              <p className="mt-2.5 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
+              <p className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
                 <SiteIcon name="banknote" size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
                 {p.deposit.type === 'percent'
                   ? t('deposit.productPercent', { percent: p.deposit.value })
@@ -434,102 +431,117 @@ export function ProductDetail() {
             ) : null}
 
             {p.shortDescription ? (
-              <p className="mt-2.5 text-[13px] font-medium leading-relaxed text-[var(--fg-muted)] sm:mt-4 sm:text-base sm:leading-7">
+              <p className="mt-3 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-[0.95rem]">
                 {p.shortDescription}
               </p>
             ) : null}
 
-            <div className="mt-5 hidden flex-wrap items-center gap-3 sm:mt-6 sm:flex">
-              <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
-              <Button onClick={onAddCart} disabled={p.stock <= 0} className="rounded-full">
-                <SiteIcon name="cart" size={16} />
-                {t('common.addToCart')}
-              </Button>
-              <Button
-                variant={wishlisted ? 'primary' : 'outline'}
-                onClick={onWishlist}
-                className="rounded-full"
-                aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
-              >
-                <SiteIcon name="heart" size={16} />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
-                className="rounded-full"
-              >
-                <WhatsAppIcon size={16} />
-                {t('contact.whatsapp')}
-              </Button>
+            {keySpecs.length ? (
+              <dl className="mt-4 grid grid-cols-2 gap-2">
+                {keySpecs.map(([key, value]) => (
+                  <div
+                    key={key}
+                    className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2"
+                  >
+                    <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                      {key}
+                    </dt>
+                    <dd className="mt-0.5 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--fg)]">
+                      {value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+
+            <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
+                <Button
+                  onClick={onAddCart}
+                  disabled={outOfStock}
+                  variant="outline"
+                  className="hidden min-w-[9rem] flex-1 rounded-full sm:inline-flex"
+                >
+                  <SiteIcon name="cart" size={16} />
+                  {t('common.addToCart')}
+                </Button>
+                <Button
+                  onClick={onBuyNow}
+                  disabled={outOfStock}
+                  className="hidden min-w-[9rem] flex-1 rounded-full sm:inline-flex"
+                >
+                  {t('productPage.buyNow')}
+                </Button>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-sm">
+                <button
+                  type="button"
+                  onClick={onWishlist}
+                  aria-pressed={wishlisted}
+                  className="inline-flex items-center gap-1.5 font-medium text-[var(--fg-muted)] transition hover:text-[var(--brand-text)] aria-pressed:text-[var(--brand-text)]"
+                >
+                  <SiteIcon name="heart" size={16} />
+                  {wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
+                  className="inline-flex items-center gap-1.5 font-medium text-[var(--fg-muted)] transition hover:text-[var(--brand-text)]"
+                >
+                  <WhatsAppIcon size={16} />
+                  {t('contact.whatsapp')}
+                </button>
+              </div>
             </div>
 
-            <ul className="mt-5 flex flex-wrap gap-2 sm:mt-6">
+            <ul className="mt-3 flex flex-wrap gap-2">
               {proofChips.map(({ icon, label }) => (
                 <li
                   key={label}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:h-9 sm:gap-2 sm:px-3 sm:text-xs"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:text-xs"
                 >
                   <SiteIcon name={icon} size={14} className="text-[var(--brand-text)]" />
                   {label}
                 </li>
               ))}
             </ul>
-
-            <section
-              className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12 sm:pt-10 lg:mt-8 lg:pt-8"
-              aria-labelledby="product-details-heading"
-            >
-              <p className="kicker">{t('productPage.specs')}</p>
-              <h2
-                id="product-details-heading"
-                className="mt-2 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
-              >
-                {t('productPage.details')}
-              </h2>
-
-              <div className="mt-6 grid gap-6">
-                <div>
-                  <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
-                    {t('productPage.description')}
-                  </h3>
-                  <div className="mt-3 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
-                    <p className="whitespace-pre-wrap text-sm font-medium leading-relaxed text-[var(--fg)]/80 sm:text-[0.975rem] sm:leading-7">
-                      {p.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-display text-base font-semibold text-[var(--fg)] sm:text-lg">
-                    {t('productPage.specifications')}
-                  </h3>
-                  <div className="mt-3">
-                    <SpecTable specs={(p.specs as Record<string, string>) || {}} />
-                  </div>
-                </div>
-              </div>
-            </section>
           </motion.div>
         </div>
 
-        {related.data?.length ? (
-          <motion.section {...fade(0.14)} className="mt-10 border-t border-[var(--border)] pt-8 sm:mt-12">
-            <p className="kicker">{t('common.shop')}</p>
-            <h2 className="mt-2 font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-3xl">
-              {t('productPage.moreInCategory', { name: categoryName || t('shop.category') })}
+        <motion.div
+          {...fade(0.12)}
+          className="mt-8 grid items-start gap-5 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10"
+        >
+          <section aria-labelledby="product-description-heading">
+            <h2
+              id="product-description-heading"
+              className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
+            >
+              {t('productPage.description')}
             </h2>
-            <div className="mt-6">
-              <ProductGrid
-                products={related.data}
-                loading={related.isPending || related.isFetching}
-              />
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[0.95rem] sm:leading-7">
+              {p.description}
+            </p>
+          </section>
+          <section aria-labelledby="product-specs-heading">
+            <h2
+              id="product-specs-heading"
+              className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
+            >
+              {t('productPage.specifications')}
+            </h2>
+            <div className="mt-3">
+              <SpecTable specs={(p.specs as Record<string, string>) || {}} />
             </div>
-          </motion.section>
-        ) : null}
+          </section>
+        </motion.div>
+
+        <CompleteSetup productId={p._id} />
 
         <motion.section
           {...fade(0.16)}
-          className="mt-8 border-t border-[var(--border)] pt-8 sm:mt-10"
+          className="mt-8 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8"
           aria-labelledby="product-reviews-heading"
         >
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -598,30 +610,21 @@ export function ProductDetail() {
       {/* Mobile sticky buy bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2">
-          <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
           <Button
             onClick={onAddCart}
-            disabled={p.stock <= 0}
-            className="h-10 min-w-0 flex-1 gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px]"
+            disabled={outOfStock}
+            variant="outline"
+            className="h-11 min-w-0 flex-1 gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px]"
           >
             <SiteIcon name="cart" size={15} />
             {t('common.addToCart')}
           </Button>
           <Button
-            variant={wishlisted ? 'primary' : 'outline'}
-            onClick={onWishlist}
-            className="h-10 w-10 shrink-0 rounded-full !px-0"
-            aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
+            onClick={onBuyNow}
+            disabled={outOfStock}
+            className="h-11 min-w-0 flex-1 whitespace-nowrap rounded-full px-3 text-[13px]"
           >
-            <SiteIcon name="heart" size={15} />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
-            className="h-10 w-10 shrink-0 rounded-full !px-0"
-            aria-label={t('contact.whatsapp')}
-          >
-            <WhatsAppIcon size={17} />
+            {t('productPage.buyNow')}
           </Button>
         </div>
       </div>

@@ -74,6 +74,16 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // GET /products/:id/recommendations — "Complete your setup"
+    const recommendationsMatch = route.match(/^([a-f0-9]{24})\/recommendations$/i);
+    if (recommendationsMatch) {
+      const { getRecommendations } = require('../../backend/dist/services/recommendation.service');
+      const items = await getRecommendations(recommendationsMatch[1]);
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      sendJson(res, 200, { success: true, message: 'Success', data: items });
+      return;
+    }
+
     // GET /products/compare?ids=
     if (route === 'compare') {
       const ids = String(raw.ids || '')

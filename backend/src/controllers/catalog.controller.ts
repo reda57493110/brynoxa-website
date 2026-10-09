@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
+import { getRecommendations } from '../services/recommendation.service';
 import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../services/upload.service';
 import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
@@ -129,5 +130,10 @@ export const compareProducts = asyncHandler(async (req: Request, res: Response) 
     .filter(Boolean)
     .slice(0, 4);
   const items = await catalog.getProductsByIds(ids);
+  sendSuccess(res, items);
+});
+
+export const productRecommendations = asyncHandler(async (req: Request, res: Response) => {
+  const items = await getRecommendations(param(req, 'id'));
   sendSuccess(res, items);
 });

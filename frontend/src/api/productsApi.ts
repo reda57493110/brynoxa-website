@@ -16,6 +16,8 @@ export const productsApi = {
     api.get<ApiResponse<Product[]>>('/products', { params: toParams(filters) }),
 
   getBySlug: (slug: string) => api.get<ApiResponse<Product>>(`/products/${slug}`),
+  recommendations: (id: string) =>
+    api.get<ApiResponse<Product[]>>(`/products/${id}/recommendations`),
 
   compare: (ids: string[]) =>
     api.get<ApiResponse<Product[]>>('/products/compare', {

@@ -61,6 +61,7 @@ router.delete(
 router.get('/products', optionalAuth, catalog.getProducts);
 router.get('/products/compare', catalog.compareProducts);
 router.get('/products/:slug', catalog.getProduct);
+router.get('/products/:id/recommendations', catalog.productRecommendations);
 router.get('/images/:id', catalog.getImage);
 router.get(
   '/admin/products/:id',
