@@ -15,7 +15,6 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ImageGallery } from '@/components/product/ImageGallery'
 import { Price } from '@/components/product/Price'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
-import { SpecTable } from '@/components/product/SpecTable'
 import { StockBadge } from '@/components/product/StockBadge'
 import { CompleteSetup } from '@/components/product/CompleteSetup'
 import { useCartStore } from '@/store/cartStore'
@@ -220,8 +219,8 @@ export function ProductDetail() {
     navigate('/checkout')
   }
 
+  // All specifications, shown once as tiles beside the photos
   const specEntries = Object.entries((p.specs as Record<string, string>) || {})
-  const keySpecs = specEntries.slice(0, 4)
   const outOfStock = p.stock <= 0
 
   const onWishlist = async () => {
@@ -341,9 +340,9 @@ export function ProductDetail() {
               </p>
             ) : null}
 
-            {keySpecs.length ? (
-              <dl className="mt-4 grid grid-cols-2 gap-2">
-                {keySpecs.map(([key, value]) => (
+            {specEntries.length ? (
+              <dl aria-label={t('productPage.specifications')} className="mt-4 grid grid-cols-2 gap-2">
+                {specEntries.map(([key, value]) => (
                   <div
                     key={key}
                     className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2"
@@ -416,7 +415,7 @@ export function ProductDetail() {
 
         <motion.div
           {...fade(0.12)}
-          className="mt-8 grid items-start gap-5 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10"
+          className="mt-8 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8"
         >
           <section aria-labelledby="product-description-heading">
             <h2
@@ -425,20 +424,9 @@ export function ProductDetail() {
             >
               {t('productPage.description')}
             </h2>
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[0.95rem] sm:leading-7">
+            <p className="mt-3 max-w-3xl whitespace-pre-wrap text-sm leading-relaxed text-[var(--fg)]/85 sm:text-[0.95rem] sm:leading-7">
               {p.description}
             </p>
-          </section>
-          <section aria-labelledby="product-specs-heading">
-            <h2
-              id="product-specs-heading"
-              className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
-            >
-              {t('productPage.specifications')}
-            </h2>
-            <div className="mt-3">
-              <SpecTable specs={(p.specs as Record<string, string>) || {}} />
-            </div>
           </section>
         </motion.div>
 

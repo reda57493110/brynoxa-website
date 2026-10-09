@@ -499,7 +499,6 @@ export const ar: Messages = {
     gallery: 'صور المنتج',
     description: 'الوصف',
     specifications: 'المواصفات',
-    noSpecs: 'لا توجد مواصفات.',
   },
   contact: {
     heroKicker: 'اتصل بنا',

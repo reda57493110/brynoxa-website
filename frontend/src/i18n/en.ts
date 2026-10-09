@@ -497,7 +497,6 @@ export const en = {
     gallery: 'Product images',
     description: 'Description',
     specifications: 'Specifications',
-    noSpecs: 'No specifications listed.',
   },
   contact: {
     heroKicker: 'Contact',
