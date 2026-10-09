@@ -414,8 +414,6 @@ export function ProductDetail() {
           </motion.div>
         </div>
 
-        <CompleteSetup productId={p._id} />
-
         <motion.div
           {...fade(0.12)}
           className="mt-8 grid items-start gap-5 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10"
@@ -444,6 +442,7 @@ export function ProductDetail() {
           </section>
         </motion.div>
 
+        <CompleteSetup productId={p._id} />
       </Container>
 
       {/* Mobile sticky buy bar */}
