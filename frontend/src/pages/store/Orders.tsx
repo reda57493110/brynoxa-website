@@ -13,7 +13,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { optimizedImageUrl } from '@/lib/image'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { toast } from '@/store/toastStore'
@@ -59,16 +59,8 @@ export function Orders() {
 
   return (
     <>
-      <PageHero
-        kicker={t('orders.kicker')}
-        title={t('orders.heading')}
-        description={t('orders.listBody')}
-      >
-        <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-          {t('orders.backToAccount')}
-        </Link>
-      </PageHero>
-      <Container className="py-8 sm:py-10">
+      <AccountHeader title={t('orders.heading')} back={{ to: '/account', label: t('orders.backToAccount') }} />
+      <Container className="pt-5 pb-8 sm:pb-10">
         {orders.isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner size="lg" />

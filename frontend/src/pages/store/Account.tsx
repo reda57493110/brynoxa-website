@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { authApi } from '@/api/authApi'
 import { useAuthStore } from '@/store/authStore'
@@ -38,14 +38,11 @@ export function Account() {
 
   return (
     <>
-      <PageHero
-        kicker={t('account.kicker')}
+      <AccountHeader
         title={t('account.heading')}
-        description={
-          user?.name ? t('account.signedIn', { name: user.name }) : t('account.signedInGeneric')
-        }
+        meta={user?.name ? <span className="text-sm text-[var(--fg-muted)]">{user.name}</span> : null}
       />
-      <Container className="py-8 sm:py-10">
+      <Container className="pt-5 pb-8 sm:pb-10">
         <div className="mb-6 flex flex-wrap gap-3">
           <Link
             to="/shop"

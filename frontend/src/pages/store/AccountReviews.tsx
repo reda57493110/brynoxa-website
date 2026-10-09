@@ -5,7 +5,7 @@ import { Container } from '@/components/ui/Container'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { RatingStars } from '@/components/product/RatingStars'
 import { formatDate } from '@/lib/format'
@@ -24,16 +24,8 @@ export function AccountReviews() {
 
   return (
     <>
-      <PageHero
-        kicker={t('account.kicker')}
-        title={t('account.reviewsHeading')}
-        description={t('account.reviewsBody')}
-      >
-        <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-          {t('orders.backToAccount')}
-        </Link>
-      </PageHero>
-      <Container className="py-8 sm:py-10">
+      <AccountHeader title={t('account.reviewsHeading')} back={{ to: '/account', label: t('orders.backToAccount') }} />
+      <Container className="pt-5 pb-8 sm:pb-10">
         {reviews.isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner size="lg" />

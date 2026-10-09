@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { notificationsApi } from '@/api/notificationsApi'
 import { Container } from '@/components/ui/Container'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Spinner } from '@/components/ui/Spinner'
@@ -42,16 +42,11 @@ export function Notifications() {
 
   return (
     <>
-      <PageHero
-        kicker={t('account.kicker')}
+      <AccountHeader
         title={t('notifications.heading')}
-        description={t('notifications.body')}
-      >
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-            {t('orders.backToAccount')}
-          </Link>
-          {notifications.data?.unread ? (
+        back={{ to: '/account', label: t('orders.backToAccount') }}
+        actions={
+          notifications.data?.unread ? (
             <Button
               type="button"
               variant="outline"
@@ -61,11 +56,11 @@ export function Notifications() {
             >
               {t('notifications.markAll')}
             </Button>
-          ) : null}
-        </div>
-      </PageHero>
+          ) : null
+        }
+      />
 
-      <Container className="py-8 sm:py-10">
+      <Container className="pt-5 pb-8 sm:pb-10">
         {notifications.isLoading ? (
           <div className="flex justify-center py-16">
             <Spinner size="lg" />

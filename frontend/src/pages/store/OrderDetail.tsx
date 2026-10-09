@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ordersApi } from '@/api/ordersApi'
@@ -15,7 +15,7 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { optimizedImageUrl } from '@/lib/image'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Modal } from '@/components/ui/Modal'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
@@ -193,28 +193,24 @@ export function OrderDetail() {
 
   return (
     <>
-      <PageHero
-        kicker={t('orders.heroKicker')}
+      <AccountHeader
         title={`#${o.orderNumber}`}
-        description={t('orders.placedPay', { date: formatDateTime(o.createdAt) })}
-      >
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant={statusVariant(o.orderStatus)}>{t(orderStatusKey(o.orderStatus))}</Badge>
-          <Link
-            to="/account/orders"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)] hover:underline"
-          >
-            <SiteIcon name="arrow-left" size={16} />
-            {t('orders.allOrders')}
-          </Link>
-          {canEdit ? (
+        back={{ to: '/account/orders', label: t('orders.backToOrders') }}
+        meta={
+          <>
+            <Badge variant={statusVariant(o.orderStatus)}>{t(orderStatusKey(o.orderStatus))}</Badge>
+            <span className="text-sm text-[var(--fg-muted)]">{formatDateTime(o.createdAt)}</span>
+          </>
+        }
+        actions={
+          canEdit ? (
             <Button variant="danger" size="sm" type="button" onClick={() => setConfirmOpen(true)}>
               {t('orders.cancel')}
             </Button>
-          ) : null}
-        </div>
-      </PageHero>
-      <Container className="py-8 sm:py-10">
+          ) : null
+        }
+      />
+      <Container className="pt-5 pb-8 sm:pb-10">
         {canEdit ? (
           <p className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-sm text-[var(--fg)]">
             {t('orders.editHint')}

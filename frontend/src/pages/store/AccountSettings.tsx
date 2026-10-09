@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/authApi'
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { PageHero } from '@/components/layout/PageHero'
+import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
 import { useToastStore } from '@/store/toastStore'
@@ -109,7 +109,7 @@ export function AccountSettings() {
 
   if (me.isError) {
     return (
-      <Container className="py-8 sm:py-10">
+      <Container className="pt-5 pb-8 sm:pb-10">
         <QueryErrorState
           title={t('account.loadError')}
           description={t('account.loadErrorBody')}
@@ -129,15 +129,7 @@ export function AccountSettings() {
 
   return (
     <>
-      <PageHero
-        kicker={t('account.kicker')}
-        title={t('account.settingsHeading')}
-        description={t('account.settingsBody')}
-      >
-        <Link to="/account" className="text-sm font-medium text-[var(--brand-text)] hover:underline">
-          {t('orders.backToAccount')}
-        </Link>
-      </PageHero>
+      <AccountHeader title={t('account.settingsHeading')} back={{ to: '/account', label: t('orders.backToAccount') }} />
       <Container className="py-8 sm:py-10">
       <form
         className={`${surfaceCard} max-w-lg space-y-4 p-6`}
