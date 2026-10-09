@@ -7,7 +7,6 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Price } from '@/components/product/Price'
-import { RatingStars } from '@/components/product/RatingStars'
 import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
 import { useT } from '@/hooks/useT'
@@ -102,14 +101,6 @@ export function Compare() {
               {list.map((p) => (
                 <td key={p._id} className="p-4">
                   <Price price={p.price} compareAt={p.compareAtPrice} />
-                </td>
-              ))}
-            </tr>
-            <tr className="border-b border-[var(--border)]">
-              <td className="p-4 text-[var(--fg-muted)]">{t('ui.rating')}</td>
-              {list.map((p) => (
-                <td key={p._id} className="p-4">
-                  <RatingStars rating={p.averageRating} count={p.reviewCount} />
                 </td>
               ))}
             </tr>

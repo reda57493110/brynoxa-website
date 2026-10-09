@@ -14,7 +14,6 @@ import type {
   PushCampaign,
   PushOverview,
   PushSendPayload,
-  Review,
   StoreSettings,
   User,
 } from '@/types'
@@ -89,14 +88,6 @@ export const adminApi = {
     }) => api.post<ApiResponse<User>>('/admin/users', payload),
     setRole: (id: string, role: Exclude<User['role'], 'admin'>) =>
       api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }),
-  },
-
-  reviews: {
-    list: (params?: { page?: number; limit?: number }) =>
-      api.get<ApiResponse<Review[]>>('/admin/reviews', { params }),
-    moderate: (id: string, isApproved: boolean) =>
-      api.patch<ApiResponse<Review>>(`/admin/reviews/${id}`, { isApproved }),
-    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/reviews/${id}`),
   },
 
   coupons: {

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Product } from '@/types'
 import { Price } from './Price'
-import { RatingStars } from './RatingStars'
 import { StockBadge } from './StockBadge'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
@@ -227,17 +226,6 @@ export function ProductCard({
         >
           {blurb || '\u00A0'}
         </p>
-        {product.reviewCount > 0 ? (
-          <div className={spotlight ? undefined : 'hidden sm:block'}>
-            <RatingStars
-              rating={product.averageRating}
-              count={product.reviewCount}
-              size={spotlight ? 'md' : 'sm'}
-            />
-          </div>
-        ) : spotlight ? null : (
-          <div className="hidden min-h-[1.25rem] sm:block" aria-hidden />
-        )}
         <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
           <Price
             price={product.price}

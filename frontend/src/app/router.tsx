@@ -43,9 +43,6 @@ const Orders = lazy(() => import('@/pages/store/Orders').then((m) => ({ default:
 const OrderDetail = lazy(() =>
   import('@/pages/store/OrderDetail').then((m) => ({ default: m.OrderDetail }))
 )
-const AccountReviews = lazy(() =>
-  import('@/pages/store/AccountReviews').then((m) => ({ default: m.AccountReviews }))
-)
 const AccountSettings = lazy(() =>
   import('@/pages/store/AccountSettings').then((m) => ({ default: m.AccountSettings }))
 )
@@ -86,9 +83,6 @@ const AdminCustomers = lazy(() =>
 const AdminRoles = lazy(() => import('@/pages/admin/Roles').then((m) => ({ default: m.Roles })))
 const AdminMessages = lazy(() =>
   import('@/pages/admin/Messages').then((m) => ({ default: m.Messages }))
-)
-const AdminReviews = lazy(() =>
-  import('@/pages/admin/Reviews').then((m) => ({ default: m.Reviews }))
 )
 const AdminCoupons = lazy(() =>
   import('@/pages/admin/Coupons').then((m) => ({ default: m.Coupons }))
@@ -157,14 +151,7 @@ export function AppRouter() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="account/reviews"
-          element={
-            <ProtectedRoute>
-              <S><AccountReviews /></S>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="account/reviews" element={<Navigate to="/account" replace />} />
         <Route
           path="account/settings"
           element={
@@ -203,7 +190,7 @@ export function AppRouter() {
         <Route path="customers" element={<S><AdminCustomers /></S>} />
         <Route path="roles" element={<S><AdminRoles /></S>} />
         <Route path="messages" element={<S><AdminMessages /></S>} />
-        <Route path="reviews" element={<S><AdminReviews /></S>} />
+        <Route path="reviews" element={<Navigate to="/admin" replace />} />
         <Route path="coupons" element={<S><AdminCoupons /></S>} />
         <Route path="notifications" element={<S><AdminPushNotifications /></S>} />
         <Route path="security" element={<S><AdminSecurity /></S>} />

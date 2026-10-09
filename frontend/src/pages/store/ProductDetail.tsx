@@ -1,33 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
-import { reviewsApi } from '@/api/reviewsApi'
 import { wishlistApi } from '@/api/wishlistApi'
 import { getErrorMessage } from '@/api/client'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ImageGallery } from '@/components/product/ImageGallery'
 import { Price } from '@/components/product/Price'
-import { RatingStars } from '@/components/product/RatingStars'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { SpecTable } from '@/components/product/SpecTable'
 import { StockBadge } from '@/components/product/StockBadge'
 import { CompleteSetup } from '@/components/product/CompleteSetup'
-import { surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
 import { recordProductView } from '@/lib/push'
 import { useSeo } from '@/hooks/useSeo'
@@ -36,7 +31,7 @@ import { useLocaleStore } from '@/store/localeStore'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { categoryDisplayName } from '@/i18n'
-import type { Brand, Category, Product, Review, User } from '@/types'
+import type { Brand, Category, Product } from '@/types'
 
 function primaryImage(product: Product) {
   return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
@@ -49,11 +44,7 @@ export function ProductDetail() {
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
-  const qc = useQueryClient()
   const [qty, setQty] = useState(1)
-  const [rating, setRating] = useState(5)
-  const [title, setTitle] = useState('')
-  const [comment, setComment] = useState('')
 
   const addItem = useCartStore((s) => s.addItem)
   const isAuth = useAuthStore((s) => s.isAuthenticated())
@@ -127,31 +118,6 @@ export function ProductDetail() {
           },
         }
       : null,
-  })
-
-  const reviews = useQuery({
-    queryKey: ['reviews', product.data?._id],
-    queryFn: async () =>
-      (await reviewsApi.forProduct(product.data!._id, { limit: 20 })).data.data,
-    enabled: Boolean(product.data?._id),
-  })
-
-  const reviewMutation = useMutation({
-    mutationFn: () =>
-      reviewsApi.create({
-        productId: product.data!._id,
-        rating,
-        title,
-        comment,
-      }),
-    onSuccess: () => {
-      toast.success(t('productPage.reviewSubmitted'))
-      setTitle('')
-      setComment('')
-      qc.invalidateQueries({ queryKey: ['reviews', product.data?._id] })
-      qc.invalidateQueries({ queryKey: ['product', slug] })
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const fade = (delay = 0) =>
@@ -301,62 +267,6 @@ export function ProductDetail() {
     },
   }
 
-  const writeReviewPanel = (
-    <>
-      <h3 className="font-display text-base font-semibold text-[var(--fg)]">
-        {t('productPage.writeReview')}
-      </h3>
-      {!isAuth ? (
-        <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-          <Link to="/login" className="font-medium text-[var(--brand-text)]">
-            {t('common.signIn')}
-          </Link>{' '}
-          {t('productPage.signInToReview')}
-        </p>
-      ) : (
-        <form
-          className="mt-3 space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault()
-            reviewMutation.mutate()
-          }}
-        >
-          <label className="flex flex-col gap-1.5 text-sm">
-            <span className="font-medium">{t('productPage.rating')}</span>
-            <select
-              value={rating}
-              onChange={(e) => setRating(Number(e.target.value))}
-              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand"
-            >
-              {[5, 4, 3, 2, 1].map((n) => (
-                <option key={n} value={n}>
-                  {t('productPage.stars', { n })}
-                </option>
-              ))}
-            </select>
-          </label>
-          <Input
-            label={t('ui.title')}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            minLength={3}
-          />
-          <Textarea
-            label={t('ui.comment')}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            required
-            minLength={10}
-          />
-          <Button type="submit" loading={reviewMutation.isPending} className="w-full rounded-full">
-            {t('productPage.submitReview')}
-          </Button>
-        </form>
-      )}
-    </>
-  )
-
   return (
     <>
       <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
@@ -407,11 +317,6 @@ export function ProductDetail() {
             </h1>
 
             <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
-              {p.reviewCount > 0 ? (
-                <a href="#product-reviews-heading" className="hover:opacity-80">
-                  <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
-                </a>
-              ) : null}
               <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
             </div>
 
@@ -539,72 +444,6 @@ export function ProductDetail() {
 
         <CompleteSetup productId={p._id} />
 
-        <motion.section
-          {...fade(0.16)}
-          className="mt-8 border-t border-[var(--border)] pt-6 sm:mt-10 sm:pt-8"
-          aria-labelledby="product-reviews-heading"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2
-                id="product-reviews-heading"
-                className="font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
-              >
-                {t('productPage.reviews')}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--fg-muted)]">
-                {p.reviewCount > 0
-                  ? p.reviewCount === 1
-                    ? t('productPage.reviewCountOne', { count: p.reviewCount })
-                    : t('productPage.reviewCount', { count: p.reviewCount })
-                  : t('productPage.noReviews')}
-              </p>
-            </div>
-            {p.reviewCount > 0 ? (
-              <div className="flex items-center gap-2">
-                <RatingStars rating={p.averageRating} count={p.reviewCount} size="md" />
-              </div>
-            ) : null}
-          </div>
-
-          {reviews.isLoading ? (
-            <PageLoader compact label={t('ui.loading')} className="min-h-0 py-8" />
-          ) : reviews.isError ? (
-            <div className="mt-4">
-              <QueryErrorState
-                title={t('shop.loadError')}
-                description={t('shop.loadErrorBody')}
-                onRetry={() => reviews.refetch()}
-              />
-            </div>
-          ) : reviews.data?.length ? (
-            <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
-              <div className="space-y-3">
-                {reviews.data.map((r: Review) => {
-                  const user = typeof r.user === 'object' ? (r.user as User) : null
-                  return (
-                    <article key={r._id} className={`${surfaceCard} p-4 sm:p-5`}>
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-semibold text-[var(--fg)]">
-                          {user?.name || t('ui.customer')}
-                        </p>
-                        <span className="text-xs text-[var(--fg-muted)]">{formatDate(r.createdAt)}</span>
-                      </div>
-                      <div className="mt-1">
-                        <RatingStars rating={r.rating} />
-                      </div>
-                      <p className="mt-2 font-medium text-[var(--fg)]">{r.title}</p>
-                      <p className="mt-1 text-sm leading-relaxed text-[var(--fg)]/75">{r.comment}</p>
-                    </article>
-                  )
-                })}
-              </div>
-              <div className={`${surfaceCard} h-fit p-4 sm:p-5`}>{writeReviewPanel}</div>
-            </div>
-          ) : (
-            <div className={`${surfaceCard} mt-4 max-w-xl p-4 sm:p-5`}>{writeReviewPanel}</div>
-          )}
-        </motion.section>
       </Container>
 
       {/* Mobile sticky buy bar */}
