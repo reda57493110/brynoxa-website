@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -67,17 +67,21 @@ export function ProductDetail() {
     enabled: Boolean(slug),
   })
 
+  // Track one view per product, not on every background refetch
+  const trackedId = useRef<string | null>(null)
   useEffect(() => {
-    if (!product.data) return
+    const p = product.data
+    if (!p || trackedId.current === p._id) return
+    trackedId.current = p._id
     trackViewItem({
-      item_id: product.data._id,
-      item_name: product.data.name,
-      item_sku: product.data.sku,
-      price: product.data.price,
+      item_id: p._id,
+      item_name: p.name,
+      item_sku: p.sku,
+      price: p.price,
       quantity: 1,
     })
     recordProductView()
-  }, [product.data?._id])
+  }, [product.data])
 
   const productImage = product.data ? primaryImage(product.data) : undefined
   const productDescription =

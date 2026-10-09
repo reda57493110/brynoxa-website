@@ -108,7 +108,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
                 alt={img.alt || `${name} ${i + 1}`}
                 referrerPolicy="no-referrer"
                 decoding="async"
-                className="h-full w-full object-contain p-1 sm:object-cover sm:p-0"
+                className="h-full w-full object-cover"
               />
             </button>
           ))}
