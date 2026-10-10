@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
-import { Section } from '@/components/admin/customers/shared'
+import { SiteIcon } from '@/components/ui/SiteIcon'
+import { cardClass } from '@/components/admin/customers/shared'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { InventoryBucket, InventoryStatusDef, ProductInventoryDetail } from '@/types'
@@ -52,42 +53,57 @@ export function ProductActions({
     ...(serialMode && detail.untrackedUnits > 0 ? [{ id: 'serials' as const, label: 'Register serials' }] : []),
   ]
   const [tab, setTab] = useState<Tab>('move')
+  const [open, setOpen] = useState(false)
   const active = tabs.some((t) => t.id === tab) ? tab : 'move'
 
   return (
-    <Section title="Actions">
-      <div className="mb-4 flex flex-wrap gap-2" role="tablist">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={active === t.id}
-            onClick={() => setTab(t.id)}
-            className={cn(
-              'h-9 rounded-full border px-3 text-sm',
-              active === t.id
-                ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-                : 'border-[var(--border)]'
-            )}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {active === 'move' ? (
-        <MoveForm detail={detail} statuses={statuses} canApprove={canApprove} onDone={onDone} />
-      ) : active === 'adjust' ? (
-        <AdjustForm detail={detail} statuses={statuses} onDone={onDone} />
-      ) : (
-        <SerialsForm detail={detail} onDone={onDone} />
-      )}
-      {!canApprove ? (
-        <p className="mt-3 text-[11px] text-[var(--fg-muted)]">
-          Write-offs, count adjustments and releasing custom statuses need approval rights.
-        </p>
+    <section className={cn(cardClass, 'min-w-0 p-3 sm:p-4')}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 text-start"
+      >
+        <span>
+          <span className="block font-display text-sm font-semibold sm:text-base">Move or adjust units</span>
+          <span className="block text-xs text-[var(--fg-muted)]">Defective, repair, inspection{canApprove ? ', count fixes' : ''}</span>
+        </span>
+        <SiteIcon name="chevron-down" size={16} className={cn('shrink-0 transition', open && 'rotate-180')} />
+      </button>
+      {open ? (
+        <div className="mt-3">
+          <div className="mb-3 flex flex-wrap gap-2" role="tablist">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={active === t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  'h-8 rounded-full border px-3 text-sm',
+                  active === t.id
+                    ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+                    : 'border-[var(--border)]'
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {active === 'move' ? (
+            <MoveForm detail={detail} statuses={statuses} canApprove={canApprove} onDone={onDone} />
+          ) : active === 'adjust' ? (
+            <AdjustForm detail={detail} statuses={statuses} onDone={onDone} />
+          ) : (
+            <SerialsForm detail={detail} onDone={onDone} />
+          )}
+          {!canApprove ? (
+            <p className="mt-3 text-[11px] text-[var(--fg-muted)]">Write-offs and count fixes need an admin.</p>
+          ) : null}
+        </div>
       ) : null}
-    </Section>
+    </section>
   )
 }
 

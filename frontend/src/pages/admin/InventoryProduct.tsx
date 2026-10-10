@@ -13,7 +13,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { InventoryNav } from '@/components/admin/inventory/InventoryNav'
-import { StatCard, cardClass } from '@/components/admin/customers/shared'
+import { cardClass } from '@/components/admin/customers/shared'
 import { ConditionBadge, SellableBar, ValueText } from '@/components/admin/inventory/ProductBadges'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { AddStockDialog } from '@/components/admin/inventory/AddStockDialog'
@@ -27,7 +27,7 @@ import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/cn'
 
 const linkBtn =
-  'inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+  'inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
 
 export function InventoryProduct() {
   const { id = '' } = useParams()
@@ -91,17 +91,18 @@ export function InventoryProduct() {
   const b = d.buckets
   const low = d.lowStock || d.sellable <= 0
 
-  const cards: { label: string; value: number }[] = [
+  // Only statuses that actually hold units
+  const held: { label: string; value: number; tone?: 'danger' }[] = [
     { label: 'Reserved', value: b.reserved },
     { label: 'To inspect', value: b.awaitingInspection },
     { label: 'Returns', value: b.returned },
-    { label: 'Defective', value: b.defective },
+    { label: 'Defective', value: b.defective, tone: 'danger' as const },
     { label: 'In repair', value: b.underRepair },
-    ...Object.entries(d.custom)
-      .filter(([, n]) => n > 0)
-      .map(([cid, n]) => ({ label: statuses.find((s) => s.id === cid)?.name || 'Custom status', value: n })),
-    { label: 'Written off', value: b.writtenOff },
-  ]
+    ...Object.entries(d.custom).map(([cid, n]) => ({
+      label: statuses.find((s) => s.id === cid)?.name || 'Custom status',
+      value: n,
+    })),
+  ].filter((c) => c.value > 0)
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -114,116 +115,127 @@ export function InventoryProduct() {
         >
           <SiteIcon name="arrow-left" size={14} /> Inventory
         </Link>
-        <div className="mt-3 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start">
-          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)] sm:h-20 sm:w-20">
-            {p.image ? (
-              <SafeImage
-                src={optimizedImageUrl(p.image, 240)}
-                alt=""
-                referrerPolicy="no-referrer"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-[var(--fg-muted)]">
-                <SiteIcon name="package" size={22} />
+        <div className="mt-2 flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--bg-muted)] sm:h-14 sm:w-14">
+              {p.image ? (
+                <SafeImage
+                  src={optimizedImageUrl(p.image, 240)}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-[var(--fg-muted)]">
+                  <SiteIcon name="package" size={22} />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate font-display text-base font-semibold tracking-tight sm:text-xl">{p.name}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)]">
+                <ConditionBadge condition={p.condition} />
+                {p.serialTracking ? <Badge variant="muted">Serial</Badge> : null}
+                <span className="truncate">
+                  {p.sku}
+                  {p.location ? ` · ${p.location}` : ''}
+                </span>
               </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-2xl">{p.name}</h1>
-            <p className="mt-0.5 text-sm text-[var(--fg-muted)]">
-              {p.sku}
-              {p.location ? ` · ${p.location}` : ''}
-            </p>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              <ConditionBadge condition={p.condition} />
-              {p.serialTracking ? <Badge variant="muted">Serial tracked</Badge> : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" onClick={() => setAddingStock(true)}>
               <SiteIcon name="plus" size={14} /> Add stock
             </Button>
-            <ActiveToggle product={p} />
+            <ActiveToggle product={p} size="sm" />
             <Link to={`/admin/products/${p._id}/edit`} className={linkBtn}>
-              <SiteIcon name="pencil" size={14} /> Edit product
+              <SiteIcon name="pencil" size={14} /> Edit
             </Link>
-            <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className={linkBtn}>
-              <SiteIcon name="external" size={14} /> Store page
+            <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className={linkBtn} aria-label="View in store">
+              <SiteIcon name="external" size={14} /> <span className="hidden sm:inline">Store</span>
             </a>
             {canDelete ? (
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
+                aria-label="Delete product"
                 className={cn(linkBtn, 'text-[var(--danger)] hover:border-[var(--danger)] hover:text-[var(--danger)]')}
               >
-                <SiteIcon name="trash" size={14} /> Delete
+                <SiteIcon name="trash" size={14} /> <span className="hidden sm:inline">Delete</span>
               </button>
             ) : null}
           </div>
         </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
-        <div className={cn(cardClass, 'min-w-0 p-3 sm:p-4')}>
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <div>
-              <p className="text-xs text-[var(--fg-muted)]">In stock</p>
-              <p className="mt-1 font-display text-lg font-semibold sm:text-xl">{d.physical}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-[var(--fg-muted)]">Sellable</p>
-              <p
+      <section className={cn(cardClass, 'min-w-0 p-3 sm:p-4')}>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <div>
+            <dt className="text-[11px] text-[var(--fg-muted)]">Sellable</dt>
+            <dd
+              className={cn(
+                'font-display text-xl font-semibold tabular-nums',
+                d.sellable <= 0 ? 'text-[var(--danger)]' : low && 'text-[var(--warning)]'
+              )}
+            >
+              {d.sellable}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[11px] text-[var(--fg-muted)]">Total in stock</dt>
+            <dd className="font-display text-xl font-semibold tabular-nums">{d.physical}</dd>
+          </div>
+          <div>
+            <dt className="text-[11px] text-[var(--fg-muted)]">Stock value</dt>
+            <dd className="text-sm font-semibold">
+              <ValueText value={d.value} />
+              {d.unitCost !== null ? (
+                <span className="block text-[11px] font-normal text-[var(--fg-muted)]">{formatCurrency(d.unitCost)} / unit</span>
+              ) : null}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[11px] text-[var(--fg-muted)]">Price</dt>
+            <dd className="text-sm font-semibold">{formatCurrency(p.price)}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-3">
+          <SellableBar sellable={d.sellable} nonSellable={d.nonSellable} />
+        </div>
+
+        {held.length || low || b.writtenOff || (p.serialTracking && d.untrackedUnits > 0) || d.uncostedUnits > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
+            {low ? (
+              <Badge variant={d.sellable <= 0 ? 'danger' : 'warning'}>
+                {d.sellable <= 0 ? 'Out of stock' : 'Low stock'} · alert ≤ {p.lowStockThreshold}
+              </Badge>
+            ) : null}
+            {held.map((c) => (
+              <span
+                key={c.label}
                 className={cn(
-                  'mt-1 font-display text-lg font-semibold sm:text-xl',
-                  d.sellable <= 0 ? 'text-[var(--danger)]' : low && 'text-[var(--warning)]'
+                  'rounded-full border border-[var(--border)] px-2 py-0.5',
+                  c.tone === 'danger' && 'border-[color-mix(in_srgb,var(--danger)_40%,transparent)] text-[var(--danger)]'
                 )}
               >
-                {d.sellable}
-              </p>
-            </div>
+                {c.label} <strong className="tabular-nums">{c.value}</strong>
+              </span>
+            ))}
+            {b.writtenOff ? (
+              <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-[var(--fg-muted)]">
+                Written off <strong className="tabular-nums">{b.writtenOff}</strong>
+              </span>
+            ) : null}
+            {p.serialTracking && d.untrackedUnits > 0 ? (
+              <Badge variant="warning">{d.untrackedUnits} without serial</Badge>
+            ) : null}
+            {d.uncostedUnits > 0 ? <Badge variant="warning">{d.uncostedUnits} without cost</Badge> : null}
           </div>
-          <div className="mt-3">
-            <SellableBar sellable={d.sellable} nonSellable={d.nonSellable} />
-          </div>
-          {low ? (
-            <p className="mt-2 text-xs text-[var(--warning)]">
-              {d.sellable <= 0 ? 'Out of stock' : 'Low stock'} · alert at {p.lowStockThreshold}
-            </p>
-          ) : null}
-        </div>
-        <StatCard
-          label="Stock value"
-          value={<ValueText value={d.value} className={d.value === null ? 'text-sm' : undefined} />}
-          hint={
-            <>
-              {d.unitCost !== null ? `${formatCurrency(d.unitCost)} / unit` : null}
-              {d.uncostedUnits > 0 ? (
-                <span className="block text-[var(--warning)]">No cost · {d.uncostedUnits} units</span>
-              ) : null}
-            </>
-          }
-        />
-        <StatCard
-          label="Defective value"
-          value={<ValueText value={d.defectiveValue} className={d.defectiveValue === null ? 'text-sm' : undefined} />}
-          hint={`${b.defective} units`}
-        />
-      </div>
+        ) : null}
+      </section>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {cards.map((c, i) => (
-          <StatCard key={`${i}-${c.label}`} label={c.label} value={c.value} />
-        ))}
-      </div>
-
-      {p.serialTracking && d.untrackedUnits > 0 ? (
-        <p className="rounded-xl bg-[color-mix(in_srgb,var(--warning)_14%,transparent)] px-3 py-2 text-sm text-[var(--warning)]">
-          {d.untrackedUnits} unit{d.untrackedUnits === 1 ? '' : 's'} without a serial number.
-        </p>
-      ) : null}
-
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:items-start">
         <ProductActions detail={d} statuses={statuses} canApprove={canApprove} onDone={refresh} />
         <ProductListings detail={d} onDone={refresh} />
       </div>
