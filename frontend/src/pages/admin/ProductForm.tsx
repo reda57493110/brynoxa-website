@@ -482,7 +482,7 @@ export function ProductForm() {
             return
           }
           if (!form.category) {
-            toast('Choose a category — add one in Settings if the list is empty', 'error')
+            toast('Choose a category — add one in Settings → Catalog if the list is empty', 'error')
             return
           }
           if (!form.brand.trim()) {
@@ -766,7 +766,7 @@ export function ProductForm() {
             </Link>{' '}
             → product → “Create refurbished/used listing”, so they stay linked to the new model.
             Storage locations are managed in{' '}
-            <Link to="/admin/settings" className="text-[var(--brand-text)] hover:underline">
+            <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
               Settings
             </Link>
             .
@@ -1086,7 +1086,7 @@ export function ProductForm() {
                       ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
                       : 'The big picture at the top of the Shop page. Only one product can be there.'}{' '}
                 You can also change it in{' '}
-                <Link to="/admin/settings" className="text-[var(--brand-text)] hover:underline">
+                <Link to="/admin/settings?tab=storefront" className="text-[var(--brand-text)] hover:underline">
                   Settings
                 </Link>
                 .

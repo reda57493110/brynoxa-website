@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/Input'
 import { formatCurrency } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import type { SavedSegment, SegmentSettings, StoreSettings } from '@/types'
+import { SaveBar, SettingsCard } from './settings/SettingsUi'
+import { useReportDirty } from './settings/dirty'
 
 const DEFAULTS: SegmentSettings = {
   newDays: 30,
@@ -102,7 +104,7 @@ export function CustomerSegmentSettings({ settings }: { settings?: StoreSettings
   const [highProfitMin, setHighProfitMin] = useState('')
   const [saved, setSaved] = useState<SavedSegment[]>([])
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     if (!settings) return
     const s = { ...DEFAULTS, ...settings.customerSegments }
     setNewDays(String(s.newDays))
@@ -111,6 +113,7 @@ export function CustomerSegmentSettings({ settings }: { settings?: StoreSettings
     setHighProfitMin(String(s.highProfitMin))
     setSaved(s.saved ?? [])
   }, [settings])
+  useEffect(reset, [reset])
 
   const save = useMutation({
     mutationFn: () =>
@@ -141,114 +144,107 @@ export function CustomerSegmentSettings({ settings }: { settings?: StoreSettings
   const invalid = Object.values(errors).some(Boolean)
   const savedCount = settings?.customerSegments?.saved?.length ?? 0
 
+  const base = { ...DEFAULTS, ...settings?.customerSegments }
+  const dirty =
+    Boolean(settings) &&
+    (newDays !== String(base.newDays) ||
+      inactiveDays !== String(base.inactiveDays) ||
+      highSpendMin !== String(base.highSpendMin) ||
+      highProfitMin !== String(base.highProfitMin) ||
+      saved.length !== savedCount)
+  useReportDirty('segments', dirty)
+
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="font-display text-lg font-semibold">Customer segments</h2>
-        <p className="mt-1 text-sm text-[var(--fg-muted)]">
-          The rules behind the segment filters in Admin → Customers. Net sales exclude refunds and
-          discounts; gross profit uses the cost price recorded on each order.
-        </p>
+    <SettingsCard
+      title="Customer segments"
+      description="Rules behind the segment filters in Customers."
+      footer={
+        <SaveBar
+          dirty={dirty}
+          saving={save.isPending}
+          invalid={invalid}
+          error={invalid ? 'Fix the highlighted fields' : undefined}
+          onReset={reset}
+          onSave={() => save.mutate()}
+        />
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="New = registered within (days)"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={3650}
+          step={1}
+          value={newDays}
+          onChange={(e) => setNewDays(e.target.value)}
+          error={errors.newDays}
+        />
+        <Input
+          label="Inactive after (days without order)"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={3650}
+          step={1}
+          value={inactiveDays}
+          onChange={(e) => setInactiveDays(e.target.value)}
+          error={errors.inactiveDays}
+        />
+        <Input
+          label="High-spending from (DH net sales)"
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="any"
+          value={highSpendMin}
+          onChange={(e) => setHighSpendMin(e.target.value)}
+          error={errors.highSpendMin}
+        />
+        <Input
+          label="High-profit from (DH gross profit)"
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="any"
+          value={highProfitMin}
+          onChange={(e) => setHighProfitMin(e.target.value)}
+          error={errors.highProfitMin}
+        />
       </div>
 
-      <form
-        className="space-y-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-6"
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!invalid) save.mutate()
-        }}
-      >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Input
-            label="New customer = registered within (days)"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={3650}
-            step={1}
-            value={newDays}
-            onChange={(e) => setNewDays(e.target.value)}
-            error={errors.newDays}
-          />
-          <Input
-            label="Inactive after (days without an order)"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={3650}
-            step={1}
-            value={inactiveDays}
-            onChange={(e) => setInactiveDays(e.target.value)}
-            error={errors.inactiveDays}
-          />
-          <Input
-            label="High-spending from (DH net sales)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="any"
-            value={highSpendMin}
-            onChange={(e) => setHighSpendMin(e.target.value)}
-            error={errors.highSpendMin}
-          />
-          <Input
-            label="High-profit from (DH gross profit)"
-            type="number"
-            inputMode="decimal"
-            min={0}
-            step="any"
-            value={highProfitMin}
-            onChange={(e) => setHighProfitMin(e.target.value)}
-            error={errors.highProfitMin}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Saved segments</h3>
-          {saved.length === 0 ? (
-            <p className="text-xs text-[var(--fg-muted)]">
-              {savedCount > 0
-                ? 'All saved segments removed — save to confirm.'
-                : 'None yet. Filter the customer list in Admin → Customers and save it as a segment.'}
-            </p>
-          ) : (
-            <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
-              {saved.map((seg, i) => {
-                const parts = describeFilters(seg.filters ?? {})
-                return (
-                  <li
-                    key={seg.id || `${seg.name}-${i}`}
-                    className="flex min-w-0 items-start justify-between gap-3 px-3 py-2.5"
+      <div className="space-y-2 border-t border-[var(--border)] pt-4">
+        <p className="text-sm font-medium">Saved segments</p>
+        {saved.length === 0 ? (
+          <p className="text-xs text-[var(--fg-muted)]">
+            {savedCount > 0 ? 'All removed — save to confirm.' : 'None yet. Save a filtered list from Customers.'}
+          </p>
+        ) : (
+          <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
+            {saved.map((seg, i) => {
+              const parts = describeFilters(seg.filters ?? {})
+              return (
+                <li key={seg.id || `${seg.name}-${i}`} className="flex min-w-0 items-start justify-between gap-3 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-medium">{seg.name}</p>
+                    <p className="break-words text-xs text-[var(--fg-muted)]">{parts.length ? parts.join(' · ') : 'All customers'}</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => setSaved((prev) => prev.filter((_, j) => j !== i))}
                   >
-                    <div className="min-w-0">
-                      <p className="break-words text-sm font-medium">{seg.name}</p>
-                      <p className="break-words text-xs text-[var(--fg-muted)]">
-                        {parts.length ? parts.join(' · ') : 'No filters (all customers)'}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0"
-                      onClick={() => setSaved((prev) => prev.filter((_, j) => j !== i))}
-                    >
-                      Delete
-                    </Button>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-          {saved.length !== savedCount ? (
-            <p className="text-xs text-[var(--warning)]">Unsaved change — click Save to apply.</p>
-          ) : null}
-        </div>
-
-        <Button type="submit" loading={save.isPending} disabled={invalid}>
-          Save segment settings
-        </Button>
-      </form>
-    </section>
+                    Delete
+                  </Button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </SettingsCard>
   )
 }

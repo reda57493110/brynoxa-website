@@ -1,22 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
-import { Button } from '@/components/ui/Button'
 import { Textarea } from '@/components/ui/Textarea'
 import { useToastStore } from '@/store/toastStore'
 import type { EmailEvent, EmailMessageEvent, StoreSettings } from '@/types'
+import { SaveBar, SettingsCard, Switch } from './settings/SettingsUi'
+import { useReportDirty } from './settings/dirty'
 
 const EMAILS: { key: EmailEvent; label: string; when: string; customer: boolean }[] = [
-  { key: 'orderPlaced', label: 'Order received', when: 'Right after a customer places an order (with deposit details when one is needed).', customer: true },
-  { key: 'orderConfirmed', label: 'Order confirmed', when: 'When you change the order status to Confirmed.', customer: true },
-  { key: 'orderShipped', label: 'Order shipped', when: 'When you change the status to Shipped — tells the customer how much cash to prepare.', customer: true },
-  { key: 'orderDelivered', label: 'Order delivered & paid', when: 'When you mark the order Delivered — confirms the payment and starts the warranty.', customer: true },
-  { key: 'orderCancelled', label: 'Order cancelled', when: 'When an order is cancelled by you or the customer (mentions a deposit refund if one was paid).', customer: true },
-  { key: 'depositRequested', label: 'Deposit needed', when: 'When you add or change a deposit on a pending order.', customer: true },
-  { key: 'depositReceived', label: 'Deposit received', when: 'When you mark a deposit as received — payment confirmation with the balance due.', customer: true },
-  { key: 'staffNewOrder', label: 'New order alert (staff)', when: 'Sent to the store email (ADMIN_EMAIL) for every new order.', customer: false },
-  { key: 'securityAlerts', label: 'Account security alerts', when: 'Password changed or reset, two-step sign-in turned on or off.', customer: false },
+  { key: 'orderPlaced', label: 'Order received', when: 'After checkout, with deposit details if needed.', customer: true },
+  { key: 'orderConfirmed', label: 'Order confirmed', when: 'Status set to Confirmed.', customer: true },
+  { key: 'orderShipped', label: 'Order shipped', when: 'Status set to Shipped, with the cash to prepare.', customer: true },
+  { key: 'orderDelivered', label: 'Delivered & paid', when: 'Status set to Delivered; starts the warranty.', customer: true },
+  { key: 'orderCancelled', label: 'Order cancelled', when: 'Cancelled by you or the customer.', customer: true },
+  { key: 'depositRequested', label: 'Deposit needed', when: 'A deposit is added or changed on a pending order.', customer: true },
+  { key: 'depositReceived', label: 'Deposit received', when: 'You mark a deposit as received.', customer: true },
+  { key: 'staffNewOrder', label: 'New order alert', when: 'Sent to the store email (ADMIN_EMAIL).', customer: false },
+  { key: 'securityAlerts', label: 'Security alerts', when: 'Password or two-step sign-in changes.', customer: false },
 ]
 
 const isMessageEvent = (key: EmailEvent): key is EmailMessageEvent =>
@@ -30,11 +31,12 @@ export function EmailNotificationsSettings({ settings }: { settings?: StoreSetti
   const [messages, setMessages] = useState<Partial<Record<EmailMessageEvent, string>>>({})
   const [open, setOpen] = useState<EmailMessageEvent | null>(null)
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     if (!settings) return
     setEnabled(settings.emailNotifications ?? {})
     setMessages(settings.emailMessages ?? {})
   }, [settings])
+  useEffect(reset, [reset])
 
   const save = useMutation({
     mutationFn: () =>
@@ -58,82 +60,69 @@ export function EmailNotificationsSettings({ settings }: { settings?: StoreSetti
 
   const savedEnabled = (key: EmailEvent) => settings?.emailNotifications?.[key] !== false
 
-  return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="font-display text-lg font-semibold">Email notifications</h2>
-        <p className="mt-1 text-sm text-[var(--fg-muted)]">
-          Sent automatically when orders and payments change. Verification and password-reset emails are always sent.
-          “Send test” emails a sample with a made-up order to your own address.
-        </p>
-      </div>
+  const dirty =
+    Boolean(settings) &&
+    (EMAILS.some(({ key }) => (enabled[key] !== false) !== savedEnabled(key)) ||
+      EMAILS.some(({ key }) => isMessageEvent(key) && (messages[key] ?? '').trim() !== (settings?.emailMessages?.[key] ?? '').trim()))
+  useReportDirty('emails', dirty)
 
-      <div className="divide-y divide-[var(--border)] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
-        {EMAILS.map(({ key, label, when, customer }) => {
-          const on = enabled[key] !== false
-          const messageKey = isMessageEvent(key) ? key : null
-          return (
-            <div key={key} className="p-4">
-              <div className="flex flex-wrap items-start gap-3">
-                <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="mt-1"
-                    checked={on}
-                    onChange={(e) => setEnabled({ ...enabled, [key]: e.target.checked })}
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-medium">
-                      {label}
-                      {!customer ? <span className="ms-2 text-xs font-normal text-[var(--fg-muted)]">internal</span> : null}
-                    </span>
-                    <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">{when}</span>
-                  </span>
-                </label>
-                {messageKey ? (
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setOpen(open === messageKey ? null : messageKey)}
-                    >
-                      {messages[messageKey]?.trim() ? 'Edit message' : 'Add message'}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={!savedEnabled(key)}
-                      title={savedEnabled(key) ? undefined : 'Turn it on and save first'}
-                      loading={test.isPending && test.variables === messageKey}
-                      onClick={() => test.mutate(messageKey)}
-                    >
-                      Send test
-                    </Button>
-                  </div>
-                ) : null}
+  const group = (customer: boolean) => (
+    <ul className="divide-y divide-[var(--border)]">
+      {EMAILS.filter((e) => e.customer === customer).map(({ key, label, when }) => {
+        const messageKey = isMessageEvent(key) ? key : null
+        return (
+          <li key={key} className="py-3 first:pt-0 last:pb-0">
+            <Switch checked={enabled[key] !== false} onChange={(v) => setEnabled({ ...enabled, [key]: v })} label={label} hint={when} />
+            {messageKey ? (
+              <div className="mt-1.5 flex flex-wrap gap-3 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setOpen(open === messageKey ? null : messageKey)}
+                  className="font-medium text-[var(--brand-text)] hover:underline"
+                >
+                  {messages[messageKey]?.trim() ? 'Edit extra message' : 'Add extra message'}
+                </button>
+                <button
+                  type="button"
+                  disabled={!savedEnabled(key) || test.isPending}
+                  title={savedEnabled(key) ? 'Emails a sample to you' : 'Turn it on and save first'}
+                  onClick={() => test.mutate(messageKey)}
+                  className="font-medium text-[var(--fg-muted)] hover:text-[var(--fg)] disabled:opacity-40"
+                >
+                  {test.isPending && test.variables === messageKey ? 'Sending…' : 'Send test'}
+                </button>
               </div>
-              {messageKey && open === messageKey ? (
-                <div className="mt-3">
-                  <Textarea
-                    label="Extra message (optional)"
-                    value={messages[messageKey] ?? ''}
-                    onChange={(e) => setMessages({ ...messages, [messageKey]: e.target.value })}
-                    rows={3}
-                    maxLength={1000}
-                    placeholder="Shown in a “A note from Brynoxa” box in this email."
-                  />
-                </div>
-              ) : null}
-            </div>
-          )
-        })}
-      </div>
+            ) : null}
+            {messageKey && open === messageKey ? (
+              <div className="mt-2">
+                <Textarea
+                  aria-label={`Extra message for ${label}`}
+                  value={messages[messageKey] ?? ''}
+                  onChange={(e) => setMessages({ ...messages, [messageKey]: e.target.value })}
+                  rows={3}
+                  maxLength={1000}
+                  placeholder="Shown in a “A note from Brynoxa” box in this email."
+                />
+              </div>
+            ) : null}
+          </li>
+        )
+      })}
+    </ul>
+  )
 
-      <Button type="button" onClick={() => save.mutate()} loading={save.isPending}>
-        Save email settings
-      </Button>
-    </section>
+  return (
+    <SettingsCard
+      title="Automatic emails"
+      description="Verification and password-reset emails are always sent."
+      footer={<SaveBar dirty={dirty} saving={save.isPending} onReset={reset} onSave={() => save.mutate()} />}
+    >
+      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">To customers</p>
+      {group(true)}
+      <p className="border-t border-[var(--border)] pt-4 text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+        To the store
+      </p>
+      {group(false)}
+    </SettingsCard>
   )
 }

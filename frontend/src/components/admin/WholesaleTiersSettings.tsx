@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { toast } from '@/store/toastStore'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { StoreSettings, WholesaleTier } from '@/types'
+import { SaveBar, SettingsCard } from './settings/SettingsUi'
+import { useReportDirty } from './settings/dirty'
 
 const MAX_TIERS = 10
 
@@ -53,9 +56,10 @@ export function WholesaleTiersSettings({ settings }: { settings?: StoreSettings 
   const [rows, setRows] = useState<TierRow[]>([])
   const [confirmRemove, setConfirmRemove] = useState<TierRow | null>(null)
 
-  useEffect(() => {
+  const reset = useCallback(() => {
     if (settings) setRows(toRows(settings.wholesaleTiers))
   }, [settings])
+  useEffect(reset, [reset])
 
   const savedIds = new Set((settings?.wholesaleTiers ?? []).map((t) => t.id))
 
@@ -86,101 +90,77 @@ export function WholesaleTiersSettings({ settings }: { settings?: StoreSettings 
   const duplicate = ids.some((id, i) => id && ids.indexOf(id) !== i)
   const invalid = errors.some(Boolean) || duplicate
 
+  const dirty =
+    Boolean(settings) &&
+    JSON.stringify(rows.map((r) => [r.id, r.name.trim(), Number(r.discountPercent)])) !==
+      JSON.stringify((settings?.wholesaleTiers ?? []).map((t) => [t.id, t.name, t.discountPercent]))
+  useReportDirty('wholesale', dirty)
+
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="font-display text-lg font-semibold">Wholesale pricing</h2>
-        <div className="mt-1 space-y-1 text-sm text-[var(--fg-muted)]">
-          <p>
-            Approved wholesale / business customers get their tier's % off the catalog price
-            automatically at checkout. You assign a tier when you approve a customer in Admin →
-            Customers.
-          </p>
-          <p>
-            Changing a tier's % only affects future orders — past orders keep the price they were
-            charged.
-          </p>
-        </div>
-      </div>
+    <SettingsCard
+      title="Wholesale price tiers"
+      description="% off the catalog price for approved business customers. Assign tiers in Customers; past orders keep their prices."
+      footer={
+        <SaveBar
+          dirty={dirty}
+          saving={save.isPending}
+          invalid={invalid}
+          error={duplicate ? 'Two tiers have the same name' : errors.some(Boolean) ? 'Fix the highlighted tiers' : undefined}
+          onReset={reset}
+          onSave={() => save.mutate()}
+        />
+      }
+    >
+      {rows.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No tiers yet, e.g. “Reseller” at 10%.</p> : null}
 
-      <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-6">
-        {rows.length === 0 ? (
-          <p className="text-sm text-[var(--fg-muted)]">
-            No tiers yet. Add one (e.g. “Reseller” at 10%) to offer business prices.
-          </p>
-        ) : null}
-
-        {rows.map((row, i) => (
-          <div
-            key={row.key}
-            className="grid gap-3 border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[1fr_9rem_auto] sm:items-start"
-          >
-            <Input
-              label="Tier name"
-              value={row.name}
-              maxLength={40}
-              placeholder="e.g. Reseller"
-              onChange={(e) => update(row.key, { name: e.target.value })}
-              error={!row.name.trim() ? errors[i] : undefined}
-            />
-            <Input
-              label="Discount (%)"
-              type="number"
-              inputMode="decimal"
-              min={0}
-              max={90}
-              step={0.5}
-              value={row.discountPercent}
-              onChange={(e) => update(row.key, { discountPercent: e.target.value })}
-              error={row.name.trim() ? errors[i] : undefined}
-            />
-            <div className="flex items-center justify-between gap-2 sm:pt-7">
-              <span className="truncate text-xs text-[var(--fg-muted)] sm:hidden">
-                {row.id ? `ID: ${row.id}` : 'New tier'}
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => (savedIds.has(row.id) ? setConfirmRemove(row) : removeRow(row.key))}
-              >
-                Remove
-              </Button>
-            </div>
-          </div>
-        ))}
-
-        {duplicate ? (
-          <p className="text-xs text-[var(--danger)]">Two tiers have the same name — make each name unique.</p>
-        ) : null}
-
-        <div className="flex flex-wrap gap-2 pt-1">
-          <Button
+      {rows.map((row, i) => (
+        <div key={row.key} className="grid max-w-xl grid-cols-[minmax(0,1fr)_7rem_auto] items-start gap-2">
+          <Input
+            label={i === 0 ? 'Tier name' : undefined}
+            aria-label="Tier name"
+            value={row.name}
+            maxLength={40}
+            placeholder="e.g. Reseller"
+            onChange={(e) => update(row.key, { name: e.target.value })}
+            error={!row.name.trim() ? errors[i] : undefined}
+          />
+          <Input
+            label={i === 0 ? 'Discount %' : undefined}
+            aria-label="Discount percent"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={90}
+            step={0.5}
+            value={row.discountPercent}
+            onChange={(e) => update(row.key, { discountPercent: e.target.value })}
+            error={row.name.trim() ? errors[i] : undefined}
+          />
+          <button
             type="button"
-            variant="outline"
-            disabled={rows.length >= MAX_TIERS}
-            title={rows.length >= MAX_TIERS ? `Up to ${MAX_TIERS} tiers` : undefined}
-            onClick={() =>
-              setRows((prev) => [...prev, { key: nextKey(), id: '', name: '', discountPercent: '10' }])
-            }
+            onClick={() => (savedIds.has(row.id) ? setConfirmRemove(row) : removeRow(row.key))}
+            className={`${i === 0 ? 'mt-7' : 'mt-1'} inline-flex h-9 w-9 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]`}
+            aria-label={`Remove ${row.name || 'tier'}`}
           >
-            Add tier
-          </Button>
-          <Button
-            type="button"
-            onClick={() => save.mutate()}
-            loading={save.isPending}
-            disabled={invalid}
-          >
-            Save wholesale tiers
-          </Button>
+            <SiteIcon name="trash" size={14} />
+          </button>
         </div>
-      </div>
+      ))}
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={rows.length >= MAX_TIERS}
+        onClick={() => setRows((prev) => [...prev, { key: nextKey(), id: '', name: '', discountPercent: '10' }])}
+      >
+        <SiteIcon name="plus" size={14} /> Add tier
+      </Button>
 
       <ConfirmDialog
         open={Boolean(confirmRemove)}
         title={`Remove “${confirmRemove?.name || 'tier'}”?`}
-        description="Customers may already be assigned to this tier. Once you save, they get retail prices until you assign them another tier in Admin → Customers. Past orders are not changed."
+        description="Customers on this tier get retail prices after you save, until you assign another tier. Past orders are not changed."
         confirmLabel="Remove"
         onClose={() => setConfirmRemove(null)}
         onConfirm={() => {
@@ -188,6 +168,6 @@ export function WholesaleTiersSettings({ settings }: { settings?: StoreSettings 
           setConfirmRemove(null)
         }}
       />
-    </section>
+    </SettingsCard>
   )
 }
