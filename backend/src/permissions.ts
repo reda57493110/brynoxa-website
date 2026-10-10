@@ -18,7 +18,9 @@ export type Permission =
   | 'reviews'
   | 'coupons'
   | 'push'
-  | 'settings';
+  | 'settings'
+  /** Cost, profit and margin figures (owner/admin by default). */
+  | 'reports';
 
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   admin: ['*'],

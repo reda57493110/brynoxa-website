@@ -6,6 +6,7 @@ import { ordersApi } from '@/api/ordersApi'
 import { couponsApi } from '@/api/couponsApi'
 import { productsApi } from '@/api/productsApi'
 import { settingsApi } from '@/api/settingsApi'
+import { wholesaleApi } from '@/api/wholesaleApi'
 import { getErrorMessage } from '@/api/client'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
@@ -24,6 +25,7 @@ import { linkPushToOrder } from '@/lib/push'
 import { formatCurrency } from '@/lib/format'
 import { resolveShippingFee } from '@/lib/shipping'
 import { orderDeposit } from '@/lib/deposit'
+import { wholesaleUnitPrice } from '@/lib/wholesale'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -37,7 +39,7 @@ export function Checkout() {
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
   const clear = useCartStore((s) => s.clear)
-  const subtotal = useCartStore((s) => s.subtotal())
+  const cartSubtotal = useCartStore((s) => s.subtotal())
   const user = useAuthStore((s) => s.user)
   const setAuth = useAuthStore((s) => s.setAuth)
   const isAuth = Boolean(user)
@@ -54,9 +56,9 @@ export function Checkout() {
         price: i.price,
         quantity: i.qty,
       })),
-      subtotal
+      cartSubtotal
     )
-  }, [items, subtotal])
+  }, [items, cartSubtotal])
 
   const emptyAddress: Address = {
     label: t('account.homeLabel'),
@@ -114,15 +116,6 @@ export function Checkout() {
     queryFn: async () => (await settingsApi.get()).data.data,
   })
 
-  const taxRate = settings.data?.taxRate ?? 0
-  const shipping = resolveShippingFee(settings.data, address.city, subtotal)
-  const taxable = Math.max(0, subtotal - discount)
-  const tax = (taxable * taxRate) / 100
-  const total = taxable + shipping + tax
-  const cityRateOptions = settings.data?.shippingByCity ?? []
-  const freeShippingMin = settings.data?.freeShippingMin ?? 0
-  const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
-
   // Live product data: stock check on submit, and deposit rules shown before ordering
   const productIds = items.map((item) => item.productId)
   const currentProducts = useQuery({
@@ -137,14 +130,78 @@ export function Checkout() {
       ).flatMap((response) => response.data.data),
     enabled: productIds.length > 0,
   })
+
+  // Approved wholesale customers are charged their tier price by the server; mirror it here.
+  // If the request fails we show retail totals (the server stays authoritative).
+  const wholesalePricing = useQuery({
+    queryKey: ['wholesale-pricing', user?._id],
+    queryFn: async () => (await wholesaleApi.pricing()).data.data,
+    enabled: isAuth,
+    retry: false,
+  })
+  const wholesaleTerms =
+    isAuth && !wholesalePricing.isError ? (wholesalePricing.data?.terms ?? null) : null
+  const chargedLines = (products: Product[]) =>
+    items.map((item) => {
+      const product = products.find((p) => p._id === item.productId)
+      const list = product?.price ?? item.price
+      const charged = wholesaleTerms
+        ? wholesaleUnitPrice(list, wholesaleTerms.discountPercent)
+        : list
+      return { item, product, list, charged }
+    })
+  const wholesaleLines = wholesaleTerms ? chargedLines(currentProducts.data ?? []) : []
+  const sumLines = (pick: (line: (typeof wholesaleLines)[number]) => number) =>
+    Math.round(wholesaleLines.reduce((acc, line) => acc + pick(line) * line.item.qty, 0) * 100) /
+    100
+  const listSubtotal = wholesaleTerms ? sumLines((l) => l.list) : cartSubtotal
+  const wholesaleDiscount = wholesaleTerms ? sumLines((l) => l.list - l.charged) : 0
+  const subtotal = wholesaleTerms ? sumLines((l) => l.charged) : cartSubtotal
+
+  // A coupon validated against another subtotal is stale once wholesale prices change it
+  const wholesaleSubtotalKey = wholesaleTerms ? subtotal : null
+  useEffect(() => {
+    if (wholesaleSubtotalKey === null) return
+    setDiscount(0)
+    setAppliedCoupon('')
+  }, [wholesaleSubtotalKey])
+
+  const taxRate = settings.data?.taxRate ?? 0
+  const shipping = resolveShippingFee(settings.data, address.city, subtotal)
+  const taxable = Math.max(0, subtotal - discount)
+  const tax = (taxable * taxRate) / 100
+  const total = taxable + shipping + tax
+  const cityRateOptions = settings.data?.shippingByCity ?? []
+  const freeShippingMin = settings.data?.freeShippingMin ?? 0
+  const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
+
   const depositFor = (products: Product[]) =>
     orderDeposit(
-      items.map((item) => {
-        const product = products.find((p) => p._id === item.productId)
-        return { rule: product?.deposit, price: product?.price ?? item.price, qty: item.qty }
-      }),
+      chargedLines(products).map(({ item, product, charged }) => ({
+        rule: product?.deposit,
+        price: charged,
+        qty: item.qty,
+      })),
       total
     )
+  const wholesaleRow =
+    wholesaleTerms && wholesaleDiscount > 0 ? (
+      <div className="flex justify-between gap-3">
+        <span className="text-[var(--fg-muted)]">
+          {t('wholesale.checkoutRow', {
+            tier: wholesaleTerms.tierName,
+            percent: wholesaleTerms.discountPercent,
+          })}
+        </span>
+        <span className="shrink-0 text-[var(--success)]">-{formatCurrency(wholesaleDiscount)}</span>
+      </div>
+    ) : null
+  const wholesaleBadge = wholesaleTerms ? (
+    <p className="inline-flex items-center gap-1.5 rounded-full border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-2.5 py-1 text-xs font-medium text-[var(--brand-text)]">
+      <SiteIcon name="package-check" size={12} />
+      {t('wholesale.checkoutBadge')}
+    </p>
+  ) : null
   const deposit = depositFor(currentProducts.data ?? [])
   const depositRows =
     deposit > 0 ? (
@@ -531,21 +588,28 @@ export function Checkout() {
             )}
           >
             <h2 className="font-display text-lg font-semibold">{t('checkout.orderSummary')}</h2>
+            {wholesaleBadge ? <div className="mt-2">{wholesaleBadge}</div> : null}
             <ul className="mt-4 space-y-2 text-sm">
               {items.map((i) => (
                 <li key={i.productId} className="flex justify-between gap-3">
                   <span className="line-clamp-1 text-[var(--fg-muted)]">
                     {i.name} × {i.qty}
                   </span>
-                  <span className="shrink-0">{formatCurrency(i.price * i.qty)}</span>
+                  <span className="shrink-0">
+                    {formatCurrency(
+                      (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ??
+                        i.price) * i.qty
+                    )}
+                  </span>
                 </li>
               ))}
             </ul>
             <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
-                <span>{formatCurrency(subtotal)}</span>
+                <span>{formatCurrency(listSubtotal)}</span>
               </div>
+              {wholesaleRow}
               {discount > 0 ? (
                 <div className="flex justify-between">
                   <span className="text-[var(--fg-muted)]">{t('checkout.discount')}</span>
@@ -597,10 +661,12 @@ export function Checkout() {
         </form>
 
         <div className={cn(surfaceCard, 'mt-5 p-4 sm:hidden')}>
+          {wholesaleBadge ? <div className="mb-3">{wholesaleBadge}</div> : null}
           <div className="flex justify-between text-sm">
             <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
-            <span>{formatCurrency(subtotal)}</span>
+            <span>{formatCurrency(listSubtotal)}</span>
           </div>
+          {wholesaleRow ? <div className="mt-2 text-sm">{wholesaleRow}</div> : null}
           {discount > 0 ? (
             <div className="mt-2 flex justify-between text-sm">
               <span className="text-[var(--fg-muted)]">{t('checkout.discount')}</span>

@@ -15,8 +15,22 @@ export interface IOrderItem {
   name: string;
   image?: string;
   sku: string;
+  /** Price actually charged per unit (after any wholesale discount). */
   price: number;
   qty: number;
+  /** Catalog price per unit at order time; differs from price on wholesale orders. */
+  listPrice?: number;
+  /** Product cost per unit at order time; missing on orders placed before costs were recorded. */
+  unitCost?: number;
+}
+
+/** A refund recorded by staff (money given back to the customer). */
+export interface IOrderRefund {
+  amount: number;
+  reason: string;
+  itemsReturned: boolean;
+  at: Date;
+  by?: Types.ObjectId;
 }
 
 /**
@@ -47,7 +61,13 @@ export interface IOrder extends Document {
     shipping: number;
     tax: number;
     total: number;
+    /** Wholesale tier discount included in the item prices (list − charged). */
+    wholesaleDiscount?: number;
   };
+  /** Sales channel when the order was placed; never changes afterwards. */
+  channel: 'retail' | 'wholesale';
+  wholesaleTier?: { id: string; name: string; discountPercent: number };
+  refunds: IOrderRefund[];
   coupon?: {
     code: string;
     couponId?: Types.ObjectId;
@@ -73,6 +93,9 @@ const orderItemSchema = new Schema<IOrderItem>(
     sku: { type: String, required: true },
     price: { type: Number, required: true },
     qty: { type: Number, required: true, min: 1 },
+    listPrice: { type: Number },
+    // Staff-only: queries that need it use .select('+items.unitCost')
+    unitCost: { type: Number, select: false },
   },
   { _id: false }
 );
@@ -112,6 +135,27 @@ const orderSchema = new Schema<IOrder>(
       shipping: { type: Number, default: 0 },
       tax: { type: Number, default: 0 },
       total: { type: Number, required: true },
+      wholesaleDiscount: { type: Number, default: 0 },
+    },
+    channel: { type: String, enum: ['retail', 'wholesale'], default: 'retail' },
+    wholesaleTier: {
+      type: new Schema({ id: String, name: String, discountPercent: Number }, { _id: false }),
+      default: undefined,
+    },
+    refunds: {
+      type: [
+        new Schema(
+          {
+            amount: { type: Number, required: true, min: 0.01 },
+            reason: { type: String, required: true, maxlength: 300 },
+            itemsReturned: { type: Boolean, default: false },
+            at: { type: Date, default: Date.now },
+            by: { type: Schema.Types.ObjectId, ref: 'User' },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
     },
     coupon: {
       code: { type: String },

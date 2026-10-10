@@ -205,29 +205,6 @@ async function buildDashboardStats() {
   };
 }
 
-export async function listCustomers(page = 1, limit = 20, q?: string) {
-  const filter: Record<string, unknown> = { role: 'customer' };
-  if (q?.trim()) {
-    const rx = new RegExp(escapeRegex(q.trim()), 'i');
-    filter.$or = [{ name: rx }, { email: rx }, { phone: rx }];
-  }
-  const [items, total] = await Promise.all([
-    User.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
-    User.countDocuments(filter),
-  ]);
-  return { items, total, page, limit };
-}
-
-export async function setCustomerActive(id: string, isActive: boolean) {
-  const user = await User.findOneAndUpdate(
-    { _id: id, role: 'customer' },
-    { isActive },
-    { new: true }
-  );
-  if (!user) throw new ApiError(404, 'Customer not found');
-  return user;
-}
-
 export async function deleteCustomer(id: string) {
   const user = await User.findOne({ _id: id, role: 'customer' });
   if (!user) throw new ApiError(404, 'Customer not found');

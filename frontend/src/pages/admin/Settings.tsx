@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { settingsApi } from '@/api/settingsApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -13,6 +12,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
 import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
+import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
+import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
 import { useToastStore } from '@/store/toastStore'
 
 export function Settings() {
@@ -20,8 +21,8 @@ export function Settings() {
   const toast = useToastStore((s) => s.push)
 
   const settings = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => (await settingsApi.get()).data.data,
+    queryKey: ['admin-settings'],
+    queryFn: async () => (await adminApi.settings.get()).data.data,
   })
 
   const categories = useQuery({
@@ -43,6 +44,7 @@ export function Settings() {
   const save = useMutation({
     mutationFn: () => adminApi.settings.update({ storeName, depositInstructions }),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-settings'] })
       qc.invalidateQueries({ queryKey: ['settings'] })
       toast('Settings saved', 'success')
     },
@@ -97,7 +99,8 @@ export function Settings() {
       <div>
         <h1 className="font-display text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-[var(--fg-muted)]">
-          Store name, page header products, and catalog categories
+          Store name, page header products, emails, wholesale pricing, customer segments and
+          catalog categories
         </p>
       </div>
 
@@ -148,6 +151,10 @@ export function Settings() {
       </section>
 
       <EmailNotificationsSettings settings={settings.data} />
+
+      <WholesaleTiersSettings settings={settings.data} />
+
+      <CustomerSegmentSettings settings={settings.data} />
 
       <section className="space-y-4">
         <div>

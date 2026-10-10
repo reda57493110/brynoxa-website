@@ -241,6 +241,8 @@ function sanitizeUser(user: InstanceType<typeof User>) {
     avatar: user.avatar,
     isActive: user.isActive,
     isGuest: Boolean(user.isGuest),
+    customerType: user.customerType || 'retail',
+    wholesaleStatus: user.wholesale?.status || 'none',
     mfaEnabled: Boolean(user.mfaEnabled),
     createdAt: user.createdAt,
   };

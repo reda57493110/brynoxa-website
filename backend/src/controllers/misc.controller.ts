@@ -12,8 +12,11 @@ import {
   sanitizeEmailMessages,
   sanitizeEmailNotifications,
   sanitizePageHeroProducts,
+  sanitizeSegmentSettings,
+  publicSettings,
   Settings,
 } from '../models/Settings';
+import { sanitizeWholesaleTiers } from '../utils/wholesale';
 import { sendTestEmail } from '../services/emailTest.service';
 import { listSentEmails, sendManualEmail } from '../services/manualEmail.service';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
@@ -131,23 +134,6 @@ export const dashboard = asyncHandler(async (_req: Request, res: Response) => {
   sendSuccess(res, stats);
 });
 
-export const customers = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 20;
-  const q = typeof req.query.q === 'string' ? req.query.q : undefined;
-  const result = await adminService.listCustomers(page, limit, q);
-  sendPaginated(res, result.items, {
-    page: result.page,
-    limit: result.limit,
-    total: result.total,
-  });
-});
-
-export const setCustomerActive = asyncHandler(async (req: Request, res: Response) => {
-  const user = await adminService.setCustomerActive(param(req, 'id'), Boolean(req.body.isActive));
-  sendSuccess(res, user, 'Customer updated');
-});
-
 export const deleteCustomer = asyncHandler(async (req: Request, res: Response) => {
   await adminService.deleteCustomer(param(req, 'id'));
   sendSuccess(res, null, 'Customer deleted');
@@ -221,8 +207,12 @@ export const listSubscribers = asyncHandler(async (_req: Request, res: Response)
 });
 
 export const getStoreSettings = asyncHandler(async (_req: Request, res: Response) => {
-  const settings = await getSettings();
-  sendSuccess(res, settings);
+  sendSuccess(res, publicSettings(await getSettings()));
+});
+
+/** Full settings (incl. private fields) for the admin Settings page. */
+export const getAdminSettings = asyncHandler(async (_req: Request, res: Response) => {
+  sendSuccess(res, await getSettings());
 });
 
 export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -241,6 +231,12 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.emailNotifications !== undefined) {
     body.emailNotifications = sanitizeEmailNotifications(body.emailNotifications, settings.emailNotifications);
+  }
+  if (body.wholesaleTiers !== undefined) {
+    body.wholesaleTiers = sanitizeWholesaleTiers(body.wholesaleTiers);
+  }
+  if (body.customerSegments !== undefined) {
+    body.customerSegments = sanitizeSegmentSettings(body.customerSegments, settings.customerSegments);
   }
   if (body.emailMessages !== undefined) {
     body.emailMessages = sanitizeEmailMessages(body.emailMessages, settings.emailMessages);

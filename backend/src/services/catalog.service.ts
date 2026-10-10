@@ -314,8 +314,16 @@ function sanitizeRecommended(input: unknown, selfId?: string): mongoose.Types.Ob
   return ids.slice(0, 12).map((id) => new mongoose.Types.ObjectId(id));
 }
 
+/** A valid cost price, or undefined to leave it unset (empty / null / negative). */
+function costPriceOf(value: unknown): number | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : undefined;
+}
+
 export async function getProductById(id: string) {
   const product = await Product.findById(id)
+    .select('+costPrice')
     .populate('category', 'name slug isActive')
     .populate('brand', 'name slug logo')
     .populate('recommended', 'name sku slug images price stock isActive');
@@ -337,6 +345,7 @@ export async function createProduct(data: Record<string, unknown>) {
     ...data,
     deposit: sanitizeDepositRule(data.deposit) ?? undefined,
     recommended: sanitizeRecommended(data.recommended),
+    costPrice: costPriceOf(data.costPrice),
     recommendedOnly: Boolean(data.recommendedOnly),
     slug,
     sku,
@@ -383,6 +392,12 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     const deposit = sanitizeDepositRule(data.deposit);
     if (deposit) product.deposit = deposit;
     else product.set('deposit', undefined);
+  }
+
+  if (data.costPrice !== undefined) {
+    const cost = costPriceOf(data.costPrice);
+    if (cost === undefined) product.set('costPrice', undefined);
+    else product.costPrice = cost;
   }
 
   if (data.recommended !== undefined) {

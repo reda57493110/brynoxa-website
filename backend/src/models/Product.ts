@@ -19,6 +19,8 @@ export interface IProduct extends Document {
   images: IProductImage[];
   price: number;
   compareAtPrice?: number;
+  /** What the product costs Brynoxa (staff only — never sent to shoppers). Used for profit reports. */
+  costPrice?: number;
   /** Optional upfront deposit for cash-on-delivery orders; absent means none. */
   deposit?: ProductDepositRule;
   /** Hand-picked "Complete your setup" products, shown first in this order. */
@@ -71,6 +73,7 @@ const productSchema = new Schema<IProduct>(
     images: [imageSchema],
     price: { type: Number, required: true, min: 0 },
     compareAtPrice: { type: Number, min: 0 },
+    costPrice: { type: Number, min: 0, select: false },
     deposit: { type: depositRuleSchema, default: undefined },
     recommended: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     recommendedOnly: { type: Boolean, default: false },

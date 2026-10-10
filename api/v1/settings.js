@@ -19,6 +19,8 @@ const ALLOWED_FIELDS = [
   'depositInstructions',
   'emailNotifications',
   'emailMessages',
+  'wholesaleTiers',
+  'customerSegments',
   'notifyStaffLoginEmail',
   'pageHeroProducts',
 ];
@@ -27,9 +29,9 @@ module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
       await connectMongo();
-      const { getSettings } = require('../../backend/dist/models/Settings');
+      const { getSettings, publicSettings } = require('../../backend/dist/models/Settings');
       const settings = await getSettings();
-      sendJson(res, 200, { success: true, message: 'Success', data: settings });
+      sendJson(res, 200, { success: true, message: 'Success', data: publicSettings(settings) });
       return;
     }
 
@@ -43,7 +45,9 @@ module.exports = async (req, res) => {
         sanitizePageHeroProducts,
         sanitizeEmailNotifications,
         sanitizeEmailMessages,
+        sanitizeSegmentSettings,
       } = require('../../backend/dist/models/Settings');
+      const { sanitizeWholesaleTiers } = require('../../backend/dist/utils/wholesale');
       const settings = await getSettings();
 
       for (const key of ALLOWED_FIELDS) {
@@ -52,6 +56,10 @@ module.exports = async (req, res) => {
           settings[key] = sanitizeShippingByCity(body[key]);
         } else if (key === 'emailNotifications') {
           settings[key] = sanitizeEmailNotifications(body[key], settings.emailNotifications);
+        } else if (key === 'wholesaleTiers') {
+          settings[key] = sanitizeWholesaleTiers(body[key]);
+        } else if (key === 'customerSegments') {
+          settings[key] = sanitizeSegmentSettings(body[key], settings.customerSegments);
         } else if (key === 'emailMessages') {
           settings[key] = sanitizeEmailMessages(body[key], settings.emailMessages);
         } else if (key === 'depositInstructions') {

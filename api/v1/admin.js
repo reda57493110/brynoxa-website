@@ -19,6 +19,26 @@ function parseUrl(url = '') {
   };
 }
 
+/**
+ * Hands a request to the full Express app (same code as local dev). Used for admin routes this
+ * fast handler does not implement, so they work on Vercel instead of failing with 405/404.
+ * Must run before anything reads the request body.
+ */
+function delegateToExpress(req, res, route, query) {
+  const { getApp } = require('../../backend/dist/app');
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (!key.startsWith('__')) params.set(key, value);
+  }
+  const qs = params.toString();
+  req.url = `/api/v1/admin/${route}${qs ? `?${qs}` : ''}`;
+  return new Promise((resolve) => {
+    res.on('finish', resolve);
+    res.on('close', resolve);
+    getApp()(req, res);
+  });
+}
+
 function paginated(items, page, limit, total) {
   return {
     success: true,
@@ -303,41 +323,6 @@ async function handleOrderRoutes(req, res, route, query) {
   sendJson(res, 405, { success: false, message: 'Method not allowed' });
 }
 
-async function handleCustomerRoutes(req, res, route, query) {
-  const adminService = require('../../backend/dist/services/admin.service');
-
-  if (route === 'customers' && req.method === 'GET') {
-    const user = await requireStaff(req, res, ['customers:read']);
-    if (!user) return;
-    const page = Number(query.page || 1);
-    const limit = Number(query.limit || 20);
-    const result = await adminService.listCustomers(page, limit, query.q);
-    sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
-    return;
-  }
-
-  const match = route.match(/^customers\/([^/]+)$/);
-  if (match && req.method === 'PATCH') {
-    const user = await requireStaff(req, res, ['customers:write']);
-    if (!user) return;
-    const body = await readJsonBody(req);
-    const item = await adminService.setCustomerActive(match[1], Boolean(body.isActive));
-    sendJson(res, 200, { success: true, message: 'Customer updated', data: item });
-    return;
-  }
-
-  if (match && req.method === 'DELETE') {
-    const user = await requireStaff(req, res, ['customers:write']);
-    if (!user) return;
-    await adminService.deleteCustomer(match[1]);
-    dashboardCache = { at: 0, data: null };
-    sendJson(res, 200, { success: true, message: 'Customer deleted', data: null });
-    return;
-  }
-
-  sendJson(res, 405, { success: false, message: 'Method not allowed' });
-}
-
 async function handlePushRoutes(req, res, route) {
   const user = await requireStaff(req, res, ['push']);
   if (!user) return;
@@ -472,15 +457,21 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Refunds are recorded by the Express app
+    if (/^orders\/[^/]+\/refunds$/.test(route)) {
+      await delegateToExpress(req, res, route, query);
+      return;
+    }
+
     // Orders list/detail + status updates
     if (route === 'orders' || route.startsWith('orders/')) {
       await handleOrderRoutes(req, res, route, query);
       return;
     }
 
-    // Customers list + enable/disable
+    // Customer management (list, profile, edits, wholesale, export) lives in Express
     if (route === 'customers' || route.startsWith('customers/')) {
-      await handleCustomerRoutes(req, res, route, query);
+      await delegateToExpress(req, res, route, query);
       return;
     }
 
@@ -491,7 +482,7 @@ module.exports = async (req, res) => {
     }
 
     if (req.method !== 'GET') {
-      sendJson(res, 405, { success: false, message: 'Method not allowed' });
+      await delegateToExpress(req, res, route, query);
       return;
     }
 
@@ -556,7 +547,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    sendJson(res, 404, { success: false, message: 'Not found' });
+    await delegateToExpress(req, res, route, query);
   } catch (err) {
     console.error('Fast admin failed:', err);
     const status = err?.statusCode || 500;

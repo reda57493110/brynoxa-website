@@ -37,9 +37,14 @@ export interface User {
   isActive: boolean
   isGuest?: boolean
   mfaEnabled?: boolean
+  customerType?: CustomerType
+  wholesaleStatus?: WholesaleStatus
   createdAt?: string
   updatedAt?: string
 }
+
+export type CustomerType = 'retail' | 'wholesale' | 'business'
+export type WholesaleStatus = 'none' | 'pending' | 'approved' | 'rejected'
 
 export interface AuthPayload {
   user?: User
@@ -102,6 +107,8 @@ export interface Product {
   images: ProductImage[]
   price: number
   compareAtPrice?: number
+  /** Staff-only; only present in admin product responses */
+  costPrice?: number | null
   deposit?: ProductDeposit | null
   /** Hand-picked recommendations (ids; populated objects in the admin product view) */
   recommended?: (string | Product)[]
@@ -159,8 +166,18 @@ export interface OrderItem {
   name: string
   image?: string
   sku: string
+  /** Charged per unit (after any wholesale discount) */
   price: number
   qty: number
+  /** Catalog price per unit when ordered */
+  listPrice?: number
+}
+
+export interface OrderRefund {
+  amount: number
+  reason: string
+  itemsReturned?: boolean
+  at: string
 }
 
 export interface OrderTimeline {
@@ -187,6 +204,9 @@ export interface Order {
   shippingAddress: Address
   paymentMethod: 'cod'
   paymentStatus: PaymentStatus
+  channel?: 'retail' | 'wholesale'
+  wholesaleTier?: { id: string; name: string; discountPercent: number }
+  refunds?: OrderRefund[]
   deposit?: OrderDeposit
   orderStatus: OrderStatus
   timeline: OrderTimeline[]
@@ -272,6 +292,8 @@ export interface StoreSettings {
   depositInstructions?: string
   emailNotifications?: Partial<Record<EmailEvent, boolean>>
   emailMessages?: Partial<Record<EmailMessageEvent, string>>
+  wholesaleTiers?: WholesaleTier[]
+  customerSegments?: SegmentSettings
   notifyStaffLoginEmail?: boolean
   pageHeroProducts?: Partial<Record<HeroPage, string>>
 }
@@ -400,4 +422,271 @@ export interface SentEmail {
   sentBy?: { _id: string; name?: string; email?: string } | string
   status: 'sent' | 'failed'
   createdAt: string
+}
+
+/* ---------- Customer management (admin) ---------- */
+
+export interface WholesaleTier {
+  id: string
+  name: string
+  discountPercent: number
+}
+
+export interface SavedSegment {
+  id: string
+  name: string
+  filters: Record<string, string | number>
+}
+
+export interface SegmentSettings {
+  newDays: number
+  inactiveDays: number
+  highSpendMin: number
+  highProfitMin: number
+  saved: SavedSegment[]
+}
+
+export type SegmentKey =
+  | 'new'
+  | 'repeat'
+  | 'high-spend'
+  | 'high-profit'
+  | 'inactive'
+  | 'wholesale'
+  | 'wholesale-pending'
+  | 'outstanding'
+
+export type CustomerAccountStatus = 'active' | 'disabled' | 'unverified' | 'wholesale-pending'
+
+/** Sales figures for a set of orders. Profit fields are null when cost data is missing or hidden. */
+export interface SalesBlock {
+  orders: number
+  completedOrders: number
+  grossSales: number
+  wholesaleDiscounts: number
+  couponDiscounts: number
+  refunds: number
+  netSales: number
+  cogs: number
+  ordersMissingCost: number
+  grossProfit: number | null
+  margin: number | null
+  averageOrderValue: number | null
+  profitPerOrder: number | null
+}
+
+export interface CustomerMetrics {
+  orders: { total: number; completed: number; open: number; cancelled: number; refunded: number; partiallyRefunded: number }
+  sales: SalesBlock & { totalOrderValue: number; completedOrderValue: number; shippingCollected: number }
+  channels: { retail: SalesBlock; wholesale: SalesBlock }
+  payments: {
+    totalPaid: number
+    depositsReceived: number
+    depositsAwaiting: number
+    dueOnDelivery: number
+    toCollect: number
+    refunds: number
+    codOrders: number
+    methods: string[]
+  }
+  dates: { firstOrder: string | null; lastOrder: string | null; lastCompleted: string | null }
+  /** False when the viewer lacks the "reports" permission (cost/profit removed). */
+  profitVisible: boolean
+}
+
+export interface CustomerRow {
+  _id: string
+  customerId: string
+  name: string
+  email: string
+  phone?: string
+  companyName?: string
+  customerType: CustomerType
+  status: CustomerAccountStatus
+  wholesaleStatus: WholesaleStatus
+  tierName?: string
+  isGuest: boolean
+  registeredAt: string
+  segments: SegmentKey[]
+  metrics: CustomerMetrics
+}
+
+export interface CustomerListParams {
+  page?: number
+  limit?: number
+  q?: string
+  type?: CustomerType | ''
+  status?: CustomerAccountStatus | ''
+  registeredFrom?: string
+  registeredTo?: string
+  from?: string
+  to?: string
+  activity?: 'ordered' | 'never' | 'active' | 'inactive' | ''
+  minOrders?: number | string
+  maxOrders?: number | string
+  minNet?: number | string
+  maxNet?: number | string
+  minProfit?: number | string
+  segment?: string
+  sort?: 'spent' | 'net' | 'profit' | 'orders' | 'lastOrder' | 'registered' | 'name'
+  dir?: 'asc' | 'desc'
+}
+
+export interface SummaryBlock {
+  netSales: number
+  grossProfit: number | null
+  ordersMissingCost: number
+  averageOrderValue: number | null
+  completedOrders: number
+  toCollect: number
+  profitVisible: boolean
+}
+
+export interface CustomerSummary {
+  counts: {
+    total: number
+    active: number
+    retail: number
+    wholesaleApproved: number
+    wholesalePending: number
+    newInPeriod: number | null
+  }
+  lifetime: SummaryBlock
+  period: SummaryBlock | null
+  segmentSettings: SegmentSettings
+  wholesaleTiers: WholesaleTier[]
+}
+
+export interface BusinessInfo {
+  companyName?: string
+  contactName?: string
+  email?: string
+  phone?: string
+  address?: string
+  taxId?: string
+}
+
+export interface BillingAddress {
+  fullName?: string
+  line1?: string
+  line2?: string
+  city?: string
+  state?: string
+  postalCode?: string
+  country?: string
+  phone?: string
+}
+
+export interface CustomerTimelineEvent {
+  at: string
+  type: string
+  title: string
+  detail?: string
+  orderId?: string
+  orderNumber?: string
+}
+
+export interface CustomerProfileOrder {
+  _id: string
+  orderNumber: string
+  createdAt: string
+  orderStatus: OrderStatus
+  paymentStatus: PaymentStatus
+  channel: 'retail' | 'wholesale'
+  tierName?: string
+  items: number
+  total: number
+  discount: number
+  deposit: { amount: number; status: 'pending' | 'received' } | null
+  refunded: number
+  fullyRefunded: boolean
+  completed: boolean
+}
+
+export interface CustomerProfile {
+  customer: {
+    _id: string
+    customerId: string
+    name: string
+    email: string
+    phone?: string
+    emailVerified?: boolean
+    isActive: boolean
+    isGuest?: boolean
+    createdAt: string
+    customerType?: CustomerType
+    status: CustomerAccountStatus
+    addresses: Address[]
+    billingAddress?: BillingAddress
+    business?: BusinessInfo
+    adminNotes?: string
+    wholesale?: {
+      status: WholesaleStatus
+      requestedType?: 'wholesale' | 'business'
+      applicationMessage?: string
+      requestedAt?: string
+      reviewedAt?: string
+      reviewedBy?: { name?: string } | string
+      rejectionReason?: string
+      tierId?: string
+      paymentTerms?: string
+    }
+    tier: WholesaleTier | null
+    segments: SegmentKey[]
+    daysInactive: number
+    inactive: boolean
+    inactiveDays: number
+  }
+  lifetime: CustomerMetrics
+  period: CustomerMetrics | null
+  orders: CustomerProfileOrder[]
+  refunds: (OrderRefund & { orderId: string; orderNumber: string })[]
+  topProducts: { productId: string; name: string; qty: number; orders: number; spent: number; slug?: string }[]
+  categories: { name: string; qty: number; spent: number }[]
+  timeline: CustomerTimelineEvent[]
+  wholesaleTiers: WholesaleTier[]
+}
+
+export interface CustomerUpdatePayload {
+  name?: string
+  phone?: string
+  isActive?: boolean
+  customerType?: CustomerType
+  adminNotes?: string
+  business?: BusinessInfo
+  billingAddress?: BillingAddress | null
+  tierId?: string
+  paymentTerms?: string
+}
+
+export interface WholesaleReviewPayload {
+  action: 'approve' | 'reject' | 'revoke'
+  tierId?: string
+  paymentTerms?: string
+  reason?: string
+  customerType?: 'wholesale' | 'business'
+}
+
+/** What a signed-in customer sees about their own wholesale account. */
+export interface MyWholesale {
+  customerType: CustomerType
+  status: WholesaleStatus
+  requestedType?: 'wholesale' | 'business'
+  requestedAt?: string
+  rejectionReason?: string
+  paymentTerms?: string
+  business?: BusinessInfo
+  terms: WholesaleTerms | null
+}
+
+export interface WholesaleTerms {
+  tierId: string
+  tierName: string
+  discountPercent: number
+}
+
+export interface WholesaleApplicationPayload {
+  requestedType: 'wholesale' | 'business'
+  business: BusinessInfo & { companyName: string; phone: string }
+  message?: string
 }

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { WholesaleAccount } from '@/components/account/WholesaleAccount'
 import { AccountHeader } from '@/components/layout/AccountHeader'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { useAuthStore } from '@/store/authStore'
@@ -248,6 +249,8 @@ export function AccountSettings() {
           </div>
         </form>
       </div>
+
+      <WholesaleAccount className="mt-8" />
       </Container>
       <ConfirmDialog
         open={Boolean(removeAddressId)}

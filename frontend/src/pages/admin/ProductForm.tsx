@@ -75,6 +75,7 @@ export function ProductForm() {
     brand: string
     price: number
     compareAtPrice: number
+    costPrice: string
     depositType: 'none' | 'fixed' | 'percent'
     depositValue: number
     stock: number
@@ -94,6 +95,7 @@ export function ProductForm() {
     brand: '',
     price: 0,
     compareAtPrice: 0,
+    costPrice: '',
     depositType: 'none',
     depositValue: 0,
     stock: 0,
@@ -124,6 +126,7 @@ export function ProductForm() {
         brand: brandName,
         price: p.price,
         compareAtPrice: p.compareAtPrice || 0,
+        costPrice: p.costPrice != null ? String(p.costPrice) : '',
         depositType: p.deposit?.type ?? ('none' as const),
         depositValue: p.deposit?.value ?? 0,
         stock: p.stock,
@@ -143,6 +146,11 @@ export function ProductForm() {
   }, [existing.data])
 
   const isDirty = JSON.stringify(form) !== initialFormRef.current
+  const costNumber =
+    form.costPrice.trim() !== '' && Number.isFinite(Number(form.costPrice))
+      ? Number(form.costPrice)
+      : null
+  const salePrice = Number(form.price)
 
   useEffect(() => {
     if (!isDirty) return
@@ -169,6 +177,7 @@ export function ProductForm() {
           form.compareAtPrice && form.compareAtPrice > Number(form.price)
             ? Number(form.compareAtPrice)
             : undefined,
+        costPrice: form.costPrice.trim() === '' ? null : Number(form.costPrice),
         deposit:
           form.depositType !== 'none' && Number(form.depositValue) > 0
             ? { type: form.depositType, value: Number(form.depositValue) }
@@ -205,6 +214,7 @@ export function ProductForm() {
       qc.invalidateQueries({ queryKey: ['admin-products'] })
       qc.invalidateQueries({ queryKey: ['brands'] })
       qc.invalidateQueries({ queryKey: ['settings'] })
+      qc.invalidateQueries({ queryKey: ['admin-settings'] })
       qc.invalidateQueries({ queryKey: ['hero-product'] })
       qc.invalidateQueries({ queryKey: ['hero-auto-products'] })
       toast(isEdit ? 'Product updated' : 'Product created', 'success')
@@ -389,6 +399,40 @@ export function ProductForm() {
               </span>
             </div>
           ) : null}
+          <div className="sm:col-span-2 space-y-1.5">
+            <div className="sm:max-w-[calc(50%-0.5rem)]">
+              <Input
+                label="Cost price (DH) — private"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                value={form.costPrice}
+                onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
+                placeholder="What you paid for it"
+              />
+            </div>
+            <p className="text-xs text-[var(--fg-muted)]">
+              Never shown to customers. Used for profit reports, and recorded on each new order so
+              later cost changes don't rewrite past profit.
+            </p>
+            {costNumber !== null && salePrice > 0 ? (
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="text-[var(--fg-muted)]">
+                  Margin:{' '}
+                  <span className="font-semibold tabular-nums text-[var(--fg)]">
+                    {(((salePrice - costNumber) / salePrice) * 100).toFixed(1)}%
+                  </span>{' '}
+                  ({(salePrice - costNumber).toLocaleString('fr-MA')} DH per unit)
+                </span>
+                {costNumber >= salePrice ? (
+                  <span className="font-medium text-[var(--warning)]">
+                    Cost is higher than the sale price
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+          </div>
         </div>
         <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
           <Select

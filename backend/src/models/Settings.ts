@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import type { WholesaleTier } from '../utils/wholesale';
 
 export interface IShippingCityRate {
   city: string;
@@ -33,6 +34,23 @@ export type EmailMessageEvent = (typeof EMAIL_MESSAGE_EVENTS)[number];
 
 const MAX_EMAIL_MESSAGE = 1000;
 
+/** Thresholds behind the built-in customer segments, plus admin-saved custom segments. */
+export interface ICustomerSegmentSettings {
+  newDays: number;
+  inactiveDays: number;
+  highSpendMin: number;
+  highProfitMin: number;
+  saved: { id: string; name: string; filters: Record<string, string | number> }[];
+}
+
+export const DEFAULT_SEGMENT_SETTINGS: ICustomerSegmentSettings = {
+  newDays: 30,
+  inactiveDays: 90,
+  highSpendMin: 20000,
+  highProfitMin: 5000,
+  saved: [],
+};
+
 export const HERO_PAGES = ['shop', 'services', 'contact'] as const;
 export type HeroPage = (typeof HERO_PAGES)[number];
 
@@ -52,6 +70,8 @@ export interface ISettings extends Document {
   emailNotifications: Partial<Record<EmailEvent, boolean>>;
   /** Optional extra paragraph added to a customer email. */
   emailMessages: Partial<Record<EmailMessageEvent, string>>;
+  wholesaleTiers: WholesaleTier[];
+  customerSegments: ICustomerSegmentSettings;
   /** Email ADMIN_EMAIL when a staff account signs into admin. */
   notifyStaffLoginEmail: boolean;
   /** Product id featured in each store page header; empty shows the default photo. */
@@ -79,6 +99,32 @@ const settingsSchema = new Schema<ISettings>(
     depositInstructions: { type: String, default: '', maxlength: 2000 },
     emailNotifications: {
       type: Object.fromEntries(EMAIL_EVENTS.map((key) => [key, { type: Boolean, default: true }])),
+      default: () => ({}),
+    },
+    wholesaleTiers: {
+      type: [
+        new Schema(
+          {
+            id: { type: String, required: true },
+            name: { type: String, required: true },
+            discountPercent: { type: Number, required: true, min: 0, max: 90 },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
+    customerSegments: {
+      type: new Schema(
+        {
+          newDays: { type: Number, default: DEFAULT_SEGMENT_SETTINGS.newDays, min: 1, max: 3650 },
+          inactiveDays: { type: Number, default: DEFAULT_SEGMENT_SETTINGS.inactiveDays, min: 1, max: 3650 },
+          highSpendMin: { type: Number, default: DEFAULT_SEGMENT_SETTINGS.highSpendMin, min: 0 },
+          highProfitMin: { type: Number, default: DEFAULT_SEGMENT_SETTINGS.highProfitMin, min: 0 },
+          saved: { type: [Schema.Types.Mixed], default: [] },
+        },
+        { _id: false }
+      ),
       default: () => ({}),
     },
     emailMessages: {
@@ -149,9 +195,58 @@ export function sanitizeEmailMessages(
   return out;
 }
 
+/** Segment thresholds with defaults filled in; saved segments validated (max 20). */
+export function sanitizeSegmentSettings(
+  input: unknown,
+  current: Partial<ICustomerSegmentSettings> = {}
+): ICustomerSegmentSettings {
+  const src = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const num = (key: keyof Omit<ICustomerSegmentSettings, 'saved'>, min: number, max: number) => {
+    const raw = src[key] ?? current[key] ?? DEFAULT_SEGMENT_SETTINGS[key];
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.min(Math.max(n, min), max) : DEFAULT_SEGMENT_SETTINGS[key];
+  };
+  const savedInput = Array.isArray(src.saved) ? src.saved : current.saved ?? [];
+  const saved: ICustomerSegmentSettings['saved'] = [];
+  for (const row of savedInput) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const name = String(r.name ?? '').trim().slice(0, 40);
+    if (!name || typeof r.filters !== 'object' || !r.filters) continue;
+    const filters: Record<string, string | number> = {};
+    for (const [k, v] of Object.entries(r.filters as Record<string, unknown>)) {
+      if (!/^[a-zA-Z]{1,24}$/.test(k)) continue;
+      if (typeof v === 'number' && Number.isFinite(v)) filters[k] = v;
+      else if (typeof v === 'string' && v.length <= 60) filters[k] = v;
+    }
+    const id = String(r.id ?? '').replace(/[^a-z0-9-]/gi, '').slice(0, 24) || Math.random().toString(36).slice(2, 10);
+    saved.push({ id, name, filters });
+    if (saved.length >= 20) break;
+  }
+  return {
+    newDays: num('newDays', 1, 3650),
+    inactiveDays: num('inactiveDays', 1, 3650),
+    highSpendMin: num('highSpendMin', 0, 1e9),
+    highProfitMin: num('highProfitMin', 0, 1e9),
+    saved,
+  };
+}
+
 /** Whether an automatic email type is switched on (on unless explicitly turned off). */
 export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, event: EmailEvent) {
   return settings.emailNotifications?.[event] !== false;
+}
+
+/** Fields only staff may read (pricing tiers, segment rules, email configuration). */
+const PRIVATE_SETTINGS = ['wholesaleTiers', 'customerSegments', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+
+/** Settings safe for the public storefront. */
+export function publicSettings(settings: ISettings) {
+  const plain = (typeof (settings as { toObject?: () => object }).toObject === 'function'
+    ? (settings as unknown as { toObject: () => Record<string, unknown> }).toObject()
+    : { ...(settings as unknown as Record<string, unknown>) }) as Record<string, unknown>;
+  for (const key of PRIVATE_SETTINGS) delete plain[key];
+  return plain;
 }
 
 export async function getSettings(): Promise<ISettings> {

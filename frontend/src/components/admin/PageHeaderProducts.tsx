@@ -45,6 +45,7 @@ export function PageHeaderProducts({ value }: { value?: Partial<Record<HeroPage,
       adminApi.settings.update({ pageHeroProducts: { [next.page]: next.id } }),
     onSuccess: (_res, next) => {
       qc.invalidateQueries({ queryKey: ['settings'] })
+      qc.invalidateQueries({ queryKey: ['admin-settings'] })
       qc.invalidateQueries({ queryKey: ['hero-product'] })
       qc.invalidateQueries({ queryKey: ['hero-auto-products'] })
       const label = PAGES.find((p) => p.page === next.page)?.label ?? 'Page'

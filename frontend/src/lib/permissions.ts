@@ -28,6 +28,8 @@ export type Permission =
   | 'coupons'
   | 'push'
   | 'settings'
+  /** Cost, profit and margin figures */
+  | 'reports'
 
 /** Owner alone gets the full dashboard; other roles land on their workspace. */
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {

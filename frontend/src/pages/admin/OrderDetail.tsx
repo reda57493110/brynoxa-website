@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderDepositPanel } from '@/components/admin/OrderDepositPanel'
+import { OrderRefundsPanel } from '@/components/admin/OrderRefundsPanel'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -99,6 +100,14 @@ export function OrderDetail() {
           <Badge variant={orderStatusVariant(o.orderStatus)}>
             {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
           </Badge>
+          {o.channel === 'wholesale' ? (
+            <Badge variant="brand" className="normal-case">
+              Wholesale
+              {o.wholesaleTier
+                ? ` · ${o.wholesaleTier.name} −${o.wholesaleTier.discountPercent}%`
+                : ''}
+            </Badge>
+          ) : null}
         </div>
         <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
           <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
@@ -153,6 +162,8 @@ export function OrderDetail() {
 
       <OrderDepositPanel order={o} />
 
+      <OrderRefundsPanel order={o} />
+
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
           <h2 className="font-semibold">Items</h2>
@@ -165,8 +176,13 @@ export function OrderDetail() {
                   </span>
                   <span className="block truncate text-xs text-[var(--fg-muted)]">{item.sku}</span>
                 </span>
-                <span className="shrink-0 tabular-nums">
+                <span className="shrink-0 text-end tabular-nums">
                   {formatCurrency(item.price * item.qty)}
+                  {item.listPrice != null && item.listPrice > item.price ? (
+                    <span className="block text-xs text-[var(--fg-muted)] line-through">
+                      {formatCurrency(item.listPrice * item.qty)}
+                    </span>
+                  ) : null}
                 </span>
               </li>
             ))}

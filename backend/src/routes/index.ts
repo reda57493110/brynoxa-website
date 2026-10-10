@@ -2,11 +2,13 @@ import { Router } from 'express';
 import authRoutes from './auth.routes';
 import catalogRoutes from './catalog.routes';
 import commerceRoutes from './commerce.routes';
+import customerRoutes from './customer.routes';
 
 const router = Router();
 
 router.use('/auth', authRoutes);
 router.use(catalogRoutes);
+router.use(customerRoutes);
 router.use(commerceRoutes);
 
 router.get('/health', (_req, res) => {

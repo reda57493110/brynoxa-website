@@ -16,9 +16,21 @@ import type {
   PushSendPayload,
   StoreSettings,
   EmailMessageEvent,
+  CustomerListParams,
+  CustomerProfile,
+  CustomerRow,
+  CustomerSummary,
+  CustomerUpdatePayload,
+  WholesaleReviewPayload,
   SentEmail,
   User,
 } from '@/types'
+
+/** Drops empty filter values so they are not sent as "?type=". */
+function cleanParams<T extends object>(params?: T) {
+  if (!params) return undefined
+  return Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
+}
 
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
@@ -64,14 +76,27 @@ export const adminApi = {
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
     setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
+    recordRefund: (id: string, payload: { amount: number; reason: string; itemsReturned?: boolean }) =>
+      api.post<ApiResponse<Order>>(`/admin/orders/${id}/refunds`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/orders/${id}`),
   },
 
   customers: {
-    list: (params?: { page?: number; limit?: number; q?: string }) =>
-      api.get<ApiResponse<User[]>>('/admin/customers', { params }),
+    list: (params?: CustomerListParams) =>
+      api.get<ApiResponse<CustomerRow[]>>('/admin/customers', { params: cleanParams(params) }),
+    summary: (params?: { from?: string; to?: string }) =>
+      api.get<ApiResponse<CustomerSummary>>('/admin/customers/summary', { params: cleanParams(params) }),
+    /** CSV of the filtered list (downloaded with the staff session). */
+    exportCsv: (params?: CustomerListParams) =>
+      api.get<Blob>('/admin/customers/export', { params: cleanParams(params), responseType: 'blob' }),
+    profile: (id: string, params?: { from?: string; to?: string }) =>
+      api.get<ApiResponse<CustomerProfile>>(`/admin/customers/${id}`, { params: cleanParams(params) }),
+    update: (id: string, payload: CustomerUpdatePayload) =>
+      api.patch<ApiResponse<CustomerProfile>>(`/admin/customers/${id}`, payload),
     setActive: (id: string, isActive: boolean) =>
-      api.patch<ApiResponse<User>>(`/admin/customers/${id}`, { isActive }),
+      api.patch<ApiResponse<CustomerProfile>>(`/admin/customers/${id}`, { isActive }),
+    reviewWholesale: (id: string, payload: WholesaleReviewPayload) =>
+      api.post<ApiResponse<CustomerProfile>>(`/admin/customers/${id}/wholesale`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/customers/${id}`),
   },
 
@@ -131,6 +156,8 @@ export const adminApi = {
   },
 
   settings: {
+    /** Full settings incl. private fields (tiers, segments, email config). */
+    get: () => api.get<ApiResponse<StoreSettings>>('/admin/settings'),
     update: (payload: Partial<StoreSettings>) =>
       api.patch<ApiResponse<StoreSettings>>('/settings', payload),
   },

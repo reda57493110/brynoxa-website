@@ -6,6 +6,8 @@ import { Notification } from '../models/Notification';
 import { getSettings } from '../models/Settings';
 import { resolveShippingFee } from '../utils/shipping';
 import { lineDeposit, roundMoney } from '../utils/deposit';
+import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
+import { getWholesaleTerms } from './wholesale.service';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
@@ -83,7 +85,14 @@ async function claimCoupon(couponId: Types.ObjectId) {
   return coupon;
 }
 
-async function buildOrderLines(items: { productId: string; qty: number }[]) {
+/**
+ * Prices order lines from the current catalog. With wholesale terms, each line is charged the
+ * tier price; listPrice keeps the catalog price and unitCost the product cost at this moment.
+ */
+async function buildOrderLines(
+  items: { productId: string; qty: number }[],
+  terms?: WholesaleTerms | null
+) {
   if (!items.length) throw new ApiError(400, 'Add at least one product');
 
   const merged = new Map<string, number>();
@@ -94,7 +103,7 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
   const uniqueItems = [...merged.entries()].map(([productId, qty]) => ({ productId, qty }));
 
   const productIds = uniqueItems.map((i) => i.productId);
-  const products = await Product.find({ _id: { $in: productIds }, isActive: true });
+  const products = await Product.find({ _id: { $in: productIds }, isActive: true }).select('+costPrice');
   if (products.length !== productIds.length) {
     throw new ApiError(400, 'One or more products are unavailable');
   }
@@ -102,6 +111,7 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
   let subtotal = 0;
   let depositTotal = 0;
+  let wholesaleDiscount = 0;
   const orderItems = uniqueItems.map((item) => {
     const product = productMap.get(item.productId);
     if (!product) throw new ApiError(400, 'Product not found');
@@ -109,19 +119,28 @@ async function buildOrderLines(items: { productId: string; qty: number }[]) {
       throw new ApiError(400, `Insufficient stock for ${product.name}`);
     }
     const primary = product.images.find((img) => img.isPrimary) || product.images[0];
-    subtotal += product.price * item.qty;
-    depositTotal += lineDeposit(product.deposit, product.price, item.qty);
+    const price = terms ? wholesaleUnitPrice(product.price, terms.discountPercent) : product.price;
+    subtotal += price * item.qty;
+    wholesaleDiscount += (product.price - price) * item.qty;
+    depositTotal += lineDeposit(product.deposit, price, item.qty);
     return {
       product: product._id,
       name: product.name,
       image: primary?.url,
       sku: product.sku,
-      price: product.price,
+      price,
+      listPrice: product.price,
+      unitCost: typeof product.costPrice === 'number' ? product.costPrice : undefined,
       qty: item.qty,
     };
   });
 
-  return { orderItems, subtotal, depositTotal: roundMoney(depositTotal) };
+  return {
+    orderItems,
+    subtotal: roundMoney(subtotal),
+    wholesaleDiscount: roundMoney(wholesaleDiscount),
+    depositTotal: roundMoney(depositTotal),
+  };
 }
 
 /** Deposit from product rules, capped at the order total; undefined when none applies. */
@@ -163,7 +182,9 @@ export async function createCodOrder(input: {
 }) {
   const settings = await getSettings();
 
-  const { orderItems, subtotal, depositTotal } = await buildOrderLines(input.items);
+  // Wholesale prices only for approved accounts; the channel is fixed on the order from now on
+  const terms = await getWholesaleTerms(input.userId);
+  const { orderItems, subtotal, wholesaleDiscount, depositTotal } = await buildOrderLines(input.items, terms);
   const { pricing, couponMeta } = await priceOrder(
     subtotal,
     input.couponCode,
@@ -185,7 +206,9 @@ export async function createCodOrder(input: {
       receiptTokenHash: hashReceiptToken(receiptToken),
       user: input.userId,
       items: orderItems,
-      pricing,
+      pricing: { ...pricing, wholesaleDiscount },
+      channel: terms ? 'wholesale' : 'retail',
+      wholesaleTier: terms ? { id: terms.tierId, name: terms.tierName, discountPercent: terms.discountPercent } : undefined,
       coupon: couponMeta,
       shippingAddress: input.shippingAddress,
       paymentMethod: 'cod',
@@ -293,12 +316,17 @@ export async function updateUserOrderItems(
 
   const previousCouponCode = order.coupon?.code;
   const previousCouponId = order.coupon?.couponId;
-  const { orderItems, subtotal, depositTotal } = await buildOrderLines(items);
-  const { pricing, couponMeta } = await priceOrder(
+  // Keep the channel and tier the order was placed with, even if the account changed since
+  const terms = order.wholesaleTier
+    ? { tierId: order.wholesaleTier.id, tierName: order.wholesaleTier.name, discountPercent: order.wholesaleTier.discountPercent }
+    : null;
+  const { orderItems, subtotal, wholesaleDiscount, depositTotal } = await buildOrderLines(items, terms);
+  const { pricing: basePricing, couponMeta } = await priceOrder(
     subtotal,
     previousCouponCode,
     order.shippingAddress?.city
   );
+  const pricing = { ...basePricing, wholesaleDiscount };
 
   // A deposit set by staff is kept (capped at the new total); otherwise follow the products.
   const deposit: IOrderDeposit | undefined =
@@ -551,6 +579,65 @@ export async function setOrderDeposit(
     );
   }
 
+  return order;
+}
+
+/** Money the customer has actually paid on an order: the full total once delivered, else a received deposit. */
+export function amountPaidOnOrder(order: { orderStatus: OrderStatus; pricing: { total: number }; deposit?: { amount: number; status: string } | null }) {
+  if (order.orderStatus === 'delivered') return order.pricing.total;
+  return order.deposit?.status === 'received' ? order.deposit.amount : 0;
+}
+
+/**
+ * Staff record money given back to the customer. Capped at what was actually paid minus earlier
+ * refunds, so the same payment can never be refunded (or counted) twice.
+ */
+export async function recordRefund(
+  orderId: string,
+  input: { amount: number; reason: string; itemsReturned?: boolean },
+  actorId: string
+) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new ApiError(404, 'Order not found');
+
+  const paid = amountPaidOnOrder(order);
+  const alreadyRefunded = (order.refunds || []).reduce((sum, r) => sum + r.amount, 0);
+  const refundable = roundMoney(paid - alreadyRefunded);
+  const amount = roundMoney(input.amount);
+  if (paid <= 0) throw new ApiError(400, 'Nothing has been paid on this order yet');
+  if (!(amount > 0) || amount > refundable) {
+    throw new ApiError(400, `The refund must be between 0 and ${formatDh(refundable)}`);
+  }
+
+  order.refunds.push({
+    amount,
+    reason: input.reason.trim(),
+    itemsReturned: Boolean(input.itemsReturned),
+    at: new Date(),
+    by: actorId as never,
+  });
+  if (order.orderStatus === 'delivered' && alreadyRefunded + amount >= paid) {
+    order.paymentStatus = 'refunded';
+  }
+  order.timeline.push({
+    status: order.orderStatus,
+    note: `Refund of ${formatDh(amount)} recorded${input.itemsReturned ? ' (items returned)' : ''}: ${input.reason.trim()}`,
+    at: new Date(),
+  });
+  await order.save();
+  invalidateDashboardCache();
+
+  try {
+    await Notification.create({
+      user: order.user,
+      type: 'order',
+      title: 'Refund',
+      message: `A refund of ${formatDh(amount)} was recorded (${order.orderNumber})`,
+      link: `/account/orders/${order.orderNumber}`,
+    });
+  } catch (error) {
+    console.error('Refund notification failed', error);
+  }
   return order;
 }
 

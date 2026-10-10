@@ -137,13 +137,6 @@ router.get(
   ),
   misc.dashboard
 );
-router.get('/admin/customers', requireAuth, requirePermission('customers:read'), misc.customers);
-router.patch(
-  '/admin/customers/:id',
-  requireAuth,
-  requirePermission('customers:write'),
-  misc.setCustomerActive
-);
 router.delete(
   '/admin/customers/:id',
   requireAuth,
@@ -170,6 +163,7 @@ router.patch('/admin/messages/:id', requireAuth, requirePermission('messages'), 
 router.get('/admin/subscribers', requireAuth, requirePermission('messages'), misc.listSubscribers);
 
 router.get('/settings', misc.getStoreSettings);
+router.get('/admin/settings', requireAuth, requirePermission('settings'), misc.getAdminSettings);
 router.patch(
   '/settings',
   requireAuth,

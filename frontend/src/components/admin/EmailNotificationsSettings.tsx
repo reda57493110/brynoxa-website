@@ -43,6 +43,7 @@ export function EmailNotificationsSettings({ settings }: { settings?: StoreSetti
         emailMessages: messages,
       }),
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-settings'] })
       qc.invalidateQueries({ queryKey: ['settings'] })
       toast('Email settings saved', 'success')
     },

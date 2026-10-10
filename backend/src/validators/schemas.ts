@@ -104,6 +104,7 @@ export const productSchema = z.object({
     .optional(),
   price: z.number().min(0),
   compareAtPrice: z.number().min(0).optional(),
+  costPrice: z.number().min(0).nullable().optional(),
   deposit: z
     .object({ type: z.enum(['fixed', 'percent']), value: z.number().min(0) })
     .nullable()
@@ -215,6 +216,22 @@ export const settingsSchema = z.object({
   depositInstructions: z.string().max(2000).optional(),
   emailNotifications: z.record(z.string(), z.boolean()).optional(),
   emailMessages: z.record(z.string(), z.string().max(1000)).optional(),
+  wholesaleTiers: z
+    .array(z.object({ id: z.string().max(24).optional(), name: z.string().trim().min(1).max(40), discountPercent: z.number().min(0).max(90) }))
+    .max(10)
+    .optional(),
+  customerSegments: z
+    .object({
+      newDays: z.number().int().min(1).max(3650).optional(),
+      inactiveDays: z.number().int().min(1).max(3650).optional(),
+      highSpendMin: z.number().min(0).optional(),
+      highProfitMin: z.number().min(0).optional(),
+      saved: z
+        .array(z.object({ id: z.string().max(24).optional(), name: z.string().trim().min(1).max(40), filters: z.record(z.string(), z.union([z.string().max(60), z.number()])) }))
+        .max(20)
+        .optional(),
+    })
+    .optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
   pageHeroProducts: z
     .object({
@@ -356,4 +373,62 @@ export const manualEmailSchema = z.object({
   subject: z.string().trim().min(2).max(150),
   message: z.string().trim().min(2).max(5000),
   orderId: z.string().regex(/^[a-f0-9]{24}$/i).optional(),
+});
+
+const businessInfoSchema = z.object({
+  companyName: z.string().trim().max(120).optional(),
+  contactName: z.string().trim().max(120).optional(),
+  email: z.union([z.string().trim().email().max(160), z.literal('')]).optional(),
+  phone: z.string().trim().max(40).optional(),
+  address: z.string().trim().max(300).optional(),
+  taxId: z.string().trim().max(60).optional(),
+});
+
+/** Staff edits on a customer (admin profile page). */
+export const updateCustomerSchema = z.object({
+  name: z.string().trim().min(2).max(120).optional(),
+  phone: z.string().trim().max(40).optional(),
+  isActive: z.boolean().optional(),
+  customerType: z.enum(['retail', 'wholesale', 'business']).optional(),
+  adminNotes: z.string().max(5000).optional(),
+  business: businessInfoSchema.optional(),
+  billingAddress: z
+    .object({
+      fullName: z.string().trim().max(120).optional(),
+      line1: z.string().trim().max(200).optional(),
+      line2: z.string().trim().max(200).optional(),
+      city: z.string().trim().max(80).optional(),
+      state: z.string().trim().max(80).optional(),
+      postalCode: z.string().trim().max(20).optional(),
+      country: z.string().trim().max(2).optional(),
+      phone: z.string().trim().max(40).optional(),
+    })
+    .nullable()
+    .optional(),
+  tierId: z.string().max(24).optional(),
+  paymentTerms: z.string().max(200).optional(),
+});
+
+export const wholesaleReviewSchema = z.object({
+  action: z.enum(['approve', 'reject', 'revoke']),
+  tierId: z.string().max(24).optional(),
+  paymentTerms: z.string().max(200).optional(),
+  reason: z.string().max(500).optional(),
+  customerType: z.enum(['wholesale', 'business']).optional(),
+});
+
+/** Customer applying for a wholesale / business account from their account page. */
+export const wholesaleApplicationSchema = z.object({
+  requestedType: z.enum(['wholesale', 'business']),
+  business: businessInfoSchema.extend({
+    companyName: z.string().trim().min(2).max(120),
+    phone: z.string().trim().min(6).max(40),
+  }),
+  message: z.string().trim().max(1000).optional(),
+});
+
+export const refundSchema = z.object({
+  amount: z.number().positive().max(10_000_000),
+  reason: z.string().trim().min(3).max(300),
+  itemsReturned: z.boolean().optional(),
 });
