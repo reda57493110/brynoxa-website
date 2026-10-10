@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi } from '@/api/inventoryApi'
+import { adminApi } from '@/api/adminApi'
+import { getErrorMessage } from '@/api/client'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { toast } from '@/store/toastStore'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
@@ -30,7 +34,22 @@ export function InventoryProduct() {
   const qc = useQueryClient()
   const role = useAuthStore((s) => s.user?.role)
   const canApprove = hasPermission(role, 'inventory:approve')
+  const canDelete = hasPermission(role, 'products:delete')
   const [addingStock, setAddingStock] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const navigate = useNavigate()
+
+  const remove = useMutation({
+    mutationFn: () => adminApi.products.remove(id),
+    onSuccess: () => {
+      toast.success('Product deleted')
+      qc.invalidateQueries({ queryKey: ['admin-inventory'] })
+      qc.invalidateQueries({ queryKey: ['admin-products'] })
+      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
+      navigate('/admin/inventory', { replace: true })
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
 
   const detail = useQuery({
     queryKey: ['admin-inventory', 'product', id],
@@ -132,6 +151,15 @@ export function InventoryProduct() {
             <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className={linkBtn}>
               <SiteIcon name="external" size={14} /> Store page
             </a>
+            {canDelete ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className={cn(linkBtn, 'text-[var(--danger)] hover:border-[var(--danger)] hover:text-[var(--danger)]')}
+              >
+                <SiteIcon name="trash" size={14} /> Delete
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
@@ -207,6 +235,17 @@ export function InventoryProduct() {
           addingStock ? { _id: p._id, name: p.name, sellable: d.sellable, serialTracking: p.serialTracking } : null
         }
         onClose={() => setAddingStock(false)}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        title={`Delete ${p.name}?`}
+        description={`This permanently removes the product and its images from the catalog${
+          d.sellable + d.nonSellable > 0 ? ` (${d.sellable + d.nonSellable} units still recorded in stock)` : ''
+        }. To just hide it from the shop, set it to Inactive instead.`}
+        confirmLabel="Delete permanently"
+        loading={remove.isPending}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => remove.mutate()}
       />
     </div>
   )
