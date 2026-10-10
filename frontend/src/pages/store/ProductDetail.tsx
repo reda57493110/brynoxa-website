@@ -33,6 +33,8 @@ import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
+import { resolveTemplate } from '@/lib/specs'
+import { ProductSpecs } from '@/components/product/ProductSpecs'
 
 function primaryImage(product: Product) {
   return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
@@ -222,8 +224,8 @@ export function ProductDetail() {
     navigate('/checkout')
   }
 
-  // All specifications, shown once as tiles beside the photos
-  const specEntries = Object.entries((p.specs as Record<string, string>) || {})
+  // Specifications are shown once, beside the photos, grouped by the product's spec type
+  const specTemplate = resolveTemplate(p.specTemplate, category)
   const outOfStock = p.stock <= 0
 
   const onWishlist = async () => {
@@ -365,23 +367,7 @@ export function ProductDetail() {
               </p>
             ) : null}
 
-            {specEntries.length ? (
-              <dl aria-label={t('productPage.specifications')} className="mt-4 grid grid-cols-2 gap-2">
-                {specEntries.map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2"
-                  >
-                    <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-                      {key}
-                    </dt>
-                    <dd className="mt-0.5 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--fg)]">
-                      {value}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ) : null}
+            <ProductSpecs specs={p.specs} template={specTemplate} />
 
             <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">

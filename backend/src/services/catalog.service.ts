@@ -4,6 +4,7 @@ import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
 import { sanitizeDepositRule } from '../utils/deposit';
+import { sanitizeSpecs, sanitizeSpecTemplate } from '../utils/specs';
 import { moveStock, withTransaction } from './inventoryLedger.service';
 import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
@@ -89,6 +90,7 @@ export async function createCategory(data: {
   parent?: string | null;
   isActive?: boolean;
   sortOrder?: number;
+  specTemplate?: string | null;
 }) {
   let slug = slugify(data.name);
   const exists = await Category.findOne({ slug });
@@ -96,6 +98,7 @@ export async function createCategory(data: {
 
   const created = await Category.create({
     ...data,
+    specTemplate: sanitizeSpecTemplate(data.specTemplate) || undefined,
     slug,
     parent: data.parent || null,
   });
@@ -110,6 +113,7 @@ export async function updateCategory(id: string, data: Partial<{
   parent: string | null;
   isActive: boolean;
   sortOrder: number;
+  specTemplate: string | null;
 }>) {
   const category = await Category.findById(id);
   if (!category) throw new ApiError(404, 'Category not found');
@@ -122,6 +126,8 @@ export async function updateCategory(id: string, data: Partial<{
   if (data.parent !== undefined) category.parent = data.parent as never;
   if (data.isActive !== undefined) category.isActive = data.isActive;
   if (data.sortOrder !== undefined) category.sortOrder = data.sortOrder;
+  const specTemplate = sanitizeSpecTemplate(data.specTemplate);
+  if (specTemplate !== undefined) category.specTemplate = specTemplate || undefined;
   await category.save();
   invalidateActiveCategoryCache();
   return category;
@@ -283,7 +289,7 @@ export async function listProducts(query: ProductQuery) {
   const listQuery = Product.find(filter)
     .skip(skip)
     .limit(query.limit)
-    .populate('category', 'name slug isActive')
+    .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug logo')
     .lean();
 
@@ -301,7 +307,7 @@ export async function listProducts(query: ProductQuery) {
 
 export async function getProductBySlug(slug: string) {
   const product = await Product.findOne({ slug, isActive: true })
-    .populate('category', 'name slug isActive')
+    .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug logo');
   if (!product) throw new ApiError(404, 'Product not found');
   if (!categoryIsActive(product.category)) {
@@ -329,7 +335,7 @@ function costPriceOf(value: unknown): number | undefined {
 export async function getProductById(id: string) {
   const product = await Product.findById(id)
     .select('+costPrice')
-    .populate('category', 'name slug isActive')
+    .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug logo')
     .populate('recommended', 'name sku slug images price stock isActive');
   if (!product) throw new ApiError(404, 'Product not found');
@@ -357,6 +363,8 @@ export async function createProduct(data: Record<string, unknown>) {
     recommended: sanitizeRecommended(data.recommended),
     costPrice: costPriceOf(data.costPrice),
     recommendedOnly: Boolean(data.recommendedOnly),
+    specs: sanitizeSpecs(data.specs) ?? {},
+    specTemplate: sanitizeSpecTemplate(data.specTemplate) || undefined,
     slug,
     sku,
     isFeatured,
@@ -407,7 +415,6 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     'serialTracking',
     'inventoryLocation',
     'lowStockThreshold',
-    'specs',
     'tags',
     'isActive',
   ] as const;
@@ -417,6 +424,11 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
       (product as unknown as Record<string, unknown>)[key] = data[key];
     }
   }
+  // Specs are replaced as a whole (the form always sends the full set); omitted = untouched
+  const specs = sanitizeSpecs(data.specs);
+  if (specs) product.set('specs', specs);
+  const specTemplate = sanitizeSpecTemplate(data.specTemplate);
+  if (specTemplate !== undefined) product.specTemplate = specTemplate || undefined;
 
   if (data.deposit !== undefined) {
     const deposit = sanitizeDepositRule(data.deposit);
@@ -507,6 +519,6 @@ export async function getProductsByIds(ids: string[]) {
     isActive: true,
     category: { $in: activeIds },
   })
-    .populate('category', 'name slug isActive')
+    .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug');
 }

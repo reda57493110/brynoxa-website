@@ -8,6 +8,8 @@ export interface ICategory extends Document {
   parent?: Types.ObjectId | null;
   isActive: boolean;
   sortOrder: number;
+  /** Spec form for products in this category (see utils/specs.ts). */
+  specTemplate?: string;
 }
 
 const categorySchema = new Schema<ICategory>(
@@ -19,6 +21,7 @@ const categorySchema = new Schema<ICategory>(
     parent: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     isActive: { type: Boolean, default: true },
     sortOrder: { type: Number, default: 0 },
+    specTemplate: { type: String, default: undefined },
   },
   { timestamps: true }
 );

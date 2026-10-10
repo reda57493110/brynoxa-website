@@ -503,6 +503,8 @@ export const fr: Messages = {
     gallery: 'Images du produit',
     description: 'Description',
     specifications: 'Caractéristiques',
+    allSpecs: 'Toutes les caractéristiques ({count})',
+    keySpecs: 'Voir seulement l’essentiel',
   },
   contact: {
     heroKicker: 'Contact',

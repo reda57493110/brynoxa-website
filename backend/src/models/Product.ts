@@ -58,6 +58,8 @@ export interface IProduct extends Document {
   inventoryLocation?: string;
   inventory?: IProductInventory;
   specs: Map<string, string> | Record<string, string>;
+  /** Spec form used for this product (see utils/specs.ts); empty = from its category. */
+  specTemplate?: string;
   tags: string[];
   isFeatured: boolean;
   featuredAt?: Date | null;
@@ -130,6 +132,7 @@ const productSchema = new Schema<IProduct>(
       select: false,
     },
     specs: { type: Map, of: String, default: {} },
+    specTemplate: { type: String, default: undefined },
     tags: [{ type: String }],
     isFeatured: { type: Boolean, default: false },
     featuredAt: { type: Date, default: null },

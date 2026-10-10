@@ -12,9 +12,13 @@ import { isPreOwned } from '@/lib/condition'
 import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
 import { useT } from '@/hooks/useT'
+import { useLocaleStore } from '@/store/localeStore'
+import { formatSpecValue, getTemplate, resolveTemplate, specLabel, templateFields } from '@/lib/specs'
+import type { Category } from '@/types'
 
 export function Compare() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const navigate = useNavigate()
   const items = useCompareStore((s) => s.items)
   const remove = useCompareStore((s) => s.remove)
@@ -55,9 +59,15 @@ export function Compare() {
     )
   }
 
+  // Spec rows in the order of the first product's spec type, then any others
+  const first = list[0]
+  const order = templateFields(
+    getTemplate(resolveTemplate(first?.specTemplate, typeof first?.category === 'object' ? (first.category as Category) : null))
+  )
+  const rank = (k: string) => (order.includes(k) ? order.indexOf(k) : order.length)
   const allSpecKeys = Array.from(
     new Set(list.flatMap((p) => Object.keys((p.specs as Record<string, string>) || {})))
-  )
+  ).sort((a, b) => rank(a) - rank(b))
 
   return (
     <Container className="py-10">
@@ -132,10 +142,12 @@ export function Compare() {
             </tr>
             {allSpecKeys.map((key) => (
               <tr key={key} className="border-b border-[var(--border)]">
-                <td className="p-4 text-[var(--fg-muted)]">{key}</td>
+                <td className="p-4 text-[var(--fg-muted)]">{specLabel(key, locale)}</td>
                 {list.map((p) => (
                   <td key={p._id} className="p-4">
-                    {((p.specs as Record<string, string>) || {})[key] || '—'}
+                    {((p.specs as Record<string, string>) || {})[key]
+                      ? formatSpecValue(key, (p.specs as Record<string, string>)[key], locale)
+                      : '—'}
                   </td>
                 ))}
               </tr>

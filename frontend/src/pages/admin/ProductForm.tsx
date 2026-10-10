@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -18,9 +18,19 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
-import type { Brand, Product, ProductCondition } from '@/types'
+import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
+import { SpecsEditor } from '@/components/admin/SpecsEditor'
+import {
+  distribute,
+  draftEntries,
+  draftToSpecs,
+  isTemplateId,
+  templateForCategory,
+  validateDraft,
+  type SpecDraft,
+} from '@/lib/specs'
 
 type ImageSource = 'gallery' | 'url'
 type FormImage = { url: string; publicId?: string }
@@ -46,7 +56,7 @@ export function ProductForm() {
 
   const categories = useQuery({
     queryKey: ['categories', 'all'],
-    queryFn: async () => (await categoriesApi.list(true)).data.data,
+    queryFn: async () => (await categoriesApi.list(true)).data.data as Category[],
   })
   const adminSettings = useQuery({
     queryKey: ['admin-settings'],
@@ -121,6 +131,14 @@ export function ProductForm() {
   })
   const initialFormRef = useRef(JSON.stringify(form))
 
+  // Specifications: fields come from the category's template (or a type picked for this product)
+  const [specs, setSpecs] = useState<SpecDraft | null>(null)
+  const [specOverride, setSpecOverride] = useState('')
+  const [showSpecErrors, setShowSpecErrors] = useState(false)
+  // Saved specs waiting to be placed into the template (new product: none)
+  const [pendingSpecs, setPendingSpecs] = useState<[string, string][] | null>(isEdit ? null : [])
+  const initialSpecsRef = useRef<string | null>(isEdit ? null : JSON.stringify({ specs: {}, type: '' }))
+
   useEffect(() => {
     if (existing.data) {
       const p = existing.data
@@ -158,8 +176,44 @@ export function ProductForm() {
       }
       initialFormRef.current = JSON.stringify(nextForm)
       setForm(nextForm)
+      setPendingSpecs(Object.entries(p.specs || {}).map(([k, v]) => [k, String(v)]))
+      setSpecOverride(isTemplateId(p.specTemplate) ? p.specTemplate! : '')
+      setSpecs(null)
+      initialSpecsRef.current = null
     }
   }, [existing.data])
+
+  const categoryList = categories.data ?? []
+  const populatedCategory =
+    existing.data && typeof existing.data.category === 'object' ? (existing.data.category as Category) : null
+  const selectedCategory =
+    categoryList.find((c) => c._id === form.category) ??
+    (populatedCategory?._id === form.category ? populatedCategory : null)
+  const autoTemplate = templateForCategory(selectedCategory, categoryList)
+  // Wait for the category list so the type does not flip once it arrives
+  const categoriesReady = Boolean(categories.data) || categories.isError
+  const specTemplate = specOverride || (form.category && categoriesReady ? autoTemplate : null)
+
+  // Place saved specs into the current template; on a type change, carry every value over
+  useEffect(() => {
+    if (!specTemplate) return
+    if (pendingSpecs) {
+      // Keep anything typed before a category was chosen
+      const next = distribute([...pendingSpecs, ...(specs ? draftEntries(specs) : [])], specTemplate)
+      setSpecs(next)
+      setPendingSpecs(null)
+      if (initialSpecsRef.current === null) {
+        initialSpecsRef.current = JSON.stringify({ specs: draftToSpecs(next), type: specOverride })
+      }
+    } else if (specs && specs.template !== specTemplate) {
+      setSpecs(distribute(draftEntries(specs), specTemplate))
+    }
+  }, [specTemplate, specs, pendingSpecs, specOverride])
+
+  const specErrors = useMemo(
+    () => (showSpecErrors && specs ? validateDraft(specs) : {}),
+    [showSpecErrors, specs]
+  )
 
   const locationOptions = Array.from(
     new Set(
@@ -169,7 +223,10 @@ export function ProductForm() {
     )
   )
 
-  const isDirty = JSON.stringify(form) !== initialFormRef.current
+  const specsSnapshot = JSON.stringify({ specs: specs ? draftToSpecs(specs) : {}, type: specOverride })
+  const isDirty =
+    JSON.stringify(form) !== initialFormRef.current ||
+    (initialSpecsRef.current !== null && specsSnapshot !== initialSpecsRef.current)
   const costNumber =
     form.costPrice.trim() !== '' && Number.isFinite(Number(form.costPrice))
       ? Number(form.costPrice)
@@ -222,6 +279,9 @@ export function ProductForm() {
         isActive: form.isActive,
         recommended: form.recommended.map((r) => r._id),
         recommendedOnly: form.recommendedOnly,
+        // Full set of specs (empty ones left out); not sent until the spec fields are ready
+        ...(specs ? { specs: draftToSpecs(specs) } : {}),
+        specTemplate: specOverride,
         images: form.images.map((img, i) => ({
           url: img.url,
           publicId: img.publicId,
@@ -368,6 +428,15 @@ export function ProductForm() {
           }
           if (!isEdit && (!Number.isInteger(Number(form.stock)) || form.stock < 0)) {
             toast('Stock must be a whole number (0 or more)', 'error')
+            return
+          }
+          if (specs && Object.keys(validateDraft(specs)).length) {
+            setShowSpecErrors(true)
+            toast('Fix the highlighted specifications', 'error')
+            return
+          }
+          if (isEdit && !specs) {
+            toast('Specifications are still loading — try again in a moment', 'error')
             return
           }
           save.mutate()
@@ -563,7 +632,11 @@ export function ProductForm() {
           value={form.category}
           onChange={(e) => setForm({ ...form, category: e.target.value })}
           required
-          options={(categories.data || []).map((c) => ({ value: c._id, label: c.name }))}
+          options={categoryList.map((c) => {
+            const parentId = typeof c.parent === 'string' ? c.parent : c.parent?._id
+            const parent = parentId ? categoryList.find((x) => x._id === parentId) : null
+            return { value: c._id, label: parent ? `${parent.name} › ${c.name}` : c.name }
+          })}
         />
         <Input
           label="Brand"
@@ -642,6 +715,22 @@ export function ProductForm() {
             </span>
           </label>
         </div>
+        {specs || !specTemplate ? (
+          <SpecsEditor
+            draft={specs ?? { template: autoTemplate, values: {}, custom: [] }}
+            onChange={setSpecs}
+            override={specOverride}
+            onOverride={setSpecOverride}
+            autoTemplate={autoTemplate}
+            hasCategory={Boolean(form.category)}
+            context={{ condition: form.condition }}
+            errors={specErrors}
+          />
+        ) : (
+          <div className="flex justify-center py-6 sm:col-span-2">
+            <Spinner />
+          </div>
+        )}
         <Textarea
           label="Short description"
           className="sm:col-span-2"

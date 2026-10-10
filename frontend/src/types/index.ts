@@ -68,6 +68,8 @@ export interface Category {
   parent?: string | Category | null
   isActive: boolean
   sortOrder: number
+  /** Spec form for products in this category (lib/specs.ts template id). */
+  specTemplate?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -123,6 +125,8 @@ export interface Product {
   stock: number
   lowStockThreshold: number
   specs: Record<string, string>
+  /** Spec form picked for this product; empty = from its category. */
+  specTemplate?: string
   tags: string[]
   isFeatured: boolean
   isCarousel?: boolean

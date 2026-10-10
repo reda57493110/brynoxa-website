@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
@@ -77,6 +78,7 @@ export const categorySchema = z.object({
   parent: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().optional(),
+  specTemplate: z.union([z.enum(SPEC_TEMPLATE_IDS), z.literal(''), z.null()]).optional(),
 });
 
 export const brandSchema = z.object({
@@ -117,7 +119,8 @@ export const productSchema = z.object({
   inventoryLocation: z.string().trim().max(80).optional(),
   stock: z.number().int().min(0),
   lowStockThreshold: z.number().int().min(0).optional(),
-  specs: z.record(z.string(), z.string()).optional(),
+  specs: z.record(z.string().max(60), z.string().max(500)).optional(),
+  specTemplate: z.union([z.enum(SPEC_TEMPLATE_IDS), z.literal(''), z.null()]).optional(),
   tags: z.array(z.string()).optional(),
   isFeatured: z.boolean().optional(),
   isCarousel: z.boolean().optional(),

@@ -16,6 +16,7 @@ import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSetting
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
 import { InventorySettings } from '@/components/admin/InventorySettings'
 import { useToastStore } from '@/store/toastStore'
+import { SPEC_TEMPLATES, getTemplate, isTemplateId, templateForCategory } from '@/lib/specs'
 
 export function Settings() {
   const qc = useQueryClient()
@@ -70,6 +71,16 @@ export function Settings() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] })
       toast('Category updated', 'success')
+    },
+    onError: (e) => toast(getErrorMessage(e), 'error'),
+  })
+
+  const setCategorySpecs = useMutation({
+    mutationFn: (c: { _id: string; specTemplate: string }) =>
+      adminApi.categories.update(c._id, { specTemplate: c.specTemplate }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['categories'] })
+      toast('Specification type saved', 'success')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })
@@ -164,7 +175,8 @@ export function Settings() {
           <h2 className="font-display text-lg font-semibold">Categories</h2>
           <p className="text-sm text-[var(--fg-muted)]">
             Add categories for your products. Hide removes a category and its products from the
-            shop (admin catalog still shows them).
+            shop (admin catalog still shows them). The specification type decides which spec
+            fields the product form shows for products in that category.
           </p>
         </div>
 
@@ -203,11 +215,27 @@ export function Settings() {
                 key={c._id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium">{c.name}</p>
                   <p className="text-xs text-[var(--fg-muted)]">/{c.slug}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={`Specification type for ${c.name}`}
+                    value={isTemplateId(c.specTemplate) ? c.specTemplate : ''}
+                    disabled={setCategorySpecs.isPending}
+                    onChange={(e) => setCategorySpecs.mutate({ _id: c._id, specTemplate: e.target.value })}
+                    className="h-9 max-w-[13rem] rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm"
+                  >
+                    <option value="">
+                      Specs: {getTemplate(templateForCategory({ ...c, specTemplate: undefined }, categories.data ?? [])).label.en} (auto)
+                    </option>
+                    {SPEC_TEMPLATES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        Specs: {t.label.en}
+                      </option>
+                    ))}
+                  </select>
                   <Badge variant={c.isActive ? 'success' : 'danger'}>
                     {c.isActive ? 'On' : 'Off'}
                   </Badge>
