@@ -2,6 +2,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { formatCurrency } from '@/lib/format'
 import { Spinner } from '@/components/ui/Spinner'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SalesChart } from '@/components/admin/SalesChart'
@@ -30,7 +31,7 @@ export function Dashboard() {
 
   const s = stats.data
   if (!s) {
-    return <p className="text-sm text-[var(--fg-muted)]">Could not load dashboard.</p>
+    return <QueryErrorState onRetry={() => stats.refetch()} />
   }
 
   const cards: { label: string; value: string; hint: string; icon: SiteIconName; to: string }[] = [
