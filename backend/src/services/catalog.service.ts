@@ -185,12 +185,15 @@ type ProductQuery = {
   inStock?: boolean;
   isActive?: boolean;
   admin?: boolean;
+  condition?: string;
 };
 
 export async function listProducts(query: ProductQuery) {
   const filter: Record<string, unknown> = {};
   if (!query.admin) filter.isActive = true;
   else if (query.isActive !== undefined) filter.isActive = query.isActive;
+  if (query.condition === 'new') filter.condition = { $in: ['new', null] };
+  else if (query.condition === 'refurbished' || query.condition === 'used') filter.condition = query.condition;
 
   const q = query.q?.trim() || '';
   let useTextScore = false;

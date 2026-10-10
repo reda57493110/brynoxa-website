@@ -78,6 +78,9 @@ export interface InventoryQuery {
   location?: string;
   supplier?: string;
   status?: string;
+  /** 'true' = active listings only, 'false' = inactive only */
+  active?: string;
+  category?: string;
   sort?: 'name' | 'available' | 'physical' | 'value' | 'nonSellable';
   dir?: 'asc' | 'desc';
 }
@@ -90,6 +93,9 @@ export async function inventoryOverview(query: InventoryQuery) {
     const rx = new RegExp(escapeRegex(query.q.trim()), 'i');
     filter.$or = [{ name: rx }, { sku: rx }];
   }
+  if (query.active === 'true') filter.isActive = true;
+  if (query.active === 'false') filter.isActive = false;
+  if (query.category && mongoose.Types.ObjectId.isValid(query.category)) filter.category = query.category;
   if (query.condition && ['new', 'refurbished', 'used'].includes(query.condition)) {
     filter.condition = query.condition === 'new' ? { $in: ['new', null] } : query.condition;
   }

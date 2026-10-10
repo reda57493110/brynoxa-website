@@ -22,7 +22,8 @@ export const overview = asyncHandler(async (req: AuthRequest, res: Response) => 
   const sort = ['name', 'available', 'physical', 'value', 'nonSellable'].includes(String(q.sort)) ? (q.sort as reports.InventoryQuery['sort']) : undefined;
   const result = await reports.inventoryOverview({
     page: num(q.page), limit: num(q.limit), q: str(q.q), serial: str(q.serial), condition: str(q.condition),
-    location: str(q.location), supplier: str(q.supplier), status: str(q.status), sort, dir: q.dir === 'asc' ? 'asc' : 'desc',
+    location: str(q.location), supplier: str(q.supplier), status: str(q.status),
+    active: str(q.active), category: str(q.category), sort, dir: q.dir === 'asc' ? 'asc' : 'desc',
   });
   sendPaginated(res, result.items, { page: result.page, limit: result.limit, total: result.total });
 });

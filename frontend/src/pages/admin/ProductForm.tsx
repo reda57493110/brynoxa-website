@@ -373,6 +373,38 @@ export function ProductForm() {
           save.mutate()
         }}
       >
+        <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/40 p-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Status</p>
+            <p className="text-xs text-[var(--fg-muted)]">
+              Inactive products stay in admin with all their stock and details, but customers can’t see them.
+            </p>
+          </div>
+          <div role="radiogroup" aria-label="Product status" className="inline-flex shrink-0 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] p-0.5">
+            {[
+              { value: true, label: 'Active' },
+              { value: false, label: 'Inactive' },
+            ].map((o) => (
+              <button
+                key={o.label}
+                type="button"
+                role="radio"
+                aria-checked={form.isActive === o.value}
+                onClick={() => setForm({ ...form, isActive: o.value })}
+                className={cn(
+                  'h-8 rounded-full px-4 text-sm font-medium transition',
+                  form.isActive === o.value
+                    ? o.value
+                      ? 'bg-[var(--success)] text-white'
+                      : 'bg-[var(--fg)] text-[var(--bg)]'
+                    : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                )}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <Input
           label="Name"
           className="sm:col-span-2"
@@ -842,20 +874,6 @@ export function ProductForm() {
             <input
               type="checkbox"
               className="mt-1"
-              checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-            />
-            <span>
-              <span className="block text-sm font-medium">Active in shop</span>
-              <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                Hidden products stay in admin but are not visible to customers.
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1"
               checked={shopHero}
               onChange={(e) => setShopHero(e.target.checked)}
             />
@@ -889,7 +907,7 @@ export function ProductForm() {
               ) : null}
               {shopHero && !form.isActive ? (
                 <span className="mt-1 block text-xs text-[var(--danger)]">
-                  Turn on “Active in shop”, otherwise customers won’t see it.
+                  Set the status to Active at the top, otherwise customers won’t see it.
                 </span>
               ) : null}
             </span>

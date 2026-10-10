@@ -148,6 +148,7 @@ export interface ProductFilters {
   inStock?: boolean
   isActive?: boolean
   admin?: boolean
+  condition?: ProductCondition
 }
 
 export type OrderStatus =
@@ -773,6 +774,10 @@ export interface InventoryQueryParams {
   supplier?: string
   /** in-stock | low | out | awaiting | defective | repair | non-sellable */
   status?: string
+  /** 'true' = active listings only, 'false' = inactive only */
+  active?: 'true' | 'false' | ''
+  /** category id */
+  category?: string
   sort?: 'name' | 'available' | 'physical' | 'value' | 'nonSellable'
   dir?: 'asc' | 'desc'
 }

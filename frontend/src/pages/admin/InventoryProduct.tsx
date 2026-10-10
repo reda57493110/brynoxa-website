@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi } from '@/api/inventoryApi'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -9,6 +11,8 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { InventoryNav } from '@/components/admin/inventory/InventoryNav'
 import { StatCard, cardClass } from '@/components/admin/customers/shared'
 import { ConditionBadge, SellableBar, ValueText } from '@/components/admin/inventory/ProductBadges'
+import { ActiveToggle } from '@/components/admin/ActiveToggle'
+import { AddStockDialog } from '@/components/admin/inventory/AddStockDialog'
 import { ProductActions } from '@/components/admin/inventory/ProductActions'
 import { ProductListings } from '@/components/admin/inventory/ProductListings'
 import { ProductHistory } from '@/components/admin/inventory/ProductHistory'
@@ -26,6 +30,7 @@ export function InventoryProduct() {
   const qc = useQueryClient()
   const role = useAuthStore((s) => s.user?.role)
   const canApprove = hasPermission(role, 'inventory:approve')
+  const [addingStock, setAddingStock] = useState(false)
 
   const detail = useQuery({
     queryKey: ['admin-inventory', 'product', id],
@@ -114,10 +119,13 @@ export function InventoryProduct() {
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <ConditionBadge condition={p.condition} />
               {p.serialTracking ? <Badge variant="muted">Serial tracked</Badge> : null}
-              {!p.isActive ? <Badge variant="danger">Inactive</Badge> : null}
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" onClick={() => setAddingStock(true)}>
+              <SiteIcon name="plus" size={14} /> Add stock
+            </Button>
+            <ActiveToggle product={p} />
             <Link to={`/admin/products/${p._id}/edit`} className={linkBtn}>
               <SiteIcon name="pencil" size={14} /> Edit product
             </Link>
@@ -193,6 +201,13 @@ export function InventoryProduct() {
       </div>
 
       <ProductHistory detail={d} statuses={statuses} />
+
+      <AddStockDialog
+        product={
+          addingStock ? { _id: p._id, name: p.name, sellable: d.sellable, serialTracking: p.serialTracking } : null
+        }
+        onClose={() => setAddingStock(false)}
+      />
     </div>
   )
 }

@@ -351,6 +351,9 @@ export const createStaffUserSchema = z.object({
   role: z.enum(['orders', 'catalog', 'support', 'marketing']),
 });
 
+/** Query-string boolean: only "true"/"false" (z.coerce.boolean would turn "false" into true). */
+const queryBool = z.preprocess((v) => (v === 'true' || v === true ? true : v === 'false' || v === false ? false : undefined), z.boolean().optional());
+
 export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(12),
@@ -360,10 +363,11 @@ export const paginationQuerySchema = z.object({
   brand: z.string().optional(),
   minPrice: z.coerce.number().optional(),
   maxPrice: z.coerce.number().optional(),
-  featured: z.coerce.boolean().optional(),
-  carousel: z.coerce.boolean().optional(),
-  inStock: z.coerce.boolean().optional(),
-  isActive: z.coerce.boolean().optional(),
+  featured: queryBool,
+  carousel: queryBool,
+  inStock: queryBool,
+  isActive: queryBool,
+  condition: z.enum(['new', 'refurbished', 'used']).optional(),
 });
 
 export const emailTestSchema = z.object({

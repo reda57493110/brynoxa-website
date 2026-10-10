@@ -17,7 +17,8 @@ import { Pagination } from '@/components/ui/Pagination'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { formatCurrency } from '@/lib/format'
 import { toast } from '@/store/toastStore'
-import type { Category } from '@/types'
+import { ActiveToggle } from '@/components/admin/ActiveToggle'
+import type { Category, ProductCondition } from '@/types'
 
 export function Products() {
   const qc = useQueryClient()
@@ -25,6 +26,7 @@ export function Products() {
   const [page, setPage] = useState(1)
   const [category, setCategory] = useState('')
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
+  const [condition, setCondition] = useState<ProductCondition | ''>('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const cats = useQuery({
@@ -39,9 +41,10 @@ export function Products() {
       q: q || undefined,
       category: category || undefined,
       isActive: active === 'all' ? undefined : active === 'true',
+      condition: condition || undefined,
       admin: true,
     }),
-    [page, q, category, active]
+    [page, q, category, active, condition]
   )
 
   const products = useQuery({
@@ -69,7 +72,7 @@ export function Products() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader
         title="Products"
-        description={`${products.data?.meta?.total ?? '—'} in catalog · includes hidden items`}
+        description={`${products.data?.meta?.total ?? '—'} in catalog · includes inactive items`}
         actions={
           <Link to="/admin/products/new" className="w-full sm:w-auto">
             <Button size="sm" className="w-full sm:h-11 sm:px-4 sm:text-sm">
@@ -90,7 +93,7 @@ export function Products() {
             }}
           />
         </div>
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:contents">
+        <div className="grid min-w-0 grid-cols-3 gap-2 sm:contents">
           <select
             value={category}
             onChange={(e) => {
@@ -116,7 +119,21 @@ export function Products() {
           >
             <option value="all">All status</option>
             <option value="true">Active</option>
-            <option value="false">Hidden</option>
+            <option value="false">Inactive</option>
+          </select>
+          <select
+            value={condition}
+            onChange={(e) => {
+              setCondition(e.target.value as typeof condition)
+              setPage(1)
+            }}
+            aria-label="Condition"
+            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
+          >
+            <option value="">Any condition</option>
+            <option value="new">New</option>
+            <option value="refurbished">Refurbished</option>
+            <option value="used">Used</option>
           </select>
         </div>
       </div>
@@ -160,9 +177,10 @@ export function Products() {
                     </div>
                   </div>
                   <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1">
-                    <Badge variant={p.isActive ? 'success' : 'danger'}>
-                      {p.isActive ? 'Active' : 'Hidden'}
-                    </Badge>
+                    <ActiveToggle product={p} size="sm" />
+                    {p.condition && p.condition !== 'new' ? (
+                      <Badge variant="muted">{p.condition === 'used' ? 'Used' : 'Refurbished'}</Badge>
+                    ) : null}
                     {p.stock <= p.lowStockThreshold ? (
                       <Badge variant="warning">{p.stock} left</Badge>
                     ) : (
@@ -247,9 +265,10 @@ export function Products() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex max-w-[12rem] flex-wrap gap-1">
-                          <Badge variant={p.isActive ? 'success' : 'danger'}>
-                            {p.isActive ? 'Active' : 'Hidden'}
-                          </Badge>
+                          <ActiveToggle product={p} size="sm" />
+                          {p.condition && p.condition !== 'new' ? (
+                            <Badge variant="muted">{p.condition === 'used' ? 'Used' : 'Refurbished'}</Badge>
+                          ) : null}
                           {p.isFeatured ? <Badge variant="brand">Featured</Badge> : null}
                           {p.isCarousel ? <Badge variant="brand">Carousel</Badge> : null}
                         </div>

@@ -4,14 +4,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
+import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { cardClass } from '@/components/admin/customers/shared'
+import { formatCurrency } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { InventoryRow } from '@/types'
-import { ConditionBadge, ValueText } from './ProductBadges'
+import { ConditionBadge } from './ProductBadges'
 
 function Thumb({ src }: { src?: string }) {
   return (
@@ -29,10 +32,10 @@ function Thumb({ src }: { src?: string }) {
 
 function Tags({ row }: { row: InventoryRow }) {
   return (
-    <div className="mt-1 flex flex-wrap gap-1">
+    <div className="mt-1 flex flex-wrap items-center gap-1">
       <ConditionBadge condition={row.condition} />
+      {row.category ? <span className="text-[11px] text-[var(--fg-muted)]">{row.category}</span> : null}
       {row.serialTracking ? <Badge variant="muted">Serial</Badge> : null}
-      {!row.isActive ? <Badge variant="danger">Inactive</Badge> : null}
     </div>
   )
 }
@@ -41,6 +44,20 @@ function sellableClass(row: InventoryRow) {
   if (row.sellable <= 0) return 'text-[var(--danger)]'
   if (row.lowStock) return 'text-[var(--warning)]'
   return ''
+}
+
+/** Units held back (not for sale), with the breakdown on hover. */
+function heldTitle(row: InventoryRow) {
+  const b = row.buckets
+  return [
+    b.reserved && `${b.reserved} reserved`,
+    b.awaitingInspection && `${b.awaitingInspection} to inspect`,
+    b.returned && `${b.returned} returned`,
+    b.defective && `${b.defective} defective`,
+    b.underRepair && `${b.underRepair} in repair`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 /** Inline low-stock alert editor (no reason needed). */
@@ -80,8 +97,7 @@ function ThresholdEdit({ row }: { row: InventoryRow }) {
       onClick={stop}
       onSubmit={(e) => {
         e.preventDefault()
-        const n = Math.max(0, Math.trunc(Number(value) || 0))
-        save.mutate(n)
+        save.mutate(Math.max(0, Math.trunc(Number(value) || 0)))
       }}
       className="inline-flex items-center gap-1"
     >
@@ -114,19 +130,24 @@ function ThresholdEdit({ row }: { row: InventoryRow }) {
   )
 }
 
-const NUM_COLS: { key: keyof InventoryRow['buckets']; label: string }[] = [
-  { key: 'reserved', label: 'Reserved' },
-  { key: 'awaitingInspection', label: 'To inspect' },
-  { key: 'returned', label: 'Returns' },
-  { key: 'defective', label: 'Defective' },
-  { key: 'underRepair', label: 'In repair' },
-]
-
-function n(v: number) {
-  return v ? v : <span className="text-[var(--fg-muted)]">0</span>
+function AddStockButton({ row, onAddStock, block }: { row: InventoryRow; onAddStock: (row: InventoryRow) => void; block?: boolean }) {
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className={cn('shrink-0', block && 'flex-1')}
+      onClick={(e) => {
+        e.stopPropagation()
+        onAddStock(row)
+      }}
+    >
+      <SiteIcon name="plus" size={14} />
+      Add stock
+    </Button>
+  )
 }
 
-export function DashboardTable({ rows }: { rows: InventoryRow[] }) {
+export function DashboardTable({ rows, onAddStock }: { rows: InventoryRow[]; onAddStock: (row: InventoryRow) => void }) {
   const navigate = useNavigate()
   const open = (id: string) => navigate(`/admin/inventory/products/${id}`)
 
@@ -148,48 +169,45 @@ export function DashboardTable({ rows }: { rows: InventoryRow[] }) {
               <Thumb src={r.image} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{r.name}</p>
-                <p className="truncate text-[11px] text-[var(--fg-muted)]">{r.sku}</p>
+                <p className="truncate text-[11px] text-[var(--fg-muted)]">
+                  {r.sku} · {formatCurrency(r.price)}
+                </p>
                 <Tags row={r} />
               </div>
-              <div className="shrink-0 text-right">
+              <div className="shrink-0 text-end">
                 <p className={cn('font-display text-lg font-semibold', sellableClass(r))}>{r.sellable}</p>
-                <p className="text-[11px] text-[var(--fg-muted)]">Sellable</p>
+                <p className="text-[11px] text-[var(--fg-muted)]">In stock</p>
               </div>
             </Link>
-            <dl className="mt-2.5 grid grid-cols-3 gap-x-3 gap-y-1 text-xs">
-              {NUM_COLS.map((c) => (
-                <div key={c.key} className="flex justify-between gap-1">
-                  <dt className="truncate text-[var(--fg-muted)]">{c.label}</dt>
-                  <dd>{r.buckets[c.key]}</dd>
-                </div>
-              ))}
-              <div className="flex justify-between gap-1">
-                <dt className="text-[var(--fg-muted)]">Physical</dt>
-                <dd>{r.physical}</dd>
-              </div>
-            </dl>
-            <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
               <ThresholdEdit row={r} />
-              <ValueText value={r.value} />
+              {r.nonSellable ? (
+                <span className="text-[var(--fg-muted)]" title={heldTitle(r)}>
+                  +{r.nonSellable} not sellable
+                </span>
+              ) : null}
+            </div>
+            <div className="mt-2.5 flex items-center gap-2">
+              <AddStockButton row={r} onAddStock={onAddStock} block />
+              <ActiveToggle product={r} size="sm" />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Desktop: table scrolls inside its card */}
+      {/* Desktop */}
       <div className={`${cardClass} hidden min-w-0 overflow-x-auto md:block`}>
-        <table className="w-full min-w-[1040px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-start text-sm">
           <thead className="bg-[var(--bg-muted)] text-xs text-[var(--fg-muted)]">
             <tr>
-              <th className="px-3 py-3 font-medium">Product</th>
-              <th className="px-3 py-3 text-right font-medium">Sellable</th>
-              {NUM_COLS.map((c) => (
-                <th key={c.key} className="px-3 py-3 text-right font-medium">
-                  {c.label}
-                </th>
-              ))}
-              <th className="px-3 py-3 text-right font-medium">Physical</th>
-              <th className="px-3 py-3 text-right font-medium">Value</th>
+              <th className="px-3 py-3 text-start font-medium">Product</th>
+              <th className="px-3 py-3 text-end font-medium">Price</th>
+              <th className="px-3 py-3 text-end font-medium">In stock</th>
+              <th className="px-3 py-3 text-end font-medium">Not sellable</th>
+              <th className="px-3 py-3 text-start font-medium">Status</th>
+              <th className="px-3 py-3 text-end font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -199,7 +217,7 @@ export function DashboardTable({ rows }: { rows: InventoryRow[] }) {
                 onClick={() => open(r._id)}
                 className="cursor-pointer border-t border-[var(--border)] align-top transition hover:bg-[var(--bg-muted)]/50"
               >
-                <td className="max-w-[20rem] px-3 py-3">
+                <td className="max-w-[22rem] px-3 py-3">
                   <div className="flex min-w-0 items-start gap-2.5">
                     <Thumb src={r.image} />
                     <div className="min-w-0">
@@ -215,21 +233,19 @@ export function DashboardTable({ rows }: { rows: InventoryRow[] }) {
                     </div>
                   </div>
                 </td>
-                <td className="px-3 py-3 text-right whitespace-nowrap">
-                  <p className={cn('font-semibold', sellableClass(r))}>{r.sellable}</p>
+                <td className="px-3 py-3 text-end whitespace-nowrap tabular-nums">{formatCurrency(r.price)}</td>
+                <td className="px-3 py-3 text-end whitespace-nowrap">
+                  <p className={cn('font-semibold tabular-nums', sellableClass(r))}>{r.sellable}</p>
                   <ThresholdEdit row={r} />
                 </td>
-                {NUM_COLS.map((c) => (
-                  <td key={c.key} className="px-3 py-3 text-right">
-                    {n(r.buckets[c.key])}
-                  </td>
-                ))}
-                <td className="px-3 py-3 text-right font-medium">{r.physical}</td>
-                <td className="px-3 py-3 text-right whitespace-nowrap">
-                  <ValueText value={r.value} />
-                  {r.value !== null && r.uncostedUnits > 0 ? (
-                    <p className="text-[11px] text-[var(--warning)]">+{r.uncostedUnits} no cost</p>
-                  ) : null}
+                <td className="px-3 py-3 text-end tabular-nums" title={heldTitle(r) || undefined}>
+                  {r.nonSellable ? r.nonSellable : <span className="text-[var(--fg-muted)]">0</span>}
+                </td>
+                <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                  <ActiveToggle product={r} size="sm" />
+                </td>
+                <td className="px-3 py-3 text-end">
+                  <AddStockButton row={r} onAddStock={onAddStock} />
                 </td>
               </tr>
             ))}

@@ -126,6 +126,7 @@ module.exports = async (req, res) => {
       inStock: raw.inStock === 'true',
       admin: isAdmin,
       isActive: toBool(raw.isActive),
+      condition: raw.condition,
     });
 
     sendJson(res, 200, {
