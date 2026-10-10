@@ -23,7 +23,8 @@ import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
-import type { OrderItem, Product } from '@/types'
+import type { OrderItem, Product, ProductCondition } from '@/types'
+import { ConditionBadge } from '@/components/product/ConditionBadge'
 
 function statusVariant(status: string) {
   if (status === 'delivered') return 'success' as const
@@ -37,7 +38,15 @@ function productIdOf(item: OrderItem) {
   return typeof item.product === 'string' ? item.product : item.product._id
 }
 
-type DraftItem = { productId: string; name: string; image?: string; price: number; qty: number; sku: string }
+type DraftItem = {
+  productId: string
+  name: string
+  image?: string
+  price: number
+  qty: number
+  sku: string
+  condition?: ProductCondition
+}
 
 function toDraft(items: OrderItem[]): DraftItem[] {
   return items.map((item) => ({
@@ -47,6 +56,7 @@ function toDraft(items: OrderItem[]): DraftItem[] {
     price: item.price,
     qty: item.qty,
     sku: item.sku,
+    condition: item.condition,
   }))
 }
 
@@ -150,6 +160,7 @@ export function OrderDetail() {
           price: product.price,
           qty: 1,
           sku: product.sku,
+          condition: product.condition,
         },
       ]
     })
@@ -234,7 +245,10 @@ export function OrderDetail() {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-display font-semibold">{item.name}</p>
-                  <p className="text-sm text-[var(--fg-muted)]">{formatCurrency(item.price)}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-[var(--fg-muted)]">{formatCurrency(item.price)}</p>
+                    <ConditionBadge condition={item.condition} size="sm" />
+                  </div>
                   {canEdit ? (
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <div className="inline-flex items-center rounded-full border border-[var(--border)]">

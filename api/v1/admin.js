@@ -138,21 +138,6 @@ async function handleProductRoutes(req, res, route) {
     return;
   }
 
-  const inventoryMatch = route.match(/^products\/([^/]+)\/inventory$/);
-  if (inventoryMatch && req.method === 'PATCH') {
-    const user = await requireStaff(req, res, ['inventory:write']);
-    if (!user) return;
-    const body = await readJsonBody(req);
-    const item = await catalog.updateInventory(
-      inventoryMatch[1],
-      Number(body.stock),
-      body.lowStockThreshold !== undefined ? Number(body.lowStockThreshold) : undefined
-    );
-    dashboardCache = { at: 0, data: null };
-    sendJson(res, 200, { success: true, message: 'Inventory updated', data: item });
-    return;
-  }
-
   const match = route.match(/^products\/([^/]+)$/);
   if (!match) {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
@@ -439,7 +424,13 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // Admin product CRUD + inventory — keep off the slow Express lambda.
+    // Stock edits go through the inventory ledger in Express (reason + approval + audit log)
+    if (/^products\/[^/]+\/inventory$/.test(route)) {
+      await delegateToExpress(req, res, route, query);
+      return;
+    }
+
+    // Admin product CRUD — keep off the slow Express lambda.
     if (route === 'products' || route.startsWith('products/')) {
       await handleProductRoutes(req, res, route);
       return;
@@ -458,7 +449,7 @@ module.exports = async (req, res) => {
     }
 
     // Refunds are recorded by the Express app
-    if (/^orders\/[^/]+\/refunds$/.test(route)) {
+    if (/^orders\/[^/]+\/(refunds|returns)$/.test(route)) {
       await delegateToExpress(req, res, route, query);
       return;
     }

@@ -21,6 +21,9 @@ const ALLOWED_FIELDS = [
   'emailMessages',
   'wholesaleTiers',
   'customerSegments',
+  'inventoryStatuses',
+  'inventoryLocations',
+  'requireInspection',
   'notifyStaffLoginEmail',
   'pageHeroProducts',
 ];
@@ -46,6 +49,8 @@ module.exports = async (req, res) => {
         sanitizeEmailNotifications,
         sanitizeEmailMessages,
         sanitizeSegmentSettings,
+        sanitizeInventoryStatuses,
+        sanitizeLocations,
       } = require('../../backend/dist/models/Settings');
       const { sanitizeWholesaleTiers } = require('../../backend/dist/utils/wholesale');
       const settings = await getSettings();
@@ -56,6 +61,12 @@ module.exports = async (req, res) => {
           settings[key] = sanitizeShippingByCity(body[key]);
         } else if (key === 'emailNotifications') {
           settings[key] = sanitizeEmailNotifications(body[key], settings.emailNotifications);
+        } else if (key === 'inventoryStatuses') {
+          settings[key] = sanitizeInventoryStatuses(body[key]);
+        } else if (key === 'inventoryLocations') {
+          settings[key] = sanitizeLocations(body[key]);
+        } else if (key === 'requireInspection') {
+          settings[key] = Boolean(body[key]);
         } else if (key === 'wholesaleTiers') {
           settings[key] = sanitizeWholesaleTiers(body[key]);
         } else if (key === 'customerSegments') {

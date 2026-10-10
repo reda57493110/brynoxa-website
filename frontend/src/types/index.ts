@@ -109,6 +109,13 @@ export interface Product {
   compareAtPrice?: number
   /** Staff-only; only present in admin product responses */
   costPrice?: number | null
+  /** Condition of the units this listing sells */
+  condition?: ProductCondition
+  /** Disclosure shown on refurbished / used listings */
+  conditionNote?: string
+  serialTracking?: boolean
+  baseProduct?: string
+  inventoryLocation?: string
   deposit?: ProductDeposit | null
   /** Hand-picked recommendations (ids; populated objects in the admin product view) */
   recommended?: (string | Product)[]
@@ -171,6 +178,9 @@ export interface OrderItem {
   qty: number
   /** Catalog price per unit when ordered */
   listPrice?: number
+  /** Condition of the listing when ordered */
+  condition?: ProductCondition
+  serials?: string[]
 }
 
 export interface OrderRefund {
@@ -294,6 +304,9 @@ export interface StoreSettings {
   emailMessages?: Partial<Record<EmailMessageEvent, string>>
   wholesaleTiers?: WholesaleTier[]
   customerSegments?: SegmentSettings
+  inventoryStatuses?: InventoryStatusDef[]
+  inventoryLocations?: string[]
+  requireInspection?: boolean
   notifyStaffLoginEmail?: boolean
   pageHeroProducts?: Partial<Record<HeroPage, string>>
 }
@@ -689,4 +702,330 @@ export interface WholesaleApplicationPayload {
   requestedType: 'wholesale' | 'business'
   business: BusinessInfo & { companyName: string; phone: string }
   message?: string
+}
+
+/* ---------- Inventory (admin) ---------- */
+
+export type ProductCondition = 'new' | 'refurbished' | 'used'
+
+/** Where units can be. 'custom:<id>' = an admin-defined holding status. */
+export type InventoryBucket =
+  | 'available'
+  | 'reserved'
+  | 'awaitingInspection'
+  | 'returned'
+  | 'defective'
+  | 'underRepair'
+  | 'writtenOff'
+  | `custom:${string}`
+
+export interface InventoryStatusDef {
+  id: string
+  name: string
+}
+
+export interface InventoryBuckets {
+  available: number
+  reserved: number
+  awaitingInspection: number
+  returned: number
+  defective: number
+  underRepair: number
+  writtenOff: number
+}
+
+/** Counts and value for one product. value is null when the product has no cost price. */
+export interface InventorySnapshot {
+  buckets: InventoryBuckets
+  custom: Record<string, number>
+  physical: number
+  sellable: number
+  nonSellable: number
+  uncostedUnits: number
+  unitCost: number | null
+  value: number | null
+  defectiveValue: number | null
+  lowStock: boolean
+}
+
+export interface InventoryRow extends InventorySnapshot {
+  _id: string
+  name: string
+  sku: string
+  slug: string
+  price: number
+  condition: ProductCondition
+  serialTracking: boolean
+  isActive: boolean
+  category?: string
+  location?: string
+  lowStockThreshold: number
+  image?: string
+}
+
+export interface InventoryQueryParams {
+  page?: number
+  limit?: number
+  q?: string
+  serial?: string
+  condition?: ProductCondition | ''
+  location?: string
+  supplier?: string
+  /** in-stock | low | out | awaiting | defective | repair | non-sellable */
+  status?: string
+  sort?: 'name' | 'available' | 'physical' | 'value' | 'nonSellable'
+  dir?: 'asc' | 'desc'
+}
+
+export interface InventorySummary {
+  units: {
+    physical: number
+    sellable: number
+    nonSellable: number
+    reserved: number
+    awaitingInspection: number
+    returned: number
+    defective: number
+    underRepair: number
+    writtenOff: number
+    refurbishedAvailable: number
+    usedAvailable: number
+    custom: (InventoryStatusDef & { units: number })[]
+  }
+  lowStockProducts: number
+  value: {
+    total: number
+    uncostedUnits: number
+    byCondition: Record<string, { units: number; value: number; uncostedUnits: number }>
+    defective: number
+  }
+  reports: {
+    writeOffs: { units: number; value: number; uncostedUnits: number }
+    customerReturns: { units: number }
+    repairs: { cost: number; open: number; closed: number; successRate: number | null }
+    suppliers: { supplier: string; deliveries: number; units: number; faulty: number; defectRate: number | null; lastDelivery: string }[]
+  }
+  statuses: InventoryStatusDef[]
+  locations: string[]
+  requireInspection: boolean
+}
+
+export type MovementType =
+  | 'supplier-receipt'
+  | 'customer-return'
+  | 'order-reservation'
+  | 'order-dispatch'
+  | 'reservation-release'
+  | 'condition-change'
+  | 'repair-transfer'
+  | 'repair-completion'
+  | 'listing-transfer'
+  | 'stock-adjustment'
+  | 'write-off'
+
+export interface StockMovement {
+  _id: string
+  product: string | { _id: string; name: string; sku: string; condition?: ProductCondition }
+  sku: string
+  type: MovementType
+  qty: number
+  /** Bucket name, 'custom:<id>', or 'external' (outside the store) */
+  from: string
+  to: string
+  fromAfter?: number
+  toAfter?: number
+  serials: string[]
+  unitCost?: number
+  reason: string
+  order?: string
+  orderNumber?: string
+  receipt?: string
+  customerReturn?: string
+  repair?: string
+  by?: { _id: string; name?: string } | string
+  createdAt: string
+}
+
+export interface InventoryUnit {
+  _id: string
+  product: string
+  serial: string
+  /** a bucket name, 'custom:<id>', or 'sold' */
+  status: string
+  unitCost?: number
+  location?: string
+  receipt?: string
+  order?: string
+  warranty?: string
+  notes?: string
+  createdAt: string
+}
+
+export interface ReceiptLine {
+  _id?: string
+  product: string
+  name: string
+  sku: string
+  qty: number
+  unitCost?: number
+  serials: string[]
+  warranty?: string
+  result: { available: number; defective: number; underRepair: number; awaitingInspection: number }
+  faultNotes?: string
+}
+
+export interface SupplierReceipt {
+  _id: string
+  supplier: string
+  reference?: string
+  receivedAt: string
+  location?: string
+  notes?: string
+  evidenceUrls: string[]
+  lines: ReceiptLine[]
+  by?: { _id: string; name?: string } | string
+  createdAt: string
+}
+
+export interface ReceiptPayload {
+  supplier: string
+  reference?: string
+  receivedAt?: string
+  location?: string
+  notes?: string
+  evidenceUrls?: string[]
+  lines: {
+    productId: string
+    qty: number
+    unitCost?: number
+    serials?: string[]
+    warranty?: string
+    /** bulk inspection counts; the rest stays "awaiting inspection" */
+    result?: { available?: number; defective?: number; underRepair?: number }
+    /** per-serial inspection for serial-tracked products */
+    unitResults?: { serial: string; result: 'available' | 'defective' | 'underRepair' | 'awaitingInspection'; fault?: string }[]
+    faultNotes?: string
+  }[]
+}
+
+export type ReturnOutcome = 'restock-new' | 'used' | 'repair' | 'defective' | 'write-off'
+
+export interface ReturnLine {
+  _id: string
+  product: string
+  name: string
+  sku: string
+  qty: number
+  serials: string[]
+  reason: string
+  conditionNote?: string
+  assessed: { qty: number; outcome: ReturnOutcome; note?: string; targetProduct?: { _id: string; name: string; sku: string } | string; at: string }[]
+}
+
+export interface CustomerReturn {
+  _id: string
+  order: string
+  orderNumber: string
+  customer: { _id: string; name?: string; email?: string; phone?: string } | string
+  returnedAt: string
+  status: 'awaiting-assessment' | 'assessed'
+  lines: ReturnLine[]
+  createdAt: string
+}
+
+export interface ReturnPayload {
+  returnedAt?: string
+  lines: { productId: string; qty: number; serials?: string[]; reason: string; conditionNote?: string }[]
+}
+
+export interface AssessReturnPayload {
+  lineId: string
+  qty: number
+  outcome: ReturnOutcome
+  note?: string
+  /** required for 'used': the Used listing of the same model */
+  targetProductId?: string
+  /** required for 'restock-new' on a New listing */
+  meetsNewCriteria?: boolean
+  serials?: string[]
+}
+
+export type RepairStatus =
+  | 'awaiting-diagnosis'
+  | 'awaiting-parts'
+  | 'in-repair'
+  | 'repair-completed'
+  | 'qc-pending'
+  | 'qc-passed'
+  | 'qc-failed'
+
+export interface RepairRecord {
+  _id: string
+  product: string
+  name: string
+  sku: string
+  qty: number
+  serial?: string
+  source: 'receipt' | 'return' | 'stock'
+  receipt?: string
+  customerReturn?: string
+  reportedFault: string
+  diagnosis?: string
+  status: RepairStatus
+  cost: number
+  technician?: string
+  partsReplaced: string[]
+  startedAt?: string
+  completedAt?: string
+  qcResult?: 'passed' | 'failed'
+  qcNote?: string
+  qcBy?: { _id: string; name?: string } | string
+  finalStatus?: 'new' | 'refurbished' | 'used' | 'defective' | 'write-off'
+  finalProduct?: { _id: string; name: string; sku: string; condition?: ProductCondition } | string
+  closed: boolean
+  history: { status: RepairStatus; note?: string; at: string; by?: { _id: string; name?: string } | string }[]
+  createdAt: string
+  updatedAt: string
+}
+
+/** Repair detail also lists the New / Refurbished / Used listings of the same model. */
+export interface RepairDetail extends RepairRecord {
+  listings: { _id: string; name: string; sku: string; condition?: ProductCondition }[]
+}
+
+export interface ListingRef {
+  _id: string
+  name: string
+  sku: string
+  condition?: ProductCondition
+  stock: number
+  isActive: boolean
+  price: number
+}
+
+export interface ProductInventoryDetail extends InventorySnapshot {
+  product: {
+    _id: string
+    name: string
+    sku: string
+    slug: string
+    price: number
+    condition: ProductCondition
+    serialTracking: boolean
+    isActive: boolean
+    location?: string
+    lowStockThreshold: number
+    category?: string
+    baseProduct?: string
+    image?: string
+  }
+  /** serial-tracked products: units in stock without a registered serial */
+  untrackedUnits: number
+  units: InventoryUnit[]
+  receipts: { _id: string; supplier: string; reference?: string; receivedAt: string; line?: ReceiptLine }[]
+  returns: { _id: string; orderNumber: string; order: string; customer: { name?: string; email?: string } | string; returnedAt: string; status: CustomerReturn['status']; line?: ReturnLine }[]
+  repairs: RepairRecord[]
+  movements: StockMovement[]
+  /** New / Refurbished / Used listings of the same model */
+  listings: ListingRef[]
 }

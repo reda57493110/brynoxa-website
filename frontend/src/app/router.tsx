@@ -71,6 +71,27 @@ const AdminProductForm = lazy(() =>
 const AdminInventory = lazy(() =>
   import('@/pages/admin/Inventory').then((m) => ({ default: m.Inventory }))
 )
+const AdminInventoryProduct = lazy(() =>
+  import('@/pages/admin/InventoryProduct').then((m) => ({ default: m.InventoryProduct }))
+)
+const AdminInventoryReceive = lazy(() =>
+  import('@/pages/admin/InventoryReceive').then((m) => ({ default: m.InventoryReceive }))
+)
+const AdminInventoryReturns = lazy(() =>
+  import('@/pages/admin/InventoryReturns').then((m) => ({ default: m.InventoryReturns }))
+)
+const AdminInventoryReturn = lazy(() =>
+  import('@/pages/admin/InventoryReturn').then((m) => ({ default: m.InventoryReturn }))
+)
+const AdminInventoryRepairs = lazy(() =>
+  import('@/pages/admin/InventoryRepairs').then((m) => ({ default: m.InventoryRepairs }))
+)
+const AdminInventoryRepair = lazy(() =>
+  import('@/pages/admin/InventoryRepair').then((m) => ({ default: m.InventoryRepair }))
+)
+const AdminInventoryMovements = lazy(() =>
+  import('@/pages/admin/InventoryMovements').then((m) => ({ default: m.InventoryMovements }))
+)
 const AdminOrders = lazy(() =>
   import('@/pages/admin/Orders').then((m) => ({ default: m.Orders }))
 )
@@ -189,6 +210,13 @@ export function AppRouter() {
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />
         <Route path="inventory" element={<S><AdminInventory /></S>} />
+        <Route path="inventory/products/:id" element={<S><AdminInventoryProduct /></S>} />
+        <Route path="inventory/receive" element={<S><AdminInventoryReceive /></S>} />
+        <Route path="inventory/returns" element={<S><AdminInventoryReturns /></S>} />
+        <Route path="inventory/returns/:id" element={<S><AdminInventoryReturn /></S>} />
+        <Route path="inventory/repairs" element={<S><AdminInventoryRepairs /></S>} />
+        <Route path="inventory/repairs/:id" element={<S><AdminInventoryRepair /></S>} />
+        <Route path="inventory/movements" element={<S><AdminInventoryMovements /></S>} />
         <Route path="orders" element={<S><AdminOrders /></S>} />
         <Route path="orders/:id" element={<S><AdminOrderDetail /></S>} />
         <Route path="customers" element={<S><AdminCustomers /></S>} />

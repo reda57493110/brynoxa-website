@@ -3,6 +3,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Product } from '@/types'
 import { Price } from './Price'
 import { StockBadge } from './StockBadge'
+import { ConditionBadge } from './ConditionBadge'
 import { useCartStore } from '@/store/cartStore'
 import { useWishlistStore } from '@/store/wishlistStore'
 import { useAuthStore } from '@/store/authStore'
@@ -83,6 +84,7 @@ export function ProductCard({
       price: product.price,
       stock: product.stock,
       sku: product.sku,
+      condition: product.condition,
     })
     toast.success(t('product.addedToCart'))
   }
@@ -166,6 +168,7 @@ export function ProductCard({
               {t('product.featuredPick')}
             </span>
           ) : null}
+          <ConditionBadge condition={product.condition} size="sm" />
           {off ? (
             <span className="rounded-full bg-[var(--fg)] px-2 py-0.5 text-[10px] font-bold text-[var(--bg)] sm:px-2.5 sm:py-1 sm:text-[11px]">
               −{off}%

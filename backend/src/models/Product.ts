@@ -8,6 +8,22 @@ export interface IProductImage {
   isPrimary: boolean;
 }
 
+export type ProductCondition = 'new' | 'refurbished' | 'used';
+
+/** Non-sellable unit counts. Sellable units are Product.stock. Changed only through the inventory ledger. */
+export interface IProductInventory {
+  reserved: number;
+  awaitingInspection: number;
+  returned: number;
+  defective: number;
+  underRepair: number;
+  writtenOff: number;
+  /** Counts for custom holding statuses defined in Settings (key = status id). */
+  custom: Map<string, number>;
+  /** Units without a known cost (stock that existed before costs were recorded). */
+  uncosted: number;
+}
+
 export interface IProduct extends Document {
   name: string;
   slug: string;
@@ -27,8 +43,20 @@ export interface IProduct extends Document {
   recommended: Types.ObjectId[];
   /** When true, only `recommended` is shown — no automatic suggestions. */
   recommendedOnly: boolean;
+  /** Units for sale on this listing (checkout uses this). */
   stock: number;
   lowStockThreshold: number;
+  /** Condition of the units this listing sells; shown to customers. */
+  condition: ProductCondition;
+  /** Honest description of a used / refurbished listing (shown on the product page). */
+  conditionNote?: string;
+  /** Track every unit by serial number instead of by quantity only. */
+  serialTracking: boolean;
+  /** For refurbished / used listings: the new model they come from. */
+  baseProduct?: Types.ObjectId;
+  /** Default storage location (warehouse, shelf…). */
+  inventoryLocation?: string;
+  inventory?: IProductInventory;
   specs: Map<string, string> | Record<string, string>;
   tags: string[];
   isFeatured: boolean;
@@ -79,6 +107,28 @@ const productSchema = new Schema<IProduct>(
     recommendedOnly: { type: Boolean, default: false },
     stock: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, default: 5 },
+    condition: { type: String, enum: ['new', 'refurbished', 'used'], default: 'new' },
+    conditionNote: { type: String, maxlength: 500 },
+    serialTracking: { type: Boolean, default: false },
+    baseProduct: { type: Schema.Types.ObjectId, ref: 'Product' },
+    inventoryLocation: { type: String, maxlength: 80 },
+    inventory: {
+      type: new Schema(
+        {
+          reserved: { type: Number, default: 0, min: 0 },
+          awaitingInspection: { type: Number, default: 0, min: 0 },
+          returned: { type: Number, default: 0, min: 0 },
+          defective: { type: Number, default: 0, min: 0 },
+          underRepair: { type: Number, default: 0, min: 0 },
+          writtenOff: { type: Number, default: 0, min: 0 },
+          custom: { type: Map, of: Number, default: {} },
+          uncosted: { type: Number, default: 0, min: 0 },
+        },
+        { _id: false }
+      ),
+      default: undefined,
+      select: false,
+    },
     specs: { type: Map, of: String, default: {} },
     tags: [{ type: String }],
     isFeatured: { type: Boolean, default: false },

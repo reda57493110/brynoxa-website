@@ -4,6 +4,8 @@ import { Brand } from '../models/Brand';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
 import { sanitizeDepositRule } from '../utils/deposit';
+import { moveStock, withTransaction } from './inventoryLedger.service';
+import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteUnusedImages } from './upload.service';
 
@@ -341,8 +343,13 @@ export async function createProduct(data: Record<string, unknown>) {
 
   const isFeatured = Boolean(data.isFeatured);
   const isCarousel = Boolean(data.isCarousel);
+  // Opening stock is recorded in the inventory ledger, not written silently
+  const openingStock = Math.max(0, Math.floor(Number(data.stock) || 0));
   const product = await Product.create({
     ...data,
+    stock: 0,
+    condition: ['new', 'refurbished', 'used'].includes(String(data.condition)) ? data.condition : 'new',
+    serialTracking: Boolean(data.serialTracking),
     deposit: sanitizeDepositRule(data.deposit) ?? undefined,
     recommended: sanitizeRecommended(data.recommended),
     costPrice: costPriceOf(data.costPrice),
@@ -354,6 +361,23 @@ export async function createProduct(data: Record<string, unknown>) {
     isCarousel,
     carouselAt: isCarousel ? new Date() : null,
   });
+  if (openingStock > 0) {
+    await withTransaction((session) =>
+      moveStock(
+        {
+          product: product._id,
+          qty: openingStock,
+          from: 'external',
+          to: 'available',
+          type: 'stock-adjustment',
+          reason: 'Opening stock when the product was created',
+          unitCost: typeof product.costPrice === 'number' ? product.costPrice : undefined,
+        },
+        session
+      )
+    );
+    product.stock = openingStock;
+  }
   await deleteAbandonedUploads();
   return product;
 }
@@ -375,7 +399,10 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
     'images',
     'price',
     'compareAtPrice',
-    'stock',
+    'condition',
+    'conditionNote',
+    'serialTracking',
+    'inventoryLocation',
     'lowStockThreshold',
     'specs',
     'tags',
@@ -444,16 +471,29 @@ export async function deleteProduct(id: string) {
   return product;
 }
 
+/**
+ * Inventory page quick edit. The low-stock threshold is a plain setting; a different stock number
+ * becomes a logged stock adjustment (reason + approval rights required) — never a silent write.
+ */
 export async function updateInventory(
   id: string,
-  stock: number,
-  lowStockThreshold?: number
+  input: { stock?: number; lowStockThreshold?: number; reason?: string },
+  actor: { id: string; canApprove: boolean }
 ) {
-  const update: { stock: number; lowStockThreshold?: number } = { stock };
-  if (lowStockThreshold !== undefined) update.lowStockThreshold = lowStockThreshold;
-  const product = await Product.findByIdAndUpdate(id, update, { new: true });
+  const product = await Product.findById(id);
   if (!product) throw new ApiError(404, 'Product not found');
-  return product;
+  if (input.lowStockThreshold !== undefined) {
+    product.lowStockThreshold = input.lowStockThreshold;
+    await product.save();
+  }
+  if (input.stock !== undefined && input.stock !== product.stock) {
+    if (!input.reason?.trim()) throw new ApiError(400, 'Give a reason for changing the stock count');
+    await adjustStock(
+      { productId: id, bucket: 'available', delta: input.stock - product.stock, reason: input.reason },
+      actor
+    );
+  }
+  return Product.findById(id);
 }
 
 export async function getProductsByIds(ids: string[]) {

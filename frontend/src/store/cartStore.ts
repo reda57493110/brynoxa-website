@@ -1,8 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CartItem } from '@/types'
+import type { CartItem as BaseCartItem, ProductCondition } from '@/types'
 import { trackAddToCart } from '@/lib/analytics'
 import { recordAddToCart } from '@/lib/push'
+
+/**
+ * Cart line as stored. `condition` is optional so carts saved before it existed still load
+ * (missing = new / unknown).
+ */
+export type CartItem = BaseCartItem & { condition?: ProductCondition }
 
 interface CartState {
   items: CartItem[]
@@ -26,7 +32,7 @@ export const useCartStore = create<CartState>()(
             return {
               items: state.items.map((i) =>
                 i.productId === item.productId
-                  ? { ...i, qty: Math.min(i.qty + qty, i.stock) }
+                  ? { ...i, condition: item.condition ?? i.condition, qty: Math.min(i.qty + qty, i.stock) }
                   : i
               ),
             }

@@ -20,7 +20,9 @@ export type Permission =
   | 'push'
   | 'settings'
   /** Cost, profit and margin figures (owner/admin by default). */
-  | 'reports';
+  | 'reports'
+  /** Approve repaired units for sale, write off stock, adjust counts (owner/admin by default). */
+  | 'inventory:approve';
 
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   admin: ['*'],

@@ -30,6 +30,8 @@ export type Permission =
   | 'settings'
   /** Cost, profit and margin figures */
   | 'reports'
+  /** Approve repaired units for sale, write off stock, adjust counts */
+  | 'inventory:approve'
 
 /** Owner alone gets the full dashboard; other roles land on their workspace. */
 export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {

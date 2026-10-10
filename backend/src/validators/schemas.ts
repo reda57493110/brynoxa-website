@@ -111,6 +111,10 @@ export const productSchema = z.object({
     .optional(),
   recommended: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
   recommendedOnly: z.boolean().optional(),
+  condition: z.enum(['new', 'refurbished', 'used']).optional(),
+  conditionNote: z.string().trim().max(500).optional(),
+  serialTracking: z.boolean().optional(),
+  inventoryLocation: z.string().trim().max(80).optional(),
   stock: z.number().int().min(0),
   lowStockThreshold: z.number().int().min(0).optional(),
   specs: z.record(z.string(), z.string()).optional(),
@@ -216,6 +220,12 @@ export const settingsSchema = z.object({
   depositInstructions: z.string().max(2000).optional(),
   emailNotifications: z.record(z.string(), z.boolean()).optional(),
   emailMessages: z.record(z.string(), z.string().max(1000)).optional(),
+  inventoryStatuses: z
+    .array(z.object({ id: z.string().max(24).optional(), name: z.string().trim().min(1).max(40) }))
+    .max(20)
+    .optional(),
+  inventoryLocations: z.array(z.string().trim().min(1).max(80)).max(50).optional(),
+  requireInspection: z.boolean().optional(),
   wholesaleTiers: z
     .array(z.object({ id: z.string().max(24).optional(), name: z.string().trim().min(1).max(40), discountPercent: z.number().min(0).max(90) }))
     .max(10)
@@ -243,8 +253,9 @@ export const settingsSchema = z.object({
 });
 
 export const inventorySchema = z.object({
-  stock: z.number().int().min(0),
+  stock: z.number().int().min(0).optional(),
   lowStockThreshold: z.number().int().min(0).optional(),
+  reason: z.string().trim().max(500).optional(),
 });
 
 export const contactSchema = z.object({
@@ -431,4 +442,115 @@ export const refundSchema = z.object({
   amount: z.number().positive().max(10_000_000),
   reason: z.string().trim().min(3).max(300),
   itemsReturned: z.boolean().optional(),
+});
+
+/* ---------------- Inventory ---------------- */
+
+const objectId = z.string().regex(/^[a-f0-9]{24}$/i);
+const bucket = z.string().regex(/^(available|reserved|awaitingInspection|returned|defective|underRepair|writtenOff|custom:[a-z0-9-]{1,24})$/);
+const serialList = z.array(z.string().trim().min(1).max(80)).max(500).optional();
+
+export const receiptSchema = z.object({
+  supplier: z.string().trim().min(2).max(120),
+  reference: z.string().trim().max(120).optional(),
+  receivedAt: z.coerce.date().optional(),
+  location: z.string().trim().max(80).optional(),
+  notes: z.string().max(2000).optional(),
+  evidenceUrls: z.array(z.string().url().max(500)).max(10).optional(),
+  lines: z
+    .array(
+      z.object({
+        productId: objectId,
+        qty: z.number().int().min(1).max(100000),
+        unitCost: z.number().min(0).optional(),
+        serials: serialList,
+        warranty: z.string().trim().max(200).optional(),
+        result: z
+          .object({
+            available: z.number().int().min(0).optional(),
+            defective: z.number().int().min(0).optional(),
+            underRepair: z.number().int().min(0).optional(),
+          })
+          .optional(),
+        unitResults: z
+          .array(z.object({ serial: z.string().trim().min(1).max(80), result: z.enum(['available', 'defective', 'underRepair', 'awaitingInspection']), fault: z.string().max(300).optional() }))
+          .max(500)
+          .optional(),
+        faultNotes: z.string().trim().max(500).optional(),
+      })
+    )
+    .min(1)
+    .max(100),
+});
+
+export const conditionChangeSchema = z.object({
+  productId: objectId,
+  from: bucket,
+  to: bucket,
+  qty: z.number().int().min(1).max(100000),
+  serials: serialList,
+  reason: z.string().trim().min(3).max(500),
+  fault: z.string().trim().max(500).optional(),
+});
+
+export const stockAdjustmentSchema = z.object({
+  productId: objectId,
+  bucket,
+  delta: z.number().int().min(-100000).max(100000),
+  reason: z.string().trim().min(3).max(500),
+  unitCost: z.number().min(0).optional(),
+});
+
+export const registerSerialsSchema = z.object({
+  productId: objectId,
+  bucket,
+  serials: z.array(z.string().trim().min(1).max(80)).min(1).max(500),
+  location: z.string().trim().max(80).optional(),
+});
+
+export const conditionListingSchema = z.object({
+  condition: z.enum(['refurbished', 'used']),
+  price: z.number().positive().optional(),
+});
+
+export const returnSchema = z.object({
+  returnedAt: z.coerce.date().optional(),
+  lines: z
+    .array(
+      z.object({
+        productId: objectId,
+        qty: z.number().int().min(1),
+        serials: serialList,
+        reason: z.string().trim().min(3).max(300),
+        conditionNote: z.string().trim().max(500).optional(),
+      })
+    )
+    .min(1)
+    .max(50),
+});
+
+export const assessReturnSchema = z.object({
+  lineId: objectId,
+  qty: z.number().int().min(1),
+  outcome: z.enum(['restock-new', 'used', 'repair', 'defective', 'write-off']),
+  note: z.string().trim().max(500).optional(),
+  targetProductId: objectId.optional(),
+  meetsNewCriteria: z.boolean().optional(),
+  serials: serialList,
+});
+
+export const repairUpdateSchema = z.object({
+  status: z.enum(['awaiting-diagnosis', 'awaiting-parts', 'in-repair', 'repair-completed', 'qc-pending']).optional(),
+  diagnosis: z.string().max(1000).optional(),
+  cost: z.number().min(0).max(10000000).optional(),
+  technician: z.string().max(120).optional(),
+  partsReplaced: z.array(z.string().max(120)).max(30).optional(),
+  note: z.string().max(500).optional(),
+});
+
+export const repairCompleteSchema = z.object({
+  qcResult: z.enum(['passed', 'failed']),
+  finalStatus: z.enum(['new', 'refurbished', 'used', 'defective', 'write-off']),
+  targetProductId: objectId.optional(),
+  qcNote: z.string().trim().max(500).optional(),
 });

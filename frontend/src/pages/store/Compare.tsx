@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Price } from '@/components/product/Price'
+import { ConditionBadge } from '@/components/product/ConditionBadge'
+import { isPreOwned } from '@/lib/condition'
 import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
 import { useT } from '@/hooks/useT'
@@ -75,21 +77,22 @@ export function Compare() {
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-[var(--border)]">
-              <th className="p-4 text-left text-[var(--fg-muted)]">{t('ui.product')}</th>
+              <th className="p-4 text-start text-[var(--fg-muted)]">{t('ui.product')}</th>
               {list.map((p) => (
-                <th key={p._id} className="min-w-[180px] p-4 text-left align-top">
+                <th key={p._id} className="min-w-[180px] p-4 text-start align-top">
                   <div className="relative">
                     <button
                       type="button"
-                      className="absolute right-0 top-0 rounded-lg p-1 hover:bg-[var(--bg-muted)]"
+                      className="absolute end-0 top-0 rounded-lg p-1 hover:bg-[var(--bg-muted)]"
                       onClick={() => remove(p._id)}
                       aria-label={t('ui.remove')}
                     >
                       <SiteIcon name="close" size={16} />
                     </button>
-                    <Link to={`/product/${p.slug}`} className="block pr-6 font-display font-semibold hover:text-[var(--brand)]">
+                    <Link to={`/product/${p.slug}`} className="block pe-6 font-display font-semibold hover:text-[var(--brand)]">
                       {p.name}
                     </Link>
+                    <ConditionBadge condition={p.condition} size="sm" className="mt-1.5" />
                   </div>
                 </th>
               ))}
@@ -101,6 +104,21 @@ export function Compare() {
               {list.map((p) => (
                 <td key={p._id} className="p-4">
                   <Price price={p.price} compareAt={p.compareAtPrice} />
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-[var(--border)]">
+              <td className="p-4 text-[var(--fg-muted)]">{t('condition.noteTitle')}</td>
+              {list.map((p) => (
+                <td key={p._id} className="p-4">
+                  <span className={isPreOwned(p.condition) ? 'font-semibold' : undefined}>
+                    {t(`condition.${p.condition ?? 'new'}`)}
+                  </span>
+                  {isPreOwned(p.condition) && p.conditionNote?.trim() ? (
+                    <p className="mt-1 whitespace-pre-line text-xs text-[var(--fg-muted)]">
+                      {p.conditionNote.trim()}
+                    </p>
+                  ) : null}
                 </td>
               ))}
             </tr>

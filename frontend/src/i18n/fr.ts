@@ -686,6 +686,14 @@ export const fr: Messages = {
     checkoutRow: 'Prix de gros ({tier} −{percent} %)',
     checkoutBadge: 'Prix de gros appliqués',
   },
+  condition: {
+    new: 'Neuf',
+    refurbished: 'Reconditionné',
+    used: 'Occasion',
+    noteTitle: 'État',
+    refurbishedNotice: 'Cet article est reconditionné, il n’est pas neuf.',
+    usedNotice: 'Cet article est d’occasion, il n’est pas neuf.',
+  },
   services: {
     heroKicker: 'Services',
     heroTitle: 'Garantie, retours,',

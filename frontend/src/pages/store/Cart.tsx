@@ -14,6 +14,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { ConditionBadge } from '@/components/product/ConditionBadge'
 
 export function Cart() {
   const t = useT()
@@ -124,9 +125,12 @@ export function Cart() {
                       {formatCurrency(item.price * item.qty)}
                     </p>
                   </div>
-                  <p className="mt-1 text-xs text-[var(--fg-muted)] sm:text-sm">
-                    {formatCurrency(item.price)}
-                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <p className="text-xs text-[var(--fg-muted)] sm:text-sm">
+                      {formatCurrency(item.price)}
+                    </p>
+                    <ConditionBadge condition={item.condition} size="sm" />
+                  </div>
                   <div className="mt-2.5 flex flex-wrap items-center gap-2 sm:mt-3 sm:gap-3">
                     <QuantityStepper
                       value={item.qty}

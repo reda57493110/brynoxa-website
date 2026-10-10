@@ -13,6 +13,8 @@ import {
   sanitizeEmailNotifications,
   sanitizePageHeroProducts,
   sanitizeSegmentSettings,
+  sanitizeInventoryStatuses,
+  sanitizeLocations,
   publicSettings,
   Settings,
 } from '../models/Settings';
@@ -231,6 +233,12 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.emailNotifications !== undefined) {
     body.emailNotifications = sanitizeEmailNotifications(body.emailNotifications, settings.emailNotifications);
+  }
+  if (body.inventoryStatuses !== undefined) {
+    body.inventoryStatuses = sanitizeInventoryStatuses(body.inventoryStatuses);
+  }
+  if (body.inventoryLocations !== undefined) {
+    body.inventoryLocations = sanitizeLocations(body.inventoryLocations);
   }
   if (body.wholesaleTiers !== undefined) {
     body.wholesaleTiers = sanitizeWholesaleTiers(body.wholesaleTiers);

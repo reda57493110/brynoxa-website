@@ -14,6 +14,7 @@ import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
 import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
 import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
+import { InventorySettings } from '@/components/admin/InventorySettings'
 import { useToastStore } from '@/store/toastStore'
 
 export function Settings() {
@@ -99,8 +100,8 @@ export function Settings() {
       <div>
         <h1 className="font-display text-2xl font-semibold">Settings</h1>
         <p className="text-sm text-[var(--fg-muted)]">
-          Store name, page header products, emails, wholesale pricing, customer segments and
-          catalog categories
+          Store name, page header products, emails, wholesale pricing, customer segments,
+          inventory and catalog categories
         </p>
       </div>
 
@@ -155,6 +156,8 @@ export function Settings() {
       <WholesaleTiersSettings settings={settings.data} />
 
       <CustomerSegmentSettings settings={settings.data} />
+
+      <InventorySettings settings={settings.data} />
 
       <section className="space-y-4">
         <div>

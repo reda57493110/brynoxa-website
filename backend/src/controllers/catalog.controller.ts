@@ -7,7 +7,7 @@ import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../servi
 import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
 import { param } from '../utils/params';
-import { isStaffRole } from '../permissions';
+import { hasPermission, isStaffRole } from '../permissions';
 import { ApiError } from '../utils/ApiError';
 
 export const getCategories = asyncHandler(async (req: Request, res: Response) => {
@@ -96,11 +96,11 @@ export const deleteProduct = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const updateInventory = asyncHandler(async (req: Request, res: Response) => {
-  const item = await catalog.updateInventory(
-    param(req, 'id'),
-    req.body.stock,
-    req.body.lowStockThreshold
-  );
+  const role = (req as Request & { user?: { userId: string; role: string } }).user;
+  const item = await catalog.updateInventory(param(req, 'id'), req.body, {
+    id: role!.userId,
+    canApprove: hasPermission(role!.role, 'inventory:approve'),
+  });
   sendSuccess(res, item, 'Inventory updated');
 });
 

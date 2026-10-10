@@ -31,6 +31,8 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
 import type { Address, Product } from '@/types'
+import { ConditionBadge } from '@/components/product/ConditionBadge'
+import { isPreOwned } from '@/lib/condition'
 
 export function Checkout() {
   const t = useT()
@@ -590,19 +592,28 @@ export function Checkout() {
             <h2 className="font-display text-lg font-semibold">{t('checkout.orderSummary')}</h2>
             {wholesaleBadge ? <div className="mt-2">{wholesaleBadge}</div> : null}
             <ul className="mt-4 space-y-2 text-sm">
-              {items.map((i) => (
-                <li key={i.productId} className="flex justify-between gap-3">
-                  <span className="line-clamp-1 text-[var(--fg-muted)]">
-                    {i.name} × {i.qty}
-                  </span>
-                  <span className="shrink-0">
-                    {formatCurrency(
-                      (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ??
-                        i.price) * i.qty
-                    )}
-                  </span>
-                </li>
-              ))}
+              {items.map((i) => {
+                const condition =
+                  currentProducts.data?.find((p) => p._id === i.productId)?.condition ?? i.condition
+                return (
+                  <li key={i.productId} className="flex justify-between gap-3">
+                    <span className="min-w-0 text-[var(--fg-muted)]">
+                      <span className="line-clamp-1">
+                        {i.name} × {i.qty}
+                      </span>
+                      {isPreOwned(condition) ? (
+                        <ConditionBadge condition={condition} size="sm" className="mt-1" />
+                      ) : null}
+                    </span>
+                    <span className="shrink-0">
+                      {formatCurrency(
+                        (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ??
+                          i.price) * i.qty
+                      )}
+                    </span>
+                  </li>
+                )
+              })}
             </ul>
             <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
               <div className="flex justify-between">

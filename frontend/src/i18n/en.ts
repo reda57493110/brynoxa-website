@@ -680,6 +680,14 @@ export const en = {
     checkoutRow: 'Wholesale price ({tier} −{percent}%)',
     checkoutBadge: 'Wholesale prices applied',
   },
+  condition: {
+    new: 'New',
+    refurbished: 'Refurbished',
+    used: 'Used',
+    noteTitle: 'Condition',
+    refurbishedNotice: 'This item is refurbished, not new.',
+    usedNotice: 'This item is used, not new.',
+  },
   services: {
     heroKicker: 'Services',
     heroTitle: 'Warranty, returns,',

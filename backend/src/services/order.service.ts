@@ -8,6 +8,7 @@ import { resolveShippingFee } from '../utils/shipping';
 import { lineDeposit, roundMoney } from '../utils/deposit';
 import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
 import { getWholesaleTerms } from './wholesale.service';
+import { dispatchOrderStock, releaseOrderStock, reserveOrderStock } from './orderStock.service';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
@@ -130,6 +131,7 @@ async function buildOrderLines(
       sku: product.sku,
       price,
       listPrice: product.price,
+      condition: product.condition || 'new',
       unitCost: typeof product.costPrice === 'number' ? product.costPrice : undefined,
       qty: item.qty,
     };
@@ -367,58 +369,6 @@ export async function updateUserOrderItems(
   return order;
 }
 
-async function adjustStock(order: InstanceType<typeof Order>, direction: 'reserve' | 'restore') {
-  const changed: { productId: Types.ObjectId; stockDelta: number; soldDelta: number }[] = [];
-
-  try {
-    // Parallel atomic updates (each line is its own findOneAndUpdate).
-    const results = await Promise.all(
-      order.items.map(async (item) => {
-        const stockDelta = direction === 'reserve' ? -item.qty : item.qty;
-        const soldDelta = direction === 'reserve' ? item.qty : -item.qty;
-        const updated = await Product.findOneAndUpdate(
-          {
-            _id: item.product,
-            ...(direction === 'reserve' ? { stock: { $gte: item.qty } } : {}),
-          },
-          {
-            $inc: {
-              stock: stockDelta,
-              soldCount: soldDelta,
-            },
-          },
-          { new: true }
-        );
-        return { item, updated, stockDelta, soldDelta };
-      })
-    );
-
-    for (const { item, updated, stockDelta, soldDelta } of results) {
-      if (direction === 'reserve' && !updated) {
-        throw new ApiError(400, `Insufficient stock for ${item.name}`);
-      }
-      if (!updated) {
-        throw new ApiError(400, `Product unavailable for ${item.name}`);
-      }
-      changed.push({
-        productId: item.product as Types.ObjectId,
-        stockDelta,
-        soldDelta,
-      });
-    }
-  } catch (error) {
-    await Promise.all(
-      changed.map(({ productId, stockDelta, soldDelta }) =>
-        Product.updateOne(
-          { _id: productId },
-          { $inc: { stock: -stockDelta, soldCount: -soldDelta } }
-        )
-      )
-    );
-    throw error;
-  }
-}
-
 export async function updateOrderStatus(
   orderId: string,
   orderStatus: OrderStatus,
@@ -439,12 +389,16 @@ export async function updateOrderStatus(
   }
 
   if (orderStatus === 'confirmed' && !order.stockReserved) {
-    await adjustStock(order, 'reserve');
+    await reserveOrderStock(order);
     order.stockReserved = true;
   }
 
+  if (orderStatus === 'shipped' && order.stockReserved) {
+    await dispatchOrderStock(order);
+  }
+
   if (orderStatus === 'cancelled' && order.stockReserved) {
-    await adjustStock(order, 'restore');
+    await releaseOrderStock(order, 'cancelled');
     order.stockReserved = false;
   }
 
@@ -701,8 +655,8 @@ export async function deleteOrder(id: string) {
   const order = await Order.findById(id);
   if (!order) throw new ApiError(404, 'Order not found');
 
-  if (order.stockReserved) {
-    await adjustStock(order, 'restore');
+  if (order.stockReserved && !order.stockDispatched) {
+    await releaseOrderStock(order, 'order deleted');
     order.stockReserved = false;
   }
 

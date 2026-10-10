@@ -18,7 +18,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
-import type { Brand, Product } from '@/types'
+import type { Brand, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
 
@@ -47,6 +47,10 @@ export function ProductForm() {
   const categories = useQuery({
     queryKey: ['categories', 'all'],
     queryFn: async () => (await categoriesApi.list(true)).data.data,
+  })
+  const adminSettings = useQuery({
+    queryKey: ['admin-settings'],
+    queryFn: async () => (await adminApi.settings.get()).data.data,
   })
   const existing = useQuery({
     queryKey: ['admin-product', id],
@@ -79,6 +83,10 @@ export function ProductForm() {
     depositType: 'none' | 'fixed' | 'percent'
     depositValue: number
     stock: number
+    condition: ProductCondition
+    conditionNote: string
+    serialTracking: boolean
+    inventoryLocation: string
     tags: string
     isFeatured: boolean
     isCarousel: boolean
@@ -99,6 +107,10 @@ export function ProductForm() {
     depositType: 'none',
     depositValue: 0,
     stock: 0,
+    condition: 'new',
+    conditionNote: '',
+    serialTracking: false,
+    inventoryLocation: '',
     tags: '',
     isFeatured: false,
     isCarousel: false,
@@ -130,6 +142,10 @@ export function ProductForm() {
         depositType: p.deposit?.type ?? ('none' as const),
         depositValue: p.deposit?.value ?? 0,
         stock: p.stock,
+        condition: p.condition ?? ('new' as const),
+        conditionNote: p.conditionNote || '',
+        serialTracking: Boolean(p.serialTracking),
+        inventoryLocation: p.inventoryLocation || '',
         tags: (p.tags || []).join(', '),
         isFeatured: p.isFeatured,
         isCarousel: Boolean(p.isCarousel),
@@ -144,6 +160,14 @@ export function ProductForm() {
       setForm(nextForm)
     }
   }, [existing.data])
+
+  const locationOptions = Array.from(
+    new Set(
+      [...(adminSettings.data?.inventoryLocations || []), form.inventoryLocation.trim()].filter(
+        Boolean
+      )
+    )
+  )
 
   const isDirty = JSON.stringify(form) !== initialFormRef.current
   const costNumber =
@@ -182,7 +206,13 @@ export function ProductForm() {
           form.depositType !== 'none' && Number(form.depositValue) > 0
             ? { type: form.depositType, value: Number(form.depositValue) }
             : null,
-        stock: Number(form.stock),
+        // Stock only changes through the inventory ledger once a product exists;
+        // on create it is recorded as the opening movement.
+        ...(isEdit ? {} : { stock: Number(form.stock) }),
+        condition: form.condition,
+        conditionNote: form.condition === 'new' ? '' : form.conditionNote.trim(),
+        serialTracking: form.serialTracking,
+        inventoryLocation: form.inventoryLocation.trim(),
         tags: form.tags
           .split(',')
           .map((t) => t.trim())
@@ -336,7 +366,7 @@ export function ProductForm() {
             toast('Enter a valid sale price', 'error')
             return
           }
-          if (!Number.isInteger(Number(form.stock)) || form.stock < 0) {
+          if (!isEdit && (!Number.isInteger(Number(form.stock)) || form.stock < 0)) {
             toast('Stock must be a whole number (0 or more)', 'error')
             return
           }
@@ -466,14 +496,36 @@ export function ProductForm() {
             The order can only be confirmed once you mark the deposit as received.
           </p>
         </div>
-        <Input
-          label="Stock"
-          type="number"
-          min={0}
-          value={form.stock}
-          onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
-          required
-        />
+        {isEdit ? (
+          <div className="flex min-w-0 flex-col gap-1.5 text-sm">
+            <span className="font-medium text-[var(--fg)]">Stock</span>
+            <div className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/40 px-3.5 py-2">
+              <span>
+                In stock: <span className="font-semibold tabular-nums">{form.stock}</span>
+              </span>
+              <Link
+                to={`/admin/inventory/products/${id}`}
+                className="font-medium text-[var(--brand-text)] hover:underline"
+              >
+                Manage stock <span className="inline-block rtl:rotate-180">→</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="min-w-0 space-y-1.5">
+            <Input
+              label="Opening stock"
+              type="number"
+              min={0}
+              value={form.stock}
+              onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+              required
+            />
+            <p className="text-xs text-[var(--fg-muted)]">
+              Recorded as the opening stock movement. Later changes go through Inventory.
+            </p>
+          </div>
+        )}
         <Select
           label="Category"
           value={form.category}
@@ -488,6 +540,76 @@ export function ProductForm() {
           placeholder="e.g. ASUS, Brynoxa"
           required
         />
+        <div className="sm:col-span-2 grid min-w-0 gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4 sm:grid-cols-2">
+          <p className="sm:col-span-2 text-sm font-semibold">Condition &amp; inventory</p>
+          <Select
+            label="Condition"
+            value={form.condition}
+            onChange={(e) => setForm({ ...form, condition: e.target.value as ProductCondition })}
+            options={[
+              { value: 'new', label: 'New' },
+              { value: 'refurbished', label: 'Refurbished' },
+              { value: 'used', label: 'Used' },
+            ]}
+          />
+          <div className="min-w-0">
+            <Input
+              label="Storage location"
+              list="product-inventory-locations"
+              maxLength={80}
+              value={form.inventoryLocation}
+              onChange={(e) => setForm({ ...form, inventoryLocation: e.target.value })}
+              placeholder={locationOptions.length ? 'Pick a location or type one' : 'e.g. Shelf A3'}
+            />
+            <datalist id="product-inventory-locations">
+              {locationOptions.map((loc) => (
+                <option key={loc} value={loc} />
+              ))}
+            </datalist>
+          </div>
+          <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
+            Refurbished and used listings only sell units of that condition. Create them from{' '}
+            <Link to="/admin/inventory" className="text-[var(--brand-text)] hover:underline">
+              Admin → Inventory
+            </Link>{' '}
+            → product → “Create refurbished/used listing”, so they stay linked to the new model.
+            Storage locations are managed in{' '}
+            <Link to="/admin/settings" className="text-[var(--brand-text)] hover:underline">
+              Settings
+            </Link>
+            .
+          </p>
+          {form.condition !== 'new' ? (
+            <div className="sm:col-span-2 space-y-1.5">
+              <Textarea
+                label="Condition note"
+                rows={3}
+                maxLength={500}
+                value={form.conditionNote}
+                onChange={(e) => setForm({ ...form, conditionNote: e.target.value })}
+                placeholder="e.g. Light scratches on the lid, battery at 88%, original charger included"
+              />
+              <p className="flex justify-between gap-3 text-xs text-[var(--fg-muted)]">
+                <span>Shown to customers on this listing. Describe the actual condition honestly.</span>
+                <span className="shrink-0 tabular-nums">{form.conditionNote.length}/500</span>
+              </p>
+            </div>
+          ) : null}
+          <label className="sm:col-span-2 flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={form.serialTracking}
+              onChange={(e) => setForm({ ...form, serialTracking: e.target.checked })}
+            />
+            <span>
+              <span className="block text-sm font-medium">Serial number tracking</span>
+              <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
+                Each unit is tracked by its serial number. Deliveries require serials.
+              </span>
+            </span>
+          </label>
+        </div>
         <Textarea
           label="Short description"
           className="sm:col-span-2"

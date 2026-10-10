@@ -682,6 +682,14 @@ export const ar: Messages = {
     checkoutRow: 'سعر الجملة ({tier} −{percent}%)',
     checkoutBadge: 'تم تطبيق أسعار الجملة',
   },
+  condition: {
+    new: 'جديد',
+    refurbished: 'مُجدَّد',
+    used: 'مستعمل',
+    noteTitle: 'الحالة',
+    refurbishedNotice: 'هذا المنتج مُجدَّد وليس جديدًا.',
+    usedNotice: 'هذا المنتج مستعمل وليس جديدًا.',
+  },
   services: {
     heroKicker: 'الخدمات',
     heroTitle: 'الضمان والإرجاع',

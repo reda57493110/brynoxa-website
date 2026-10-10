@@ -71,6 +71,12 @@ export interface ISettings extends Document {
   /** Optional extra paragraph added to a customer email. */
   emailMessages: Partial<Record<EmailMessageEvent, string>>;
   wholesaleTiers: WholesaleTier[];
+  /** Extra non-sellable holding statuses (e.g. "Display unit", "On loan"). */
+  inventoryStatuses: { id: string; name: string }[];
+  /** Storage locations to choose from (warehouse, shop floor…). */
+  inventoryLocations: string[];
+  /** New supplier deliveries go to "Awaiting inspection" unless results are entered on receipt. */
+  requireInspection: boolean;
   customerSegments: ICustomerSegmentSettings;
   /** Email ADMIN_EMAIL when a staff account signs into admin. */
   notifyStaffLoginEmail: boolean;
@@ -114,6 +120,12 @@ const settingsSchema = new Schema<ISettings>(
       ],
       default: [],
     },
+    inventoryStatuses: {
+      type: [new Schema({ id: { type: String, required: true }, name: { type: String, required: true } }, { _id: false })],
+      default: [],
+    },
+    inventoryLocations: { type: [String], default: [] },
+    requireInspection: { type: Boolean, default: true },
     customerSegments: {
       type: new Schema(
         {
@@ -232,13 +244,37 @@ export function sanitizeSegmentSettings(
   };
 }
 
+/** Custom holding statuses: unique ids (slug of the name), max 20. */
+export function sanitizeInventoryStatuses(input: unknown): { id: string; name: string }[] {
+  if (!Array.isArray(input)) return [];
+  const seen = new Set<string>();
+  const out: { id: string; name: string }[] = [];
+  for (const row of input) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const name = String(r.name ?? '').trim().slice(0, 40);
+    let id = String(r.id ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 24);
+    if (!id) id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
+    if (!name || !id || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, name });
+    if (out.length >= 20) break;
+  }
+  return out;
+}
+
+export function sanitizeLocations(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  return [...new Set(input.map((v) => String(v ?? '').trim().slice(0, 80)).filter(Boolean))].slice(0, 50);
+}
+
 /** Whether an automatic email type is switched on (on unless explicitly turned off). */
 export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, event: EmailEvent) {
   return settings.emailNotifications?.[event] !== false;
 }
 
 /** Fields only staff may read (pricing tiers, segment rules, email configuration). */
-const PRIVATE_SETTINGS = ['wholesaleTiers', 'customerSegments', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+const PRIVATE_SETTINGS = ['wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
 
 /** Settings safe for the public storefront. */
 export function publicSettings(settings: ISettings) {

@@ -13,6 +13,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderDepositPanel } from '@/components/admin/OrderDepositPanel'
 import { OrderRefundsPanel } from '@/components/admin/OrderRefundsPanel'
+import { OrderReturnPanel } from '@/components/admin/OrderReturnPanel'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -163,6 +164,8 @@ export function OrderDetail() {
       <OrderDepositPanel order={o} />
 
       <OrderRefundsPanel order={o} />
+
+      <OrderReturnPanel order={o} />
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">

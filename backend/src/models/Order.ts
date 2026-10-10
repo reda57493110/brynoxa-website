@@ -20,6 +20,10 @@ export interface IOrderItem {
   qty: number;
   /** Catalog price per unit at order time; differs from price on wholesale orders. */
   listPrice?: number;
+  /** Serial numbers of the units reserved for this line (serial-tracked products). */
+  serials?: string[];
+  /** Condition of the listing when ordered (new / refurbished / used). */
+  condition?: string;
   /** Product cost per unit at order time; missing on orders placed before costs were recorded. */
   unitCost?: number;
 }
@@ -81,6 +85,10 @@ export interface IOrder extends Document {
   customerNote?: string;
   adminNote?: string;
   stockReserved: boolean;
+  /** Stock for this order goes through the inventory ledger (reserved bucket). Older orders: false. */
+  inventoryLedger?: boolean;
+  /** Units have left the store (order shipped). */
+  stockDispatched?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,6 +102,8 @@ const orderItemSchema = new Schema<IOrderItem>(
     price: { type: Number, required: true },
     qty: { type: Number, required: true, min: 1 },
     listPrice: { type: Number },
+    serials: { type: [String], default: undefined },
+    condition: { type: String },
     // Staff-only: queries that need it use .select('+items.unitCost')
     unitCost: { type: Number, select: false },
   },
@@ -189,6 +199,8 @@ const orderSchema = new Schema<IOrder>(
     customerNote: { type: String },
     adminNote: { type: String },
     stockReserved: { type: Boolean, default: false },
+    inventoryLedger: { type: Boolean, default: false },
+    stockDispatched: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

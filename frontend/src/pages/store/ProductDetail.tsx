@@ -31,6 +31,8 @@ import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product } from '@/types'
+import { ConditionBadge } from '@/components/product/ConditionBadge'
+import { isPreOwned } from '@/lib/condition'
 
 function primaryImage(product: Product) {
   return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
@@ -205,6 +207,7 @@ export function ProductDetail() {
     price: p.price,
     stock: p.stock,
     sku: p.sku,
+    condition: p.condition,
     qty,
   }
 
@@ -258,6 +261,12 @@ export function ProductDetail() {
       '@type': 'Offer',
       priceCurrency: 'MAD',
       price: p.price,
+      itemCondition:
+        p.condition === 'refurbished'
+          ? 'https://schema.org/RefurbishedCondition'
+          : p.condition === 'used'
+            ? 'https://schema.org/UsedCondition'
+            : 'https://schema.org/NewCondition',
       availability:
         p.stock > 0
           ? 'https://schema.org/InStock'
@@ -316,6 +325,7 @@ export function ProductDetail() {
             </h1>
 
             <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+              <ConditionBadge condition={p.condition} />
               <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
             </div>
 
@@ -324,6 +334,21 @@ export function ProductDetail() {
               price={p.price}
               compareAt={p.compareAtPrice}
             />
+
+            {isPreOwned(p.condition) ? (
+              <div className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/50 px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
+                <SiteIcon name="refresh" size={16} className="mt-0.5 shrink-0 text-[var(--fg-muted)]" />
+                <div className="min-w-0">
+                  <p className="font-semibold">
+                    {t('condition.noteTitle')}: {t(`condition.${p.condition}`)}
+                  </p>
+                  <p className="whitespace-pre-line break-words text-[var(--fg-muted)]">
+                    {p.conditionNote?.trim() ||
+                      t(p.condition === 'used' ? 'condition.usedNotice' : 'condition.refurbishedNotice')}
+                  </p>
+                </div>
+              </div>
+            ) : null}
 
             {p.deposit && p.deposit.value > 0 ? (
               <p className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
