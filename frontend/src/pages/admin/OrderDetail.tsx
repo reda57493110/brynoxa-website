@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderDepositPanel } from '@/components/admin/OrderDepositPanel'
 import { formatCurrency, formatDateTime } from '@/lib/format'
@@ -103,6 +104,15 @@ export function OrderDetail() {
           <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
           <p className="break-all">{user?.email}</p>
           <p>{user?.phone || 'No phone'} · COD</p>
+          {user?.email ? (
+            <Link
+              to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
+              className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-[var(--brand-text)] hover:underline"
+            >
+              <SiteIcon name="mail" size={15} />
+              Email customer
+            </Link>
+          ) : null}
           <p className="text-xs">{formatDateTime(o.createdAt)}</p>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   Settings,
 } from '../models/Settings';
 import { sendTestEmail } from '../services/emailTest.service';
+import { listSentEmails, sendManualEmail } from '../services/manualEmail.service';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { User } from '../models/User';
 import * as pushService from '../services/push.service';
@@ -329,3 +330,15 @@ export const adminPushSend = asyncHandler(async (req: Request, res: Response) =>
 });
 
 void Settings;
+
+export const sendCustomerEmail = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await sendManualEmail({ ...req.body, sentBy: req.user!.userId });
+  sendSuccess(res, result, `Email sent to ${result.sentTo}`);
+});
+
+export const sentEmails = asyncHandler(async (req: Request, res: Response) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
+  const result = await listSentEmails(page, limit, req.query.to ? String(req.query.to) : undefined);
+  sendPaginated(res, result.items, { page: result.page, limit: result.limit, total: result.total });
+});

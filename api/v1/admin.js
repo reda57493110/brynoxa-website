@@ -404,6 +404,33 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // GET/POST /admin/emails — staff emails to customers, with a sent log
+    if (route === 'emails') {
+      const user = await requireStaff(req, res, ['messages']);
+      if (!user) return;
+      const manual = require('../../backend/dist/services/manualEmail.service');
+      if (req.method === 'GET') {
+        const page = Math.max(1, Number(query.page) || 1);
+        const limit = Math.min(50, Math.max(1, Number(query.limit) || 20));
+        const result = await manual.listSentEmails(page, limit, query.to ? String(query.to) : undefined);
+        sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
+        return;
+      }
+      if (req.method === 'POST') {
+        const { manualEmailSchema } = require('../../backend/dist/validators/schemas');
+        const parsed = manualEmailSchema.safeParse(await readJsonBody(req));
+        if (!parsed.success) {
+          sendJson(res, 400, { success: false, message: 'Check the email address, subject and message' });
+          return;
+        }
+        const result = await manual.sendManualEmail({ ...parsed.data, sentBy: String(user._id) });
+        sendJson(res, 200, { success: true, message: `Email sent to ${result.sentTo}`, data: result });
+        return;
+      }
+      sendJson(res, 405, { success: false, message: 'Method not allowed' });
+      return;
+    }
+
     // Settings page category CRUD — keep off the slow Express lambda.
     if (
       route === 'categories' ||

@@ -388,3 +388,16 @@ export interface UploadResult {
   url: string
   publicId?: string
 }
+
+/** An email written by staff from the admin Emails page. */
+export interface SentEmail {
+  _id: string
+  to: string
+  subject: string
+  message: string
+  order?: string
+  orderNumber?: string
+  sentBy?: { _id: string; name?: string; email?: string } | string
+  status: 'sent' | 'failed'
+  createdAt: string
+}

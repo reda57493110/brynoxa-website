@@ -16,6 +16,7 @@ import {
   couponSchema,
   settingsSchema,
   emailTestSchema,
+  manualEmailSchema,
   contactSchema,
   newsletterSchema,
   pushSubscribeSchema,
@@ -191,6 +192,15 @@ router.post(
   contactLimiter,
   validate(emailTestSchema),
   misc.sendEmailTest
+);
+
+router.get('/admin/emails', requireAuth, requirePermission('messages'), misc.sentEmails);
+router.post(
+  '/admin/emails',
+  requireAuth,
+  requirePermission('messages'),
+  validate(manualEmailSchema),
+  misc.sendCustomerEmail
 );
 
 router.post('/contact', contactLimiter, validate(contactSchema), misc.submitContact);

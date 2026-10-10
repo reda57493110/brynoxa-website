@@ -29,6 +29,7 @@ const items: {
   { to: '/admin/customers', label: 'Customers', icon: 'users' },
   { to: '/admin/roles', label: 'Roles', icon: 'shield' },
   { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },
+  { to: '/admin/emails', label: 'Emails', icon: 'mail' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'ticket' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'bell' },
   { to: '/admin/security', label: 'Security', icon: 'shield' },

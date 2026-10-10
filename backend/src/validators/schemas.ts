@@ -349,3 +349,11 @@ export const emailTestSchema = z.object({
     'depositReceived',
   ]),
 });
+
+/** Staff email to one customer from the admin Emails page. */
+export const manualEmailSchema = z.object({
+  to: z.string().trim().email(),
+  subject: z.string().trim().min(2).max(150),
+  message: z.string().trim().min(2).max(5000),
+  orderId: z.string().regex(/^[a-f0-9]{24}$/i).optional(),
+});

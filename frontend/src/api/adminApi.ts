@@ -16,6 +16,7 @@ import type {
   PushSendPayload,
   StoreSettings,
   EmailMessageEvent,
+  SentEmail,
   User,
 } from '@/types'
 
@@ -98,6 +99,13 @@ export const adminApi = {
     update: (id: string, payload: Partial<Coupon>) =>
       api.patch<ApiResponse<Coupon>>(`/admin/coupons/${id}`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/coupons/${id}`),
+  },
+
+  emails: {
+    list: (params?: { page?: number; limit?: number; to?: string }) =>
+      api.get<ApiResponse<SentEmail[]>>('/admin/emails', { params }),
+    send: (payload: { to: string; subject: string; message: string; orderId?: string }) =>
+      api.post<ApiResponse<{ sentTo: string }>>('/admin/emails', payload),
   },
 
   messages: {

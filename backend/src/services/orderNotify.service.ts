@@ -58,14 +58,14 @@ const STATUS_EMAIL: Partial<Record<OrderStatus, EmailMessageEvent>> = {
   cancelled: 'orderCancelled',
 };
 
-async function resolveCustomer(order: OrderDoc) {
+export async function resolveCustomer(order: OrderDoc) {
   return User.findById(order.user).select('email name phone isGuest');
 }
 
 type Customer = NonNullable<Awaited<ReturnType<typeof resolveCustomer>>>;
 
 /** Guests have no account page; they follow their order on the tracking page. */
-function orderLink(order: OrderDoc, customer: Customer) {
+export function orderLink(order: OrderDoc, customer: Customer) {
   return customer.isGuest
     ? siteUrl('/track-order')
     : siteUrl(`/account/orders/${encodeURIComponent(order.orderNumber)}`);
@@ -99,7 +99,7 @@ function depositAmounts(order: OrderDoc) {
 }
 
 /** Items, totals, payment method and deposit — the same block in every order email. */
-function orderSummaryHtml(order: OrderDoc, opts: { paid?: boolean } = {}) {
+export function orderSummaryHtml(order: OrderDoc, opts: { paid?: boolean } = {}) {
   const items = order.items
     .map(
       (item) => `<tr>
