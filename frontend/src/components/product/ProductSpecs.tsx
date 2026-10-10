@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
-import { groupSpecs } from '@/lib/specs'
+import { normalizeSpecs, groupSpecs } from '@/lib/specs'
 import { cn } from '@/lib/cn'
 
 const KEY_LIMIT = 6
@@ -14,7 +14,7 @@ export function ProductSpecs({ specs, template }: { specs?: Record<string, strin
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const [all, setAll] = useState(false)
-  const sections = groupSpecs(specs, template, locale)
+  const sections = groupSpecs(normalizeSpecs(specs, template), template, locale)
   const rows = sections.flatMap((s) => s.rows)
   if (!rows.length) return null
 

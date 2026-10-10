@@ -13,7 +13,7 @@ import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
-import { formatSpecValue, getTemplate, resolveTemplate, specLabel, templateFields } from '@/lib/specs'
+import { formatSpecValue, getTemplate, normalizeSpecs, resolveTemplate, specLabel, templateFields } from '@/lib/specs'
 import type { Category } from '@/types'
 
 export function Compare() {
@@ -59,15 +59,15 @@ export function Compare() {
     )
   }
 
-  // Spec rows in the order of the first product's spec type, then any others
-  const first = list[0]
-  const order = templateFields(
-    getTemplate(resolveTemplate(first?.specTemplate, typeof first?.category === 'object' ? (first.category as Category) : null))
-  )
+  // Each product's specs mapped onto its spec type; rows in the first product's order
+  const templateOf = (p: (typeof list)[number]) =>
+    resolveTemplate(p.specTemplate, typeof p.category === 'object' ? (p.category as Category) : null)
+  const specsById = new Map(list.map((p) => [p._id, normalizeSpecs(p.specs, templateOf(p))]))
+  const order = list[0] ? templateFields(getTemplate(templateOf(list[0]))) : []
   const rank = (k: string) => (order.includes(k) ? order.indexOf(k) : order.length)
-  const allSpecKeys = Array.from(
-    new Set(list.flatMap((p) => Object.keys((p.specs as Record<string, string>) || {})))
-  ).sort((a, b) => rank(a) - rank(b))
+  const allSpecKeys = Array.from(new Set(list.flatMap((p) => Object.keys(specsById.get(p._id) ?? {})))).sort(
+    (a, b) => rank(a) - rank(b)
+  )
 
   return (
     <Container className="py-10">
@@ -145,9 +145,7 @@ export function Compare() {
                 <td className="p-4 text-[var(--fg-muted)]">{specLabel(key, locale)}</td>
                 {list.map((p) => (
                   <td key={p._id} className="p-4">
-                    {((p.specs as Record<string, string>) || {})[key]
-                      ? formatSpecValue(key, (p.specs as Record<string, string>)[key], locale)
-                      : '—'}
+                    {specsById.get(p._id)?.[key] ? formatSpecValue(key, specsById.get(p._id)![key], locale) : '—'}
                   </td>
                 ))}
               </tr>

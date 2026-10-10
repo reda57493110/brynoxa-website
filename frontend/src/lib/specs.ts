@@ -577,6 +577,14 @@ export function customFieldClash(draft: SpecDraft, label: string): string | null
   return key ? SPEC_FIELDS[key].label.en : null
 }
 
+/**
+ * Specs as the form would save them: older free-form entries mapped onto the template's fields
+ * when they fit. Used for display, so products not re-saved yet still show clean specs.
+ */
+export function normalizeSpecs(specs: Record<string, string> | null | undefined, templateId: string) {
+  return draftToSpecs(distribute(Object.entries(specs || {}).map(([k, v]) => [k, String(v ?? '')]), templateId))
+}
+
 export function isFieldVisible(key: string, values: Record<string, string>, ctx: SpecContext) {
   const field = SPEC_FIELDS[key]
   return !field?.showIf || Boolean(values[key]) || field.showIf(values, ctx)
