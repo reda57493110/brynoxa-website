@@ -9,30 +9,27 @@ export function ProfilePayments({
   profile,
   metrics,
   lifetime,
-  scope,
 }: {
   profile: CustomerProfile
   metrics: CustomerMetrics
   lifetime: CustomerMetrics | null
-  scope: string
 }) {
   const p = metrics.payments
-  const life = (v: number) => (lifetime ? `Lifetime: ${money(v)}` : undefined)
+  const life = (v: number) => (lifetime ? `All time: ${money(v)}` : undefined)
   const L = lifetime?.payments
 
   return (
     <div className="min-w-0 space-y-4">
-      <p className="text-xs text-[var(--fg-muted)]">Figures: {scope}</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
-        <StatCard label="Total paid" value={money(p.totalPaid)} hint={L ? life(L.totalPaid) : undefined} />
-        <StatCard label="Deposits received" value={money(p.depositsReceived)} hint={L ? life(L.depositsReceived) : undefined} />
-        <StatCard label="Deposits awaiting" value={money(p.depositsAwaiting)} />
+        <StatCard label="Paid" value={money(p.totalPaid)} hint={L ? life(L.totalPaid) : undefined} />
+        <StatCard label="Deposits paid" value={money(p.depositsReceived)} hint={L ? life(L.depositsReceived) : undefined} />
+        <StatCard label="Deposits due" value={money(p.depositsAwaiting)} />
         <StatCard label="Due on delivery" value={money(p.dueOnDelivery)} />
-        <StatCard label="To collect (open orders)" value={money(p.toCollect)} />
-        <StatCard label="Refunds total" value={money(p.refunds)} hint={L ? life(L.refunds) : undefined} />
-        <StatCard label="Cash-on-delivery orders" value={p.codOrders} />
+        <StatCard label="To collect" value={money(p.toCollect)} />
+        <StatCard label="Refunded" value={money(p.refunds)} hint={L ? life(L.refunds) : undefined} />
+        <StatCard label="COD orders" value={p.codOrders} />
         <StatCard
-          label="Payment methods"
+          label="Methods"
           value={
             p.methods.length ? (
               <span className="flex flex-wrap gap-1">
@@ -49,7 +46,7 @@ export function ProfilePayments({
         />
       </div>
 
-      <Section title={`Refund history (${profile.refunds.length})`}>
+      <Section title={`Refunds (${profile.refunds.length})`}>
         {profile.refunds.length ? (
           <ul className="divide-y divide-[var(--border)]">
             {profile.refunds.map((r, i) => (

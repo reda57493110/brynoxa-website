@@ -64,7 +64,8 @@ export function ProductCard({
   const off = salePercent(product)
   const brand = brandName(product)
   const category = categoryName(product, locale)
-  const meta = [brand, category].filter(Boolean).join(' · ')
+  // Grid cards stay short: brand only; the spotlight card has room for the category too
+  const meta = spotlight ? [brand, category].filter(Boolean).join(' · ') : brand || category
   const blurb = product.shortDescription?.trim()
   const imageSrc = optimizedImageUrl(primaryImage(product), spotlight ? 1200 : 640)
   const photo = useImageLoaded(imageSrc)
@@ -216,16 +217,9 @@ export function ProductCard({
         >
           {product.name}
         </Link>
-        <p
-          className={cn(
-            'font-medium leading-relaxed text-[var(--fg-muted)]',
-            spotlight
-              ? 'line-clamp-2 max-w-md text-sm'
-              : 'line-clamp-2 min-h-[2rem] text-[11px] sm:min-h-[2.5rem] sm:text-sm'
-          )}
-        >
-          {blurb || '\u00A0'}
-        </p>
+        {spotlight && blurb ? (
+          <p className="line-clamp-2 max-w-md text-sm font-medium leading-relaxed text-[var(--fg-muted)]">{blurb}</p>
+        ) : null}
         <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
           <Price
             price={product.price}

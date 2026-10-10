@@ -244,9 +244,8 @@ export function Customers() {
   const s = summary.data
   const hasPeriod = Boolean(period.from || period.to)
   const block: SummaryBlock | undefined = hasPeriod ? (s?.period ?? undefined) : s?.lifetime
-  const scope = hasPeriod ? 'Selected period' : 'Lifetime'
   const lifetimeHint = (render: (b: SummaryBlock) => ReactNode) =>
-    hasPeriod && s ? <>Lifetime: {render(s.lifetime)}</> : null
+    hasPeriod && s ? <>All time: {render(s.lifetime)}</> : null
 
   const segmentChips: { id: string; label: string; saved?: SavedSegment }[] = [
     { id: '', label: 'All' },
@@ -279,30 +278,29 @@ export function Customers() {
         <QueryErrorState title="Could not load the summary" onRetry={() => summary.refetch()} />
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-          <StatCard label="Total customers" value={s ? s.counts.total : '—'} hint={hasPeriod && s?.counts.newInPeriod != null ? `${s.counts.newInPeriod} new in period` : undefined} />
+          <StatCard label="Customers" value={s ? s.counts.total : '—'} hint={hasPeriod && s?.counts.newInPeriod != null ? `+${s.counts.newInPeriod} new` : undefined} />
           <StatCard label="Active" value={s ? s.counts.active : '—'} />
           <StatCard label="Retail" value={s ? s.counts.retail : '—'} />
           <StatCard
-            label="Approved wholesale"
+            label="Wholesale"
             value={s ? s.counts.wholesaleApproved : '—'}
             onClick={() => update({ segment: 'wholesale' })}
             active={segment === 'wholesale'}
           />
           <StatCard
-            label="Pending wholesale applications"
+            label="Applications"
             value={s ? s.counts.wholesalePending : '—'}
-            hint="Click to review"
             onClick={() => update({ segment: 'wholesale-pending' })}
             active={segment === 'wholesale-pending'}
           />
           <StatCard
-            label={`Net sales · ${scope}`}
+            label="Net sales"
             value={block ? money(block.netSales) : '—'}
             hint={lifetimeHint((b) => money(b.netSales))}
           />
           {profitVisible ? (
             <StatCard
-              label={`Gross profit · ${scope}`}
+              label="Gross profit"
               value={
                 block ? (
                   <ProfitText value={block.grossProfit} missing={block.ordersMissingCost} className="font-display" />
@@ -316,7 +314,7 @@ export function Customers() {
             />
           ) : null}
           <StatCard
-            label={`Avg order value · ${scope}`}
+            label="Avg. order"
             value={block ? money(block.averageOrderValue) : '—'}
             hint={lifetimeHint((b) => money(b.averageOrderValue))}
           />

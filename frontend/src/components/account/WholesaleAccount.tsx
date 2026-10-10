@@ -174,10 +174,6 @@ function WholesaleApplyForm({
   return (
     <>
       <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('wholesale.intro')}</p>
-      <ul className="mt-2 space-y-1 text-xs text-[var(--fg-muted)]">
-        <li>• {t('wholesale.reviewNote')}</li>
-        <li>• {t('wholesale.pricesAfterApproval')}</li>
-      </ul>
 
       {data.status === 'rejected' ? (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
@@ -185,7 +181,6 @@ function WholesaleApplyForm({
           {data.rejectionReason ? (
             <p className="mt-1">{t('wholesale.rejectedReason', { reason: data.rejectionReason })}</p>
           ) : null}
-          <p className="mt-1">{t('wholesale.rejectedBody')}</p>
         </div>
       ) : null}
 
@@ -248,7 +243,6 @@ function WholesaleApplyForm({
             value={taxId}
             onChange={(e) => setTaxId(e.target.value)}
           />
-          <p className="mt-1 text-xs text-[var(--fg-muted)]">{t('wholesale.taxIdHint')}</p>
         </div>
         <div className="sm:col-span-2">
           <Textarea

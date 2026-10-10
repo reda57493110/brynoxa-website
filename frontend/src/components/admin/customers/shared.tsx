@@ -55,7 +55,7 @@ export function ProfitText({
   if (value === null) {
     return (
       <span className={cn('text-xs text-[var(--warning)]', className)}>
-        {missing > 0 ? `Cost data needed for ${missing} order${missing === 1 ? '' : 's'}` : '—'}
+        {missing > 0 ? `No cost · ${missing} order${missing === 1 ? '' : 's'}` : '—'}
       </span>
     )
   }

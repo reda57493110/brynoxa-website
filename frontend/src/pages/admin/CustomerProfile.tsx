@@ -169,7 +169,6 @@ export function CustomerProfile() {
   const c = data.customer
   const hasPeriod = Boolean(period.from || period.to) && Boolean(data.period)
   const metrics = hasPeriod && data.period ? data.period : data.lifetime
-  const scope = hasPeriod ? 'Selected period' : 'Lifetime'
   const lifetimeForHints = hasPeriod ? data.lifetime : null
   const busy = updateMut.isPending || reviewMut.isPending
 
@@ -259,13 +258,13 @@ export function CustomerProfile() {
       >
         {tab === 'overview' ? <ProfileOverview profile={data} save={save} review={review} busy={busy} /> : null}
         {tab === 'orders' ? (
-          <ProfileOrders profile={data} metrics={metrics} scope={scope} lifetime={lifetimeForHints} />
+          <ProfileOrders profile={data} metrics={metrics} lifetime={lifetimeForHints} />
         ) : null}
         {tab === 'profit' ? (
-          <ProfileProfitability metrics={metrics} lifetime={data.lifetime} scope={scope} />
+          <ProfileProfitability metrics={metrics} lifetime={data.lifetime} />
         ) : null}
         {tab === 'payments' ? (
-          <ProfilePayments profile={data} metrics={metrics} lifetime={lifetimeForHints} scope={scope} />
+          <ProfilePayments profile={data} metrics={metrics} lifetime={lifetimeForHints} />
         ) : null}
         {tab === 'activity' ? <ProfileActivity timeline={data.timeline} /> : null}
       </div>

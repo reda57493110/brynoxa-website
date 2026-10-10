@@ -19,24 +19,24 @@ function Breakdown({ s, shipping }: { s: SalesBlock; shipping?: number }) {
   return (
     <dl>
       <Row label="Gross sales">{money(s.grossSales)}</Row>
-      <Row label="Wholesale discounts">−{money(s.wholesaleDiscounts)}</Row>
-      <Row label="Coupon discounts">−{money(s.couponDiscounts)}</Row>
+      <Row label="Wholesale discount">−{money(s.wholesaleDiscounts)}</Row>
+      <Row label="Coupons">−{money(s.couponDiscounts)}</Row>
       <Row label="Refunds">−{money(s.refunds)}</Row>
       <Row label="Net sales" strong>
         {money(s.netSales)}
       </Row>
-      <Row label="Cost of goods sold">{s.grossProfit === null ? '—' : money(s.cogs)}</Row>
+      <Row label="Product cost">{s.grossProfit === null ? '—' : money(s.cogs)}</Row>
       <Row label="Gross profit" strong>
         <ProfitText value={s.grossProfit} missing={s.ordersMissingCost} />
       </Row>
       <Row label="Margin">
         <ProfitText value={s.margin} missing={0} format={pct} />
       </Row>
-      <Row label="Profit per completed order">
+      <Row label="Profit / order">
         <ProfitText value={s.profitPerOrder} missing={0} />
       </Row>
       {shipping !== undefined ? (
-        <Row label="Shipping collected" note="Not part of net sales">
+        <Row label="Shipping" note="not in sales">
           {money(shipping)}
         </Row>
       ) : null}
@@ -55,7 +55,7 @@ function ChannelCard({ title, s }: { title: string; s: SalesBlock }) {
         <Row label="Gross profit">
           <ProfitText value={s.grossProfit} missing={s.ordersMissingCost} />
         </Row>
-        <Row label="Avg order value">{money(s.averageOrderValue)}</Row>
+        <Row label="Avg. order">{money(s.averageOrderValue)}</Row>
       </dl>
     </div>
   )
@@ -64,17 +64,14 @@ function ChannelCard({ title, s }: { title: string; s: SalesBlock }) {
 export function ProfileProfitability({
   metrics,
   lifetime,
-  scope,
 }: {
   metrics: CustomerMetrics
   lifetime: CustomerMetrics
-  scope: string
 }) {
   if (!lifetime.profitVisible) {
     return (
       <p className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-5 text-sm text-[var(--fg-muted)]">
-        You don&apos;t have access to cost and profit data. Ask an administrator for the &ldquo;reports&rdquo;
-        permission.
+        Profit data is limited to administrators.
       </p>
     )
   }
@@ -86,21 +83,21 @@ export function ProfileProfitability({
     <div className="min-w-0 space-y-4">
       {missing ? (
         <p className="rounded-xl bg-[color-mix(in_srgb,var(--warning)_14%,transparent)] px-3 py-2 text-sm text-[var(--warning)]">
-          Cost data needed for {metrics.sales.ordersMissingCost} completed order
-          {metrics.sales.ordersMissingCost === 1 ? '' : 's'} — add product cost prices to see gross profit.
+          No cost price on {metrics.sales.ordersMissingCost} order
+          {metrics.sales.ordersMissingCost === 1 ? '' : 's'} — add cost prices to see profit.
         </p>
       ) : null}
       <div className={`grid min-w-0 gap-4 ${hasPeriod ? 'lg:grid-cols-2' : ''}`}>
-        <Section title={`Profit breakdown · ${scope}`}>
+        <Section title={hasPeriod ? 'Profit · this period' : 'Profit'}>
           <Breakdown s={metrics.sales} shipping={metrics.sales.shippingCollected} />
         </Section>
         {hasPeriod ? (
-          <Section title="Profit breakdown · Lifetime">
+          <Section title="Profit · all time">
             <Breakdown s={lifetime.sales} shipping={lifetime.sales.shippingCollected} />
           </Section>
         ) : null}
       </div>
-      <Section title={`Retail vs wholesale · ${scope}`}>
+      <Section title="Retail vs wholesale">
         <div className="grid min-w-0 gap-3 sm:grid-cols-2">
           <ChannelCard title="Retail" s={metrics.channels.retail} />
           <ChannelCard title="Wholesale" s={metrics.channels.wholesale} />

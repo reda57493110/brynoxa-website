@@ -16,43 +16,43 @@ function dateOr(v: string | null) {
 export function ProfileOrders({
   profile,
   metrics,
-  scope,
   lifetime,
 }: {
   profile: CustomerProfile
   metrics: CustomerMetrics
-  scope: string
   lifetime: CustomerMetrics | null
 }) {
   const o = metrics.orders
   const s = metrics.sales
-  const life = (fn: (m: CustomerMetrics) => string) => (lifetime ? `Lifetime: ${fn(lifetime)}` : undefined)
+  const life = (fn: (m: CustomerMetrics) => string) => (lifetime ? `All time: ${fn(lifetime)}` : undefined)
 
   return (
     <div className="min-w-0 space-y-4">
-      <p className="text-xs text-[var(--fg-muted)]">Figures: {scope}</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-6">
-        <StatCard label="Total orders" value={o.total} hint={life((m) => String(m.orders.total))} />
+        <StatCard label="Orders" value={o.total} hint={life((m) => String(m.orders.total))} />
         <StatCard label="Completed" value={o.completed} hint={life((m) => String(m.orders.completed))} />
         <StatCard label="Open" value={o.open} />
         <StatCard label="Cancelled" value={o.cancelled} />
-        <StatCard label="Refunded" value={o.refunded} />
-        <StatCard label="Partially refunded" value={o.partiallyRefunded} />
+        <StatCard
+          label="Refunded"
+          value={o.refunded}
+          hint={o.partiallyRefunded ? `+${o.partiallyRefunded} partial` : undefined}
+        />
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
-        <StatCard label="Total order value" value={money(s.totalOrderValue)} hint={life((m) => money(m.sales.totalOrderValue))} />
+        <StatCard label="Order value" value={money(s.totalOrderValue)} hint={life((m) => money(m.sales.totalOrderValue))} />
         <StatCard
-          label="Completed sales value"
+          label="Sales"
           value={money(s.completedOrderValue)}
           hint={life((m) => money(m.sales.completedOrderValue))}
         />
-        <StatCard label="Avg order value" value={money(s.averageOrderValue)} hint={life((m) => money(m.sales.averageOrderValue))} />
-        <StatCard label="First purchase" value={dateOr(metrics.dates.firstOrder)} />
-        <StatCard label="Last purchase" value={dateOr(metrics.dates.lastOrder)} />
+        <StatCard label="Avg. order" value={money(s.averageOrderValue)} hint={life((m) => money(m.sales.averageOrderValue))} />
+        <StatCard label="First order" value={dateOr(metrics.dates.firstOrder)} />
+        <StatCard label="Last order" value={dateOr(metrics.dates.lastOrder)} />
       </div>
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-        <Section title="Top products (lifetime)">
+        <Section title="Top products">
           {profile.topProducts.length ? (
             <div className="-mx-4 overflow-x-auto sm:-mx-5">
               <table className="w-full min-w-[420px] text-left text-sm">
@@ -88,7 +88,7 @@ export function ProfileOrders({
             <p className="text-sm text-[var(--fg-muted)]">No purchases yet.</p>
           )}
         </Section>
-        <Section title="Categories (lifetime)">
+        <Section title="Categories">
           {profile.categories.length ? (
             <div className="-mx-4 overflow-x-auto sm:-mx-5">
               <table className="w-full min-w-[320px] text-left text-sm">
@@ -116,7 +116,7 @@ export function ProfileOrders({
         </Section>
       </div>
 
-      <Section title={`Order history (${profile.orders.length})`}>
+      <Section title={`Orders (${profile.orders.length})`}>
         {profile.orders.length ? (
           <div className="-mx-4 overflow-x-auto sm:-mx-5">
             <table className="w-full min-w-[960px] text-left text-sm">
@@ -184,7 +184,7 @@ export function ProfileOrders({
             </table>
           </div>
         ) : (
-          <p className="text-sm text-[var(--fg-muted)]">This customer has not placed any orders.</p>
+          <p className="text-sm text-[var(--fg-muted)]">No orders yet.</p>
         )}
       </Section>
     </div>
