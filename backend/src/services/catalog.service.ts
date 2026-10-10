@@ -5,6 +5,7 @@ import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
 import { sanitizeDepositRule } from '../utils/deposit';
 import { sanitizeSpecs, sanitizeSpecTemplate } from '../utils/specs';
+import { sanitizeVariantLabel, syncVariantGroup, variantsOf } from './variants.service';
 import { moveStock, withTransaction } from './inventoryLedger.service';
 import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
@@ -247,6 +248,8 @@ export async function listProducts(query: ProductQuery) {
     }
     filter.brand = brandId;
   }
+  // One card per variant group in the shop (featured/carousel picks are shown as chosen)
+  if (!query.admin && !query.featured && !query.carousel) filter.variantListed = { $ne: false };
   if (query.featured) filter.isFeatured = true;
   if (query.carousel) filter.isCarousel = true;
   if (query.inStock) filter.stock = { $gt: 0 };
@@ -313,7 +316,7 @@ export async function getProductBySlug(slug: string) {
   if (!categoryIsActive(product.category)) {
     throw new ApiError(404, 'Product not found');
   }
-  return product;
+  return Object.assign(product.toJSON(), { variants: await variantsOf(product, true) });
 }
 
 /** Valid, unique product ids (never the product itself), max 12, in the given order. */
@@ -339,7 +342,7 @@ export async function getProductById(id: string) {
     .populate('brand', 'name slug logo')
     .populate('recommended', 'name sku slug images price stock isActive');
   if (!product) throw new ApiError(404, 'Product not found');
-  return product;
+  return Object.assign(product.toJSON(), { variants: await variantsOf(product, false) });
 }
 
 export async function createProduct(data: Record<string, unknown>) {
@@ -429,6 +432,8 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   if (specs) product.set('specs', specs);
   const specTemplate = sanitizeSpecTemplate(data.specTemplate);
   if (specTemplate !== undefined) product.specTemplate = specTemplate || undefined;
+  const variantLabel = sanitizeVariantLabel(data.variantLabel);
+  if (variantLabel !== undefined && product.variantGroup) product.variantLabel = variantLabel || undefined;
 
   if (data.deposit !== undefined) {
     const deposit = sanitizeDepositRule(data.deposit);
@@ -471,6 +476,8 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   }
 
   await product.save();
+  // Which product of a variant group represents it in the shop can change with its status
+  if (data.isActive !== undefined && product.variantGroup) await syncVariantGroup(product.variantGroup);
 
   const currentUrls = new Set(product.images.map((img) => img.url));
   await deleteUnusedImages(previousImages.filter((img) => !currentUrls.has(img.url)));
@@ -483,6 +490,7 @@ export async function deleteProduct(id: string) {
   const product = await Product.findByIdAndDelete(id);
   if (!product) throw new ApiError(404, 'Product not found');
   await deleteUnusedImages(product.images);
+  await syncVariantGroup(product.variantGroup);
   return product;
 }
 

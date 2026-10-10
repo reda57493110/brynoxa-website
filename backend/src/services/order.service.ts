@@ -126,7 +126,8 @@ async function buildOrderLines(
     depositTotal += lineDeposit(product.deposit, price, item.qty);
     return {
       product: product._id,
-      name: product.name,
+      // Variants share a name; keep the chosen options with the line
+      name: product.variantLabel ? `${product.name} (${product.variantLabel})` : product.name,
       image: primary?.url,
       sku: product.sku,
       price,

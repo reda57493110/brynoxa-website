@@ -121,6 +121,7 @@ export const productSchema = z.object({
   lowStockThreshold: z.number().int().min(0).optional(),
   specs: z.record(z.string().max(60), z.string().max(500)).optional(),
   specTemplate: z.union([z.enum(SPEC_TEMPLATE_IDS), z.literal(''), z.null()]).optional(),
+  variantLabel: z.string().max(120).optional(),
   tags: z.array(z.string()).optional(),
   isFeatured: z.boolean().optional(),
   isCarousel: z.boolean().optional(),

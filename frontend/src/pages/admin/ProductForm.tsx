@@ -22,6 +22,8 @@ import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
 import { SpecsEditor } from '@/components/admin/SpecsEditor'
+import { VariantsPanel } from '@/components/admin/VariantsPanel'
+import { variantLabel } from '@/lib/variants'
 import {
   distribute,
   draftEntries,
@@ -282,6 +284,10 @@ export function ProductForm() {
         // Full set of specs (empty ones left out); not sent until the spec fields are ready
         ...(specs ? { specs: draftToSpecs(specs) } : {}),
         specTemplate: specOverride,
+        // Variants: keep the option summary ("16 GB · 512 GB") in step with the specs
+        ...(specs && existing.data?.variantGroup
+          ? { variantLabel: variantLabel(draftToSpecs(specs), specs.template, existing.data.variantAttributes ?? []) }
+          : {}),
         images: form.images.map((img, i) => ({
           url: img.url,
           publicId: img.publicId,
@@ -731,6 +737,13 @@ export function ProductForm() {
             <Spinner />
           </div>
         )}
+        {isEdit && existing.data && specs ? (
+          <VariantsPanel product={existing.data} templateId={specs.template} dirty={isDirty} />
+        ) : !isEdit ? (
+          <p className="text-xs text-[var(--fg-muted)] sm:col-span-2">
+            Sold in several versions (e.g. 8 GB / 16 GB RAM)? Create the product first, then add variants when editing it.
+          </p>
+        ) : null}
         <Textarea
           label="Short description"
           className="sm:col-span-2"

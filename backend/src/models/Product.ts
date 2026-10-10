@@ -60,6 +60,14 @@ export interface IProduct extends Document {
   specs: Map<string, string> | Record<string, string>;
   /** Spec form used for this product (see utils/specs.ts); empty = from its category. */
   specTemplate?: string;
+  /** Products sold as options of the same model share this id (see services/variants.service.ts). */
+  variantGroup?: string;
+  /** Spec keys that differ between the group's products (e.g. ram_gb, storage). */
+  variantAttributes?: string[];
+  /** Short option summary, e.g. "16 GB · 512 GB" (shown in cart and orders). */
+  variantLabel?: string;
+  /** false = another product of the group represents it in shop listings. */
+  variantListed?: boolean;
   tags: string[];
   isFeatured: boolean;
   featuredAt?: Date | null;
@@ -133,6 +141,10 @@ const productSchema = new Schema<IProduct>(
     },
     specs: { type: Map, of: String, default: {} },
     specTemplate: { type: String, default: undefined },
+    variantGroup: { type: String, default: undefined, index: true },
+    variantAttributes: { type: [String], default: undefined },
+    variantLabel: { type: String, default: undefined },
+    variantListed: { type: Boolean, default: undefined },
     tags: [{ type: String }],
     isFeatured: { type: Boolean, default: false },
     featuredAt: { type: Date, default: null },

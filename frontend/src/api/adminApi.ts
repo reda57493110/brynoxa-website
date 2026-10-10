@@ -1,5 +1,6 @@
 import api from './client'
 import type {
+  ProductVariant,
   ApiResponse,
   Brand,
   Category,
@@ -45,6 +46,12 @@ export const adminApi = {
     /** Low-stock threshold, and/or a new sellable count (logged adjustment: reason + approval rights). */
     inventory: (id: string, payload: { stock?: number; lowStockThreshold?: number; reason?: string }) =>
       api.patch<ApiResponse<Product>>(`/admin/products/${id}/inventory`, payload),
+    /** Variants: copy this product as a new option, or link an existing product (productId). */
+    addVariant: (id: string, payload: { attributes?: string[]; productId?: string }) =>
+      api.post<ApiResponse<Product>>(`/admin/products/${id}/variants`, payload),
+    updateVariants: (id: string, payload: { attributes?: string[]; labels?: Record<string, string> }) =>
+      api.patch<ApiResponse<ProductVariant[]>>(`/admin/products/${id}/variants`, payload),
+    leaveVariants: (id: string) => api.delete<ApiResponse<null>>(`/admin/products/${id}/variants`),
     list: (filters?: ProductFilters) =>
       api.get<ApiResponse<Product[]>>('/products', {
         params: { admin: true, ...filters, limit: filters?.limit ?? 20 },

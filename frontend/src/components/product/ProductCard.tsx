@@ -234,6 +234,9 @@ export function ProductCard({
                 : 'min-h-[1.5rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-sm sm:[&>span:first-child]:text-lg'
             }
           />
+          {product.variantGroup ? (
+            <p className="-mt-1 text-[10px] font-medium text-[var(--brand-text)] sm:text-xs">{t('productPage.moreOptions')}</p>
+          ) : null}
           <div className="flex items-center gap-2">
             <Button
               size="sm"

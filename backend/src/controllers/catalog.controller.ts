@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
+import * as variants from '../services/variants.service';
 import { getRecommendations } from '../services/recommendation.service';
 import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../services/upload.service';
 import { hasValidImageSignature } from '../middleware/upload';
@@ -88,6 +89,24 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.updateProduct(param(req, 'id'), req.body);
   sendSuccess(res, item, 'Product updated');
+});
+
+export const createVariant = asyncHandler(async (req: Request, res: Response) => {
+  const body = req.body || {};
+  const item = body.productId
+    ? await variants.linkVariant(param(req, 'id'), String(body.productId), body)
+    : await variants.createVariant(param(req, 'id'), body);
+  sendSuccess(res, item, 'Variant added', 201);
+});
+
+export const updateVariants = asyncHandler(async (req: Request, res: Response) => {
+  const items = await variants.updateVariantGroup(param(req, 'id'), req.body || {});
+  sendSuccess(res, items, 'Variants updated');
+});
+
+export const leaveVariants = asyncHandler(async (req: Request, res: Response) => {
+  await variants.leaveVariantGroup(param(req, 'id'));
+  sendSuccess(res, null, 'Removed from variants');
 });
 
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {

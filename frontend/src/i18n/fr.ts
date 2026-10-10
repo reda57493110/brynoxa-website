@@ -505,6 +505,8 @@ export const fr: Messages = {
     specifications: 'Caractéristiques',
     allSpecs: 'Toutes les caractéristiques ({count})',
     keySpecs: 'Voir seulement l’essentiel',
+    unavailable: 'rupture',
+    moreOptions: 'Autres configurations disponibles',
   },
   contact: {
     heroKicker: 'Contact',

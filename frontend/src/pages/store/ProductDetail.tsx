@@ -35,6 +35,7 @@ import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
 import { resolveTemplate } from '@/lib/specs'
 import { ProductSpecs } from '@/components/product/ProductSpecs'
+import { VariantPicker } from '@/components/product/VariantPicker'
 
 function primaryImage(product: Product) {
   return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
@@ -204,7 +205,8 @@ export function ProductDetail() {
   const cartLine = {
     productId: p._id,
     slug: p.slug,
-    name: p.name,
+    // Variants share a name; the options tell them apart in the cart
+    name: p.variantLabel ? `${p.name} (${p.variantLabel})` : p.name,
     image: primaryImage(p),
     price: p.price,
     stock: p.stock,
@@ -366,6 +368,8 @@ export function ProductDetail() {
                 {p.shortDescription}
               </p>
             ) : null}
+
+            <VariantPicker product={p} template={specTemplate} />
 
             <ProductSpecs specs={p.specs} template={specTemplate} />
 

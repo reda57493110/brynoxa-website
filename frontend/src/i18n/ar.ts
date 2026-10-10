@@ -501,6 +501,8 @@ export const ar: Messages = {
     specifications: 'المواصفات',
     allSpecs: 'جميع المواصفات ({count})',
     keySpecs: 'عرض المواصفات الأساسية فقط',
+    unavailable: 'نفد',
+    moreOptions: 'تتوفر خيارات أخرى',
   },
   contact: {
     heroKicker: 'اتصل بنا',

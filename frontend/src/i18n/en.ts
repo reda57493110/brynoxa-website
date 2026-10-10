@@ -499,6 +499,8 @@ export const en = {
     specifications: 'Specifications',
     allSpecs: 'All specifications ({count})',
     keySpecs: 'Show key specs only',
+    unavailable: 'out of stock',
+    moreOptions: 'More options available',
   },
   contact: {
     heroKicker: 'Contact',

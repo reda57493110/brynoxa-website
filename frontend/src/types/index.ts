@@ -59,6 +59,22 @@ export interface SessionPayload {
   accessToken: string | null
 }
 
+/** One option of a product sold in several versions (own SKU, price and stock). */
+export interface ProductVariant {
+  _id: string
+  name: string
+  slug: string
+  sku: string
+  price: number
+  compareAtPrice?: number
+  stock: number
+  specs: Record<string, string>
+  specTemplate?: string
+  variantLabel?: string
+  isActive: boolean
+  image?: string
+}
+
 export interface Category {
   _id: string
   name: string
@@ -127,6 +143,14 @@ export interface Product {
   specs: Record<string, string>
   /** Spec form picked for this product; empty = from its category. */
   specTemplate?: string
+  /** Products sold as options of the same model share this id. */
+  variantGroup?: string
+  /** Spec keys that differ between the variants (e.g. ram_gb, storage). */
+  variantAttributes?: string[]
+  /** Short option summary, e.g. "16 GB · 512 GB". */
+  variantLabel?: string
+  /** Every product of the group, this one included (shop: active ones only). */
+  variants?: ProductVariant[]
   tags: string[]
   isFeatured: boolean
   isCarousel?: boolean

@@ -89,6 +89,9 @@ router.delete(
   requirePermission('products:delete'),
   catalog.deleteProduct
 );
+router.post('/admin/products/:id/variants', requireAuth, requirePermission('products:write'), catalog.createVariant);
+router.patch('/admin/products/:id/variants', requireAuth, requirePermission('products:write'), catalog.updateVariants);
+router.delete('/admin/products/:id/variants', requireAuth, requirePermission('products:write'), catalog.leaveVariants);
 router.patch(
   '/admin/products/:id/inventory',
   requireAuth,

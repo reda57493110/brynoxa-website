@@ -14,9 +14,13 @@ import { roundMoney } from '../utils/deposit';
 
 const BUCKET_KEYS = ['reserved', 'awaitingInspection', 'returned', 'defective', 'underRepair', 'writtenOff'] as const;
 
+/** Variants share a name; add their options so each one is recognisable. */
+const displayName = (p: { name: string; variantLabel?: string }) => (p.variantLabel ? `${p.name} (${p.variantLabel})` : p.name);
+
 type LeanProduct = {
   _id: Types.ObjectId;
   name: string;
+  variantLabel?: string;
   sku: string;
   slug: string;
   price: number;
@@ -67,7 +71,7 @@ export function inventorySnapshot(p: LeanProduct) {
   };
 }
 
-const PRODUCT_FIELDS = '+inventory +costPrice name sku slug price stock lowStockThreshold condition serialTracking isActive inventoryLocation baseProduct category images';
+const PRODUCT_FIELDS = '+inventory +costPrice name variantLabel sku slug price stock lowStockThreshold condition serialTracking isActive inventoryLocation baseProduct category images';
 
 export interface InventoryQuery {
   page?: number;
@@ -121,7 +125,7 @@ export async function inventoryOverview(query: InventoryQuery) {
   const products = await Product.find(filter).select(PRODUCT_FIELDS).populate('category', 'name').lean<LeanProduct[]>();
   let rows = products.map((p) => ({
     _id: p._id,
-    name: p.name,
+    name: displayName(p),
     sku: p.sku,
     slug: p.slug,
     price: p.price,
@@ -269,7 +273,7 @@ export async function productInventory(id: string) {
   ]);
   return {
     product: {
-      _id: p._id, name: p.name, sku: p.sku, slug: p.slug, price: p.price, condition: p.condition || 'new',
+      _id: p._id, name: displayName(p), sku: p.sku, slug: p.slug, price: p.price, condition: p.condition || 'new',
       serialTracking: Boolean(p.serialTracking), isActive: p.isActive, location: p.inventoryLocation,
       lowStockThreshold: p.lowStockThreshold ?? 5, category: p.category?.name, baseProduct: p.baseProduct,
       image: p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url,

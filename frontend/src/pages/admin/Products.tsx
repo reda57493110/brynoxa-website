@@ -162,7 +162,10 @@ export function Products() {
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1 overflow-hidden">
-                      <p className="truncate text-sm font-medium">{p.name}</p>
+                      <p className="truncate text-sm font-medium">
+                        {p.name}
+                        {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
+                      </p>
                       <p className="mt-0.5 truncate text-[11px] text-[var(--fg-muted)]">
                         {cat || '—'} · {p.sku}
                       </p>
@@ -238,7 +241,10 @@ export function Products() {
                             ) : null}
                           </div>
                           <div className="min-w-0">
-                            <p className="truncate font-medium">{p.name}</p>
+                            <p className="truncate font-medium">
+                        {p.name}
+                        {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
+                      </p>
                             <p className="truncate text-xs text-[var(--fg-muted)]">{cat}</p>
                           </div>
                         </div>
