@@ -270,11 +270,28 @@ export interface StoreSettings {
   supportEmail: string
   codEnabled: boolean
   depositInstructions?: string
+  emailNotifications?: Partial<Record<EmailEvent, boolean>>
+  emailMessages?: Partial<Record<EmailMessageEvent, string>>
   notifyStaffLoginEmail?: boolean
   pageHeroProducts?: Partial<Record<HeroPage, string>>
 }
 
 export type HeroPage = 'shop' | 'services' | 'contact'
+
+/** Automatic emails the admin can switch on/off (mirrors backend EMAIL_EVENTS). */
+export type EmailEvent =
+  | 'orderPlaced'
+  | 'orderConfirmed'
+  | 'orderShipped'
+  | 'orderDelivered'
+  | 'orderCancelled'
+  | 'depositRequested'
+  | 'depositReceived'
+  | 'staffNewOrder'
+  | 'securityAlerts'
+
+/** Customer emails that can carry a custom message and be test-sent. */
+export type EmailMessageEvent = Exclude<EmailEvent, 'staffNewOrder' | 'securityAlerts'>
 
 export interface Notification {
   _id: string

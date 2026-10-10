@@ -213,6 +213,8 @@ export const settingsSchema = z.object({
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
   depositInstructions: z.string().max(2000).optional(),
+  emailNotifications: z.record(z.string(), z.boolean()).optional(),
+  emailMessages: z.record(z.string(), z.string().max(1000)).optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
   pageHeroProducts: z
     .object({
@@ -334,4 +336,16 @@ export const paginationQuerySchema = z.object({
   carousel: z.coerce.boolean().optional(),
   inStock: z.coerce.boolean().optional(),
   isActive: z.coerce.boolean().optional(),
+});
+
+export const emailTestSchema = z.object({
+  type: z.enum([
+    'orderPlaced',
+    'orderConfirmed',
+    'orderShipped',
+    'orderDelivered',
+    'orderCancelled',
+    'depositRequested',
+    'depositReceived',
+  ]),
 });

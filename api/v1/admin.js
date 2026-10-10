@@ -388,6 +388,22 @@ module.exports = async (req, res) => {
     )
       .replace(/^\/+|\/+$/g, '');
 
+    // POST /admin/email-test — send a sample email to the signed-in staff member
+    if (route === 'email-test' && req.method === 'POST') {
+      const user = await requireStaff(req, res, ['settings']);
+      if (!user) return;
+      const { emailTestSchema } = require('../../backend/dist/validators/schemas');
+      const parsed = emailTestSchema.safeParse(await readJsonBody(req));
+      if (!parsed.success) {
+        sendJson(res, 400, { success: false, message: 'Unknown email type' });
+        return;
+      }
+      const { sendTestEmail } = require('../../backend/dist/services/emailTest.service');
+      const result = await sendTestEmail(String(user._id), parsed.data.type);
+      sendJson(res, 200, { success: true, message: `Test email sent to ${result.sentTo}`, data: result });
+      return;
+    }
+
     // Settings page category CRUD — keep off the slow Express lambda.
     if (
       route === 'categories' ||

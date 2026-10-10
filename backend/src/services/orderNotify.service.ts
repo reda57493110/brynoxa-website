@@ -1,13 +1,29 @@
 import { env } from '../config/env';
 import { User } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
+import {
+  getSettings,
+  isEmailEnabled,
+  type EmailMessageEvent,
+  type ISettings,
+} from '../models/Settings';
 import { escapeHtml, sendEmail } from './email.service';
+import {
+  button,
+  detailRows,
+  formatMad,
+  panel,
+  paragraphs,
+  renderEmail,
+  siteUrl,
+  toPlainText,
+} from './emailTemplate';
 import { notifyCustomerOrderStatus, notifyStaffNewOrder } from './push.service';
 
-const STATUS_COPY: Record<
-  OrderStatus,
-  { title: string; customerLine: string }
-> = {
+type OrderDoc = InstanceType<typeof Order>;
+
+/** Short copy reused by in-app notifications and push messages. */
+const STATUS_COPY: Record<OrderStatus, { title: string; customerLine: string }> = {
   pending: {
     title: 'Order placed',
     customerLine: 'We received your order and will confirm it shortly. Pay cash on delivery.',
@@ -30,46 +46,33 @@ const STATUS_COPY: Record<
   },
 };
 
-function formatMad(amount: number) {
-  return `${Math.round(amount).toLocaleString('fr-MA')} DH`;
+export function statusNotificationCopy(status: OrderStatus) {
+  return STATUS_COPY[status];
 }
 
-function orderItemsHtml(order: InstanceType<typeof Order>) {
-  const rows = order.items
-    .map(
-      (item) =>
-        `<tr>
-          <td style="padding:8px 0;border-bottom:1px solid #e8ecef;">${escapeHtml(item.name)} × ${item.qty}</td>
-          <td style="padding:8px 0;border-bottom:1px solid #e8ecef;text-align:right;">${formatMad(item.price * item.qty)}</td>
-        </tr>`
-    )
-    .join('');
-  return `<table style="width:100%;border-collapse:collapse;font-size:14px;">${rows}</table>`;
+/** Status changes that send a customer email, and the admin switch that controls each. */
+const STATUS_EMAIL: Partial<Record<OrderStatus, EmailMessageEvent>> = {
+  confirmed: 'orderConfirmed',
+  shipped: 'orderShipped',
+  delivered: 'orderDelivered',
+  cancelled: 'orderCancelled',
+};
+
+async function resolveCustomer(order: OrderDoc) {
+  return User.findById(order.user).select('email name phone isGuest');
 }
 
-function wrapEmail(title: string, body: string) {
-  return `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f5f7f9;font-family:Manrope,Segoe UI,Arial,sans-serif;color:#0c1218;">
-  <div style="max-width:560px;margin:24px auto;background:#ffffff;border:1px solid #d5dde4;border-radius:16px;overflow:hidden;">
-    <div style="padding:20px 24px;background:#080B0E;color:#fff;">
-      <div style="font-size:18px;font-weight:700;letter-spacing:-0.02em;">Brynoxa</div>
-      <div style="margin-top:4px;font-size:13px;color:#7adfff;">${escapeHtml(title)}</div>
-    </div>
-    <div style="padding:24px;">${body}</div>
-    <div style="padding:16px 24px;border-top:1px solid #e8ecef;font-size:12px;color:#5a6a7a;">
-      Questions? WhatsApp <a href="https://wa.me/212779318061" style="color:#0077a8;">07 79 31 80 61</a>
-      · <a href="mailto:brynoxa.shop@gmail.com" style="color:#0077a8;">brynoxa.shop@gmail.com</a>
-    </div>
-  </div>
-</body></html>`;
-}
+type Customer = NonNullable<Awaited<ReturnType<typeof resolveCustomer>>>;
 
-function customerOrderLink(orderNumber: string) {
-  return `${env.CLIENT_URL}/account/orders/${encodeURIComponent(orderNumber)}`;
+/** Guests have no account page; they follow their order on the tracking page. */
+function orderLink(order: OrderDoc, customer: Customer) {
+  return customer.isGuest
+    ? siteUrl('/track-order')
+    : siteUrl(`/account/orders/${encodeURIComponent(order.orderNumber)}`);
 }
 
 function adminOrderLink(orderId: string) {
-  return `${env.CLIENT_URL}/admin/orders/${orderId}`;
+  return siteUrl(`/admin/orders/${orderId}`);
 }
 
 function whatsappCustomerLink(phone?: string, orderNumber?: string) {
@@ -84,17 +87,102 @@ function whatsappCustomerLink(phone?: string, orderNumber?: string) {
   return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
 }
 
-async function resolveCustomerEmail(order: InstanceType<typeof Order>) {
-  const user = await User.findById(order.user).select('email name phone isGuest');
-  return user;
+function greeting(order: OrderDoc, customer: Customer) {
+  const name = (customer.name || order.shippingAddress?.fullName || '').trim().split(/\s+/)[0];
+  return `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;">Hi ${escapeHtml(name || 'there')},</p>`;
 }
 
-export function statusNotificationCopy(status: OrderStatus) {
-  return STATUS_COPY[status];
+function depositAmounts(order: OrderDoc) {
+  const deposit = order.deposit?.amount && order.deposit.amount > 0 ? order.deposit : null;
+  const paid = deposit?.status === 'received' ? deposit.amount : 0;
+  return { deposit, paid, dueOnDelivery: Math.max(0, order.pricing.total - paid) };
 }
 
-/** Customer + admin emails (and staff push alerts) after a new COD order (non-blocking). */
-export async function notifyOrderPlaced(order: InstanceType<typeof Order>) {
+/** Items, totals, payment method and deposit — the same block in every order email. */
+function orderSummaryHtml(order: OrderDoc, opts: { paid?: boolean } = {}) {
+  const items = order.items
+    .map(
+      (item) => `<tr>
+        <td style="padding:8px 0;font-size:14px;border-bottom:1px solid #e6ebef;">${escapeHtml(item.name)}<span style="color:#5a6a7a;"> × ${item.qty}</span></td>
+        <td style="padding:8px 0;font-size:14px;border-bottom:1px solid #e6ebef;text-align:right;white-space:nowrap;">${formatMad(item.price * item.qty)}</td>
+      </tr>`
+    )
+    .join('');
+
+  const { deposit } = depositAmounts(order);
+  const rows = [
+    { label: 'Subtotal', value: formatMad(order.pricing.subtotal) },
+    ...(order.pricing.discount > 0
+      ? [{ label: `Discount${order.coupon?.code ? ` (${order.coupon.code})` : ''}`, value: `−${formatMad(order.pricing.discount)}` }]
+      : []),
+    { label: 'Shipping', value: order.pricing.shipping > 0 ? formatMad(order.pricing.shipping) : 'Free' },
+    ...(order.pricing.tax > 0 ? [{ label: 'Tax', value: formatMad(order.pricing.tax) }] : []),
+    { label: 'Total', value: formatMad(order.pricing.total), strong: true },
+    { label: 'Payment method', value: opts.paid ? 'Cash on delivery — paid' : 'Cash on delivery' },
+    ...(deposit && !opts.paid
+      ? deposit.status === 'received'
+        ? [
+            { label: 'Deposit paid', value: formatMad(deposit.amount) },
+            { label: 'Left to pay on delivery', value: formatMad(order.pricing.total - deposit.amount), strong: true },
+          ]
+        : [
+            { label: 'Deposit to pay before confirmation', value: formatMad(deposit.amount), strong: true },
+            { label: 'Then on delivery', value: formatMad(order.pricing.total - deposit.amount) },
+          ]
+      : []),
+  ];
+
+  return panel(
+    `Order ${order.orderNumber}`,
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">${items}</table>
+     <div style="height:6px;"></div>${detailRows(rows)}`
+  );
+}
+
+function deliveryHtml(order: OrderDoc) {
+  const a = order.shippingAddress;
+  const lines = [a.fullName, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.phone].filter(Boolean);
+  return panel(
+    'Delivery address',
+    `<p style="margin:0;font-size:14px;line-height:1.6;">${lines.map((l) => escapeHtml(String(l))).join('<br/>')}</p>`
+  );
+}
+
+function depositInstructionsHtml(settings: ISettings, amount: number) {
+  const instructions = settings.depositInstructions?.trim();
+  return panel(
+    `Deposit to pay: ${formatMad(amount)}`,
+    `${instructions ? paragraphs(instructions) : paragraphs('We will contact you with the payment details.')}
+     <p style="margin:0;font-size:14px;line-height:1.6;color:#5a6a7a;">After paying, send your receipt on WhatsApp with your order number. We confirm your order as soon as the deposit is received.</p>`,
+    'highlight'
+  );
+}
+
+function customMessage(settings: ISettings, event: EmailMessageEvent) {
+  const text = settings.emailMessages?.[event]?.trim();
+  return text ? panel('A note from Brynoxa', paragraphs(text)) : '';
+}
+
+async function sendCustomerEmail(input: {
+  to: string;
+  subject: string;
+  heading: string;
+  preheader: string;
+  body: string;
+  idempotencyKey: string;
+}) {
+  const html = renderEmail({ heading: input.heading, preheader: input.preheader, body: input.body });
+  return sendEmail({
+    to: input.to,
+    subject: input.subject,
+    html,
+    text: toPlainText(html),
+    idempotencyKey: input.idempotencyKey,
+  });
+}
+
+/** Customer + staff emails (and staff push) after a new COD order. Non-blocking for checkout. */
+export async function notifyOrderPlaced(order: OrderDoc) {
   const staffPush = notifyStaffNewOrder(order).catch((error) => {
     console.error('Staff order push failed', error);
   });
@@ -102,89 +190,223 @@ export async function notifyOrderPlaced(order: InstanceType<typeof Order>) {
   await staffPush;
 }
 
-async function notifyOrderPlacedEmails(order: InstanceType<typeof Order>) {
-  const user = await resolveCustomerEmail(order);
-  const copy = STATUS_COPY.pending;
-  const total = formatMad(order.pricing.total);
-  const orderUrl = customerOrderLink(order.orderNumber);
-  const waCustomer = whatsappCustomerLink(order.shippingAddress?.phone || user?.phone, order.orderNumber);
-  const deposit = order.deposit?.amount ? order.deposit.amount : 0;
-  const depositLine = deposit
-    ? `<strong>Deposit to pay before confirmation</strong> ${formatMad(deposit)}<br/>
-         <strong>Pay on delivery</strong> ${formatMad(order.pricing.total - deposit)}<br/>`
-    : '';
+async function notifyOrderPlacedEmails(order: OrderDoc) {
+  const [customer, settings] = await Promise.all([resolveCustomer(order), getSettings()]);
+  await sendOrderPlacedCustomerEmail(order, customer, settings);
+  await sendOrderPlacedStaffEmail(order, customer, settings);
+}
 
-  if (user?.email) {
-    await sendEmail({
-      to: user.email,
-      subject: `Brynoxa — ${copy.title} ${order.orderNumber}`,
-      html: wrapEmail(
-        copy.title,
-        `<p>Hi ${escapeHtml(user.name || order.shippingAddress.fullName)},</p>
-         <p>${escapeHtml(copy.customerLine)}</p>
-         <p><strong>Order</strong> ${escapeHtml(order.orderNumber)}<br/>
-         <strong>Total</strong> ${total} (cash on delivery)<br/>
-         ${depositLine}
-         <strong>City</strong> ${escapeHtml(order.shippingAddress.city)}</p>
-         ${orderItemsHtml(order)}
-         <p style="margin-top:20px;"><a href="${orderUrl}" style="display:inline-block;background:#00c2ff;color:#041018;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;">View order</a></p>`
-      ),
+/** Order confirmation to the customer. Returns false when skipped or not sent. */
+export async function sendOrderPlacedCustomerEmail(
+  order: OrderDoc,
+  customer?: Customer | null,
+  settings?: ISettings
+): Promise<boolean> {
+  customer ??= await resolveCustomer(order);
+  settings ??= await getSettings();
+  const { deposit } = depositAmounts(order);
+  const id = String(order._id);
+  if (!customer?.email || !isEmailEnabled(settings, 'orderPlaced')) return false;
+
+  const intro = deposit
+    ? 'Thank you for your order. We have received it. This order needs a deposit before we confirm it — the details are below. You pay the rest in cash when it arrives.'
+    : 'Thank you for your order — we have received it. We will call or message you to confirm, then pack it within 1–2 business days. You pay in cash when it arrives.';
+  return sendCustomerEmail({
+    to: customer.email,
+    subject: `Order ${order.orderNumber} received — Brynoxa`,
+    heading: 'We received your order',
+    preheader: `Order ${order.orderNumber} · ${formatMad(order.pricing.total)} · cash on delivery`,
+    body: [
+      greeting(order, customer),
+      paragraphs(intro),
+      deposit ? depositInstructionsHtml(settings, deposit.amount) : '',
+      orderSummaryHtml(order),
+      deliveryHtml(order),
+      customMessage(settings, 'orderPlaced'),
+      button(customer.isGuest ? 'Track your order' : 'View your order', orderLink(order, customer)),
+    ].join(''),
+    idempotencyKey: `order-placed/${id}`,
+  });
+}
+
+async function sendOrderPlacedStaffEmail(order: OrderDoc, customer: Customer | null, settings: ISettings) {
+  const { deposit } = depositAmounts(order);
+  const id = String(order._id);
+  const adminTo = env.ADMIN_EMAIL;
+  if (adminTo && isEmailEnabled(settings, 'staffNewOrder')) {
+    const wa = whatsappCustomerLink(order.shippingAddress?.phone || customer?.phone, order.orderNumber);
+    const html = renderEmail({
+      heading: `New order ${order.orderNumber}`,
+      preheader: `${order.shippingAddress.fullName} · ${order.shippingAddress.city} · ${formatMad(order.pricing.total)}`,
+      body: [
+        paragraphs(
+          `A new cash-on-delivery order was placed by ${order.shippingAddress.fullName} (${order.shippingAddress.phone}).`
+        ),
+        deposit ? paragraphs(`Deposit required: ${formatMad(deposit.amount)} — confirm only after it is received.`) : '',
+        orderSummaryHtml(order),
+        deliveryHtml(order),
+        button('Open in admin', adminOrderLink(id)),
+        wa ? `<p style="margin:6px 0 0;font-size:14px;"><a href="${wa}" style="color:#0077a8;">WhatsApp the customer</a></p>` : '',
+      ].join(''),
     });
-  }
-
-  const adminTo = env.ADMIN_EMAIL || undefined;
-  if (adminTo) {
     await sendEmail({
       to: adminTo,
-      subject: `New COD order ${order.orderNumber} — ${total}`,
-      html: wrapEmail(
-        'New order',
-        `<p>A new cash-on-delivery order was placed.</p>
-         <p><strong>${escapeHtml(order.orderNumber)}</strong> · ${total}<br/>
-         ${depositLine}
-         ${escapeHtml(order.shippingAddress.fullName)} · ${escapeHtml(order.shippingAddress.phone)}<br/>
-         ${escapeHtml(order.shippingAddress.line1)}, ${escapeHtml(order.shippingAddress.city)}</p>
-         ${orderItemsHtml(order)}
-         <p style="margin-top:20px;">
-           <a href="${adminOrderLink(String(order._id))}" style="display:inline-block;background:#00c2ff;color:#041018;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;margin-right:8px;">Open in admin</a>
-           ${
-             waCustomer
-               ? `<a href="${waCustomer}" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;">WhatsApp customer</a>`
-               : ''
-           }
-         </p>`
-      ),
+      subject: `New order ${order.orderNumber} — ${formatMad(order.pricing.total)}`,
+      html,
+      text: toPlainText(html),
+      idempotencyKey: `order-placed-staff/${id}`,
     });
   }
 }
 
-/** Customer email + push when admin (or system) changes order status. */
-export async function notifyOrderStatusChanged(
-  order: InstanceType<typeof Order>,
-  status: OrderStatus
-) {
-  const user = await resolveCustomerEmail(order);
-  await notifyCustomerOrderStatus(order, status, { isGuest: Boolean(user?.isGuest) }).catch(
-    (error) => {
-      console.error('Customer order push failed', error);
+function statusEmailContent(order: OrderDoc, status: OrderStatus, settings: ISettings) {
+  const { deposit, paid, dueOnDelivery } = depositAmounts(order);
+  switch (status) {
+    case 'confirmed':
+      return {
+        subject: `Order ${order.orderNumber} confirmed — Brynoxa`,
+        heading: 'Your order is confirmed',
+        preheader: 'We are preparing your order for shipping.',
+        intro: `Good news — your order is confirmed and we are preparing it. It is usually packed within 1–2 business days, and delivery takes 2–5 days depending on your city.${paid ? '' : ` You pay ${formatMad(dueOnDelivery)} in cash on delivery.`}`,
+      };
+    case 'shipped':
+      return {
+        subject: `Order ${order.orderNumber} is on its way — Brynoxa`,
+        heading: 'Your order is on its way',
+        preheader: `Have ${formatMad(dueOnDelivery)} ready for the courier.`,
+        intro: `Your order has left our warehouse. The courier will call you before delivery. Please have ${formatMad(dueOnDelivery)} ready in cash — check the package before you pay.`,
+      };
+    case 'delivered':
+      return {
+        subject: `Order ${order.orderNumber} delivered — Brynoxa`,
+        heading: 'Your order was delivered',
+        preheader: 'Payment received — thank you for shopping with Brynoxa.',
+        intro: 'Your order was delivered and your payment has been received. Thank you for shopping with Brynoxa! Your 6-month warranty starts today — keep this email and your order number as proof of purchase.',
+        extra: panel(
+          'Payment received',
+          detailRows([
+            ...(paid ? [{ label: 'Deposit paid earlier', value: formatMad(paid) }] : []),
+            { label: 'Paid in cash on delivery', value: formatMad(dueOnDelivery) },
+            { label: 'Total paid', value: formatMad(order.pricing.total), strong: true },
+          ]),
+          'highlight'
+        ),
+      };
+    case 'cancelled': {
+      const lastNote = [...order.timeline].reverse().find((t) => t.status === 'cancelled')?.note;
+      const reason = lastNote && !/^Status changed to/i.test(lastNote) ? ` Reason: ${lastNote}.` : '';
+      const refund = deposit?.status === 'received'
+        ? ` Your deposit of ${formatMad(deposit.amount)} will be refunded — we will contact you to arrange it.`
+        : '';
+      return {
+        subject: `Order ${order.orderNumber} cancelled — Brynoxa`,
+        heading: 'Your order was cancelled',
+        preheader: `Order ${order.orderNumber} has been cancelled.`,
+        intro: `Your order ${order.orderNumber} has been cancelled.${reason}${refund} If this is a mistake or you have a question, message us on WhatsApp and we will help.`,
+      };
     }
-  );
-  if (!user?.email) return;
+    default:
+      void settings;
+      return null;
+  }
+}
 
-  const copy = STATUS_COPY[status];
-  const orderUrl = customerOrderLink(order.orderNumber);
+/** Customer email + push when an order's status actually changes. */
+export async function notifyOrderStatusChanged(order: OrderDoc, status: OrderStatus): Promise<boolean> {
+  const customer = await resolveCustomer(order);
+  await notifyCustomerOrderStatus(order, status, { isGuest: Boolean(customer?.isGuest) }).catch((error) => {
+    console.error('Customer order push failed', error);
+  });
+  return sendOrderStatusEmail(order, status, customer);
+}
 
-  await sendEmail({
-    to: user.email,
-    subject: `Brynoxa — ${copy.title} (${order.orderNumber})`,
-    html: wrapEmail(
-      copy.title,
-      `<p>Hi ${escapeHtml(user.name || order.shippingAddress.fullName)},</p>
-       <p>${escapeHtml(copy.customerLine)}</p>
-       <p><strong>Order</strong> ${escapeHtml(order.orderNumber)}<br/>
-       <strong>Status</strong> ${escapeHtml(status)}<br/>
-       <strong>Total</strong> ${formatMad(order.pricing.total)}</p>
-       <p style="margin-top:20px;"><a href="${orderUrl}" style="display:inline-block;background:#00c2ff;color:#041018;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:999px;">Track order</a></p>`
-    ),
+/** The status email alone (no push). Returns false when skipped or not sent. */
+export async function sendOrderStatusEmail(
+  order: OrderDoc,
+  status: OrderStatus,
+  customer?: Customer | null
+): Promise<boolean> {
+  customer ??= await resolveCustomer(order);
+  const event = STATUS_EMAIL[status];
+  if (!event || !customer?.email) return false;
+  const settings = await getSettings();
+  if (!isEmailEnabled(settings, event)) return false;
+
+  const content = statusEmailContent(order, status, settings);
+  if (!content) return false;
+
+  return sendCustomerEmail({
+    to: customer.email,
+    subject: content.subject,
+    heading: content.heading,
+    preheader: content.preheader,
+    body: [
+      greeting(order, customer),
+      paragraphs(content.intro),
+      'extra' in content ? content.extra : '',
+      status === 'cancelled' ? '' : orderSummaryHtml(order, { paid: status === 'delivered' }),
+      status === 'confirmed' || status === 'shipped' ? deliveryHtml(order) : '',
+      customMessage(settings, event),
+      button(customer.isGuest ? 'Track your order' : 'View your order', orderLink(order, customer)),
+    ].join(''),
+    idempotencyKey: `order-status/${String(order._id)}/${status}`,
+  });
+}
+
+/** Staff set or changed the deposit on an order: tell the customer what to pay and how. */
+export async function notifyDepositRequested(order: OrderDoc): Promise<boolean> {
+  const { deposit } = depositAmounts(order);
+  if (!deposit || deposit.status !== 'pending') return false;
+  const [customer, settings] = await Promise.all([resolveCustomer(order), getSettings()]);
+  if (!customer?.email || !isEmailEnabled(settings, 'depositRequested')) return false;
+
+  return sendCustomerEmail({
+    to: customer.email,
+    subject: `Deposit needed for order ${order.orderNumber} — Brynoxa`,
+    heading: 'A deposit is needed to confirm your order',
+    preheader: `Deposit ${formatMad(deposit.amount)} · the rest on delivery`,
+    body: [
+      greeting(order, customer),
+      paragraphs(
+        `To confirm order ${order.orderNumber}, we need a deposit of ${formatMad(deposit.amount)}. You pay the remaining ${formatMad(order.pricing.total - deposit.amount)} in cash on delivery.`
+      ),
+      depositInstructionsHtml(settings, deposit.amount),
+      orderSummaryHtml(order),
+      customMessage(settings, 'depositRequested'),
+      button(customer.isGuest ? 'Track your order' : 'View your order', orderLink(order, customer)),
+    ].join(''),
+    idempotencyKey: `deposit-requested/${String(order._id)}/${deposit.amount}`,
+  });
+}
+
+/** Staff marked the deposit as received: payment confirmation with the remaining balance. */
+export async function notifyDepositReceived(order: OrderDoc): Promise<boolean> {
+  const { deposit } = depositAmounts(order);
+  if (!deposit || deposit.status !== 'received') return false;
+  const [customer, settings] = await Promise.all([resolveCustomer(order), getSettings()]);
+  if (!customer?.email || !isEmailEnabled(settings, 'depositReceived')) return false;
+
+  return sendCustomerEmail({
+    to: customer.email,
+    subject: `Deposit received for order ${order.orderNumber} — Brynoxa`,
+    heading: 'We received your deposit',
+    preheader: `${formatMad(deposit.amount)} received · ${formatMad(order.pricing.total - deposit.amount)} left on delivery`,
+    body: [
+      greeting(order, customer),
+      paragraphs('Thank you — we received your deposit. We will now confirm and prepare your order.'),
+      panel(
+        'Payment received',
+        detailRows([
+          { label: 'Deposit received', value: formatMad(deposit.amount), strong: true },
+          { label: 'Left to pay on delivery', value: formatMad(order.pricing.total - deposit.amount) },
+          { label: 'Order total', value: formatMad(order.pricing.total) },
+        ]),
+        'highlight'
+      ),
+      orderSummaryHtml(order),
+      customMessage(settings, 'depositReceived'),
+      button(customer.isGuest ? 'Track your order' : 'View your order', orderLink(order, customer)),
+    ].join(''),
+    idempotencyKey: `deposit-received/${String(order._id)}/${deposit.receivedAt?.getTime() ?? deposit.amount}`,
   });
 }

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../types/express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as reviewService from '../services/review.service';
@@ -6,7 +7,14 @@ import * as wishlistService from '../services/wishlist.service';
 import * as notificationService from '../services/notification.service';
 import * as couponService from '../services/coupon.service';
 import * as adminService from '../services/admin.service';
-import { getSettings, sanitizePageHeroProducts, Settings } from '../models/Settings';
+import {
+  getSettings,
+  sanitizeEmailMessages,
+  sanitizeEmailNotifications,
+  sanitizePageHeroProducts,
+  Settings,
+} from '../models/Settings';
+import { sendTestEmail } from '../services/emailTest.service';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { User } from '../models/User';
 import * as pushService from '../services/push.service';
@@ -216,6 +224,11 @@ export const getStoreSettings = asyncHandler(async (_req: Request, res: Response
   sendSuccess(res, settings);
 });
 
+export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await sendTestEmail(req.user!.userId, req.body.type);
+  sendSuccess(res, result, `Test email sent to ${result.sentTo}`);
+});
+
 export const updateStoreSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSettings();
   const body = { ...req.body } as Record<string, unknown>;
@@ -224,6 +237,12 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.pageHeroProducts !== undefined) {
     body.pageHeroProducts = sanitizePageHeroProducts(body.pageHeroProducts, settings.pageHeroProducts);
+  }
+  if (body.emailNotifications !== undefined) {
+    body.emailNotifications = sanitizeEmailNotifications(body.emailNotifications, settings.emailNotifications);
+  }
+  if (body.emailMessages !== undefined) {
+    body.emailMessages = sanitizeEmailMessages(body.emailMessages, settings.emailMessages);
   }
   Object.assign(settings, body);
   await settings.save();

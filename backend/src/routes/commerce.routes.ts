@@ -15,6 +15,7 @@ import {
   reviewSchema,
   couponSchema,
   settingsSchema,
+  emailTestSchema,
   contactSchema,
   newsletterSchema,
   pushSubscribeSchema,
@@ -181,6 +182,15 @@ router.patch(
   requirePermission('settings'),
   validate(settingsSchema),
   misc.updateStoreSettings
+);
+
+router.post(
+  '/admin/email-test',
+  requireAuth,
+  requirePermission('settings'),
+  contactLimiter,
+  validate(emailTestSchema),
+  misc.sendEmailTest
 );
 
 router.post('/contact', contactLimiter, validate(contactSchema), misc.submitContact);

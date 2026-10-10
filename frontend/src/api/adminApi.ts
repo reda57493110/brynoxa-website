@@ -15,6 +15,7 @@ import type {
   PushOverview,
   PushSendPayload,
   StoreSettings,
+  EmailMessageEvent,
   User,
 } from '@/types'
 
@@ -125,4 +126,6 @@ export const adminApi = {
     update: (payload: Partial<StoreSettings>) =>
       api.patch<ApiResponse<StoreSettings>>('/settings', payload),
   },
+  emailTest: (type: EmailMessageEvent) =>
+    api.post<ApiResponse<{ sentTo: string }>>('/admin/email-test', { type }),
 }

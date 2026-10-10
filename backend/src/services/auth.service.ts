@@ -11,6 +11,8 @@ import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
+import { sendEmail } from './email.service';
+import { notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
 
 function scheduleStaffLoginNotify(
   user: { name?: string; email?: string; role?: string; phone?: string },
@@ -66,19 +68,14 @@ function hashOneTimeToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-async function sendSecurityEmail(to: string, subject: string, html: string) {
+/** Verification / reset emails: the user is waiting for them, so a failed send is reported. */
+async function sendSecurityEmail(to: string, email: { subject: string; html: string; text: string }) {
   if (!isEmailConfigured()) {
-    console.warn(`Security email skipped (Resend not configured) for ${to}`);
+    console.warn('Security email skipped (Resend not configured)');
     return;
   }
-  const { Resend } = await import('resend');
-  const { error } = await new Resend(env.RESEND_API_KEY!).emails.send({
-    from: env.EMAIL_FROM!,
-    to,
-    subject,
-    html,
-  });
-  if (error) throw new ApiError(503, 'Security email could not be sent');
+  const sent = await sendEmail({ to, ...email });
+  if (!sent) throw new ApiError(503, 'Security email could not be sent');
 }
 
 const ONE_TIME_TOKEN_TTL_MS = 60 * 60 * 1000;
@@ -89,11 +86,7 @@ export async function sendVerificationEmail(user: InstanceType<typeof User>) {
   user.emailVerificationExpires = new Date(Date.now() + ONE_TIME_TOKEN_TTL_MS);
   await user.save({ validateBeforeSave: false });
   const link = `${env.CLIENT_URL}/verify-email?token=${encodeURIComponent(token)}`;
-  await sendSecurityEmail(
-    user.email,
-    'Verify your Brynoxa email',
-    `<p>Verify your email to finish setting up your Brynoxa account.</p><p><a href="${link}">Verify email</a></p><p>This link expires in one hour.</p>`
-  );
+  await sendSecurityEmail(user.email, verificationEmail(user, link));
 }
 
 export async function requestPasswordReset(email: string) {
@@ -106,11 +99,7 @@ export async function requestPasswordReset(email: string) {
   user.passwordResetExpires = new Date(Date.now() + ONE_TIME_TOKEN_TTL_MS);
   await user.save({ validateBeforeSave: false });
   const link = `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  await sendSecurityEmail(
-    user.email,
-    'Reset your Brynoxa password',
-    `<p>We received a request to reset your Brynoxa password.</p><p><a href="${link}">Reset password</a></p><p>This link expires in one hour. If you did not request it, you can ignore this email.</p>`
-  );
+  await sendSecurityEmail(user.email, passwordResetEmail(user, link));
 }
 
 export async function resendVerificationEmail(email: string) {
@@ -160,6 +149,7 @@ export async function resetPassword(token: string, newPassword: string) {
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
   await user.save();
+  notifySecurityEvent(user, 'password-reset');
 }
 
 async function verifyTotp(secret: string, code: string) {
@@ -293,6 +283,7 @@ export async function verifyMfaSetup(userId: string, code: string) {
   user.mfaPendingSecretEncrypted = undefined;
   user.mfaRecoveryCodeHashes = recoveryCodes.map(hashRecoveryCode);
   await user.save({ validateBeforeSave: false });
+  notifySecurityEvent(user, 'mfa-enabled');
 
   return { recoveryCodes };
 }
@@ -319,6 +310,7 @@ export async function disableMfa(userId: string, code: string) {
   user.mfaPendingSecretEncrypted = undefined;
   user.mfaRecoveryCodeHashes = [];
   await user.save({ validateBeforeSave: false });
+  notifySecurityEvent(user, 'mfa-disabled');
 }
 
 function issueTokens(user: InstanceType<typeof User>) {
@@ -619,6 +611,7 @@ export async function changePassword(userId: string, currentPassword: string, ne
   user.password = newPassword;
   user.refreshToken = undefined;
   await user.save();
+  notifySecurityEvent(user, 'password-changed');
 }
 
 export async function getMe(userId: string) {

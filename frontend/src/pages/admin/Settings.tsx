@@ -12,6 +12,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Badge } from '@/components/ui/Badge'
 import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
+import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
 import { useToastStore } from '@/store/toastStore'
 
 export function Settings() {
@@ -145,6 +146,8 @@ export function Settings() {
           </Button>
         </form>
       </section>
+
+      <EmailNotificationsSettings settings={settings.data} />
 
       <section className="space-y-4">
         <div>

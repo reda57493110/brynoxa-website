@@ -11,6 +11,8 @@ import { IAddress } from '../models/User';
 import { createHash, randomBytes } from 'crypto';
 import { waitUntil } from '@vercel/functions';
 import {
+  notifyDepositReceived,
+  notifyDepositRequested,
   notifyOrderPlaced,
   notifyOrderStatusChanged,
   statusNotificationCopy,
@@ -482,6 +484,7 @@ export async function setOrderDeposit(
 
   const notes: string[] = [];
   let customerMessage = '';
+  let email: 'requested' | 'received' | null = null;
 
   if (input.amount !== undefined) {
     const amount = roundMoney(input.amount);
@@ -498,6 +501,7 @@ export async function setOrderDeposit(
       order.deposit = { amount, source: 'admin', status: 'pending' };
       notes.push(`Deposit of ${formatDh(amount)} requested`);
       customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
+      email = 'requested';
     }
   }
 
@@ -508,7 +512,10 @@ export async function setOrderDeposit(
       order.deposit.status = status;
       order.deposit.receivedAt = input.received ? new Date() : undefined;
       notes.push(input.received ? 'Deposit received' : 'Deposit marked as not received');
-      if (input.received) customerMessage = 'We received your deposit';
+      if (input.received) {
+        customerMessage = 'We received your deposit';
+        email = 'received';
+      }
     }
   }
 
@@ -533,6 +540,15 @@ export async function setOrderDeposit(
     } catch (error) {
       console.error('Deposit notification failed', error);
     }
+  }
+
+  if (email) {
+    const send = email === 'received' ? notifyDepositReceived : notifyDepositRequested;
+    waitUntil(
+      send(order).catch((error) => {
+        console.error('Deposit email failed', error);
+      })
+    );
   }
 
   return order;
