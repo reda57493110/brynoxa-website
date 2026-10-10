@@ -12,6 +12,8 @@ import { isPreOwned } from '@/lib/condition'
 import { useCompareStore } from '@/store/compareStore'
 import { COMPARE_MAX } from '@/lib/constants'
 import { useT } from '@/hooks/useT'
+import { usePageTitle } from '@/hooks/usePageTitle'
+import { PageHero } from '@/components/layout/PageHero'
 import { useLocaleStore } from '@/store/localeStore'
 import { formatSpecValue, getTemplate, normalizeSpecs, resolveTemplate, specLabel, templateFields } from '@/lib/specs'
 import type { Category } from '@/types'
@@ -19,6 +21,7 @@ import type { Category } from '@/types'
 export function Compare() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
+  usePageTitle(t('compare.title'), { noIndex: true })
   const navigate = useNavigate()
   const items = useCompareStore((s) => s.items)
   const remove = useCompareStore((s) => s.remove)
@@ -47,7 +50,9 @@ export function Compare() {
 
   if (!list.length) {
     return (
-      <Container className="py-8 sm:py-10">
+      <>
+        <PageHero kicker={t('compare.kicker')} title={t('compare.heading')} />
+      <Container className="py-5 sm:py-10">
         <EmptyState
           icon="refresh"
           title={t('compare.emptyTitle')}
@@ -56,6 +61,7 @@ export function Compare() {
           onAction={() => navigate('/shop')}
         />
       </Container>
+      </>
     )
   }
 
@@ -70,18 +76,17 @@ export function Compare() {
   )
 
   return (
-    <Container className="py-10">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold sm:text-3xl">{t('compare.heading')}</h1>
-          <p className="text-sm text-[var(--fg-muted)]">
-            {t('compare.count', { count: list.length, max: COMPARE_MAX })}
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={clear}>
-          {t('ui.clearAll')}
-        </Button>
-      </div>
+    <>
+    <PageHero
+      kicker={t('compare.kicker')}
+      title={t('compare.heading')}
+      description={t('compare.count', { count: list.length, max: COMPARE_MAX })}
+    >
+      <Button variant="outline" size="sm" onClick={clear}>
+        {t('ui.clearAll')}
+      </Button>
+    </PageHero>
+    <Container className="py-5 sm:py-10">
 
       <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
         <table className="min-w-full text-sm">
@@ -154,5 +159,6 @@ export function Compare() {
         </table>
       </div>
     </Container>
+    </>
   )
 }

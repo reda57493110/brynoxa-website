@@ -144,6 +144,17 @@ export function Products() {
         </div>
       ) : products.isError ? (
         <QueryErrorState onRetry={() => products.refetch()} />
+      ) : !products.data?.items.length ? (
+        <div className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-10 text-center">
+          <p className="text-sm text-[var(--fg-muted)]">
+            {q || category || active !== 'all' || condition ? 'No products match these filters.' : 'No products yet.'}
+          </p>
+          {!q && !category && active === 'all' && !condition ? (
+            <Link to="/admin/products/new" className="mt-3 inline-block text-sm font-medium text-[var(--brand-text)] hover:underline">
+              Add your first product
+            </Link>
+          ) : null}
+        </div>
       ) : (
         <>
           <div className="space-y-2.5 md:hidden">

@@ -13,6 +13,10 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { useToastStore } from '@/store/toastStore'
+import { AdminHeader } from '@/components/admin/AdminHeader'
+import { Panel } from '@/components/admin/Panel'
+import { StatCard } from '@/components/admin/customers/shared'
+import { Switch } from '@/components/admin/settings/SettingsUi'
 import { usePush } from '@/hooks/usePush'
 import { formatDateTime } from '@/lib/format'
 import type { PushOverview, PushSendPayload } from '@/types'
@@ -144,208 +148,156 @@ export function PushNotifications() {
   const canSend = Boolean(data?.configured) && subscribers > 0 && hasDraft
   const canTest = Boolean(data?.configured) && (data?.myDevices ?? 0) > 0 && hasDraft
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">Push notifications</h1>
-        <p className="text-sm text-[var(--fg-muted)]">
-          Send a notification to every shopper who allowed notifications on the website.
-        </p>
+  const preview = (
+    <div className="flex gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+      <img src="/brand/icon-192.png" alt="" className="h-10 w-10 shrink-0 rounded-lg" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{title || 'Notification title'}</p>
+        <p className="line-clamp-3 text-xs text-[var(--fg-muted)]">{body || 'Your message will appear here.'}</p>
+        {image ? <img src={image} alt="" className="mt-2 max-h-40 w-full rounded-lg object-cover" /> : null}
       </div>
+    </div>
+  )
+
+  return (
+    <div className="min-w-0 space-y-4 sm:space-y-6">
+      <AdminHeader title="Push notifications" description="Send a message to shoppers who allowed notifications." />
 
       {!data?.configured ? (
-        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--danger)_35%,var(--border))] bg-[color-mix(in_srgb,var(--danger)_10%,var(--bg-elevated))] p-4 text-sm">
-          Push is not configured on the server yet. Add <code>VAPID_PUBLIC_KEY</code>,{' '}
-          <code>VAPID_PRIVATE_KEY</code> and <code>VAPID_SUBJECT</code> to the Vercel environment
-          variables, then redeploy.
-        </div>
+        <p className="rounded-xl border border-[color-mix(in_srgb,var(--danger)_35%,var(--border))] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-4 py-3 text-sm">
+          Push is not configured on the server. Add <code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code> and{' '}
+          <code>VAPID_SUBJECT</code> in Vercel, then redeploy.
+        </p>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-4">
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:col-span-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-            Subscribers
-          </p>
-          <p className="mt-1 font-display text-2xl font-semibold">{subscribers}</p>
-        </div>
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:col-span-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-            By language
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {(['fr', 'ar', 'en'] as const).map((locale) => (
-              <Badge key={locale} variant="default">
-                {locale.toUpperCase()} · {data?.byLocale?.[locale] ?? 0}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </section>
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+        <StatCard label="Subscribers" value={subscribers} />
+        {(['fr', 'ar', 'en'] as const).map((locale) => (
+          <StatCard key={locale} label={`${locale.toUpperCase()} speakers`} value={data?.byLocale?.[locale] ?? 0} />
+        ))}
+      </div>
 
-      {data?.configured ? <ThisDeviceCard data={data} /> : null}
-
-      <section className="space-y-4">
-        <h2 className="font-display text-lg font-semibold">New notification</h2>
-        <form
-          className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6"
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (canSend) setConfirmOpen(true)
-          }}
-        >
-          <Select
-            label="Announce a product (optional)"
-            value={productId}
-            onChange={(e) => pickProduct(e.target.value)}
-            placeholder={products.isLoading ? 'Loading products…' : 'Choose a product to link'}
-            options={(products.data ?? []).map((p) => ({ value: p._id, label: p.name }))}
-          />
-          <Input
-            label={`Title (${title.length}/${TITLE_MAX})`}
-            value={title}
-            maxLength={TITLE_MAX}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. New gaming laptops just arrived"
-            required
-          />
-          <Textarea
-            label={`Message (${body.length}/${BODY_MAX})`}
-            value={body}
-            maxLength={BODY_MAX}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="e.g. RTX 4060 laptops from 9,990 MAD — cash on delivery everywhere in Morocco."
-            className="min-h-24"
-            required
-          />
-
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
-            <label className="flex cursor-pointer items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                checked={showLanguages}
-                onChange={(e) => setShowLanguages(e.target.checked)}
-                className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
-              />
-              <span>
-                <span className="font-medium">Write French and Arabic versions</span>
-                <span className="block text-xs text-[var(--fg-muted)]">
-                  Shoppers get the version in the language they use on the site. Anyone without a
-                  version below gets the main message above.
-                </span>
-              </span>
-            </label>
-
-            {showLanguages ? (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {(
-                  [
-                    { lang: 'fr', label: 'Français', dir: 'ltr' },
-                    { lang: 'ar', label: 'العربية', dir: 'rtl' },
-                  ] as const
-                ).map(({ lang, label, dir }) => (
-                  <div key={lang} className="space-y-3" dir={dir}>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
-                      {label}
-                    </p>
-                    <Input
-                      label={`${lang.toUpperCase()} · Title`}
-                      value={translations[lang].title}
-                      maxLength={TITLE_MAX}
-                      onChange={(e) => setTranslation(lang, 'title', e.target.value)}
-                    />
-                    <Textarea
-                      label={`${lang.toUpperCase()} · Message`}
-                      value={translations[lang].body}
-                      maxLength={BODY_MAX}
-                      onChange={(e) => setTranslation(lang, 'body', e.target.value)}
-                      className="min-h-20"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <Input
-            label="Link when tapped (optional)"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="/shop or /product/your-product"
-          />
-          <Input
-            label="Big image URL (optional, https)"
-            value={image}
-            onChange={(e) => setImage(e.target.value)}
-            placeholder="https://…"
-          />
-
-          <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-              Preview
-            </p>
-            <div className="flex gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
-              <img
-                src="/brand/icon-192.png"
-                alt=""
-                className="h-10 w-10 shrink-0 rounded-lg"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{title || 'Notification title'}</p>
-                <p className="line-clamp-3 text-xs text-[var(--fg-muted)]">
-                  {body || 'Your message will appear here.'}
-                </p>
-                {image ? (
-                  <img
-                    src={image}
-                    alt=""
-                    className="mt-2 max-h-40 w-full rounded-lg object-cover"
-                  />
-                ) : null}
-              </div>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+        <Panel
+          title="New notification"
+          description="Pick a product to fill the text, link and image automatically."
+          footer={
+            <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] bg-[var(--bg-muted)]/30 px-4 py-3 sm:px-5">
+              <Button type="submit" form="push-form" disabled={!canSend} loading={send.isPending}>
+                <SiteIcon name="send" size={14} />
+                Send to {subscribers} {subscribers === 1 ? 'subscriber' : 'subscribers'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!canTest}
+                loading={test.isPending}
+                onClick={() => test.mutate()}
+                title={data?.myDevices ? undefined : 'Turn on notifications on this device first'}
+              >
+                Test on my devices
+              </Button>
+              {subscribers === 0 && data?.configured ? (
+                <span className="text-xs text-[var(--fg-muted)]">No subscribers yet.</span>
+              ) : null}
             </div>
-          </div>
+          }
+        >
+          <form
+            id="push-form"
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (canSend) setConfirmOpen(true)
+            }}
+          >
+            <Select
+              label="Announce a product (optional)"
+              value={productId}
+              onChange={(e) => pickProduct(e.target.value)}
+              placeholder={products.isLoading ? 'Loading products…' : 'Choose a product'}
+              options={(products.data ?? []).map((p) => ({ value: p._id, label: p.name }))}
+            />
+            <Input
+              label={`Title (${title.length}/${TITLE_MAX})`}
+              value={title}
+              maxLength={TITLE_MAX}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. New gaming laptops just arrived"
+              required
+            />
+            <Textarea
+              label={`Message (${body.length}/${BODY_MAX})`}
+              value={body}
+              maxLength={BODY_MAX}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="e.g. RTX 4060 laptops from 9,990 DH — cash on delivery everywhere in Morocco."
+              className="min-h-24"
+              required
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input label="Link when tapped" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="/shop or /product/…" />
+              <Input label="Big image (https)" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://…" />
+            </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" disabled={!canSend} loading={send.isPending}>
-              <SiteIcon name="send" size={14} />
-              Send to {subscribers} {subscribers === 1 ? 'subscriber' : 'subscribers'}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!canTest}
-              loading={test.isPending}
-              onClick={() => test.mutate()}
-              title={data?.myDevices ? undefined : 'Turn on notifications on this device first'}
-            >
-              Send test to my devices
-            </Button>
-          </div>
-          {subscribers === 0 && data?.configured ? (
-            <p className="text-xs text-[var(--fg-muted)]">
-              No subscribers yet — shoppers are asked after they view a few products or place an
-              order.
-            </p>
-          ) : null}
-        </form>
-      </section>
+            <div className="space-y-3 border-t border-[var(--border)] pt-4">
+              <Switch
+                checked={showLanguages}
+                onChange={setShowLanguages}
+                label="French and Arabic versions"
+                hint="Each shopper gets their site language; others get the main message."
+              />
+              {showLanguages ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {(
+                    [
+                      { lang: 'fr', label: 'Français', dir: 'ltr' },
+                      { lang: 'ar', label: 'العربية', dir: 'rtl' },
+                    ] as const
+                  ).map(({ lang, label, dir }) => (
+                    <div key={lang} className="space-y-3" dir={dir}>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{label}</p>
+                      <Input
+                        aria-label={`${label} title`}
+                        placeholder="Title"
+                        value={translations[lang].title}
+                        maxLength={TITLE_MAX}
+                        onChange={(e) => setTranslation(lang, 'title', e.target.value)}
+                      />
+                      <Textarea
+                        aria-label={`${label} message`}
+                        placeholder="Message"
+                        value={translations[lang].body}
+                        maxLength={BODY_MAX}
+                        onChange={(e) => setTranslation(lang, 'body', e.target.value)}
+                        className="min-h-20"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </form>
+        </Panel>
 
-      <section className="space-y-4">
-        <h2 className="font-display text-lg font-semibold">History</h2>
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-4">
+          <Panel title="Preview">{preview}</Panel>
+          {data?.configured ? <ThisDeviceCard data={data} /> : null}
+        </div>
+      </div>
+
+      <Panel title="History" description={data?.campaigns?.length ? `Last ${data.campaigns.length} sent` : undefined}>
         {data?.campaigns?.length ? (
-          <ul className="space-y-2">
+          <ul className="-my-2 divide-y divide-[var(--border)]">
             {data.campaigns.map((c) => {
               const clicks = c.clicks ?? 0
               const rate = c.delivered ? Math.round((clicks / c.delivered) * 100) : 0
               return (
-                <li
-                  key={c._id}
-                  className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3"
-                >
+                <li key={c._id} className="py-2.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="font-medium">{c.title}</p>
-                      <p className="line-clamp-2 text-sm text-[var(--fg-muted)]">{c.body}</p>
+                      <p className="text-sm font-medium">{c.title}</p>
+                      <p className="line-clamp-1 text-xs text-[var(--fg-muted)]">{c.body}</p>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <Badge variant={c.delivered > 0 ? 'success' : 'default'}>
@@ -357,11 +309,11 @@ export function PushNotifications() {
                       </Badge>
                     </div>
                   </div>
-                  <p className="mt-1.5 text-xs text-[var(--fg-muted)]">
+                  <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
                     {formatDateTime(c.createdAt)}
                     {c.sentByName ? ` · ${c.sentByName}` : ''}
                     {c.url ? ` · ${c.url}` : ''}
-                    {c.translations?.fr || c.translations?.ar ? ' · FR/AR versions' : ''}
+                    {c.translations?.fr || c.translations?.ar ? ' · FR/AR' : ''}
                     {c.removed ? ` · ${c.removed} expired removed` : ''}
                   </p>
                 </li>
@@ -371,7 +323,7 @@ export function PushNotifications() {
         ) : (
           <p className="text-sm text-[var(--fg-muted)]">No notifications sent yet.</p>
         )}
-      </section>
+      </Panel>
 
       <ConfirmDialog
         open={confirmOpen}
@@ -404,22 +356,20 @@ function ThisDeviceCard({ data }: { data: PushOverview }) {
   else if (status === 'denied')
     description = 'Notifications are blocked for this site in your browser settings.'
   else if (linked)
-    description = `On — this device gets new-order alerts and your test sends. Your account has ${data.myDevices} ${
-      data.myDevices === 1 ? 'device' : 'devices'
-    } turned on.`
+    description = `On — gets new-order alerts and test sends (${data.myDevices} ${data.myDevices === 1 ? 'device' : 'devices'} on your account).`
   else if (status === 'subscribed')
     description = 'Notifications are on, but this device is not linked to your account yet.'
-  else description = 'Turn on to get an alert here for every new order, and to receive test sends.'
+  else description = 'Turn on to get new-order alerts and test sends here.'
 
   return (
-    <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
+    <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
       <div className="flex min-w-0 flex-1 items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--brand)_15%,transparent)] text-[var(--brand-text)]">
           <SiteIcon name="bell" size={18} />
         </span>
         <div className="min-w-0">
-          <p className="font-medium">This device · new-order alerts</p>
-          <p className="text-sm text-[var(--fg-muted)]">{description}</p>
+          <p className="text-sm font-semibold">This device</p>
+          <p className="text-xs text-[var(--fg-muted)]">{description}</p>
         </div>
       </div>
       {ready && status !== 'unsupported' && status !== 'denied' ? (

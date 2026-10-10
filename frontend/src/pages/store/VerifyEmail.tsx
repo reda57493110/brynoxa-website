@@ -8,7 +8,7 @@ import { useT } from '@/hooks/useT'
 
 export function VerifyEmail() {
   const t = useT()
-  usePageTitle(t('auth.verifyEmail'))
+  usePageTitle(`${t('auth.verifyEmail')} — Brynoxa`)
   const [params] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [error, setError] = useState('')

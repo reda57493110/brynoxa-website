@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/Select'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AdminHeader } from '@/components/admin/AdminHeader'
+import { Panel } from '@/components/admin/Panel'
+import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatDate } from '@/lib/format'
 import {
@@ -23,6 +25,17 @@ import type { User } from '@/types'
 /** Hireable roles only — Owner is fixed and never assignable from this page. */
 type AssignableRole = Exclude<StaffRole, 'admin'>
 const ASSIGNABLE_ROLES: AssignableRole[] = ['orders', 'catalog', 'support', 'marketing']
+/** What each role opens in the admin (mirrors ROLE_PERMISSIONS). */
+const ROLE_ACCESS: Record<AssignableRole, string> = {
+  orders: 'Orders and customer details',
+  catalog: 'Products and inventory',
+  support: 'Orders, customers and the inbox',
+  marketing: 'Coupons and push notifications',
+}
+
+// Same minimum as the server for staff accounts
+const STAFF_PASSWORD_MIN = 12
+
 const ROLE_OPTIONS = ASSIGNABLE_ROLES.map((value) => ({
   value,
   label: STAFF_ROLE_LABELS[value],
@@ -106,8 +119,8 @@ export function Roles() {
       toast.error('Enter a valid email')
       return
     }
-    if (form.password.length < 6) {
-      toast.error('Password must be at least 6 characters')
+    if (form.password.length < STAFF_PASSWORD_MIN) {
+      toast.error(`Password must be at least ${STAFF_PASSWORD_MIN} characters`)
       return
     }
     createUser.mutate()
@@ -132,13 +145,9 @@ export function Roles() {
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader title="Roles" description="Create and manage staff accounts." />
 
-      <form
-        onSubmit={onCreate}
-        className="grid min-w-0 gap-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:grid-cols-2 sm:rounded-2xl sm:p-5"
-      >
-        <h2 className="font-display text-sm font-semibold sm:col-span-2 sm:text-base">
-          Create staff account
-        </h2>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start">
+      <Panel title="New staff account" description="They sign in at /login and only see their role's pages.">
+      <form onSubmit={onCreate} className="grid min-w-0 gap-3 sm:grid-cols-2">
         <Input
           label="Name (optional)"
           placeholder="Full name"
@@ -166,7 +175,9 @@ export function Roles() {
           label="Password"
           type="password"
           name="staff-password"
-          placeholder="At least 6 characters"
+          placeholder={`At least ${STAFF_PASSWORD_MIN} characters`}
+          minLength={STAFF_PASSWORD_MIN}
+          error={form.password && form.password.length < STAFF_PASSWORD_MIN ? `At least ${STAFF_PASSWORD_MIN} characters` : undefined}
           value={form.password}
           onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
           required
@@ -178,6 +189,23 @@ export function Roles() {
           </Button>
         </div>
       </form>
+      </Panel>
+
+      <Panel title="What each role can open">
+        <ul className="-my-1 divide-y divide-[var(--border)] text-sm">
+          <li className="flex justify-between gap-3 py-2">
+            <span className="font-medium">Owner</span>
+            <span className="text-end text-[var(--fg-muted)]">Everything (you)</span>
+          </li>
+          {ASSIGNABLE_ROLES.map((r) => (
+            <li key={r} className="flex justify-between gap-3 py-2">
+              <span className="font-medium">{STAFF_ROLE_LABELS[r]}</span>
+              <span className="text-end text-[var(--fg-muted)]">{ROLE_ACCESS[r]}</span>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+      </div>
 
       <section className="min-w-0 space-y-3">
         <div className="flex items-center justify-between gap-2">
@@ -191,6 +219,8 @@ export function Roles() {
           <div className="flex justify-center py-16">
             <Spinner size="lg" />
           </div>
+        ) : staff.isError ? (
+          <QueryErrorState onRetry={() => staff.refetch()} />
         ) : (
           <>
             <div className="space-y-2.5 md:hidden">

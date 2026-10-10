@@ -452,6 +452,8 @@ export const ar: Messages = {
     loadErrorBody: 'تحقق من الاتصال ثم أعد المحاولة.',
   },
   compare: {
+    title: 'المقارنة — برينوكسا',
+    kicker: 'جنباً إلى جنب',
     emptyTitle: 'لا شيء للمقارنة',
     emptyBody: 'أضف حتى {max} منتجات من المتجر.',
     heading: 'مقارنة',

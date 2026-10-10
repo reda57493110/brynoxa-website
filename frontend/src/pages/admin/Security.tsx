@@ -4,87 +4,84 @@ import { authApi } from '@/api/authApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Badge } from '@/components/ui/Badge'
+import { AdminHeader } from '@/components/admin/AdminHeader'
+import { Panel } from '@/components/admin/Panel'
 import { useAuthStore } from '@/store/authStore'
+import { toast } from '@/store/toastStore'
 
-export function Security() {
-  const user = useAuthStore((s) => s.user)
-  const setUser = useAuthStore((s) => s.setUser)
-  const logout = useAuthStore((s) => s.logout)
-  const navigate = useNavigate()
-  const [setup, setSetup] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null)
-  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
-  const [code, setCode] = useState('')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+const MIN_PASSWORD = 12
+
+/** Runs one action with its own busy / error state, so each form reports its own result. */
+function useAction() {
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-
   const run = async (action: () => Promise<void>) => {
-    setLoading(true)
+    setBusy(true)
     setError('')
-    setMessage('')
     try {
       await action()
     } catch (err) {
       setError(getErrorMessage(err))
     } finally {
-      setLoading(false)
+      setBusy(false)
+    }
+  }
+  return { busy, error, setError, run }
+}
+
+function TwoStepPanel() {
+  const user = useAuthStore((s) => s.user)!
+  const setUser = useAuthStore((s) => s.setUser)
+  const [setup, setSetup] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null)
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
+  const [code, setCode] = useState('')
+  const { busy, error, run } = useAction()
+
+  const startSetup = () =>
+    run(async () => {
+      setCode('')
+      setSetup((await authApi.setupMfa()).data.data)
+    })
+
+  const copyCodes = async () => {
+    try {
+      await navigator.clipboard.writeText(recoveryCodes.join('\n'))
+      toast.success('Recovery codes copied')
+    } catch {
+      toast.error('Could not copy — select and copy them manually')
     }
   }
 
-  if (!user) return null
-
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold">Security</h1>
-        <p className="text-sm text-[var(--fg-muted)]">
-          Protect your staff account with an authenticator app.
-        </p>
-      </div>
-
-      <section className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-        <div>
-          <h2 className="font-display text-lg font-semibold">Authenticator-app MFA</h2>
-          <p className="mt-1 text-sm text-[var(--fg-muted)]">
-            MFA is currently {user.mfaEnabled ? 'enabled' : 'disabled'} for this account.
-          </p>
-        </div>
-
-        {!user.mfaEnabled && !setup ? (
-          <Button
-            onClick={() =>
-              void run(async () => {
-                setSetup((await authApi.setupMfa()).data.data)
-              })
-            }
-            loading={loading}
-          >
-            Start MFA setup
+    <Panel
+      title="Two-step sign-in"
+      description="A 6-digit code from an authenticator app is asked at every sign-in."
+      actions={<Badge variant={user.mfaEnabled ? 'success' : 'warning'}>{user.mfaEnabled ? 'On' : 'Off'}</Badge>}
+    >
+      {!user.mfaEnabled && !setup ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button onClick={() => void startSetup()} loading={busy}>
+            Set up two-step sign-in
           </Button>
-        ) : null}
+          <p className="text-xs text-[var(--fg-muted)]">Works with Google Authenticator, Microsoft Authenticator, 1Password…</p>
+        </div>
+      ) : null}
 
-        {setup && !user.mfaEnabled ? (
-          <div className="space-y-4">
-            <img
-              src={setup.qrCodeDataUrl}
-              alt="Scan this QR code with your authenticator app"
-              className="h-48 w-48 rounded-xl border border-[var(--border)] bg-white p-2"
-            />
-            <ol className="list-decimal space-y-1 pl-5 text-sm text-[var(--fg-muted)]">
-              <li>In your authenticator app, delete any old Brynoxa accounts.</li>
-              <li>Scan this QR (or type the key below).</li>
-              <li>Enter only the 6-digit code your phone shows now.</li>
+      {setup && !user.mfaEnabled ? (
+        <div className="grid gap-4 sm:grid-cols-[auto_minmax(0,1fr)]">
+          <img
+            src={setup.qrCodeDataUrl}
+            alt="QR code for your authenticator app"
+            className="h-44 w-44 rounded-xl border border-[var(--border)] bg-white p-2"
+          />
+          <div className="min-w-0 space-y-3">
+            <ol className="list-decimal space-y-1 ps-5 text-sm text-[var(--fg-muted)]">
+              <li>Remove any old Brynoxa entry from your app.</li>
+              <li>Scan the QR code, or enter the key below.</li>
+              <li>Type the 6-digit code your app shows.</li>
             </ol>
-            <p className="text-sm text-[var(--fg-muted)]">
-              The 10 recovery codes appear after this succeeds — you do not need them here.
-            </p>
-            <p className="text-sm text-[var(--fg-muted)]">Manual key:</p>
-            <code className="block break-all rounded-xl bg-[var(--bg-muted)] p-3 text-sm">
-              {setup.secret}
-            </code>
+            <code className="block break-all rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-xs">{setup.secret}</code>
             <form
               className="space-y-3"
               onSubmit={(event) => {
@@ -95,148 +92,179 @@ export function Security() {
                   setSetup(null)
                   setCode('')
                   setUser({ ...user, mfaEnabled: true })
+                  toast.success('Two-step sign-in is on')
                 })
               }}
             >
-              <Input
-                label="6-digit code from your phone"
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder="000000"
-                maxLength={6}
-                required
-              />
+              <div className="max-w-[12rem]">
+                <Input
+                  label="6-digit code"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="000000"
+                  maxLength={6}
+                  required
+                />
+              </div>
               <div className="flex flex-wrap gap-2">
-                <Button type="submit" loading={loading}>
-                  Verify and enable MFA
+                <Button type="submit" loading={busy} disabled={code.length !== 6}>
+                  Verify and turn on
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  loading={loading}
-                  onClick={() =>
-                    void run(async () => {
-                      setCode('')
-                      setSetup((await authApi.setupMfa()).data.data)
-                    })
-                  }
-                >
+                <Button type="button" variant="ghost" disabled={busy} onClick={() => void startSetup()}>
                   New QR code
+                </Button>
+                <Button type="button" variant="ghost" disabled={busy} onClick={() => setSetup(null)}>
+                  Cancel
                 </Button>
               </div>
             </form>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        {recoveryCodes.length ? (
-          <div className="space-y-3 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/5 p-4">
-            <h3 className="font-semibold">Save your recovery codes</h3>
-            <p className="text-sm text-[var(--fg-muted)]">
-              Each code works once. This list will not be shown again.
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {recoveryCodes.map((recoveryCode) => (
-                <code key={recoveryCode} className="rounded bg-[var(--bg-muted)] p-2 text-center">
-                  {recoveryCode}
-                </code>
-              ))}
-            </div>
-            <Button variant="outline" onClick={() => setRecoveryCodes([])}>
+      {recoveryCodes.length ? (
+        <div className="space-y-3 rounded-xl border border-[color-mix(in_srgb,var(--brand)_40%,transparent)] bg-[color-mix(in_srgb,var(--brand)_6%,transparent)] p-4">
+          <div>
+            <p className="text-sm font-semibold">Save your recovery codes</p>
+            <p className="text-xs text-[var(--fg-muted)]">Each works once if you lose your phone. They won’t be shown again.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
+            {recoveryCodes.map((recoveryCode) => (
+              <code key={recoveryCode} className="rounded-lg bg-[var(--bg-muted)] px-2 py-1.5 text-center text-xs">
+                {recoveryCode}
+              </code>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => void copyCodes()}>
+              Copy codes
+            </Button>
+            <Button size="sm" onClick={() => setRecoveryCodes([])}>
               I saved them
             </Button>
           </div>
-        ) : null}
-
-        {user.mfaEnabled ? (
-          <form
-            className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault()
-              void run(async () => {
-                await authApi.disableMfa(code.trim())
-                setCode('')
-                setUser({ ...user, mfaEnabled: false })
-                setMessage('MFA disabled')
-              })
-            }}
-          >
-            <Input
-              label="Authenticator or recovery code"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              inputMode="text"
-              autoComplete="one-time-code"
-              placeholder="6-digit app code, or a recovery code"
-              required
-            />
-            <p className="text-sm text-[var(--fg-muted)]">
-              Prefer the 6-digit code from your authenticator app. A unused recovery code also works.
-            </p>
-            <Button type="submit" variant="danger" loading={loading}>
-              Disable MFA
-            </Button>
-          </form>
-        ) : null}
-
-        {error ? <p className="text-sm text-[var(--danger)]" role="alert">{error}</p> : null}
-        {message ? <p className="text-sm text-[var(--success)]" role="status">{message}</p> : null}
-      </section>
-
-      <section className="space-y-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-6">
-        <div>
-          <h2 className="font-display text-lg font-semibold">Change password</h2>
-          <p className="mt-1 text-sm text-[var(--fg-muted)]">
-            Changing your password signs out all current sessions.
-          </p>
         </div>
+      ) : null}
+
+      {user.mfaEnabled && !recoveryCodes.length ? (
         <form
           className="space-y-3"
           onSubmit={(event) => {
             event.preventDefault()
-            if (newPassword !== confirmPassword) {
-              setError('New passwords do not match')
-              return
-            }
             void run(async () => {
-              await authApi.changePassword({ currentPassword, newPassword })
-              logout()
-              navigate('/login', { replace: true })
+              await authApi.disableMfa(code.trim())
+              setCode('')
+              setUser({ ...user, mfaEnabled: false })
+              toast.success('Two-step sign-in is off')
             })
           }}
         >
-          <Input
-            label="Current password"
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            autoComplete="current-password"
-            required
-          />
-          <Input
-            label="New password"
-            type="password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-            autoComplete="new-password"
-            minLength={12}
-            required
-          />
-          <Input
-            label="Confirm new password"
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            autoComplete="new-password"
-            minLength={12}
-            required
-          />
-          <Button type="submit" loading={loading}>
-            Change password
+          <div className="max-w-sm">
+            <Input
+              label="Code to turn it off"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              autoComplete="one-time-code"
+              placeholder="App code or a recovery code"
+              required
+            />
+          </div>
+          <Button type="submit" variant="danger" loading={busy} disabled={!code.trim()}>
+            Turn off two-step sign-in
           </Button>
         </form>
-      </section>
+      ) : null}
+
+      {error ? (
+        <p className="text-sm text-[var(--danger)]" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </Panel>
+  )
+}
+
+function PasswordPanel() {
+  const logout = useAuthStore((s) => s.logout)
+  const navigate = useNavigate()
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const { busy, error, run } = useAction()
+
+  const tooShort = newPassword.length > 0 && newPassword.length < MIN_PASSWORD
+  const mismatch = confirmPassword.length > 0 && confirmPassword !== newPassword
+  const ready = currentPassword && newPassword.length >= MIN_PASSWORD && newPassword === confirmPassword
+
+  return (
+    <Panel title="Password" description="Changing it signs you out everywhere.">
+      <form
+        className="grid max-w-md gap-3"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!ready) return
+          void run(async () => {
+            await authApi.changePassword({ currentPassword, newPassword })
+            toast.success('Password changed — sign in again')
+            logout()
+            navigate('/login', { replace: true })
+          })
+        }}
+      >
+        <Input
+          label="Current password"
+          type="password"
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+          autoComplete="current-password"
+          required
+        />
+        <Input
+          label="New password"
+          type="password"
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD}
+          required
+          error={tooShort ? `At least ${MIN_PASSWORD} characters` : undefined}
+        />
+        <Input
+          label="Confirm new password"
+          type="password"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          autoComplete="new-password"
+          minLength={MIN_PASSWORD}
+          required
+          error={mismatch ? 'Passwords do not match' : undefined}
+        />
+        {error ? (
+          <p className="text-sm text-[var(--danger)]" role="alert">
+            {error}
+          </p>
+        ) : null}
+        <div>
+          <Button type="submit" loading={busy} disabled={!ready}>
+            Change password
+          </Button>
+        </div>
+      </form>
+    </Panel>
+  )
+}
+
+export function Security() {
+  const user = useAuthStore((s) => s.user)
+  if (!user) return null
+
+  return (
+    <div className="mx-auto w-full max-w-3xl min-w-0 space-y-4 sm:space-y-6">
+      <AdminHeader title="Security" description={`Signed in as ${user.email}`} />
+      <TwoStepPanel />
+      <PasswordPanel />
     </div>
   )
 }

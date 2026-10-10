@@ -450,6 +450,8 @@ export const en = {
     loadErrorBody: 'Check your connection and try again.',
   },
   compare: {
+    title: 'Compare — Brynoxa',
+    kicker: 'Side by side',
     emptyTitle: 'Nothing to compare',
     emptyBody: 'Add up to {max} products from the shop.',
     heading: 'Compare',

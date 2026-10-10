@@ -456,6 +456,8 @@ export const fr: Messages = {
     loadErrorBody: 'Vérifiez votre connexion et réessayez.',
   },
   compare: {
+    title: 'Comparer — Brynoxa',
+    kicker: 'Côte à côte',
     emptyTitle: 'Rien à comparer',
     emptyBody: 'Ajoutez jusqu’à {max} produits depuis la boutique.',
     heading: 'Comparer',

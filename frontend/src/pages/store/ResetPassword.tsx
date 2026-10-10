@@ -9,7 +9,7 @@ import { useT } from '@/hooks/useT'
 
 export function ResetPassword() {
   const t = useT()
-  usePageTitle(t('auth.resetPassword'))
+  usePageTitle(`${t('auth.resetPassword')} — Brynoxa`)
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const [password, setPassword] = useState('')

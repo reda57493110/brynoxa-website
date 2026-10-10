@@ -9,7 +9,7 @@ import { useT } from '@/hooks/useT'
 
 export function ForgotPassword() {
   const t = useT()
-  usePageTitle(t('auth.resetPassword'))
+  usePageTitle(`${t('auth.resetPassword')} — Brynoxa`)
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
