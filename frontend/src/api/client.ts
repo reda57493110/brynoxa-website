@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL } from '@/lib/constants'
-import { useAuthStore } from '@/store/authStore'
+import { SESSION_HINT_KEY, useAuthStore } from '@/store/authStore'
 import type { ApiResponse, SessionPayload } from '@/types'
 
 const api = axios.create({
@@ -65,8 +65,21 @@ export function resetSessionCheck() {
   csrfToken = null
 }
 
+/** True when this browser is known to be signed out (no refresh cookie worth trying). */
+function knownGuest() {
+  try {
+    return localStorage.getItem(SESSION_HINT_KEY) === '0'
+  } catch {
+    return false
+  }
+}
+
 export async function restoreSession(force = false) {
   const existing = useAuthStore.getState().accessToken
+  if (!force && !existing && knownGuest()) {
+    sessionChecked = true
+    return null
+  }
   if (!force && sessionChecked && !refreshPromise) {
     if (existing) return existing
     // Memory token missing (HMR / tab race) but cookie may still be valid — try refresh once.

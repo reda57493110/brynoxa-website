@@ -16,15 +16,34 @@ interface AuthState {
   isAdmin: () => boolean
 }
 
+/**
+ * Remembers whether this browser had a session ('1') or is a known guest ('0'), so guests
+ * don't call /auth/refresh (always 401) on every page load. Unset = unknown: check once.
+ */
+export const SESSION_HINT_KEY = 'brx_session'
+function setSessionHint(value: '0' | '1') {
+  try {
+    localStorage.setItem(SESSION_HINT_KEY, value)
+  } catch {
+    /* storage blocked: the app still works, it just checks every visit */
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   accessToken: null,
   bootstrapped: false,
-  setAuth: (user, accessToken) => set({ user, accessToken }),
+  setAuth: (user, accessToken) => {
+    setSessionHint('1')
+    set({ user, accessToken })
+  },
   setUser: (user) => set({ user }),
   setAccessToken: (accessToken) => set({ accessToken }),
   setBootstrapped: (bootstrapped) => set({ bootstrapped }),
-  logout: () => set({ user: null, accessToken: null }),
+  logout: () => {
+    setSessionHint('0')
+    set({ user: null, accessToken: null })
+  },
   isAuthenticated: () => Boolean(get().accessToken && get().user),
   isAdmin: () => isStaffRole(get().user?.role),
 }))
