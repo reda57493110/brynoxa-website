@@ -86,8 +86,20 @@ function MultiInput({ field, value, onChange }: { field: SpecField; value: strin
   )
 }
 
-function FieldInput({ field, value, onChange, invalid }: { field: SpecField; value: string; onChange: (v: string) => void; invalid?: boolean }) {
-  const id = `spec-${field.key}`
+export function FieldInput({
+  field,
+  value,
+  onChange,
+  invalid,
+  idPrefix = 'spec',
+}: {
+  field: SpecField
+  value: string
+  onChange: (v: string) => void
+  invalid?: boolean
+  idPrefix?: string
+}) {
+  const id = `${idPrefix}-${field.key}`
   const errCls = invalid && 'border-[var(--danger)]'
   switch (field.type) {
     case 'number':

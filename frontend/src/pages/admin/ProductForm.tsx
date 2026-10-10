@@ -22,8 +22,10 @@ import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
 import { SpecsEditor } from '@/components/admin/SpecsEditor'
-import { VariantsPanel } from '@/components/admin/VariantsPanel'
-import { variantLabel } from '@/lib/variants'
+import { DEFAULT_VARIANT_OPTIONS, VariantsPanel } from '@/components/admin/VariantsPanel'
+import { createVersions, validateVersionRows, type VersionRow } from '@/components/admin/VariantRows'
+import { variantLabel, variantableFields } from '@/lib/variants'
+import { SPEC_FIELDS } from '@/lib/specs'
 import {
   distribute,
   draftEntries,
@@ -141,6 +143,11 @@ export function ProductForm() {
   const [pendingSpecs, setPendingSpecs] = useState<[string, string][] | null>(isEdit ? null : [])
   const initialSpecsRef = useRef<string | null>(isEdit ? null : JSON.stringify({ specs: {}, type: '' }))
 
+  // Versions (same product with other RAM / storage…), created when the form is saved
+  const [variantAttrsChoice, setVariantAttrs] = useState<string[] | null>(null)
+  const [versionRows, setVersionRows] = useState<VersionRow[]>([])
+  const [showVersionErrors, setShowVersionErrors] = useState(false)
+
   useEffect(() => {
     if (existing.data) {
       const p = existing.data
@@ -182,6 +189,9 @@ export function ProductForm() {
       setSpecOverride(isTemplateId(p.specTemplate) ? p.specTemplate! : '')
       setSpecs(null)
       initialSpecsRef.current = null
+      setVariantAttrs(null)
+      setVersionRows([])
+      setShowVersionErrors(false)
     }
   }, [existing.data])
 
@@ -212,6 +222,17 @@ export function ProductForm() {
     }
   }, [specTemplate, specs, pendingSpecs, specOverride])
 
+  const savedVariantAttrs = (existing.data?.variantAttributes ?? []).filter((k) => SPEC_FIELDS[k])
+  const variantAttrs =
+    variantAttrsChoice ??
+    (savedVariantAttrs.length
+      ? savedVariantAttrs
+      : DEFAULT_VARIANT_OPTIONS.filter((k) => specs && variantableFields(specs.template).includes(k)))
+  const versionErrors = useMemo(
+    () => (showVersionErrors ? validateVersionRows(versionRows, variantAttrs, specs?.values ?? {}) : {}),
+    [showVersionErrors, versionRows, variantAttrs, specs]
+  )
+
   const specErrors = useMemo(
     () => (showSpecErrors && specs ? validateDraft(specs) : {}),
     [showSpecErrors, specs]
@@ -228,7 +249,9 @@ export function ProductForm() {
   const specsSnapshot = JSON.stringify({ specs: specs ? draftToSpecs(specs) : {}, type: specOverride })
   const isDirty =
     JSON.stringify(form) !== initialFormRef.current ||
-    (initialSpecsRef.current !== null && specsSnapshot !== initialSpecsRef.current)
+    (initialSpecsRef.current !== null && specsSnapshot !== initialSpecsRef.current) ||
+    versionRows.length > 0 ||
+    variantAttrsChoice !== null
   const costNumber =
     form.costPrice.trim() !== '' && Number.isFinite(Number(form.costPrice))
       ? Number(form.costPrice)
@@ -286,7 +309,7 @@ export function ProductForm() {
         specTemplate: specOverride,
         // Variants: keep the option summary ("16 GB · 512 GB") in step with the specs
         ...(specs && existing.data?.variantGroup
-          ? { variantLabel: variantLabel(draftToSpecs(specs), specs.template, existing.data.variantAttributes ?? []) }
+          ? { variantLabel: variantLabel(draftToSpecs(specs), specs.template, variantAttrs) }
           : {}),
         images: form.images.map((img, i) => ({
           url: img.url,
@@ -304,16 +327,58 @@ export function ProductForm() {
       } else if (savedId && !shopHero && isShownInShopHero) {
         await adminApi.settings.update({ pageHeroProducts: { shop: HERO_NONE } })
       }
-      return res
+
+      // Versions: create the new ones, or save changed options for an existing group
+      let versionError: string | null = null
+      if (savedId && specs && versionRows.length) {
+        const result = await createVersions({
+          productId: savedId,
+          mainSpecs: draftToSpecs(specs),
+          templateId: specs.template,
+          attributes: variantAttrs,
+          rows: versionRows,
+          existing: existing.data?.variants ?? [],
+          isActive: form.isActive,
+        })
+        if (result.error) {
+          versionError = result.created
+            ? `Only ${result.created} of ${versionRows.length} versions were created: ${result.error}`
+            : `The versions were not created: ${result.error}`
+        }
+      } else if (savedId && specs && existing.data?.variantGroup && variantAttrs.join() !== savedVariantAttrs.join()) {
+        const labels = Object.fromEntries(
+          (existing.data.variants ?? []).map((v) => [
+            v._id,
+            variantLabel(v._id === savedId ? draftToSpecs(specs) : v.specs, specs.template, variantAttrs),
+          ])
+        )
+        await adminApi.products.updateVariants(savedId, { attributes: variantAttrs, labels })
+      }
+      return { savedId, versionError }
     },
-    onSuccess: () => {
+    onSuccess: ({ savedId, versionError }) => {
       qc.invalidateQueries({ queryKey: ['admin-products'] })
       qc.invalidateQueries({ queryKey: ['brands'] })
       qc.invalidateQueries({ queryKey: ['settings'] })
       qc.invalidateQueries({ queryKey: ['admin-settings'] })
       qc.invalidateQueries({ queryKey: ['hero-product'] })
       qc.invalidateQueries({ queryKey: ['hero-auto-products'] })
-      toast(isEdit ? 'Product updated' : 'Product created', 'success')
+      qc.invalidateQueries({ queryKey: ['admin-product'] })
+      qc.invalidateQueries({ queryKey: ['admin-inventory'] })
+      if (versionError) {
+        // The product itself is saved; stay on it so the remaining versions can be fixed
+        toast(`${isEdit ? 'Product updated' : 'Product created'}. ${versionError}`, 'error')
+        if (savedId) navigate(`/admin/products/${savedId}/edit`)
+        return
+      }
+      toast(
+        versionRows.length
+          ? `${isEdit ? 'Product updated' : 'Product created'} with ${versionRows.length} new version${versionRows.length === 1 ? '' : 's'}`
+          : isEdit
+            ? 'Product updated'
+            : 'Product created',
+        'success'
+      )
       navigate('/admin/products')
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
@@ -440,6 +505,22 @@ export function ProductForm() {
             setShowSpecErrors(true)
             toast('Fix the highlighted specifications', 'error')
             return
+          }
+          if (versionRows.length) {
+            const mainMissing = variantAttrs.filter((k) => !(specs?.values[k] ?? '').trim())
+            if (!variantAttrs.length) {
+              toast('Choose what changes between versions (e.g. RAM, Storage)', 'error')
+              return
+            }
+            if (mainMissing.length) {
+              toast(`Fill ${mainMissing.map((k) => SPEC_FIELDS[k].label.en).join(', ')} in the specifications for this product too`, 'error')
+              return
+            }
+            if (Object.keys(validateVersionRows(versionRows, variantAttrs, specs?.values ?? {})).length) {
+              setShowVersionErrors(true)
+              toast('Fix the highlighted versions', 'error')
+              return
+            }
           }
           if (isEdit && !specs) {
             toast('Specifications are still loading — try again in a moment', 'error')
@@ -737,12 +818,20 @@ export function ProductForm() {
             <Spinner />
           </div>
         )}
-        {isEdit && existing.data && specs ? (
-          <VariantsPanel product={existing.data} templateId={specs.template} dirty={isDirty} />
-        ) : !isEdit ? (
-          <p className="text-xs text-[var(--fg-muted)] sm:col-span-2">
-            Sold in several versions (e.g. 8 GB / 16 GB RAM)? Create the product first, then add variants when editing it.
-          </p>
+        {specs && (!isEdit || existing.data) ? (
+          <VariantsPanel
+            product={isEdit ? (existing.data ?? null) : null}
+            templateId={specs.template}
+            mainValues={specs.values}
+            mainPrice={Number(form.price) || 0}
+            mainSku={form.sku}
+            attributes={variantAttrs}
+            onAttributes={setVariantAttrs}
+            rows={versionRows}
+            onRows={setVersionRows}
+            errors={versionErrors}
+            dirty={isDirty}
+          />
         ) : null}
         <Textarea
           label="Short description"

@@ -1,5 +1,5 @@
-import { useDeferredValue, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useDeferredValue, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -12,8 +12,9 @@ import { duplicateVariants, variantLabel, variantableFields } from '@/lib/varian
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { Product } from '@/types'
+import { VariantRows, newVersionRow, type VersionRow } from './VariantRows'
 
-const DEFAULT_OPTIONS = ['ram_gb', 'storage', 'capacity_gb', 'color']
+export const DEFAULT_VARIANT_OPTIONS = ['ram_gb', 'storage', 'capacity_gb', 'color']
 
 function invalidate(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['admin-product'] })
@@ -22,64 +23,59 @@ function invalidate(qc: ReturnType<typeof useQueryClient>) {
 }
 
 /**
- * Variants of a product (same model, different RAM / storage / colour…). Each variant is its own
- * product with its own SKU, price and stock; the shop shows them as one product with options.
+ * Versions of a product (same model, different RAM / storage / colour…), right under its specs.
+ * Each version is its own product with its own SKU, price and stock; the shop shows them as one
+ * product with option buttons. New versions are created when the form is saved.
  */
-export function VariantsPanel({ product, templateId, dirty }: { product: Product; templateId: string; dirty: boolean }) {
+export function VariantsPanel({
+  product,
+  templateId,
+  mainValues,
+  mainPrice,
+  mainSku,
+  attributes,
+  onAttributes,
+  rows,
+  onRows,
+  errors,
+  dirty,
+}: {
+  /** Saved product (edit) or null (new product). */
+  product: Product | null
+  templateId: string
+  /** This product's current spec values (from the form). */
+  mainValues: Record<string, string>
+  mainPrice: number
+  mainSku: string
+  attributes: string[]
+  onAttributes: (keys: string[]) => void
+  rows: VersionRow[]
+  onRows: (rows: VersionRow[]) => void
+  errors: Record<string, string>
+  dirty: boolean
+}) {
   const qc = useQueryClient()
-  const navigate = useNavigate()
-  const variants = product.variants ?? []
-  const inGroup = Boolean(product.variantGroup) && variants.length > 1
+  const variants = product?.variants ?? []
+  const inGroup = Boolean(product?.variantGroup) && variants.length > 1
   const choices = variantableFields(templateId)
-  const saved = (product.variantAttributes ?? []).filter((k) => SPEC_FIELDS[k])
-  const [attributes, setAttributes] = useState<string[]>(() =>
-    saved.length ? saved : DEFAULT_OPTIONS.filter((k) => choices.includes(k))
-  )
   const [linking, setLinking] = useState(false)
   const [query, setQuery] = useState('')
   const [confirmLeave, setConfirmLeave] = useState(false)
   const q = useDeferredValue(query.trim())
 
-  useEffect(() => {
-    if (saved.length) setAttributes(saved)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset when another product loads
-  }, [product._id, product.variantAttributes?.join()])
-
-  const attrsChanged = inGroup && attributes.join() !== saved.join()
-  const labels = (attrs: string[]) => Object.fromEntries(variants.map((v) => [v._id, variantLabel(v.specs, templateId, attrs)]))
-
-  const create = useMutation({
-    mutationFn: async () => (await adminApi.products.addVariant(product._id, { attributes })).data.data,
-    onSuccess: (created) => {
-      invalidate(qc)
-      toast.success('Variant created (inactive). Set its options and price, then activate it.')
-      navigate(`/admin/products/${created._id}/edit`)
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  })
-
   const link = useMutation({
-    mutationFn: (otherId: string) => adminApi.products.addVariant(product._id, { attributes, productId: otherId }),
+    mutationFn: (otherId: string) => adminApi.products.addVariant(product!._id, { attributes, productId: otherId }),
     onSuccess: () => {
       invalidate(qc)
       setLinking(false)
       setQuery('')
-      toast.success('Product added as a variant')
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
-  })
-
-  const saveOptions = useMutation({
-    mutationFn: () => adminApi.products.updateVariants(product._id, { attributes, labels: labels(attributes) }),
-    onSuccess: () => {
-      invalidate(qc)
-      toast.success('Options saved')
+      toast.success('Product added as a version')
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const leave = useMutation({
-    mutationFn: () => adminApi.products.leaveVariants(product._id),
+    mutationFn: () => adminApi.products.leaveVariants(product!._id),
     onSuccess: () => {
       invalidate(qc)
       setConfirmLeave(false)
@@ -91,26 +87,27 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
   const search = useQuery({
     queryKey: ['admin-products', 'variant-link', q],
     queryFn: async () => (await adminApi.products.list({ q, limit: 8 })).data.data,
-    enabled: linking && q.length >= 2,
+    enabled: Boolean(product) && linking && q.length >= 2,
   })
   const memberIds = new Set(variants.map((v) => v._id))
-  const results = (search.data ?? []).filter((p) => p._id !== product._id && !memberIds.has(p._id))
+  const results = (search.data ?? []).filter((p) => p._id !== product?._id && !memberIds.has(p._id))
 
-  const dupes = inGroup ? duplicateVariants(variants, templateId, saved) : []
-  const busy = create.isPending || link.isPending || saveOptions.isPending
+  const dupes = inGroup ? duplicateVariants(variants, templateId, attributes) : []
+  const missingMain = attributes.filter((k) => !(mainValues[k] ?? '').trim())
+  const mainLabel = variantLabel(mainValues, templateId, attributes)
 
   return (
     <section className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-3 sm:col-span-2 sm:p-4">
       <div>
-        <p className="text-sm font-semibold">Variants{inGroup ? ` (${variants.length})` : ''}</p>
+        <p className="text-sm font-semibold">Versions{inGroup ? ` (${variants.length})` : ''}</p>
         <p className="text-xs text-[var(--fg-muted)]">
-          Same model with different options, e.g. 8 GB or 16 GB RAM. Each variant has its own SKU, price and stock; the shop
-          shows one product with option buttons.
+          Same product in several versions, e.g. 8 GB / 256 GB and 16 GB / 512 GB. Each version has its own price and
+          stock; the shop shows one product with option buttons.
         </p>
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs font-medium">Options customers choose</p>
+        <p className="mb-1.5 text-xs font-medium">What changes between versions?</p>
         <div className="flex flex-wrap gap-1.5">
           {choices.map((k) => {
             const on = attributes.includes(k)
@@ -120,7 +117,7 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
                 type="button"
                 aria-pressed={on}
                 disabled={!on && attributes.length >= 4}
-                onClick={() => setAttributes(on ? attributes.filter((a) => a !== k) : [...attributes, k])}
+                onClick={() => onAttributes(on ? attributes.filter((a) => a !== k) : [...attributes, k])}
                 className={cn(
                   'h-8 rounded-full border px-2.5 text-xs transition disabled:opacity-40',
                   on
@@ -134,18 +131,14 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
             )
           })}
         </div>
-        {attrsChanged ? (
-          <Button type="button" size="sm" className="mt-2" loading={saveOptions.isPending} onClick={() => saveOptions.mutate()}>
-            Save options for all variants
-          </Button>
-        ) : null}
       </div>
 
+      {/* Existing versions (edit) or this product as version 1 */}
       {inGroup ? (
         <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
           {variants.map((v) => {
-            const current = v._id === product._id
-            const label = variantLabel(v.specs, templateId, saved) || 'Options not set'
+            const current = v._id === product?._id
+            const label = (current ? mainLabel : variantLabel(v.specs, templateId, attributes)) || 'Options not set'
             return (
               <li key={v._id} className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2">
                 <div className="min-w-0 flex-1">
@@ -155,7 +148,7 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
                   </p>
                   <p className="truncate text-[11px] text-[var(--fg-muted)]">{v.sku}</p>
                 </div>
-                <span className="text-sm tabular-nums">{formatCurrency(v.price)}</span>
+                <span className="text-sm tabular-nums">{formatCurrency(current ? mainPrice : v.price)}</span>
                 <span className={cn('text-xs tabular-nums', v.stock <= 0 ? 'text-[var(--danger)]' : 'text-[var(--fg-muted)]')}>
                   {v.stock} in stock
                 </span>
@@ -178,42 +171,69 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
             )
           })}
         </ul>
+      ) : rows.length ? (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm">
+          <span className="text-xs font-semibold">Version 1 (this product): </span>
+          {mainLabel || <span className="text-[var(--fg-muted)]">set its options in the specifications above</span>}
+          <span className="text-[var(--fg-muted)]"> · {formatCurrency(mainPrice)}</span>
+        </div>
       ) : null}
 
-      {dupes.length ? (
+      {rows.length && missingMain.length ? (
         <p className="text-xs text-[var(--warning)]">
-          {dupes.map((list) => list.map((v) => v.sku).join(' & ')).join(', ')}: same options — set different values (e.g. RAM)
-          on each so customers can tell them apart.
+          Fill {missingMain.map((k) => SPEC_FIELDS[k].label.en).join(', ')} in the specifications above for this product too.
         </p>
       ) : null}
 
-      {dirty ? (
-        <p className="text-xs text-[var(--warning)]">Save your changes first, then add variants.</p>
+      <VariantRows
+        attributes={attributes}
+        rows={rows}
+        onChange={onRows}
+        errors={errors}
+        skuHint={`${mainSku || 'SKU'}-V…`}
+        pricePlaceholder={String(mainPrice || '')}
+        firstNumber={inGroup ? variants.length + 1 : 2}
+      />
+
+      {dupes.length ? (
+        <p className="text-xs text-[var(--warning)]">
+          {dupes.map((list) => list.map((v) => v.sku).join(' & ')).join(', ')}: same options — give each version different
+          values so customers can tell them apart.
+        </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           type="button"
           size="sm"
           variant="outline"
-          disabled={dirty || busy || !attributes.length}
-          loading={create.isPending}
-          onClick={() => create.mutate()}
+          disabled={!attributes.length}
+          onClick={() => onRows([...rows, newVersionRow(mainPrice ? String(mainPrice) : '')])}
         >
-          <SiteIcon name="plus" size={14} /> {inGroup ? 'Add another variant' : 'Create a variant'}
+          <SiteIcon name="plus" size={14} /> Add a version
         </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={dirty || busy || !attributes.length} onClick={() => setLinking((v) => !v)}>
-          Link an existing product
-        </Button>
-        {inGroup ? (
-          <Button type="button" size="sm" variant="ghost" onClick={() => setConfirmLeave(true)}>
-            Remove this one from variants
+        {product ? (
+          <Button type="button" size="sm" variant="ghost" disabled={dirty || !attributes.length} onClick={() => setLinking((v) => !v)}>
+            Link an existing product
           </Button>
         ) : null}
+        {product && inGroup ? (
+          <Button type="button" size="sm" variant="ghost" disabled={dirty} onClick={() => setConfirmLeave(true)}>
+            Remove this one from versions
+          </Button>
+        ) : null}
+        {rows.length ? (
+          <span className="text-xs text-[var(--fg-muted)]">
+            New versions are created when you click {product ? 'Save changes' : 'Create product'}.
+          </span>
+        ) : null}
       </div>
-      {!attributes.length ? <p className="text-xs text-[var(--fg-muted)]">Pick at least one option above.</p> : null}
+      {!attributes.length ? <p className="text-xs text-[var(--fg-muted)]">Pick what changes (e.g. RAM, Storage) first.</p> : null}
+      {product && dirty ? (
+        <p className="text-[11px] text-[var(--fg-muted)]">Save your changes before linking or removing versions.</p>
+      ) : null}
 
-      {linking ? (
+      {linking && product ? (
         <div className="space-y-2 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
           <input
             autoFocus
@@ -231,10 +251,17 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
                       <p className="truncate text-sm">{p.name}</p>
                       <p className="truncate text-[11px] text-[var(--fg-muted)]">
                         {p.sku} · {formatCurrency(p.price)} · {p.stock} in stock
-                        {p.variantGroup ? ' · in another variant group' : ''}
+                        {p.variantGroup ? ' · in another product’s versions' : ''}
                       </p>
                     </div>
-                    <Button type="button" size="sm" variant="outline" loading={link.isPending && link.variables === p._id} disabled={link.isPending} onClick={() => link.mutate(p._id)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      loading={link.isPending && link.variables === p._id}
+                      disabled={link.isPending}
+                      onClick={() => link.mutate(p._id)}
+                    >
                       Link
                     </Button>
                   </li>
@@ -251,7 +278,7 @@ export function VariantsPanel({ product, templateId, dirty }: { product: Product
 
       <ConfirmDialog
         open={confirmLeave}
-        title="Remove from variants?"
+        title="Remove from versions?"
         description="This product becomes a standalone product again, with its own page in the shop. Nothing is deleted."
         confirmLabel="Remove"
         loading={leave.isPending}

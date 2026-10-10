@@ -47,7 +47,18 @@ export const adminApi = {
     inventory: (id: string, payload: { stock?: number; lowStockThreshold?: number; reason?: string }) =>
       api.patch<ApiResponse<Product>>(`/admin/products/${id}/inventory`, payload),
     /** Variants: copy this product as a new option, or link an existing product (productId). */
-    addVariant: (id: string, payload: { attributes?: string[]; productId?: string }) =>
+    addVariant: (
+      id: string,
+      payload: {
+        attributes?: string[]
+        productId?: string
+        specs?: Record<string, string>
+        price?: number
+        stock?: number
+        sku?: string
+        isActive?: boolean
+      }
+    ) =>
       api.post<ApiResponse<Product>>(`/admin/products/${id}/variants`, payload),
     updateVariants: (id: string, payload: { attributes?: string[]; labels?: Record<string, string> }) =>
       api.patch<ApiResponse<ProductVariant[]>>(`/admin/products/${id}/variants`, payload),

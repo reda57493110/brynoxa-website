@@ -1,6 +1,6 @@
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
-import { slugify, uniqueSlug } from '../utils/slugify';
+import { sanitizeSpecs } from '../utils/specs';
 
 /**
  * Product variants: the same model sold with different options (8 GB / 16 GB RAM, 256 / 512 GB…).
@@ -92,8 +92,16 @@ async function freeSku(base: string) {
   return `${base}-V${Date.now().toString(36).toUpperCase()}`;
 }
 
-/** Start or extend a group with a copy of this product (inactive, no stock) to set up as a new option. */
-export async function createVariant(sourceId: string, input: { attributes?: unknown }) {
+/**
+ * Start or extend a group with a new version of this product: a copy with its own option values
+ * (e.g. { ram_gb: "16", storage: "512 GB" }), price, SKU and opening stock (recorded in the ledger).
+ */
+export async function createVariant(
+  sourceId: string,
+  input: { attributes?: unknown; specs?: unknown; price?: unknown; stock?: unknown; sku?: unknown; isActive?: unknown }
+) {
+  // Loaded here: catalog.service imports this module too
+  const { createProduct } = await import('./catalog.service');
   const src = await Product.findById(sourceId).select('+costPrice');
   if (!src) throw new ApiError(404, 'Product not found');
   const groupId = src.variantGroup || String(src._id);
@@ -101,46 +109,50 @@ export async function createVariant(sourceId: string, input: { attributes?: unkn
     throw new ApiError(400, `A product can have up to ${MAX_GROUP} variants`);
   }
   const attributes = sanitizeVariantAttributes(input.attributes) ?? src.variantAttributes ?? [];
-  if (!src.variantGroup) {
-    src.variantGroup = groupId;
-    src.variantAttributes = attributes;
-    await src.save();
-  }
-  await Product.updateMany({ variantGroup: groupId }, { $set: { variantAttributes: attributes } });
 
-  let slug = slugify(src.name);
-  if (await Product.exists({ slug })) slug = uniqueSlug(src.name, Date.now().toString(36));
+  const base = src.toObject({ flattenMaps: true }) as unknown as Record<string, unknown> & {
+    specs?: Record<string, string>;
+    images?: { url: string; publicId?: string; alt?: string; isPrimary?: boolean }[];
+    recommended?: unknown[];
+  };
+  const price = Number(input.price);
+  const hasPrice = input.price !== undefined && input.price !== '' && Number.isFinite(price) && price >= 0;
+  const stock = Math.max(0, Math.floor(Number(input.stock) || 0));
+  const sku = typeof input.sku === 'string' && input.sku.trim().length >= 2 ? input.sku.trim() : await freeSku(src.sku);
+  const finalPrice = hasPrice ? Math.round(price * 100) / 100 : src.price;
 
-  const created = await Product.create({
+  const created = await createProduct({
     name: src.name,
-    slug,
-    sku: await freeSku(src.sku),
+    sku,
     description: src.description,
     shortDescription: src.shortDescription,
-    category: src.category,
-    brand: src.brand,
-    images: src.images,
-    price: src.price,
-    compareAtPrice: src.compareAtPrice,
-    costPrice: src.costPrice,
-    deposit: src.deposit,
+    category: String(src.category),
+    brand: String(src.brand),
+    images: (base.images ?? []).map(({ url, publicId, alt, isPrimary }) => ({ url, publicId, alt, isPrimary })),
+    price: finalPrice,
+    compareAtPrice: src.compareAtPrice && src.compareAtPrice > finalPrice ? src.compareAtPrice : undefined,
+    costPrice: base.costPrice,
+    deposit: base.deposit,
     condition: src.condition,
     conditionNote: src.conditionNote,
-    specs: src.specs,
+    specs: { ...(base.specs ?? {}), ...(sanitizeSpecs(input.specs) ?? {}) },
     specTemplate: src.specTemplate,
     tags: src.tags,
     serialTracking: src.serialTracking,
     inventoryLocation: src.inventoryLocation,
     lowStockThreshold: src.lowStockThreshold,
-    recommended: src.recommended,
+    recommended: (base.recommended ?? []).map(String),
     recommendedOnly: src.recommendedOnly,
-    variantGroup: groupId,
-    variantAttributes: attributes,
-    variantLabel: src.variantLabel,
-    // Stock only arrives through Inventory; hidden until its options and price are set
-    stock: 0,
-    isActive: false,
+    stock,
+    isActive: input.isActive === undefined ? false : Boolean(input.isActive),
   });
+
+  if (!src.variantGroup) {
+    src.variantGroup = groupId;
+    await src.save();
+  }
+  await Product.updateOne({ _id: created._id }, { $set: { variantGroup: groupId } });
+  await Product.updateMany({ variantGroup: groupId }, { $set: { variantAttributes: attributes } });
   await syncVariantGroup(groupId);
   return created;
 }
