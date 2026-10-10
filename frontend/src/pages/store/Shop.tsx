@@ -57,7 +57,8 @@ export function Shop() {
     },
     placeholderData: keepPreviousData,
   })
-  const productsLoading = products.isPending || products.isFetching
+  // Skeleton on first load or a filter change — not on silent background refetches
+  const productsLoading = products.isPending || products.isPlaceholderData
   const categories = useQuery({
     queryKey: ['categories'],
     queryFn: async () => (await categoriesApi.list()).data.data,

@@ -94,7 +94,8 @@ export function CategoryPage() {
     )
 
   const productCount = products.data?.length ?? 0
-  const productsLoading = category.isPending || products.isPending || products.isFetching
+  // Skeleton on first load or a filter change — not on silent background refetches
+  const productsLoading = category.isPending || products.isPending || products.isPlaceholderData
 
   return (
     <>

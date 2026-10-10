@@ -9,7 +9,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
-import { sizedImageUrl } from '@/lib/image'
+import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { HeroPage, Product } from '@/types'
 
@@ -38,7 +38,9 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
 function HeroProductCard({ product }: { product: Product }) {
   const t = useT()
   const image = product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
-  const src = sizedImageUrl(image, 1600)
+  const src = sizedImageUrl(image, 1280)
+  const srcSet = imageSrcSet(image, [640, 960, 1280, 1600])
+  const contain = imageFit(image) === 'contain'
   const brand = typeof product.brand === 'object' ? product.brand?.name : undefined
   const onSale = product.compareAtPrice != null && product.compareAtPrice > product.price
   const photo = useImageLoaded(src)
@@ -52,14 +54,18 @@ function HeroProductCard({ product }: { product: Product }) {
         ref={photo.ref}
         className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]"
       >
+        {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-[var(--bg-muted)]" aria-hidden="true" />}
         <SafeImage
           src={src}
+          srcSet={srcSet}
           alt={product.name}
           width={1600}
           height={1000}
           sizes="(min-width: 768px) 60vw, 100vw"
+          referrerPolicy="no-referrer"
           className={cn(
-            'absolute inset-0 h-full w-full max-w-none object-cover transition duration-500 group-hover:scale-[1.04]',
+            'absolute inset-0 h-full w-full max-w-none transition duration-500 group-hover:scale-[1.04]',
+            contain ? 'bg-white object-contain p-4 sm:p-6' : 'object-cover',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
           loading="eager"
@@ -67,7 +73,6 @@ function HeroProductCard({ product }: { product: Product }) {
           onLoad={photo.onLoad}
           onError={photo.onError}
         />
-        {photo.loaded ? null : <ImageSpinner />}
         <div
           className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/25 to-transparent"
           aria-hidden="true"

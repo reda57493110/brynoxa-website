@@ -45,8 +45,8 @@ export function Wishlist() {
 
   const products = isAuth ? remote.data || productsLocal : localProducts.data
   const loading = isAuth
-    ? remote.isPending || remote.isFetching
-    : ids.length > 0 && (localProducts.isPending || localProducts.isFetching)
+    ? remote.isPending
+    : ids.length > 0 && localProducts.isPending
   const count = products?.length ?? 0
   const isError = isAuth ? remote.isError : localProducts.isError
 

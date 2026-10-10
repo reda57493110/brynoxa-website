@@ -12,22 +12,18 @@ import { wishlistApi } from '@/api/wishlistApi'
 import { toast } from '@/store/toastStore'
 import { Button } from '@/components/ui/Button'
 import { SafeImage } from '@/components/ui/SafeImage'
-import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { useImageLoaded } from '@/hooks/useImageLoaded'
 import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
-import { optimizedImageUrl } from '@/lib/image'
+import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayName } from '@/i18n'
 import type { Locale } from '@/i18n'
 
+/** Main photo, or undefined (the card then shows a neutral placeholder — no external request). */
 function primaryImage(product: Product) {
-  return (
-    product.images?.find((i) => i.isPrimary)?.url ||
-    product.images?.[0]?.url ||
-    'https://placehold.co/600x600/1a2229/00C2FF?text=Brynoxa'
-  )
+  return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url || undefined
 }
 
 function salePercent(product: Product) {
@@ -68,7 +64,11 @@ export function ProductCard({
   // Grid cards stay short: brand only; the spotlight card has room for the category too
   const meta = spotlight ? [brand, category].filter(Boolean).join(' · ') : brand || category
   const blurb = product.shortDescription?.trim()
-  const imageSrc = optimizedImageUrl(primaryImage(product), spotlight ? 1200 : 640)
+  const original = primaryImage(product)
+  // Sized for the card: phones get ~320 px, desktop grids ~480 px, the spotlight up to 1600 px
+  const imageSrc = sizedImageUrl(original, spotlight ? 1200 : 480)
+  const imageSrcSetValue = imageSrcSet(original, spotlight ? [640, 960, 1280, 1600] : [320, 480, 640, 800])
+  const contain = imageFit(original) === 'contain'
   const photo = useImageLoaded(imageSrc)
 
   const onAddCart = () => {
@@ -79,8 +79,9 @@ export function ProductCard({
     addItem({
       productId: product._id,
       slug: product.slug,
-      name: product.name,
-      image: primaryImage(product),
+      // Variants share a name; the options tell them apart in the cart
+      name: product.variantLabel ? `${product.name} (${product.variantLabel})` : product.name,
+      image: original,
       price: product.price,
       stock: product.stock,
       sku: product.sku,
@@ -133,15 +134,19 @@ export function ProductCard({
       <div
         ref={photo.ref}
         className={cn(
-          'relative overflow-hidden bg-[var(--bg-muted)]',
+          'relative overflow-hidden',
+          contain ? 'bg-white' : 'bg-[var(--bg-muted)]',
           spotlight
             ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]'
             : 'aspect-[4/5] sm:aspect-square'
         )}
       >
-        <Link to={`/product/${product.slug}`} className="block h-full w-full">
+        {/* Shimmer while the photo downloads (under the image, so it never covers it) */}
+        {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-[var(--bg-muted)]" aria-hidden="true" />}
+        <Link to={`/product/${product.slug}`} className="relative block h-full w-full">
           <SafeImage
             src={imageSrc}
+            srcSet={imageSrcSetValue}
             onLoad={photo.onLoad}
             onError={photo.onError}
             alt={product.name}
@@ -156,12 +161,12 @@ export function ProductCard({
                 : '(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 46vw'
             }
             className={cn(
-              'h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]',
+              'h-full w-full transition duration-500 ease-out group-hover:scale-[1.03]',
+              contain ? 'object-contain p-3 sm:p-5' : 'object-cover',
               photo.loaded ? 'opacity-100' : 'opacity-0'
             )}
           />
         </Link>
-        {photo.loaded ? null : <ImageSpinner size={spotlight ? 'lg' : 'md'} />}
         <div className="pointer-events-none absolute start-2 top-2 z-10 flex max-w-[calc(100%-3rem)] flex-wrap gap-1 sm:start-3 sm:top-3 sm:max-w-none sm:gap-2">
           {spotlight ? (
             <span className="rounded-full bg-[var(--brand)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[var(--brand-fg)]">
@@ -234,8 +239,13 @@ export function ProductCard({
                 : 'min-h-[1.5rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-sm sm:[&>span:first-child]:text-lg'
             }
           />
-          {product.variantGroup ? (
-            <p className="-mt-1 text-[10px] font-medium text-[var(--brand-text)] sm:text-xs">{t('productPage.moreOptions')}</p>
+          {/* Always the same height, so prices and buttons line up across a row */}
+          {!spotlight ? (
+            <p className="-mt-1 min-h-[0.875rem] truncate text-[10px] font-medium text-[var(--brand-text)] sm:min-h-4 sm:text-xs">
+              {product.variantGroup ? t('productPage.moreOptions') : ' '}
+            </p>
+          ) : product.variantGroup ? (
+            <p className="-mt-1 text-xs font-medium text-[var(--brand-text)]">{t('productPage.moreOptions')}</p>
           ) : null}
           <div className="flex items-center gap-2">
             <Button

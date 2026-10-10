@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SafeImage } from '@/components/ui/SafeImage'
+import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -98,7 +99,8 @@ export function Home() {
       >
         <div className="absolute inset-0" aria-hidden="true">
           <SafeImage
-            src={HERO_IMAGE}
+            src={sizedImageUrl(HERO_IMAGE, 1920)}
+            srcSet={imageSrcSet(HERO_IMAGE, [768, 1280, 1920, 2560])}
             alt=""
             width={2560}
             height={1440}
@@ -200,10 +202,8 @@ export function Home() {
                 carousel.refetch()
               }}
             />
-          ) : featured.isPending ||
-            featured.isFetching ||
-            carousel.isPending ||
-            carousel.isFetching ? (
+          ) : featured.isPending || carousel.isPending ? (
+            // First load only: background refetches keep the cards (and their loaded photos) on screen
             <div className="relative min-h-[18rem] space-y-5" role="status" aria-live="polite" aria-busy="true">
               <Skeleton className="h-64 rounded-[1.35rem] lg:h-[22rem]" />
               <div className="flex gap-4 overflow-hidden" aria-hidden="true">
