@@ -63,6 +63,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
     },
     onSuccess: (ret) => {
       qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
+      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       invalidateInventory(qc)
       setCreated(ret)
       setRows(order.items.map(emptyRow))

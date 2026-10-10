@@ -9,16 +9,7 @@ import { ApiError } from '../utils/ApiError';
 import { isProd } from '../config/env';
 import { sendVerificationEmail } from './auth.service';
 import { isStaffRole, STAFF_ROLES, type StaffRole } from '../permissions';
-
-function dayKey(offset: number) {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() + offset);
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+import { STORE_TIMEZONE } from './dashboard.service';
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -44,68 +35,40 @@ export async function getDashboardStats() {
   return data;
 }
 
+/**
+ * Counts for the admin shell and dashboard (badges, order pipeline, catalog, stock).
+ * Money figures live in dashboard.service (salesAnalytics), which follows the sales rules.
+ */
 async function buildDashboardStats() {
-  const startToday = new Date();
-  startToday.setHours(0, 0, 0, 0);
-  const start14 = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  const todayKey = new Intl.DateTimeFormat('en-CA', {
+    timeZone: STORE_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const lowExpr = { $lte: ['$stock', { $ifNull: ['$lowStockThreshold', 5] }] };
 
   const [orderStats, customerCount, productStats, reviewCount, unreadMessages, recentOrders] =
     await Promise.all([
       Order.aggregate([
         {
           $facet: {
-            totals: [
-              { $match: { orderStatus: { $ne: 'cancelled' } } },
-              {
-                $group: {
-                  _id: null,
-                  revenue: { $sum: '$pricing.total' },
-                  paidOrders: { $sum: 1 },
-                },
-              },
-            ],
-            today: [
-              {
-                $match: {
-                  createdAt: { $gte: startToday },
-                  orderStatus: { $ne: 'cancelled' },
-                },
-              },
-              {
-                $group: {
-                  _id: null,
-                  total: { $sum: '$pricing.total' },
-                  orders: { $sum: 1 },
-                },
-              },
-            ],
             counts: [
               {
                 $group: {
                   _id: null,
                   orderCount: { $sum: 1 },
-                  pendingOrders: {
-                    $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] },
-                  },
+                  pendingOrders: { $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] } },
                 },
               },
             ],
             byStatus: [{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }],
-            sales: [
-              {
-                $match: {
-                  createdAt: { $gte: start14 },
-                  orderStatus: { $ne: 'cancelled' },
-                },
-              },
-              {
-                $group: {
-                  _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-                  revenue: { $sum: '$pricing.total' },
-                  orders: { $sum: 1 },
-                },
-              },
-              { $sort: { _id: 1 } },
+            // Orders placed today in the store's timezone (not the server's)
+            today: [
+              { $match: { createdAt: { $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }, orderStatus: { $ne: 'cancelled' } } },
+              { $addFields: { day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } } } },
+              { $match: { day: todayKey } },
+              { $group: { _id: null, orders: { $sum: 1 }, total: { $sum: '$pricing.total' } } },
             ],
           },
         },
@@ -115,24 +78,15 @@ async function buildDashboardStats() {
         {
           $facet: {
             productCount: [{ $count: 'n' }],
-            lowStock: [
-              { $match: { $expr: { $lte: ['$stock', '$lowStockThreshold'] } } },
-              { $count: 'n' },
-            ],
+            activeProducts: [{ $match: { isActive: true } }, { $count: 'n' }],
+            // Same rules as the Inventory page: low = 1..alert level, out = nothing sellable
+            lowStock: [{ $match: { stock: { $gt: 0 }, $expr: lowExpr } }, { $count: 'n' }],
+            outOfStock: [{ $match: { stock: { $lte: 0 } } }, { $count: 'n' }],
             lowStockProducts: [
-              { $match: { $expr: { $lte: ['$stock', '$lowStockThreshold'] } } },
-              { $sort: { stock: 1 } },
-              { $limit: 8 },
-              {
-                $project: {
-                  name: 1,
-                  sku: 1,
-                  stock: 1,
-                  slug: 1,
-                  images: 1,
-                  lowStockThreshold: 1,
-                },
-              },
+              { $match: { $expr: lowExpr } },
+              { $sort: { isActive: -1, stock: 1, name: 1 } },
+              { $limit: 6 },
+              { $project: { name: 1, variantLabel: 1, sku: 1, stock: 1, slug: 1, images: { $slice: ['$images', 1] }, lowStockThreshold: 1, isActive: 1 } },
             ],
           },
         },
@@ -141,65 +95,34 @@ async function buildDashboardStats() {
       ContactMessage.countDocuments({ status: 'new' }),
       Order.find()
         .sort({ createdAt: -1 })
-        .limit(8)
-        .populate('user', 'name email')
-        .select('orderNumber orderStatus pricing createdAt user shippingAddress')
+        .limit(6)
+        .populate('user', 'name')
+        .select('orderNumber orderStatus paymentStatus pricing.total createdAt user shippingAddress.fullName')
         .lean(),
     ]);
 
-  const facet = orderStats[0] || {
-    totals: [],
-    today: [],
-    counts: [],
-    byStatus: [],
-    sales: [],
-  };
-  const productsFacet = productStats[0] || {
-    productCount: [],
-    lowStock: [],
-    lowStockProducts: [],
-  };
-
-  const salesMap = new Map<string, { revenue: number; orders: number }>(
-    (facet.sales || []).map((row: { _id: string; revenue: number; orders: number }) => [
-      row._id,
-      row,
-    ])
-  );
-  const salesByDay = Array.from({ length: 14 }, (_, i) => {
-    const key = dayKey(i - 13);
-    const row = salesMap.get(key);
-    return {
-      _id: key,
-      revenue: row?.revenue || 0,
-      orders: row?.orders || 0,
-    };
-  });
+  const facet = orderStats[0] || { counts: [], byStatus: [], today: [] };
+  const productsFacet = productStats[0] || {};
+  const n = (rows?: { n: number }[]) => rows?.[0]?.n || 0;
 
   const statusMap: Record<string, number> = {};
   for (const row of facet.byStatus || []) {
     statusMap[row._id] = row.count;
   }
 
-  const revenue = facet.totals[0]?.revenue || 0;
-  const paidOrders = facet.totals[0]?.paidOrders || 0;
-  const orderCount = facet.counts[0]?.orderCount || 0;
-  const pendingOrders = facet.counts[0]?.pendingOrders || 0;
-
   return {
-    revenue,
-    todayRevenue: facet.today[0]?.total || 0,
     todayOrders: facet.today[0]?.orders || 0,
-    avgOrderValue: paidOrders > 0 ? revenue / paidOrders : 0,
-    orderCount,
-    pendingOrders,
+    todayOrderValue: facet.today[0]?.total || 0,
+    orderCount: facet.counts[0]?.orderCount || 0,
+    pendingOrders: facet.counts[0]?.pendingOrders || 0,
     customerCount,
-    productCount: productsFacet.productCount[0]?.n || 0,
-    lowStock: productsFacet.lowStock[0]?.n || 0,
+    productCount: n(productsFacet.productCount),
+    activeProducts: n(productsFacet.activeProducts),
+    lowStock: n(productsFacet.lowStock),
+    outOfStock: n(productsFacet.outOfStock),
     reviewCount,
     unreadMessages,
     recentOrders: recentOrders || [],
-    salesByDay,
     ordersByStatus: statusMap,
     lowStockProducts: productsFacet.lowStockProducts || [],
   };

@@ -53,7 +53,7 @@ export function AdminSidebar({
   const badgeValue = (key?: (typeof items)[number]['badge']) => {
     if (!s || !key) return 0
     if (key === 'pending') return s.pendingOrders
-    if (key === 'stock') return s.lowStock
+    if (key === 'stock') return s.lowStock + (s.outOfStock || 0)
     return s.unreadMessages
   }
 

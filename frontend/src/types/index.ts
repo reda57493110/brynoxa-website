@@ -368,22 +368,54 @@ export interface Notification {
   createdAt: string
 }
 
+/** Counts for the admin shell and dashboard (no money totals — see SalesAnalytics). */
 export interface DashboardStats {
-  revenue: number
-  todayRevenue: number
   todayOrders: number
-  avgOrderValue: number
+  todayOrderValue: number
   orderCount: number
   pendingOrders: number
   customerCount: number
   productCount: number
+  activeProducts: number
+  /** 1..alert level units left (Inventory page rule). */
   lowStock: number
+  /** Nothing left to sell. */
+  outOfStock: number
   reviewCount: number
   unreadMessages: number
   recentOrders: Order[]
-  salesByDay: { _id: string; revenue: number; orders: number }[]
   ordersByStatus: Record<string, number>
-  lowStockProducts: Pick<Product, '_id' | 'name' | 'sku' | 'stock' | 'slug' | 'images'>[]
+  lowStockProducts: (Pick<Product, '_id' | 'name' | 'sku' | 'stock' | 'slug' | 'images' | 'isActive' | 'variantLabel'> & {
+    lowStockThreshold?: number
+  })[]
+}
+
+export type SalesRange = 7 | 14 | 30 | 90
+
+export interface SalesTotals {
+  /** Net sales of delivered, not fully refunded orders (items − coupons − refunds, no shipping). */
+  revenue: number
+  /** Orders placed (not cancelled). */
+  orders: number
+  orderValue: number
+  /** Delivered, not fully refunded orders. */
+  completedOrders: number
+  avgOrderValue: number | null
+  /** Null when hidden (no "reports" permission) or when a sale has no cost recorded. */
+  profit: number | null
+  salesMissingCost: number
+}
+
+export interface SalesAnalytics {
+  range: SalesRange
+  timezone: string
+  from: string
+  to: string
+  series: { date: string; revenue: number; sales: number; orders: number; orderValue: number }[]
+  totals: SalesTotals
+  previous: SalesTotals & { from: string; to: string }
+  topProducts: { productId: string; name: string; slug?: string; image?: string; exists: boolean; units: number; revenue: number }[]
+  profitVisible: boolean
 }
 
 export interface ContactInboxMessage {

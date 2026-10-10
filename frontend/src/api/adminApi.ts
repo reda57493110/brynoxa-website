@@ -1,6 +1,8 @@
 import api from './client'
 import type {
   ProductVariant,
+  SalesAnalytics,
+  SalesRange,
   ApiResponse,
   Brand,
   Category,
@@ -35,6 +37,9 @@ function cleanParams<T extends object>(params?: T) {
 
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
+  /** Revenue / orders per day, totals vs the previous period, best sellers (owner view). */
+  dashboardSales: (days: SalesRange) =>
+    api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),
 
   products: {
     get: (id: string) => api.get<ApiResponse<Product>>(`/admin/products/${id}`),

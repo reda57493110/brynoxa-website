@@ -508,6 +508,19 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Dashboard sales analytics (owner view); profit only with the "reports" permission
+    if (route === 'dashboard/sales' && req.method === 'GET') {
+      const user = await requireStaff(req, res, ['dashboard']);
+      if (!user) return;
+      const { salesAnalytics, SALES_RANGES } = require('../../backend/dist/services/dashboard.service');
+      const { hasPermission } = require('../../backend/dist/permissions');
+      const raw = Number(query.days);
+      const range = SALES_RANGES.includes(raw) ? raw : 14;
+      const data = await salesAnalytics(range, hasPermission(user.role, 'reports'));
+      sendJson(res, 200, { success: true, message: 'Success', data });
+      return;
+    }
+
     if (route === 'users') {
       const user = await requireStaff(req, res, ['users:manage']);
       if (!user) return;

@@ -40,6 +40,7 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
+      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       qc.invalidateQueries({ queryKey: ['admin-orders'] })
       setAmount('')
       setReason('')
