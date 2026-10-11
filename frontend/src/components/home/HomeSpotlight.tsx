@@ -127,14 +127,15 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
           aria-hidden="true"
         />
 
-        {/* The photo is the card: details sit on a fade at the bottom of the picture */}
-        <article
-          ref={photo.ref}
-          className={cn(
-            'relative isolate aspect-square overflow-hidden rounded-[1.5rem] text-white [@media(max-height:820px)]:aspect-[5/4]',
-            contain ? 'bg-white' : 'bg-[#0b1116]'
-          )}
-        >
+        {/* The photo is the card: full width, edge to edge, fading into the details below it */}
+        <article className="relative overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white">
+          <div
+            ref={photo.ref}
+            className={cn(
+              'relative isolate aspect-[4/3] overflow-hidden [@media(max-height:820px)]:aspect-[16/10]',
+              contain ? 'bg-white' : 'bg-[#0b1116]'
+            )}
+          >
           {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-white/10" />}
           <SafeImage
             src={src}
@@ -142,16 +143,16 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
             sizes="(min-width: 1280px) 34rem, 30rem"
             alt=""
             width={1280}
-            height={1280}
+            height={960}
             referrerPolicy="no-referrer"
             loading="eager"
             onLoad={photo.onLoad}
             onError={photo.onError}
             className={cn(
               'absolute inset-0 -z-10 h-full w-full max-w-none transition duration-700 ease-out group-hover:scale-[1.05]',
-              // Packshots on white: keep the product clear of the details below
-              // mix-blend-multiply melts the photo's own off-white background into the card
-              contain ? 'object-contain px-8 pb-[42%] pt-12 mix-blend-multiply' : 'object-cover',
+              // Packshots on white: whole product visible, clear of the fade; mix-blend-multiply
+              // melts the photo's own off-white background into the card
+              contain ? 'object-contain px-6 pb-12 pt-10 mix-blend-multiply' : 'object-cover',
               photo.loaded ? 'opacity-100' : 'opacity-0'
             )}
           />
@@ -164,7 +165,10 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
             {d ? t('home.spotlightDeal') : t('product.featuredPick')}
           </span>
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 space-y-3 bg-gradient-to-t from-[#0b1116] from-60% via-[#0b1116]/85 via-80% to-transparent p-5 pt-14">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent" aria-hidden="true" />
+          </div>
+
+          <div className="relative z-10 -mt-6 space-y-3 p-5 pt-0">
             <div className="min-w-0">
               {brand ? <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand)]">{brand}</p> : null}
               <p className="mt-1 line-clamp-2 font-display text-xl font-semibold leading-snug drop-shadow xl:text-2xl">
@@ -207,7 +211,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
               </div>
             </div>
 
-            <div className="pointer-events-auto flex gap-2">
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={add}
