@@ -98,6 +98,8 @@ export const ar: Messages = {
     proofDelivery: 'توصيل لجميع مدن المغرب',
     proofReturns: 'إرجاع خلال 14 يومًا',
     spotlightMore: 'شاهد المزيد من المنتجات',
+    spotlightSave: 'توفّر {amount}',
+    spotlightDeal: 'عرض مميز',
     featuredKicker: 'مميز',
     featuredTitle: 'مميز',
     featuredBody: 'اختيارات جاهزة للطلب.',

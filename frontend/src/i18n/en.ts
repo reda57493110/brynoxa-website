@@ -96,6 +96,8 @@ export const en = {
     proofDelivery: 'Delivery across Morocco',
     proofReturns: '14-day returns',
     spotlightMore: 'See more products',
+    spotlightSave: 'You save {amount}',
+    spotlightDeal: 'Hot deal',
     featuredKicker: 'Featured',
     featuredTitle: 'Featured',
     featuredBody: 'Hand-picked picks ready to order.',

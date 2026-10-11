@@ -357,6 +357,33 @@ html[lang="ar"] {
 
 }
 
+/* Home spotlight: gentle float, rotating border light, shine sweep on the button */
+@keyframes spotlight-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes spotlight-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spotlight-shine {
+  0% {
+    transform: translateX(-130%) skewX(-20deg);
+  }
+  55%,
+  100% {
+    transform: translateX(260%) skewX(-20deg);
+  }
+}
+
 @keyframes home-hero-ken {
   from {
     transform: scale(1.12);

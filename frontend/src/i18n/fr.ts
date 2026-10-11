@@ -98,6 +98,8 @@ export const fr: Messages = {
     proofDelivery: 'Livraison partout au Maroc',
     proofReturns: 'Retour sous 14 jours',
     spotlightMore: 'Voir plus de produits',
+    spotlightSave: 'Vous économisez {amount}',
+    spotlightDeal: 'Bonne affaire',
     featuredKicker: 'À la une',
     featuredTitle: 'À la une',
     featuredBody: 'Sélections prêtes à commander.',
