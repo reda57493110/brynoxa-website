@@ -23,6 +23,7 @@ const items: {
   badge?: 'pending' | 'stock' | 'inbox'
 }[] = [
   { to: '/admin', label: 'Dashboard', icon: 'dashboard', end: true },
+  { to: '/admin/analytics', label: 'Analytics', icon: 'sliders' },
   { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending' },
   { to: '/admin/products', label: 'Products', icon: 'package' },
   { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock' },

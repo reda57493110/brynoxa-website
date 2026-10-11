@@ -138,6 +138,7 @@ router.get(
   misc.dashboard
 );
 router.get('/admin/dashboard/sales', requireAuth, requirePermission('dashboard'), misc.salesAnalytics);
+router.get('/admin/analytics', requireAuth, requirePermission('dashboard'), misc.analytics);
 router.delete(
   '/admin/customers/:id',
   requireAuth,

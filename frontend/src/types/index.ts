@@ -390,7 +390,7 @@ export interface DashboardStats {
   })[]
 }
 
-export type SalesRange = 7 | 14 | 30 | 90
+export type SalesRange = 7 | 14 | 30 | 90 | 180 | 365
 
 export interface SalesTotals {
   /** Net sales of delivered, not fully refunded orders (items − coupons − refunds, no shipping). */
@@ -416,6 +416,19 @@ export interface SalesAnalytics {
   previous: SalesTotals & { from: string; to: string }
   topProducts: { productId: string; name: string; slug?: string; image?: string; exists: boolean; units: number; revenue: number }[]
   profitVisible: boolean
+}
+
+/** Admin → Analytics: SalesAnalytics plus breakdowns for the same period. */
+export interface AnalyticsReport extends SalesAnalytics {
+  status: { status: string; orders: number; value: number }[]
+  cancellationRate: number | null
+  channels: { channel: string; sales: number; revenue: number }[]
+  cities: { city: string; orders: number; value: number }[]
+  weekdays: { day: string; orders: number; value: number }[]
+  refunds: { amount: number; orders: number }
+  conditions: { condition: string; units: number; revenue: number }[]
+  categories: { categoryId: string | null; name: string; units: number; revenue: number }[]
+  customers: { buyers: number; returning: number; firstTime: number; guests: number; newAccounts: number; newAccountsPrev: number }
 }
 
 export interface ContactInboxMessage {

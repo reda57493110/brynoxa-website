@@ -1,14 +1,14 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
-import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SalesChart, type SalesMetric } from '@/components/admin/SalesChart'
+import { Change, Kpi, SalesStats, SectionTitle, analyticsCard as card } from '@/components/admin/analytics/Kit'
 import { dayLabel } from '@/lib/salesBuckets'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -17,136 +17,15 @@ import { optimizedImageUrl } from '@/lib/image'
 import { hasPermission, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/cn'
-import type { SalesAnalytics, SalesRange, User } from '@/types'
+import type { SalesRange, User } from '@/types'
 
 const RANGES: SalesRange[] = [7, 14, 30, 90]
-const card = 'min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]'
 
 const PAYMENT_VARIANT: Record<string, BadgeVariant> = {
   paid: 'success',
   pending: 'warning',
   failed: 'danger',
   refunded: 'muted',
-}
-
-/** "▲ 12% vs 1,200 DH prev. 14 days" — or a plain note when there is nothing to compare with. */
-function Change({ now, before, days, money }: { now: number | null; before: number | null; days: number; money?: boolean }) {
-  if (now === null || before === null || (now === 0 && before === 0)) {
-    return <span className="text-[var(--fg-muted)]">Nothing in the previous {days} days</span>
-  }
-  if (before === 0) return <span className="text-[var(--success)]">New vs previous {days} days</span>
-  const pct = ((now - before) / Math.abs(before)) * 100
-  const up = pct >= 0
-  return (
-    <span className={cn(Math.abs(pct) < 0.5 ? 'text-[var(--fg-muted)]' : up ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
-      {up ? '▲' : '▼'} {Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%{' '}
-      <span className="text-[var(--fg-muted)]">
-        vs {money ? formatCurrency(before) : before} prev. {days} days
-      </span>
-    </span>
-  )
-}
-
-function Kpi({
-  label,
-  value,
-  hint,
-  icon,
-  to,
-  tone,
-}: {
-  label: string
-  value: ReactNode
-  hint?: ReactNode
-  icon: SiteIconName
-  to?: string
-  tone?: 'warning' | 'danger'
-}) {
-  const body = (
-    <>
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-xs text-[var(--fg-muted)] sm:text-sm">{label}</p>
-        <SiteIcon
-          name={icon}
-          size={18}
-          className={cn(
-            'shrink-0',
-            tone === 'danger' ? 'text-[var(--danger)]' : tone === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--brand)]'
-          )}
-        />
-      </div>
-      <div className="mt-1.5 truncate font-display text-lg font-semibold tabular-nums sm:text-2xl">{value}</div>
-      {hint ? <div className="mt-1 truncate text-[11px] sm:text-xs">{hint}</div> : null}
-    </>
-  )
-  const cls = cn(card, 'block p-3 sm:p-4')
-  return to ? (
-    <Link to={to} className={cn(cls, 'transition hover:border-[var(--brand)]')}>
-      {body}
-    </Link>
-  ) : (
-    <div className={cls}>{body}</div>
-  )
-}
-
-/** Key figures under the chart, computed from the same daily series. */
-function SalesStats({ analytics, metric }: { analytics: SalesAnalytics; metric: SalesMetric }) {
-  const { series, totals: t, range } = analytics
-  const v = (d: SalesAnalytics['series'][number]) => (metric === 'revenue' ? d.revenue : d.orders)
-  const best = series.reduce<SalesAnalytics['series'][number] | null>((b, d) => (v(d) > 0 && (!b || v(d) > v(b)) ? d : b), null)
-  const activeDays = series.filter((d) => v(d) > 0).length
-  const total = metric === 'revenue' ? t.revenue : t.orders
-  const perDay = total / (series.length || 1)
-  const deliveryRate = t.orders > 0 ? Math.round((t.completedOrders / t.orders) * 100) : null
-  const money = (n: number) => formatCurrency(Math.round(n * 100) / 100)
-
-  const stats: { label: string; value: string; hint?: string }[] = [
-    {
-      label: metric === 'revenue' ? 'Average per day' : 'Orders per day',
-      value: metric === 'revenue' ? money(perDay) : perDay.toFixed(perDay < 10 ? 1 : 0),
-      hint: `over ${range} days`,
-    },
-    {
-      label: 'Best day',
-      value: best ? (metric === 'revenue' ? money(best.revenue) : String(best.orders)) : '—',
-      hint: best ? dayLabel(best.date) : 'No sales yet',
-    },
-    {
-      label: metric === 'revenue' ? 'Days with sales' : 'Days with orders',
-      value: `${activeDays}/${series.length}`,
-      hint: `${Math.round((activeDays / (series.length || 1)) * 100)}% of days`,
-    },
-    {
-      label: 'Delivered',
-      value: deliveryRate === null ? '—' : `${deliveryRate}%`,
-      hint: `${t.completedOrders} of ${t.orders} orders placed`,
-    },
-  ]
-
-  return (
-    <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-4">
-      {stats.map((s) => (
-        <div key={s.label} className="min-w-0 bg-[var(--bg-elevated)] px-3 py-2.5">
-          <dt className="truncate text-[11px] text-[var(--fg-muted)]">{s.label}</dt>
-          <dd className="mt-0.5 truncate font-display text-base font-semibold tabular-nums">{s.value}</dd>
-          {s.hint ? <dd className="truncate text-[10px] text-[var(--fg-muted)]">{s.hint}</dd> : null}
-        </div>
-      ))}
-    </dl>
-  )
-}
-
-function SectionTitle({ title, link }: { title: string; link?: { to: string; label: string } }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <h2 className="font-display text-sm font-semibold sm:text-base">{title}</h2>
-      {link ? (
-        <Link to={link.to} className="shrink-0 text-sm text-[var(--brand-text)] hover:underline">
-          {link.label}
-        </Link>
-      ) : null}
-    </div>
-  )
 }
 
 export function Dashboard() {
@@ -372,6 +251,9 @@ export function Dashboard() {
             )}
           </div>
           {a ? <SalesStats analytics={a} metric={metric} /> : null}
+          <Link to="/admin/analytics" className="mt-3 inline-block text-sm font-medium text-[var(--brand-text)] hover:underline">
+            Full analytics →
+          </Link>
           <p className="mt-3 text-[11px] text-[var(--fg-muted)]">
             Revenue = delivered orders (paid on delivery) minus coupons and refunds, without shipping, on the day each order
             was placed.

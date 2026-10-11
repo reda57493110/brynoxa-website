@@ -1,5 +1,6 @@
 import api from './client'
 import type {
+  AnalyticsReport,
   ProductVariant,
   SalesAnalytics,
   SalesRange,
@@ -37,6 +38,8 @@ function cleanParams<T extends object>(params?: T) {
 
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
+  /** Admin → Analytics report for the last `days` days. */
+  analytics: (days: SalesRange) => api.get<ApiResponse<AnalyticsReport>>('/admin/analytics', { params: { days } }),
   /** Revenue / orders per day, totals vs the previous period, best sellers (owner view). */
   dashboardSales: (days: SalesRange) =>
     api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),

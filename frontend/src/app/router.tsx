@@ -59,6 +59,9 @@ const ServiceDetail = lazy(() =>
 )
 const Legal = lazy(() => import('@/pages/store/Legal').then((m) => ({ default: m.Legal })))
 
+const AdminAnalytics = lazy(() =>
+  import('@/pages/admin/Analytics').then((m) => ({ default: m.Analytics }))
+)
 const AdminDashboard = lazy(() =>
   import('@/pages/admin/Dashboard').then((m) => ({ default: m.Dashboard }))
 )
@@ -206,6 +209,7 @@ export function AppRouter() {
         }
       >
         <Route index element={<S><AdminDashboard /></S>} />
+        <Route path="analytics" element={<S><AdminAnalytics /></S>} />
         <Route path="products" element={<S><AdminProducts /></S>} />
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />

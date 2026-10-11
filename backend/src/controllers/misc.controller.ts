@@ -7,7 +7,7 @@ import * as wishlistService from '../services/wishlist.service';
 import * as notificationService from '../services/notification.service';
 import * as couponService from '../services/coupon.service';
 import * as adminService from '../services/admin.service';
-import { SALES_RANGES, salesAnalytics as buildSalesAnalytics, type SalesRange } from '../services/dashboard.service';
+import { SALES_RANGES, analyticsReport, salesAnalytics as buildSalesAnalytics, type SalesRange } from '../services/dashboard.service';
 import { hasPermission } from '../permissions';
 import {
   getSettings,
@@ -144,6 +144,14 @@ export const salesAnalytics = asyncHandler(async (req: Request, res: Response) =
   const range = (SALES_RANGES as readonly number[]).includes(raw) ? (raw as SalesRange) : 14;
   const role = (req as AuthRequest).user?.role;
   sendSuccess(res, await buildSalesAnalytics(range, hasPermission(role, 'reports')));
+});
+
+/** Admin → Analytics: sales plus breakdowns for the chosen period. */
+export const analytics = asyncHandler(async (req: Request, res: Response) => {
+  const raw = Number(req.query.days);
+  const range = (SALES_RANGES as readonly number[]).includes(raw) ? (raw as SalesRange) : 30;
+  const role = (req as AuthRequest).user?.role;
+  sendSuccess(res, await analyticsReport(range, hasPermission(role, 'reports')));
 });
 
 export const deleteCustomer = asyncHandler(async (req: Request, res: Response) => {
