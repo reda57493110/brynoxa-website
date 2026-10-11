@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { env } from './env';
+import { attachDatabasePool } from '@vercel/functions';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -25,9 +26,22 @@ export async function connectDB(): Promise<typeof mongoose> {
         serverSelectionTimeoutMS: 30000,
         connectTimeoutMS: 30000,
         socketTimeoutMS: 45000,
-        maxPoolSize: 10,
+        // Serverless: many function instances each hold their own pool, and the free Atlas tier
+        // allows 500 connections in total. Keep each pool small and close idle sockets quickly.
+        maxPoolSize: 3,
+        minPoolSize: 0,
+        maxIdleTimeMS: 5000,
       })
       .then((connection) => {
+      // On Vercel, keep the instance alive long enough to close idle connections before it
+      // is frozen (frozen instances otherwise keep their sockets open on Atlas).
+      if (process.env.VERCEL) {
+        try {
+          attachDatabasePool(connection.connection.getClient());
+        } catch (err) {
+          console.error('attachDatabasePool failed', err);
+        }
+      }
       const host = connection.connection.host || 'unknown';
       console.log(`MongoDB connected (${host})`);
       return connection;

@@ -26,6 +26,7 @@ module.exports = async (req, res) => {
     await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000,
       connectTimeoutMS: 5000,
+      maxPoolSize: 1,
     });
     await mongoose.connection.db.admin().ping();
     res.statusCode = 200;
