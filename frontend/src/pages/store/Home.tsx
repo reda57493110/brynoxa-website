@@ -127,7 +127,7 @@ export function Home() {
           <div className="absolute inset-0 dark:hidden bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0%,rgb(0_0_0/0.12)_36%,transparent_58%)]" />
         </div>
 
-        <Container className="relative z-10 grid flex-1 content-center items-center gap-8 pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
           <div className="min-w-0">
           <motion.p
             {...fadeUp(reduceMotion, 0)}
@@ -186,7 +186,7 @@ export function Home() {
 
           {/* Phones / tablets: slim product strip */}
           {spotlight.product || spotlight.pending ? (
-            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-5 max-w-md lg:hidden">
+            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-6 max-w-xl lg:hidden">
               {spotlight.product ? <HomeSpotlightStrip product={spotlight.product} /> : <HomeSpotlightSkeleton strip />}
             </motion.div>
           ) : null}
