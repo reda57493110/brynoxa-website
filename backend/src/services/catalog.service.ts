@@ -31,6 +31,40 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * Search: every word must match somewhere — name, SKU, tags, short description, or the product's
+ * category / brand name. "laptops" also finds "laptop". (Before, a single word only matched the
+ * start of the SKU or name, so "laptop" or "gaming" found nothing.)
+ */
+async function searchConditions(q: string) {
+  const words = q
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => w.replace(/[^\p{L}\p{N}\-_.+"]/gu, ''))
+    .filter((w) => w.length >= 2)
+    .slice(0, 6);
+  return Promise.all(
+    words.map(async (word) => {
+      // Simple plural: "laptops" → "laptop", "pcs" → "pc"
+      const stem = word.length > 3 && word.endsWith('s') ? word.slice(0, -1) : word;
+      const rx = new RegExp(escapeRegex(stem), 'i');
+      const [cats, brands] = await Promise.all([
+        Category.find({ $or: [{ name: rx }, { slug: rx }] }).select('_id').lean(),
+        Brand.find({ name: rx }).select('_id').lean(),
+      ]);
+      const or: Record<string, unknown>[] = [
+        { name: rx },
+        { sku: new RegExp(`^${escapeRegex(word)}`, 'i') },
+        { tags: rx },
+        { shortDescription: rx },
+      ];
+      if (cats.length) or.push({ category: { $in: cats.map((c) => c._id) } });
+      if (brands.length) or.push({ brand: { $in: brands.map((b) => b._id) } });
+      return { $or: or };
+    })
+  );
+}
+
 /** Storefront-only: products must belong to an active category. */
 const ACTIVE_CATEGORY_TTL_MS = 60_000;
 let activeCategoryCache: { at: number; ids: mongoose.Types.ObjectId[] } = {
@@ -203,17 +237,9 @@ export async function listProducts(query: ProductQuery) {
   else if (query.condition === 'refurbished' || query.condition === 'used') filter.condition = query.condition;
 
   const q = query.q?.trim() || '';
-  let useTextScore = false;
   if (q) {
-    // SKU / short codes: use indexed prefix match. Longer phrases: Mongo text index.
-    const looksLikeSku = /^[a-z0-9][a-z0-9\-_]{1,31}$/i.test(q) && !/\s/.test(q);
-    if (looksLikeSku) {
-      const rx = new RegExp(`^${escapeRegex(q)}`, 'i');
-      filter.$or = [{ sku: rx }, { name: rx }];
-    } else {
-      filter.$text = { $search: q };
-      useTextScore = true;
-    }
+    const conditions = await searchConditions(q);
+    if (conditions.length) filter.$and = conditions;
   }
   if (query.category) {
     const categoryId = await resolveCategoryId(query.category);
@@ -282,9 +308,7 @@ export async function listProducts(query: ProductQuery) {
         sort = { name: 1 };
         break;
       default:
-        sort = useTextScore
-          ? { score: { $meta: 'textScore' }, createdAt: -1 }
-          : { createdAt: -1 };
+        sort = { createdAt: -1 };
     }
   }
 
@@ -296,12 +320,7 @@ export async function listProducts(query: ProductQuery) {
     .populate('brand', 'name slug logo')
     .lean();
 
-  if (useTextScore && !query.sort) {
-    listQuery.select({ score: { $meta: 'textScore' } });
-    listQuery.sort({ score: { $meta: 'textScore' }, createdAt: -1 } as never);
-  } else {
-    listQuery.sort(sort as never);
-  }
+  listQuery.sort(sort as never);
 
   const [items, total] = await Promise.all([listQuery, Product.countDocuments(filter)]);
 
