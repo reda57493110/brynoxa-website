@@ -91,9 +91,17 @@ export function OrderDetail() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div className="min-w-0">
-        <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
-          Back to orders
-        </Link>
+        <div className="flex items-center justify-between gap-2">
+          <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
+            Back to orders
+          </Link>
+          <Link
+            to={`/admin-print/slips?ids=${o._id}`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+          >
+            <SiteIcon name="package" size={14} /> Delivery slip
+          </Link>
+        </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <h1 className="min-w-0 break-all font-display text-lg font-semibold sm:text-2xl">
             #{o.orderNumber}

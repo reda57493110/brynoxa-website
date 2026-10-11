@@ -95,7 +95,9 @@ export const adminOrders = asyncHandler(async (req: AuthRequest, res: Response) 
   const limit = Number(req.query.limit) || 20;
   const status = req.query.status as string | undefined;
   const q = typeof req.query.q === 'string' ? req.query.q : undefined;
-  const result = await orderService.listAllOrders(page, limit, status, q);
+  const from = typeof req.query.from === 'string' ? req.query.from : undefined;
+  const to = typeof req.query.to === 'string' ? req.query.to : undefined;
+  const result = await orderService.listAllOrders(page, limit, status, q, { from, to });
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,

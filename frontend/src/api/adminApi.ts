@@ -91,7 +91,7 @@ export const adminApi = {
   },
 
   orders: {
-    list: (params?: { page?: number; limit?: number; status?: string; q?: string }) =>
+    list: (params?: { page?: number; limit?: number; status?: string; q?: string; from?: string; to?: string }) =>
       api.get<ApiResponse<Order[]>>('/admin/orders', { params }),
     get: (id: string) => api.get<ApiResponse<Order>>(`/admin/orders/${id}`),
     updateStatus: (

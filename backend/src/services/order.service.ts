@@ -627,13 +627,49 @@ export async function cancelUserOrder(userId: string, orderNumber: string) {
   );
 }
 
-export async function listAllOrders(page = 1, limit = 20, status?: string, q?: string) {
+/** UTC instant of 00:00 on `day` ("YYYY-MM-DD") in the store's timezone (Morocco). */
+function storeDayStart(day: string) {
+  const [y, m, d] = day.split('-').map(Number);
+  const guess = Date.UTC(y, m - 1, d);
+  // Offset of the store timezone at that moment (handles Morocco's Ramadan change)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Casablanca',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(guess));
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  const wall = Date.UTC(get('year'), get('month') - 1, get('day'), get('hour'), get('minute'));
+  return new Date(guess - (wall - guess));
+}
+
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export async function listAllOrders(
+  page = 1,
+  limit = 20,
+  status?: string,
+  q?: string,
+  range: { from?: string; to?: string } = {}
+) {
   const filter: Record<string, unknown> = {};
   if (status) filter.orderStatus = status;
   if (q?.trim()) {
     const rx = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-    filter.orderNumber = rx;
+    // Order number, or the customer's name / phone on the delivery address
+    filter.$or = [{ orderNumber: rx }, { 'shippingAddress.fullName': rx }, { 'shippingAddress.phone': rx }];
   }
+  // Placed between two calendar days (inclusive), Morocco time
+  const createdAt: Record<string, Date> = {};
+  if (range.from && DAY_RE.test(range.from)) createdAt.$gte = storeDayStart(range.from);
+  if (range.to && DAY_RE.test(range.to)) {
+    const next = new Date(storeDayStart(range.to).getTime() + 36 * 60 * 60 * 1000);
+    createdAt.$lt = storeDayStart(next.toISOString().slice(0, 10));
+  }
+  if (Object.keys(createdAt).length) filter.createdAt = createdAt;
   const [items, total] = await Promise.all([
     Order.find(filter)
       .sort({ createdAt: -1 })

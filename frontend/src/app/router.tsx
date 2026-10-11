@@ -62,6 +62,9 @@ const ServiceDetail = lazy(() =>
 )
 const Legal = lazy(() => import('@/pages/store/Legal').then((m) => ({ default: m.Legal })))
 
+const AdminDeliverySlips = lazy(() =>
+  import('@/pages/admin/DeliverySlips').then((m) => ({ default: m.DeliverySlips }))
+)
 const AdminAnalytics = lazy(() =>
   import('@/pages/admin/Analytics').then((m) => ({ default: m.Analytics }))
 )
@@ -223,6 +226,18 @@ export function AppRouter() {
         <Route path="verify-email" element={<S><VerifyEmail /></S>} />
         <Route path="reset-password" element={<S><ResetPassword /></S>} />
       </Route>
+
+      {/* Print view without the admin chrome */}
+      <Route
+        path="admin-print/slips"
+        element={
+          <AdminRoute>
+            <S>
+              <AdminDeliverySlips />
+            </S>
+          </AdminRoute>
+        }
+      />
 
       <Route
         path="admin"
