@@ -102,7 +102,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
   const locale = useLocaleStore((s) => s.locale)
   const add = useAddToCart(product)
   const image = primaryImage(product)
-  const src = sizedImageUrl(image, 960)
+  const src = sizedImageUrl(image, 1280)
   const photo = useImageLoaded(src)
   const contain = imageFit(image) === 'contain'
   const d = deal(product)
@@ -127,60 +127,58 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
           aria-hidden="true"
         />
 
-        <article className="relative overflow-hidden rounded-[1.5rem] bg-[#0b1116]/95 text-white backdrop-blur-xl">
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(ellipse_at_50%_0%,rgb(0_194_255/0.28),transparent_70%)]"
-            aria-hidden="true"
+        {/* The photo is the card: details sit on a fade at the bottom of the picture */}
+        <article
+          ref={photo.ref}
+          className={cn(
+            'relative isolate aspect-square overflow-hidden rounded-[1.5rem] text-white [@media(max-height:820px)]:aspect-[5/4]',
+            contain ? 'bg-white' : 'bg-[#0b1116]'
+          )}
+        >
+          {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-white/10" />}
+          <SafeImage
+            src={src}
+            srcSet={imageSrcSet(image, [640, 960, 1280, 1600])}
+            sizes="(min-width: 1280px) 34rem, 30rem"
+            alt=""
+            width={1280}
+            height={1280}
+            referrerPolicy="no-referrer"
+            loading="eager"
+            onLoad={photo.onLoad}
+            onError={photo.onError}
+            className={cn(
+              'absolute inset-0 -z-10 h-full w-full max-w-none transition duration-700 ease-out group-hover:scale-[1.05]',
+              // Packshots on white: keep the product clear of the details below
+              // mix-blend-multiply melts the photo's own off-white background into the card
+              contain ? 'object-contain px-8 pb-[42%] pt-12 mix-blend-multiply' : 'object-cover',
+              photo.loaded ? 'opacity-100' : 'opacity-0'
+            )}
           />
 
-          <Link to={href} className="relative block p-3 pb-0" tabIndex={-1} aria-hidden="true">
-            <div
-              ref={photo.ref}
-              className={cn(
-                'relative aspect-[4/3] overflow-hidden rounded-[1.1rem] [@media(max-height:820px)]:aspect-[16/9]',
-                contain ? 'bg-[radial-gradient(circle_at_50%_40%,#ffffff,#e9eef3)]' : 'bg-white/5'
-              )}
-            >
-              {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-white/10" />}
-              <SafeImage
-                src={src}
-                srcSet={imageSrcSet(image, [480, 640, 960, 1280])}
-                sizes="(min-width: 1280px) 34rem, 30rem"
-                alt=""
-                width={960}
-                height={768}
-                referrerPolicy="no-referrer"
-                loading="eager"
-                onLoad={photo.onLoad}
-                onError={photo.onError}
-                className={cn(
-                  'absolute inset-0 h-full w-full max-w-none transition duration-700 ease-out group-hover:scale-[1.06]',
-                  contain ? 'object-contain p-8 drop-shadow-[0_18px_20px_rgb(0_0_0/0.25)]' : 'object-cover',
-                  photo.loaded ? 'opacity-100' : 'opacity-0'
-                )}
-              />
-              <span className="absolute start-3 top-3 inline-flex h-7 items-center gap-1.5 rounded-full bg-black/55 px-3 text-[11px] font-semibold backdrop-blur-md">
-                <SiteIcon name="star" size={12} solid className="text-[var(--brand)]" />
-                {d ? t('home.spotlightDeal') : t('product.featuredPick')}
-              </span>
-            </div>
-          </Link>
+          {/* Whole picture opens the product; buttons below stay clickable */}
+          <Link to={href} className="absolute inset-0 z-0" aria-label={product.name} />
 
-          <div className="relative space-y-4 p-5 pt-4">
+          <span className="pointer-events-none absolute start-4 top-4 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-3 text-xs font-semibold backdrop-blur-md">
+            <SiteIcon name="star" size={13} solid className="text-[var(--brand)]" />
+            {d ? t('home.spotlightDeal') : t('product.featuredPick')}
+          </span>
+
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 space-y-3 bg-gradient-to-t from-[#0b1116] from-60% via-[#0b1116]/85 via-80% to-transparent p-5 pt-14">
             <div className="min-w-0">
               {brand ? <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand)]">{brand}</p> : null}
-              <Link to={href} className="mt-1 line-clamp-2 font-display text-xl font-semibold leading-snug hover:text-[var(--brand)] xl:text-2xl">
+              <p className="mt-1 line-clamp-2 font-display text-xl font-semibold leading-snug drop-shadow xl:text-2xl">
                 {product.name}
-                {product.variantLabel ? <span className="font-normal text-white/60"> · {product.variantLabel}</span> : null}
-              </Link>
+                {product.variantLabel ? <span className="font-normal text-white/65"> · {product.variantLabel}</span> : null}
+              </p>
               {specs.length ? (
-                <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                <ul className="mt-2 flex flex-wrap gap-1.5">
                   {specs.map((s) => (
                     <li
                       key={s.key}
-                      className="inline-flex max-w-full items-center gap-1.5 truncate rounded-lg border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-xs text-white/85"
+                      className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md border border-white/15 bg-white/[0.07] px-2 py-1 text-[11px] text-white/90"
                     >
-                      <SiteIcon name={s.icon} size={14} className="shrink-0 text-[var(--brand)]" />
+                      <SiteIcon name={s.icon} size={12} className="shrink-0 text-[var(--brand)]" />
                       <span className="truncate">{s.value}</span>
                     </li>
                   ))}
@@ -188,28 +186,28 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
               ) : null}
             </div>
 
-            <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-3">
+            <div className="flex items-end justify-between gap-3">
               <div className="leading-tight">
                 <p className="flex items-baseline gap-2">
                   <span className="font-display text-[2rem] font-bold tracking-tight xl:text-[2.25rem]">{formatCurrency(product.price)}</span>
-                  {d ? <span className="text-base text-white/45 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
+                  {d ? <span className="text-base text-white/50 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
                 </p>
                 {d ? (
-                  <p className="mt-1 inline-flex rounded-md bg-[var(--brand)]/15 px-2 py-0.5 text-xs font-semibold text-[#7adfff]">
+                  <p className="mt-1 inline-flex rounded-md bg-[var(--brand)]/20 px-2 py-0.5 text-xs font-semibold text-[#7adfff]">
                     {t('home.spotlightSave', { amount: formatCurrency(d.saved) })}
                   </p>
                 ) : null}
               </div>
               <div className="space-y-1.5 text-end text-xs">
                 <StockLine product={product} className="justify-end" />
-                <p className="flex items-center justify-end gap-1 text-white/60">
+                <p className="flex items-center justify-end gap-1 text-white/65">
                   <SiteIcon name="banknote" size={12} />
                   {t('deposit.payOnDelivery')}
                 </p>
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="pointer-events-auto flex gap-2">
               <button
                 type="button"
                 onClick={add}
@@ -226,7 +224,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
                 to={href}
                 aria-label={t('product.viewProduct')}
                 title={t('product.viewProduct')}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/20 text-white transition hover:border-[var(--brand)] hover:bg-white/5 hover:text-[var(--brand)]"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur-sm transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
               >
                 <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
               </Link>
@@ -310,9 +308,6 @@ export function HomeSpotlightSkeleton({ strip }: { strip?: boolean }) {
   return strip ? (
     <div className="h-[6.25rem] animate-pulse rounded-2xl border border-white/10 bg-white/10" aria-hidden="true" />
   ) : (
-    <div className="overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/10 p-3" aria-hidden="true">
-      <div className="aspect-[4/3] animate-pulse rounded-[1.1rem] bg-white/10" />
-      <div className="h-60 animate-pulse" />
-    </div>
+    <div className="aspect-square animate-pulse rounded-[1.6rem] border border-white/10 bg-white/10 [@media(max-height:820px)]:aspect-[5/4]" aria-hidden="true" />
   )
 }
