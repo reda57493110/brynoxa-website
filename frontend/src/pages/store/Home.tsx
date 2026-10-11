@@ -1,4 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useHeroProduct } from '@/hooks/useHeroProduct'
+import { HomeSpotlightCard, HomeSpotlightSkeleton, HomeSpotlightStrip } from '@/components/home/HomeSpotlight'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
 import { productsApi } from '@/api/productsApi'
@@ -59,11 +61,21 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
         transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
       }
 
+const TRUST = [
+  { key: 'home.proofCod', icon: 'banknote' },
+  { key: 'home.proofDelivery', icon: 'truck' },
+  { key: 'home.proofWarranty', icon: 'shield' },
+  { key: 'home.proofReturns', icon: 'refresh' },
+] as const
+
 export function Home() {
   const reduceMotion = useReducedMotion()
   const navigate = useNavigate()
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
+
+  // Admin → Settings → Page header → Home page (falls back to the first featured product in stock)
+  const spotlight = useHeroProduct('home')
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
@@ -115,7 +127,8 @@ export function Home() {
           <div className="absolute inset-0 dark:hidden bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0%,rgb(0_0_0/0.12)_36%,transparent_58%)]" />
         </div>
 
-        <Container className="relative z-10 flex flex-1 flex-col justify-center pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10">
+        <Container className="relative z-10 grid flex-1 content-center items-center gap-8 pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+          <div className="min-w-0">
           <motion.p
             {...fadeUp(reduceMotion, 0)}
             className="kicker text-[var(--brand)] sm:text-sm"
@@ -157,6 +170,34 @@ export function Home() {
               {t('common.browseCategories')}
             </a>
           </motion.div>
+
+          {/* Why buy here, at a glance */}
+          <motion.ul
+            {...fadeUp(reduceMotion, 0.3)}
+            className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] text-white/90 [text-shadow:0_1px_3px_rgb(0_0_0/0.65)] sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-5 sm:text-sm"
+          >
+            {TRUST.map((item) => (
+              <li key={item.key} className="flex items-center gap-1.5">
+                <SiteIcon name={item.icon} size={15} className="shrink-0 text-[var(--brand)]" />
+                {t(item.key)}
+              </li>
+            ))}
+          </motion.ul>
+
+          {/* Phones / tablets: slim product strip */}
+          {spotlight.product || spotlight.pending ? (
+            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-5 max-w-md lg:hidden">
+              {spotlight.product ? <HomeSpotlightStrip product={spotlight.product} /> : <HomeSpotlightSkeleton strip />}
+            </motion.div>
+          ) : null}
+          </div>
+
+          {/* Desktop: product card beside the headline */}
+          {spotlight.product || spotlight.pending ? (
+            <motion.div {...fadeUp(reduceMotion, 0.2)} className="hidden lg:block">
+              {spotlight.product ? <HomeSpotlightCard product={spotlight.product} /> : <HomeSpotlightSkeleton />}
+            </motion.div>
+          ) : null}
         </Container>
       </section>
 

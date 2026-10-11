@@ -262,6 +262,7 @@ export const settingsSchema = z.object({
   notifyStaffLoginEmail: z.boolean().optional(),
   pageHeroProducts: z
     .object({
+      home: z.string().max(24).optional(),
       shop: z.string().max(24).optional(),
       services: z.string().max(24).optional(),
       contact: z.string().max(24).optional(),

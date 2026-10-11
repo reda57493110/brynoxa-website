@@ -372,7 +372,7 @@ export interface StoreSettings {
   pageHeroProducts?: Partial<Record<HeroPage, string>>
 }
 
-export type HeroPage = 'shop' | 'services' | 'contact'
+export type HeroPage = 'home' | 'shop' | 'services' | 'contact'
 
 /** Automatic emails the admin can switch on/off (mirrors backend EMAIL_EVENTS). */
 export type EmailEvent =

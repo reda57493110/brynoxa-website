@@ -51,7 +51,7 @@ export const DEFAULT_SEGMENT_SETTINGS: ICustomerSegmentSettings = {
   saved: [],
 };
 
-export const HERO_PAGES = ['shop', 'services', 'contact'] as const;
+export const HERO_PAGES = ['home', 'shop', 'services', 'contact'] as const;
 export type HeroPage = (typeof HERO_PAGES)[number];
 
 export interface ISettings extends Document {
@@ -147,6 +147,7 @@ const settingsSchema = new Schema<ISettings>(
     },
     notifyStaffLoginEmail: { type: Boolean, default: true },
     pageHeroProducts: {
+      home: { type: String, default: '' },
       shop: { type: String, default: '' },
       services: { type: String, default: '' },
       contact: { type: String, default: '' },

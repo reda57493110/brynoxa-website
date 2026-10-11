@@ -15,6 +15,7 @@ import { optimizedImageUrl } from '@/lib/image'
 import type { HeroPage, Product } from '@/types'
 
 const PAGES: { page: HeroPage; label: string; path: string }[] = [
+  { page: 'home', label: 'Home page', path: '/' },
   { page: 'shop', label: 'Shop page', path: '/shop' },
 ]
 

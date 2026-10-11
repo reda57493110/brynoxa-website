@@ -36,11 +36,13 @@ export function useHeroProduct(page?: HeroPage): {
     staleTime: 5 * 60_000,
   })
 
+  // A chosen product that is gone or sold out is replaced by the automatic pick
+  const chosenUsable = Boolean(chosen.data && chosen.data.stock > 0)
   const needAuto =
     Boolean(page) &&
     settings.isSuccess &&
     !hidden &&
-    (!id || (chosen.isSuccess && !chosen.data))
+    (!id || (chosen.isSuccess && !chosenUsable))
   const auto = useQuery({
     queryKey: ['hero-auto-products'],
     queryFn: async () => {
@@ -54,7 +56,7 @@ export function useHeroProduct(page?: HeroPage): {
 
   if (!page) return { product: null, pending: false, pinned: false, hidden: false }
 
-  const pinnedProduct = (id && chosen.data) || null
+  const pinnedProduct = (id && chosenUsable && chosen.data) || null
   return {
     product: pinnedProduct || (needAuto ? (auto.data?.[0] ?? null) : null),
     pending:
