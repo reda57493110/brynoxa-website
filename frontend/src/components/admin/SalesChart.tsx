@@ -56,12 +56,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
             <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-[var(--border)]" />
             <div className="absolute inset-x-0 bottom-0 border-t border-[var(--border)]" />
             {avg > 0 ? (
-              <div className="absolute inset-x-0 border-t border-dashed border-[var(--warning)]/70" style={{ bottom: `${(avg / top) * 100}%` }}>
-                <span className="absolute -top-4 end-0 rounded bg-[var(--bg-elevated)] px-1 text-[10px] text-[var(--warning)]">
-                  avg {metric === 'revenue' ? compact(avg) : avg.toFixed(avg < 10 ? 1 : 0)}
-                  {weekly ? '/wk' : '/day'}
-                </span>
-              </div>
+              <div className="absolute inset-x-0 border-t border-dashed border-[var(--warning)]/70" style={{ bottom: `${(avg / top) * 100}%` }} />
             ) : null}
           </div>
 
@@ -161,7 +156,16 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
           ) : null}
         </div>
       </div>
-      {weekly ? <p className="mt-1 text-end text-[10px] text-[var(--fg-muted)]">One bar per week</p> : null}
+      <div className="mt-1.5 flex flex-wrap items-center justify-end gap-x-3 gap-y-0.5 text-[10px] text-[var(--fg-muted)]">
+        {avg > 0 ? (
+          <span className="inline-flex items-center gap-1">
+            <span className="w-3 border-t border-dashed border-[var(--warning)]" aria-hidden />
+            Average {metric === 'revenue' ? `${compact(avg)} DH` : avg.toFixed(avg < 10 ? 1 : 0)}
+            {weekly ? ' / week' : ' / day'}
+          </span>
+        ) : null}
+        {weekly ? <span>One bar per week</span> : null}
+      </div>
     </div>
   )
 }

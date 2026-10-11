@@ -35,6 +35,12 @@ export function AdminLayout() {
   const home = staffHomePath(role)
   const required = requiredPermissionForPath(location.pathname)
 
+  // Denser admin on phones: a smaller root size scales every rem-based size (see index.css)
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('admin-compact')
+    return () => document.documentElement.classList.remove('admin-compact')
+  }, [])
+
   useLayoutEffect(() => {
     const main = mainRef.current
     return () => {

@@ -24,3 +24,8 @@ export function formatDateTime(value: string | Date) {
     minute: '2-digit',
   }).format(new Date(value))
 }
+
+/** Whole dirhams for summary figures (KPIs, averages): "1,375 DH" rather than "1,375.41 DH". */
+export function formatCurrencyRounded(amount: number) {
+  return formatCurrency(Math.round(amount))
+}

@@ -10,9 +10,9 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Panel } from '@/components/admin/Panel'
 import { SalesChart, type SalesMetric } from '@/components/admin/SalesChart'
-import { BarList, Change, Kpi, SalesStats } from '@/components/admin/analytics/Kit'
+import { BarList, Change, Kpi, SalesStats, kpiGridClass } from '@/components/admin/analytics/Kit'
 import { dayLabel } from '@/lib/salesBuckets'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatCurrencyRounded } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { AnalyticsReport, SalesRange } from '@/types'
@@ -56,7 +56,7 @@ function downloadCsv(report: AnalyticsReport) {
 function Loading() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+      <div className={kpiGridClass}>
         {Array.from({ length: 8 }, (_, i) => (
           <Skeleton key={i} className="h-[6.5rem] rounded-2xl" />
         ))}
@@ -130,8 +130,8 @@ export function Analytics() {
       ) : (
         <div className={cn('space-y-3 sm:space-y-6', report.isFetching && 'opacity-60 transition-opacity')}>
           {/* Money */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-            <Kpi label="Revenue" value={formatCurrency(t.revenue)} hint={<Change now={t.revenue} before={p.revenue} days={range} money />} icon="banknote" />
+          <div className={kpiGridClass}>
+            <Kpi label="Revenue" value={formatCurrencyRounded(t.revenue)} hint={<Change now={t.revenue} before={p.revenue} days={range} money />} icon="banknote" />
             <Kpi
               label="Delivered sales"
               value={t.completedOrders}
@@ -140,7 +140,7 @@ export function Analytics() {
             />
             <Kpi
               label="Average sale"
-              value={t.avgOrderValue !== null ? formatCurrency(t.avgOrderValue) : '—'}
+              value={t.avgOrderValue !== null ? formatCurrencyRounded(t.avgOrderValue) : '—'}
               hint={
                 t.avgOrderValue !== null ? (
                   <Change now={t.avgOrderValue} before={p.avgOrderValue} days={range} money />
@@ -153,7 +153,7 @@ export function Analytics() {
             {r.profitVisible ? (
               <Kpi
                 label="Gross profit"
-                value={t.profit !== null ? formatCurrency(t.profit) : '—'}
+                value={t.profit !== null ? formatCurrencyRounded(t.profit) : '—'}
                 hint={
                   t.profit !== null ? (
                     <span className="text-[var(--fg-muted)]">{t.revenue > 0 ? `${pct(t.profit, t.revenue)}% margin` : 'No revenue yet'}</span>
@@ -166,12 +166,12 @@ export function Analytics() {
                 icon="layers"
               />
             ) : (
-              <Kpi label="Orders value" value={formatCurrency(t.orderValue)} hint={<span className="text-[var(--fg-muted)]">All orders placed</span>} icon="cart" />
+              <Kpi label="Orders value" value={formatCurrencyRounded(t.orderValue)} hint={<span className="text-[var(--fg-muted)]">All orders placed</span>} icon="cart" />
             )}
           </div>
 
           {/* Orders and customers */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+          <div className={kpiGridClass}>
             <Kpi label="Orders placed" value={t.orders} hint={<Change now={t.orders} before={p.orders} days={range} />} icon="cart" to="/admin/orders" />
             <Kpi
               label="Cancellation rate"
@@ -182,7 +182,7 @@ export function Analytics() {
             />
             <Kpi
               label="Refunds"
-              value={formatCurrency(r.refunds.amount)}
+              value={formatCurrencyRounded(r.refunds.amount)}
               hint={<span className="text-[var(--fg-muted)]">{r.refunds.orders} order{r.refunds.orders === 1 ? '' : 's'}</span>}
               icon="refresh"
               tone={r.refunds.amount > 0 ? 'warning' : undefined}
@@ -197,7 +197,7 @@ export function Analytics() {
           </div>
 
           {/* Trend */}
-          <Panel
+          <Panel compact
             title="Sales trend"
             description={metric === 'revenue' ? `${formatCurrency(t.revenue)} from ${t.completedOrders} delivered orders` : `${t.orders} orders placed`}
             actions={
@@ -226,7 +226,7 @@ export function Analytics() {
 
           {/* Products */}
           <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2">
-            <Panel title="Sales by category" description="Delivered items, before coupons and refunds.">
+            <Panel compact title="Sales by category" description="Delivered items, before coupons and refunds.">
               <BarList
                 rows={r.categories.map((c) => ({
                   key: c.categoryId ?? c.name,
@@ -239,7 +239,7 @@ export function Analytics() {
               />
             </Panel>
 
-            <Panel title="Best sellers" description="Top 10 by units delivered.">
+            <Panel compact title="Best sellers" description="Top 10 by units delivered.">
               {r.topProducts.length ? (
                 <ol className="-my-1 divide-y divide-[var(--border)]">
                   {r.topProducts.map((tp, i) => {
@@ -281,7 +281,7 @@ export function Analytics() {
 
           {/* Orders mix */}
           <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-3">
-            <Panel title="Order status" description={`${placed} order${placed === 1 ? '' : 's'} placed in the period`}>
+            <Panel compact title="Order status" description={`${placed} order${placed === 1 ? '' : 's'} placed in the period`}>
               {placed ? (
                 <>
                   <div className="flex h-2.5 overflow-hidden rounded-full bg-[var(--bg-muted)]" aria-hidden>
@@ -307,7 +307,7 @@ export function Analytics() {
               )}
             </Panel>
 
-            <Panel title="By condition" description="Delivered items.">
+            <Panel compact title="By condition" description="Delivered items.">
               <BarList
                 rows={r.conditions
                   .slice()
@@ -322,7 +322,7 @@ export function Analytics() {
               />
             </Panel>
 
-            <Panel title="Retail vs wholesale" description="Delivered sales, net of coupons and refunds.">
+            <Panel compact title="Retail vs wholesale" description="Delivered sales, net of coupons and refunds.">
               <BarList
                 rows={r.channels
                   .slice()
@@ -340,7 +340,7 @@ export function Analytics() {
 
           {/* Where and when */}
           <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2">
-            <Panel title="Top cities" description="Orders placed (not cancelled) by delivery city.">
+            <Panel compact title="Top cities" description="Orders placed (not cancelled) by delivery city.">
               <BarList
                 rows={r.cities.map((c) => ({
                   key: c.city,
@@ -352,7 +352,7 @@ export function Analytics() {
               />
             </Panel>
 
-            <Panel
+            <Panel compact
               title="Orders by weekday"
               description={busiest && busiest.orders > 0 ? `Busiest day: ${busiest.day}` : 'Orders placed (not cancelled), Morocco time.'}
             >
@@ -372,7 +372,7 @@ export function Analytics() {
           </div>
 
           {/* Customers */}
-          <Panel title="Customers" description="People who placed an order in the period.">
+          <Panel compact title="Customers" description="People who placed an order in the period.">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               {[
                 { label: 'Buyers', value: r.customers.buyers },

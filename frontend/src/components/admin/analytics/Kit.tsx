@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import type { SalesMetric } from '@/components/admin/SalesChart'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrencyRounded } from '@/lib/format'
 import { dayLabel } from '@/lib/salesBuckets'
 import { cn } from '@/lib/cn'
 import type { SalesAnalytics } from '@/types'
@@ -33,7 +33,7 @@ export function Change({ now, before, days, money }: { now: number | null; befor
       {up ? '▲' : '▼'} {Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%{' '}
       {/* Phones: just the change; the comparison base shows from sm up */}
       <span className="text-[var(--fg-muted)] max-sm:hidden">
-        vs {money ? formatCurrency(before) : before} prev. {days} days
+        vs {money ? formatCurrencyRounded(before) : before} prev. {days} days
       </span>
     </span>
   )
@@ -71,7 +71,7 @@ export function Kpi({
       {hint ? <div className="mt-0.5 truncate text-[10px] sm:mt-1 sm:text-xs">{hint}</div> : null}
     </>
   )
-  const cls = cn(card, 'block rounded-xl p-2.5 sm:rounded-2xl sm:p-4')
+  const cls = cn(card, 'block rounded-xl p-2.5 max-sm:rounded-none max-sm:border-0 sm:rounded-2xl sm:p-4')
   return to ? (
     <Link to={to} className={cn(cls, 'transition hover:border-[var(--brand)]')}>
       {body}
@@ -90,7 +90,7 @@ export function SalesStats({ analytics, metric }: { analytics: SalesAnalytics; m
   const total = metric === 'revenue' ? t.revenue : t.orders
   const perDay = total / (series.length || 1)
   const deliveryRate = t.orders > 0 ? Math.round((t.completedOrders / t.orders) * 100) : null
-  const money = (n: number) => formatCurrency(Math.round(n * 100) / 100)
+  const money = (n: number) => formatCurrencyRounded(n)
 
   const stats: { label: string; value: string; hint?: string }[] = [
     {
@@ -153,7 +153,7 @@ export function BarList({
   if (!rows.length) return <p className="text-sm text-[var(--fg-muted)]">{empty}</p>
   const max = Math.max(...rows.map((r) => r.value), 1)
   return (
-    <ul className="space-y-2.5">
+    <ul className="space-y-2 sm:space-y-2.5">
       {rows.map((r) => {
         const body = (
           <>
@@ -161,8 +161,8 @@ export function BarList({
               <span className="min-w-0 truncate">{r.label}</span>
               <span className="shrink-0 font-medium tabular-nums">{r.display}</span>
             </div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+            <div className="mt-0.5 flex items-center gap-2 sm:mt-1">
+              <span className="h-1 flex-1 sm:h-1.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
                 <span className="block h-full rounded-full bg-[var(--brand)]" style={{ width: `${Math.max(2, (r.value / max) * 100)}%` }} />
               </span>
               {r.sub ? <span className="w-20 shrink-0 text-end text-[10px] tabular-nums text-[var(--fg-muted)]">{r.sub}</span> : null}
@@ -184,3 +184,7 @@ export function BarList({
     </ul>
   )
 }
+
+/** Grid for KPI tiles: separate cards from tablet up, one joined block with hairlines on phones. */
+export const kpiGridClass =
+  'grid min-w-0 grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:gap-3 sm:overflow-visible sm:rounded-none sm:border-0 sm:bg-transparent lg:grid-cols-4'

@@ -97,12 +97,13 @@ export function Coupons() {
 
       <Panel title="New coupon">
         <form
-          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid grid-cols-2 gap-3 lg:grid-cols-3"
           onSubmit={(e) => {
             e.preventDefault()
             if (valid) create.mutate()
           }}
         >
+          <div className="col-span-2 lg:col-span-1">
           <Input
             label="Code"
             value={form.code}
@@ -112,13 +113,14 @@ export function Coupons() {
             error={errors.code}
             required
           />
+          </div>
           <Select
-            label="Discount type"
+            label="Type"
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value as 'percent' | 'fixed' })}
             options={[
-              { value: 'percent', label: 'Percent of the order' },
-              { value: 'fixed', label: 'Fixed amount (DH)' },
+              { value: 'percent', label: 'Percent' },
+              { value: 'fixed', label: 'Fixed (DH)' },
             ]}
           />
           <Input
@@ -132,7 +134,7 @@ export function Coupons() {
             error={errors.value}
           />
           <Input
-            label="Minimum order (DH)"
+            label="Min order (DH)"
             type="number"
             min={0}
             step="any"
@@ -141,7 +143,7 @@ export function Coupons() {
             error={errors.minOrder}
           />
           <Input
-            label="Maximum uses (0 = unlimited)"
+            label="Max uses (0 = ∞)"
             type="number"
             min={0}
             step={1}
@@ -149,13 +151,15 @@ export function Coupons() {
             onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
             error={errors.maxUses}
           />
+          <div className="col-span-2 lg:col-span-1">
           <Input
             label="Expires (optional)"
             type="datetime-local"
             value={form.expiresAt}
             onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
           />
-          <div className="sm:col-span-2 lg:col-span-3">
+          </div>
+          <div className="col-span-2 lg:col-span-3">
             <Button type="submit" loading={create.isPending} disabled={!valid}>
               <SiteIcon name="plus" size={14} /> Create coupon
             </Button>

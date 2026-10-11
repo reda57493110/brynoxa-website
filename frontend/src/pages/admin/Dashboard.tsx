@@ -8,11 +8,11 @@ import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SalesChart, type SalesMetric } from '@/components/admin/SalesChart'
-import { Change, Kpi, SalesStats, SectionTitle, analyticsCard as card } from '@/components/admin/analytics/Kit'
+import { Change, Kpi, SalesStats, SectionTitle, analyticsCard as card, kpiGridClass } from '@/components/admin/analytics/Kit'
 import { dayLabel } from '@/lib/salesBuckets'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency, formatCurrencyRounded, formatDate } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { hasPermission, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
@@ -88,14 +88,14 @@ export function Dashboard() {
       {sales.isError && !a ? (
         <QueryErrorState onRetry={() => sales.refetch()} />
       ) : (
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+        <div className={kpiGridClass}>
           {!t || !p ? (
             Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[6.5rem] rounded-2xl" />)
           ) : (
             <>
               <Kpi
                 label={`Revenue · ${range} days`}
-                value={formatCurrency(t.revenue)}
+                value={formatCurrencyRounded(t.revenue)}
                 hint={<Change now={t.revenue} before={p.revenue} days={range} money />}
                 icon="banknote"
                 to="/admin/customers"
@@ -105,7 +105,7 @@ export function Dashboard() {
                 value={t.orders}
                 hint={
                   <span className="text-[var(--fg-muted)]">
-                    {t.completedOrders} delivered · {formatCurrency(t.orderValue)} placed
+                    {t.completedOrders} delivered · {formatCurrencyRounded(t.orderValue)} placed
                   </span>
                 }
                 icon="package"
@@ -113,7 +113,7 @@ export function Dashboard() {
               />
               <Kpi
                 label="Average sale"
-                value={t.avgOrderValue !== null ? formatCurrency(t.avgOrderValue) : '—'}
+                value={t.avgOrderValue !== null ? formatCurrencyRounded(t.avgOrderValue) : '—'}
                 hint={
                   t.avgOrderValue !== null ? (
                     <Change now={t.avgOrderValue} before={p.avgOrderValue} days={range} money />
@@ -126,7 +126,7 @@ export function Dashboard() {
               {a?.profitVisible ? (
                 <Kpi
                   label={`Gross profit · ${range} days`}
-                  value={t.profit !== null ? formatCurrency(t.profit) : '—'}
+                  value={t.profit !== null ? formatCurrencyRounded(t.profit) : '—'}
                   hint={
                     t.profit !== null ? (
                       <Change now={t.profit} before={p.profit} days={range} money />
@@ -154,7 +154,7 @@ export function Dashboard() {
       )}
 
       {/* Store status */}
-      <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+      <div className={kpiGridClass}>
         {!s ? (
           stats.isError ? (
             <div className="col-span-full">
@@ -211,7 +211,7 @@ export function Dashboard() {
               {t && p ? (
                 <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                   <p className="font-display text-xl font-semibold tabular-nums sm:text-2xl">
-                    {metric === 'revenue' ? formatCurrency(t.revenue) : `${t.orders} order${t.orders === 1 ? '' : 's'}`}
+                    {metric === 'revenue' ? formatCurrencyRounded(t.revenue) : `${t.orders} order${t.orders === 1 ? '' : 's'}`}
                   </p>
                   <span className="text-xs">
                     {metric === 'revenue' ? (

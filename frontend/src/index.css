@@ -279,7 +279,25 @@ html[lang="ar"] {
     animation: text-reveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  /*
+ * Admin on phones: 14px root instead of 16px, so text, padding and card heights (all rem-based)
+ * shrink evenly by 12.5%. Form fields stay at 16px so iOS Safari does not zoom in on focus.
+ */
+@media (max-width: 639px) {
+  html.admin-compact {
+    font-size: 14px;
+  }
+
+  html.admin-compact body {
+    font-size: 1rem;
+  }
+
+  html.admin-compact :is(input:not([type='checkbox']):not([type='radio']), select, textarea) {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
     .text-reveal {
       animation: none;
     }
