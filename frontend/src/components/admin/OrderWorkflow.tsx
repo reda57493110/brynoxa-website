@@ -12,6 +12,9 @@ import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import {
   DELIVERY_ISSUES,
+  GROUP_DOT,
+  ORDER_GROUPS,
+  statusesInGroup,
   ORDER_TRANSITIONS,
   RETURNABLE_STATUSES,
   TRANSITION_LABEL,
@@ -23,6 +26,78 @@ import { toast } from '@/store/toastStore'
 import type { Order, OrderContactAttempt, OrderStatus } from '@/types'
 
 const DANGER: OrderStatus[] = ['cancelled', 'delivery_failed']
+
+/** When a status becomes available (shown on the greyed-out ones). */
+const WHEN: Record<string, string> = {
+  pending: 'New orders start here',
+  no_answer: 'From Pending',
+  confirmed: 'From Pending / No answer',
+  shipped: 'After Confirmed',
+  delivery_failed: 'After Shipped',
+  rescheduled: 'After Shipped',
+  delivered: 'After Shipped',
+  return_requested: 'After Delivered',
+  return_in_transit: 'After Shipped or Delivered',
+  partially_returned: 'Register returned items',
+  returned: 'Register returned items',
+  cancelled: 'Before shipping',
+}
+
+/**
+ * Every status of the workflow, grouped: the current one highlighted, the ones reachable now
+ * clickable, the rest greyed out with when they become available.
+ */
+function StatusMap({
+  current,
+  next,
+  onPick,
+  blocked,
+}: {
+  current: OrderStatus
+  next: OrderStatus[]
+  onPick: (s: OrderStatus) => void
+  blocked: (s: OrderStatus) => string
+}) {
+  return (
+    <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-3 sm:grid-cols-2 xl:grid-cols-5">
+      {ORDER_GROUPS.map((g) => (
+        <div key={g.id} className="min-w-0">
+          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+            <span className={cn('h-2 w-2 rounded-full', GROUP_DOT[g.id])} /> {g.label}
+          </p>
+          <ul className="space-y-1">
+            {statusesInGroup(g.id).map((s) => {
+              const isCurrent = s === current
+              const reachable = !isCurrent && next.includes(s) && !blocked(s)
+              const viaReturns = s === 'returned' || s === 'partially_returned'
+              return (
+                <li key={s}>
+                  <button
+                    type="button"
+                    disabled={!reachable}
+                    onClick={() => onPick(s)}
+                    title={isCurrent ? 'Current status' : reachable ? `Move to ${orderStatusLabel(s)}` : blocked(s) || WHEN[s]}
+                    className={cn(
+                      'flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-start text-xs',
+                      isCurrent && 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] font-semibold',
+                      reachable && 'border-[var(--border)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
+                      !isCurrent && !reachable && 'cursor-not-allowed border-dashed border-[var(--border)] text-[var(--fg-muted)] opacity-70'
+                    )}
+                  >
+                    <span className="truncate">{orderStatusLabel(s)}</span>
+                    <span className="shrink-0 text-[10px] font-normal">
+                      {isCurrent ? 'Now' : reachable ? 'Available' : viaReturns ? 'Via returns' : blocked(s) ? 'Deposit first' : WHEN[s]}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function personName(by: unknown) {
   return by && typeof by === 'object' && 'name' in by ? String((by as { name: string }).name) : ''
@@ -96,7 +171,7 @@ export function OrderStatusActions({ order }: { order: Order }) {
   return (
     <Panel
       title="Status"
-      description="Only the next valid steps are offered. Stock and payment follow automatically."
+      description="Buttons = what you can do now. The map below shows every status and when it unlocks. Stock and payment follow automatically."
       compact
       actions={<Badge variant={orderStatusVariant(current)}>{orderStatusLabel(current)}</Badge>}
     >
@@ -130,6 +205,8 @@ export function OrderStatusActions({ order }: { order: Order }) {
       {returnable && current !== 'return_in_transit' ? (
         <p className="mt-2 text-xs text-[var(--fg-muted)]">Parcel back in the shop? Register it under Returned items — the status updates itself.</p>
       ) : null}
+      <StatusMap current={current} next={next} blocked={blocked} onPick={(s) => open(s)} />
+
       {awaitingDeposit && next.includes('confirmed') ? (
         <p className="mt-2 text-xs text-[var(--warning)]">Confirming needs the deposit marked as received.</p>
       ) : null}
