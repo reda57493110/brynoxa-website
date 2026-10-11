@@ -88,7 +88,7 @@ export function Dashboard() {
       {sales.isError && !a ? (
         <QueryErrorState onRetry={() => sales.refetch()} />
       ) : (
-        <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {!t || !p ? (
             Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-[6.5rem] rounded-2xl" />)
           ) : (
@@ -154,7 +154,7 @@ export function Dashboard() {
       )}
 
       {/* Store status */}
-      <div className="grid min-w-0 grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         {!s ? (
           stats.isError ? (
             <div className="col-span-full">
@@ -202,7 +202,7 @@ export function Dashboard() {
 
       {/* Sales chart + order pipeline */}
       <div className="grid min-w-0 gap-4 lg:grid-cols-3">
-        <section className={cn(card, 'p-3 sm:p-5 lg:col-span-2')}>
+        <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5 lg:col-span-2')}>
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
               <h2 className="text-xs font-medium text-[var(--fg-muted)]">
@@ -260,7 +260,7 @@ export function Dashboard() {
           </p>
         </section>
 
-        <section className={cn(card, 'p-3 sm:p-5')}>
+        <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5')}>
           <SectionTitle title="Order pipeline" link={{ to: '/admin/orders', label: 'Orders' }} />
           <ul className="mt-3 space-y-1">
             {ORDER_STATUSES.map((status) => (
@@ -280,12 +280,35 @@ export function Dashboard() {
 
       {/* Recent orders + best sellers */}
       <div className="grid min-w-0 gap-4 lg:grid-cols-3">
-        <section className={cn(card, 'p-3 sm:p-5 lg:col-span-2')}>
+        <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5 lg:col-span-2')}>
           <SectionTitle title="Recent orders" link={{ to: '/admin/orders', label: 'View all' }} />
           {!s ? (
             <Skeleton className="mt-3 h-40 rounded-xl" />
           ) : s.recentOrders.length ? (
-            <div className="mt-3 overflow-x-auto">
+            <div className="mt-3">
+            {/* Phones: one compact row per order */}
+            <ul className="-my-1 divide-y divide-[var(--border)] sm:hidden">
+              {s.recentOrders.map((o) => {
+                const user = o.user as User | undefined
+                return (
+                  <li key={o._id}>
+                    <Link to={`/admin/orders/${o._id}`} className="flex min-w-0 items-center gap-2 py-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">#{o.orderNumber}</p>
+                        <p className="truncate text-[11px] text-[var(--fg-muted)]">
+                          {user?.name || o.shippingAddress?.fullName || '—'} · {formatDate(o.createdAt)}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1">
+                        <span className="text-sm font-medium tabular-nums">{formatCurrency(o.pricing.total)}</span>
+                        <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+            <div className="hidden overflow-x-auto sm:block">
               <table className="w-full min-w-[34rem] text-sm">
                 <thead className="text-left text-xs text-[var(--fg-muted)]">
                   <tr>
@@ -322,12 +345,13 @@ export function Dashboard() {
                 </tbody>
               </table>
             </div>
+            </div>
           ) : (
             <p className="mt-3 text-sm text-[var(--fg-muted)]">No orders yet.</p>
           )}
         </section>
 
-        <section className={cn(card, 'p-3 sm:p-5')}>
+        <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5')}>
           <SectionTitle title={`Best sellers · ${range} days`} />
           {!a ? (
             <Skeleton className="mt-3 h-40 rounded-xl" />
@@ -371,7 +395,7 @@ export function Dashboard() {
       </div>
 
       {/* Inventory insights */}
-      <section className={cn(card, 'p-3 sm:p-5')}>
+      <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5')}>
         <SectionTitle title="Stock to watch" link={{ to: '/admin/inventory', label: 'Manage inventory' }} />
         {!s ? (
           <Skeleton className="mt-3 h-24 rounded-xl" />

@@ -56,7 +56,7 @@ function downloadCsv(report: AnalyticsReport) {
 function Loading() {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         {Array.from({ length: 8 }, (_, i) => (
           <Skeleton key={i} className="h-[6.5rem] rounded-2xl" />
         ))}
@@ -128,9 +128,9 @@ export function Analytics() {
       ) : !r || !t || !p ? (
         <Loading />
       ) : (
-        <div className={cn('space-y-4 sm:space-y-6', report.isFetching && 'opacity-60 transition-opacity')}>
+        <div className={cn('space-y-3 sm:space-y-6', report.isFetching && 'opacity-60 transition-opacity')}>
           {/* Money */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
             <Kpi label="Revenue" value={formatCurrency(t.revenue)} hint={<Change now={t.revenue} before={p.revenue} days={range} money />} icon="banknote" />
             <Kpi
               label="Delivered sales"
@@ -171,7 +171,7 @@ export function Analytics() {
           </div>
 
           {/* Orders and customers */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
             <Kpi label="Orders placed" value={t.orders} hint={<Change now={t.orders} before={p.orders} days={range} />} icon="cart" to="/admin/orders" />
             <Kpi
               label="Cancellation rate"
@@ -225,7 +225,7 @@ export function Analytics() {
           </Panel>
 
           {/* Products */}
-          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2">
             <Panel title="Sales by category" description="Delivered items, before coupons and refunds.">
               <BarList
                 rows={r.categories.map((c) => ({
@@ -249,9 +249,12 @@ export function Analytics() {
                         <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
                           {tp.image ? <SafeImage src={optimizedImageUrl(tp.image, 96)} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" /> : null}
                         </div>
-                        <span className="min-w-0 flex-1 truncate text-sm">{tp.name}</span>
-                        <span className="w-14 shrink-0 text-end text-xs tabular-nums text-[var(--fg-muted)]">{tp.units} sold</span>
-                        <span className="w-24 shrink-0 text-end text-sm font-medium tabular-nums">{formatCurrency(tp.revenue)}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm">{tp.name}</span>
+                          <span className="block text-[11px] text-[var(--fg-muted)] sm:hidden">{tp.units} sold</span>
+                        </span>
+                        <span className="hidden w-14 shrink-0 text-end text-xs tabular-nums text-[var(--fg-muted)] sm:block">{tp.units} sold</span>
+                        <span className="shrink-0 text-end text-sm font-medium tabular-nums sm:w-24">{formatCurrency(tp.revenue)}</span>
                         <span className="hidden w-10 shrink-0 text-end text-[11px] tabular-nums text-[var(--fg-muted)] sm:block">
                           {pct(tp.revenue, bestTotal)}%
                         </span>
@@ -277,7 +280,7 @@ export function Analytics() {
           </div>
 
           {/* Orders mix */}
-          <div className="grid min-w-0 gap-4 lg:grid-cols-3">
+          <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-3">
             <Panel title="Order status" description={`${placed} order${placed === 1 ? '' : 's'} placed in the period`}>
               {placed ? (
                 <>
@@ -336,7 +339,7 @@ export function Analytics() {
           </div>
 
           {/* Where and when */}
-          <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+          <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2">
             <Panel title="Top cities" description="Orders placed (not cancelled) by delivery city.">
               <BarList
                 rows={r.cities.map((c) => ({
@@ -353,7 +356,7 @@ export function Analytics() {
               title="Orders by weekday"
               description={busiest && busiest.orders > 0 ? `Busiest day: ${busiest.day}` : 'Orders placed (not cancelled), Morocco time.'}
             >
-              <div className="flex h-36 items-end gap-2">
+              <div className="flex h-32 items-end gap-1.5 sm:h-36 sm:gap-2">
                 {r.weekdays.map((w) => (
                   <div key={w.day} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${w.day}: ${w.orders} orders · ${formatCurrency(w.value)}`}>
                     <span className="text-[10px] tabular-nums text-[var(--fg-muted)]">{w.orders || ''}</span>
@@ -370,7 +373,7 @@ export function Analytics() {
 
           {/* Customers */}
           <Panel title="Customers" description="People who placed an order in the period.">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               {[
                 { label: 'Buyers', value: r.customers.buyers },
                 { label: 'First-time', value: r.customers.firstTime, sub: `${pct(r.customers.firstTime, r.customers.buyers)}%` },
@@ -379,7 +382,7 @@ export function Analytics() {
               ].map((c) => (
                 <div key={c.label}>
                   <p className="text-xs text-[var(--fg-muted)]">{c.label}</p>
-                  <p className="font-display text-xl font-semibold tabular-nums">
+                  <p className="font-display text-lg font-semibold tabular-nums sm:text-xl">
                     {c.value}
                     {c.sub && r.customers.buyers ? <span className="ms-1.5 text-xs font-normal text-[var(--fg-muted)]">{c.sub}</span> : null}
                   </p>

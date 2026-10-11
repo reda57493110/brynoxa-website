@@ -13,15 +13,26 @@ const card = analyticsCard
 /** "▲ 12% vs 1,200 DH prev. 14 days" — or a plain note when there is nothing to compare with. */
 export function Change({ now, before, days, money }: { now: number | null; before: number | null; days: number; money?: boolean }) {
   if (now === null || before === null || (now === 0 && before === 0)) {
-    return <span className="text-[var(--fg-muted)]">Nothing in the previous {days} days</span>
+    return (
+      <span className="text-[var(--fg-muted)]">
+        <span className="sm:hidden">No earlier data</span>
+        <span className="max-sm:hidden">Nothing in the previous {days} days</span>
+      </span>
+    )
   }
-  if (before === 0) return <span className="text-[var(--success)]">New vs previous {days} days</span>
+  if (before === 0)
+    return (
+      <span className="text-[var(--success)]">
+        New<span className="max-sm:hidden"> vs previous {days} days</span>
+      </span>
+    )
   const pct = ((now - before) / Math.abs(before)) * 100
   const up = pct >= 0
   return (
     <span className={cn(Math.abs(pct) < 0.5 ? 'text-[var(--fg-muted)]' : up ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
       {up ? '▲' : '▼'} {Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%{' '}
-      <span className="text-[var(--fg-muted)]">
+      {/* Phones: just the change; the comparison base shows from sm up */}
+      <span className="text-[var(--fg-muted)] max-sm:hidden">
         vs {money ? formatCurrency(before) : before} prev. {days} days
       </span>
     </span>
@@ -46,21 +57,21 @@ export function Kpi({
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-xs text-[var(--fg-muted)] sm:text-sm">{label}</p>
+        <p className="truncate text-[11px] text-[var(--fg-muted)] sm:text-sm">{label}</p>
         <SiteIcon
           name={icon}
-          size={18}
+          size={16}
           className={cn(
             'shrink-0',
             tone === 'danger' ? 'text-[var(--danger)]' : tone === 'warning' ? 'text-[var(--warning)]' : 'text-[var(--brand)]'
           )}
         />
       </div>
-      <div className="mt-1.5 truncate font-display text-lg font-semibold tabular-nums sm:text-2xl">{value}</div>
-      {hint ? <div className="mt-1 truncate text-[11px] sm:text-xs">{hint}</div> : null}
+      <div className="mt-1 truncate font-display text-base font-semibold tabular-nums sm:mt-1.5 sm:text-2xl">{value}</div>
+      {hint ? <div className="mt-0.5 truncate text-[10px] sm:mt-1 sm:text-xs">{hint}</div> : null}
     </>
   )
-  const cls = cn(card, 'block p-3 sm:p-4')
+  const cls = cn(card, 'block rounded-xl p-2.5 sm:rounded-2xl sm:p-4')
   return to ? (
     <Link to={to} className={cn(cls, 'transition hover:border-[var(--brand)]')}>
       {body}
@@ -105,11 +116,11 @@ export function SalesStats({ analytics, metric }: { analytics: SalesAnalytics; m
   ]
 
   return (
-    <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-4">
+    <dl className="mt-3 grid grid-cols-2 sm:mt-4 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-4">
       {stats.map((s) => (
-        <div key={s.label} className="min-w-0 bg-[var(--bg-elevated)] px-3 py-2.5">
-          <dt className="truncate text-[11px] text-[var(--fg-muted)]">{s.label}</dt>
-          <dd className="mt-0.5 truncate font-display text-base font-semibold tabular-nums">{s.value}</dd>
+        <div key={s.label} className="min-w-0 bg-[var(--bg-elevated)] px-2.5 py-2 sm:px-3 sm:py-2.5">
+          <dt className="truncate text-[10px] text-[var(--fg-muted)] sm:text-[11px]">{s.label}</dt>
+          <dd className="mt-0.5 truncate font-display text-sm font-semibold tabular-nums sm:text-base">{s.value}</dd>
           {s.hint ? <dd className="truncate text-[10px] text-[var(--fg-muted)]">{s.hint}</dd> : null}
         </div>
       ))}

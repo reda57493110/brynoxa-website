@@ -77,12 +77,12 @@ export function StatCard({
 }) {
   const body = (
     <>
-      <p className="text-xs text-[var(--fg-muted)]">{label}</p>
-      <div className="mt-1 font-display text-lg font-semibold break-words sm:text-xl">{value}</div>
+      <p className="text-[11px] text-[var(--fg-muted)] sm:text-xs">{label}</p>
+      <div className="mt-0.5 font-display text-base font-semibold break-words sm:mt-1 sm:text-xl">{value}</div>
       {hint ? <div className="mt-1 text-[11px] text-[var(--fg-muted)]">{hint}</div> : null}
     </>
   )
-  const cls = cn(cardClass, 'min-w-0 p-3 text-left sm:p-4', active && 'border-[var(--brand)]')
+  const cls = cn(cardClass, 'min-w-0 rounded-xl p-2.5 text-left sm:rounded-2xl sm:p-4', active && 'border-[var(--brand)]')
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={cn(cls, 'transition hover:border-[var(--brand)] ring-brand')}>

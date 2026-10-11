@@ -170,7 +170,40 @@ export function Coupons() {
       ) : list.isError ? (
         <QueryErrorState onRetry={() => list.refetch()} />
       ) : coupons.length ? (
-        <div className="min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+        <>
+        {/* Phones: one card per coupon */}
+        <ul className="space-y-2 md:hidden">
+          {coupons.map((c) => {
+            const state = couponState(c)
+            const pending = toggle.isPending && toggle.variables?._id === c._id
+            return (
+              <li key={c._id} className={cn('rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3', pending && 'opacity-60')}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold tracking-wide">{c.code}</p>
+                    <p className="text-xs text-[var(--fg-muted)]">
+                      {c.type === 'percent' ? `${c.value}% off` : `${formatCurrency(c.value)} off`}
+                      {c.minOrder ? ` · min ${formatCurrency(c.minOrder)}` : ''}
+                    </p>
+                  </div>
+                  <Badge variant={state.variant}>{state.label}</Badge>
+                </div>
+                <p className="mt-1.5 text-[11px] text-[var(--fg-muted)]">
+                  Used {c.usedCount}/{c.maxUses || '∞'} · {c.expiresAt ? `expires ${formatDate(c.expiresAt)}` : 'never expires'}
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1" disabled={pending} onClick={() => toggle.mutate(c)}>
+                    {c.isActive ? 'Turn off' : 'Turn on'}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setDeleteId(c._id)} aria-label={`Delete ${c.code}`}>
+                    <SiteIcon name="trash" size={14} />
+                  </Button>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
           <table className="w-full min-w-[40rem] text-sm">
             <thead className="bg-[var(--bg-muted)] text-left text-xs text-[var(--fg-muted)]">
               <tr>
@@ -228,6 +261,7 @@ export function Coupons() {
             </tbody>
           </table>
         </div>
+        </>
       ) : (
         <p className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-10 text-center text-sm text-[var(--fg-muted)]">
           No coupons yet — create your first above.

@@ -43,7 +43,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
     <div className="relative min-w-0 select-none">
       <div className="flex gap-2">
         {/* Y axis */}
-        <div className="flex h-52 w-10 shrink-0 flex-col justify-between text-end text-[10px] tabular-nums text-[var(--fg-muted)] sm:w-12">
+        <div className="flex h-40 w-8 shrink-0 flex-col justify-between text-end text-[10px] tabular-nums text-[var(--fg-muted)] sm:h-52 sm:w-12">
           <span className="-translate-y-1/2">{axis(top)}</span>
           <span>{axis(top / 2)}</span>
           <span className="translate-y-1/2">0</span>
@@ -51,7 +51,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
 
         <div className="relative min-w-0 flex-1">
           {/* Grid */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-52" aria-hidden>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-40 sm:h-52" aria-hidden>
             <div className="absolute inset-x-0 top-0 border-t border-dashed border-[var(--border)]" />
             <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-[var(--border)]" />
             <div className="absolute inset-x-0 bottom-0 border-t border-[var(--border)]" />
@@ -66,7 +66,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
           </div>
 
           {/* Bars: fixed-height track so percentage heights resolve */}
-          <div className={cn('relative flex h-52 items-end', n > 40 ? 'gap-px' : 'gap-1 sm:gap-1.5')} onMouseLeave={() => setActive(null)}>
+          <div className={cn('relative flex h-40 items-end sm:h-52', n > 40 ? 'gap-px' : 'gap-0.5 sm:gap-1.5')} onMouseLeave={() => setActive(null)}>
             {buckets.map((b, i) => {
               const v = value(b)
               const pct = v > 0 ? Math.max(2, (v / top) * 100) : 0
@@ -109,7 +109,9 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
                   className={cn(
                     'absolute top-0 whitespace-nowrap text-[10px] text-[var(--fg-muted)]',
                     // Skip a label that would collide with the always-shown last one
-                    i !== n - 1 && n - 1 - i < labelEvery * 0.6 && 'hidden'
+                    i !== n - 1 && n - 1 - i < labelEvery * 0.6 && 'hidden',
+                    // Phones: every other label (the first and last always stay)
+                    i !== 0 && i !== n - 1 && (i / labelEvery) % 2 === 1 && 'max-sm:hidden'
                   )}
                   style={{
                     left: `${((i + 0.5) / n) * 100}%`,
