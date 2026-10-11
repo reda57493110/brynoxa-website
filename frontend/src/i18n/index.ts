@@ -93,6 +93,20 @@ export function orderStatusKey(status: string): MessageKey {
       return 'orders.delivered'
     case 'cancelled':
       return 'orders.cancelledStatus'
+    case 'no_answer':
+      return 'orders.noAnswerStatus'
+    case 'delivery_failed':
+      return 'orders.deliveryFailedStatus'
+    case 'rescheduled':
+      return 'orders.rescheduledStatus'
+    case 'return_requested':
+      return 'orders.returnRequestedStatus'
+    case 'return_in_transit':
+      return 'orders.returnInTransitStatus'
+    case 'partially_returned':
+      return 'orders.partiallyReturnedStatus'
+    case 'returned':
+      return 'orders.returnedStatus'
     default:
       return 'orders.pending'
   }

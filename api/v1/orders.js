@@ -97,7 +97,7 @@ module.exports = async (req, res) => {
     if (route === 'track' && req.method === 'POST') {
       const body = parseBody(schemas.trackOrderSchema, await readJsonBody(req));
       const order = await orderService.trackGuestOrder(body.orderNumber, body.phone);
-      sendJson(res, 200, { success: true, message: 'Success', data: order });
+      sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
       return;
     }
 
@@ -130,7 +130,7 @@ module.exports = async (req, res) => {
         sendJson(res, 201, {
           success: true,
           message: 'Order placed',
-          data: { order: result.order, user: auth.user, accessToken: auth.accessToken },
+          data: { order: orderService.customerOrderView(result.order), user: auth.user, accessToken: auth.accessToken },
         });
         return;
       }
@@ -138,7 +138,7 @@ module.exports = async (req, res) => {
       sendJson(res, 201, {
         success: true,
         message: 'Order placed',
-        data: { order: result.order, receiptToken: result.receiptToken },
+        data: { order: orderService.customerOrderView(result.order), receiptToken: result.receiptToken },
       });
       return;
     }
@@ -150,7 +150,7 @@ module.exports = async (req, res) => {
       const page = Number(query.page || 1);
       const limit = Number(query.limit || 10);
       const result = await orderService.listUserOrders(user._id.toString(), page, limit);
-      sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
+      sendJson(res, 200, paginated(result.items.map(orderService.customerOrderView), result.page, result.limit, result.total));
       return;
     }
 
@@ -163,7 +163,7 @@ module.exports = async (req, res) => {
       if (action === 'receipt' && req.method === 'POST') {
         const body = parseBody(schemas.guestOrderReceiptSchema, await readJsonBody(req));
         const order = await orderService.getGuestOrderReceipt(orderNumber, body.token);
-        sendJson(res, 200, { success: true, message: 'Success', data: order });
+        sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
         return;
       }
 
@@ -171,7 +171,7 @@ module.exports = async (req, res) => {
         const user = await requireUser(req, res);
         if (!user) return;
         const order = await orderService.cancelUserOrder(user._id.toString(), orderNumber);
-        sendJson(res, 200, { success: true, message: 'Order cancelled', data: order });
+        sendJson(res, 200, { success: true, message: 'Order cancelled', data: orderService.customerOrderView(order) });
         return;
       }
 
@@ -184,7 +184,7 @@ module.exports = async (req, res) => {
           orderNumber,
           body.items
         );
-        sendJson(res, 200, { success: true, message: 'Order updated', data: order });
+        sendJson(res, 200, { success: true, message: 'Order updated', data: orderService.customerOrderView(order) });
         return;
       }
 
@@ -192,7 +192,7 @@ module.exports = async (req, res) => {
         const user = await requireUser(req, res);
         if (!user) return;
         const order = await orderService.getUserOrder(user._id.toString(), orderNumber);
-        sendJson(res, 200, { success: true, message: 'Success', data: order });
+        sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
         return;
       }
     }

@@ -1,11 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
-import { Select } from '@/components/ui/Select'
-import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Badge } from '@/components/ui/Badge'
@@ -17,46 +15,30 @@ import { OrderReturnPanel } from '@/components/admin/OrderReturnPanel'
 import { OrderItemThumb } from '@/components/admin/OrderThumbs'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
-import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
-import type { OrderStatus, User } from '@/types'
+import { OrderContactLog, OrderHistory, OrderInternalNote, OrderStatusActions } from '@/components/admin/OrderWorkflow'
+import {
+  attentionReasons,
+  deliveryIssueLabel,
+  formatDeliveryDay,
+  orderStatusLabel,
+  orderStatusVariant,
+  refundState,
+  refundedTotal,
+} from '@/lib/orderStatus'
+import type { User } from '@/types'
+
+const PAYMENT_LABEL: Record<string, string> = { pending: 'Unpaid', paid: 'Paid', failed: 'Not collected', refunded: 'Refunded' }
 
 export function OrderDetail() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
-  const [status, setStatus] = useState<OrderStatus>('pending')
-  const [note, setNote] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const order = useQuery({
     queryKey: ['admin-order', id],
     queryFn: async () => (await adminApi.orders.get(id)).data.data,
     enabled: Boolean(id),
-  })
-
-  useEffect(() => {
-    if (order.data) {
-      const next =
-        order.data.orderStatus === 'processing' ? 'confirmed' : order.data.orderStatus
-      setStatus(next)
-      setNote(order.data.adminNote || '')
-    }
-  }, [order.data])
-
-  const update = useMutation({
-    mutationFn: () =>
-      adminApi.orders.updateStatus(id, {
-        orderStatus: status,
-        note: `Updated to ${status}`,
-        adminNote: note || undefined,
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin-order', id] })
-      qc.invalidateQueries({ queryKey: ['admin-orders'] })
-      qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      toast.success('Order updated')
-    },
-    onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const remove = useMutation({
@@ -86,8 +68,9 @@ export function OrderDetail() {
 
   const o = order.data
   const user = o.user as User
-  const awaitingDeposit = o.deposit?.status === 'pending'
-  const confirmBlocked = status === 'confirmed' && o.orderStatus === 'pending' && awaitingDeposit
+  const attention = attentionReasons(o)
+  const refund = refundState(o)
+  const refunded = refundedTotal(o)
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
@@ -107,9 +90,17 @@ export function OrderDetail() {
           <h1 className="min-w-0 break-all font-display text-lg font-semibold sm:text-2xl">
             #{o.orderNumber}
           </h1>
-          <Badge variant={orderStatusVariant(o.orderStatus)}>
-            {o.orderStatus === 'processing' ? 'confirmed' : o.orderStatus}
+          <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
+          <Badge variant={o.paymentStatus === 'paid' ? 'success' : o.paymentStatus === 'failed' ? 'muted' : 'default'} className="normal-case">
+            Payment: {PAYMENT_LABEL[o.paymentStatus] ?? o.paymentStatus}
           </Badge>
+          {refund === 'due' ? (
+            <Badge variant="danger" className="normal-case">Refund pending</Badge>
+          ) : refund === 'partial' ? (
+            <Badge variant="warning" className="normal-case">Refunded {formatCurrency(refunded)}</Badge>
+          ) : refund === 'refunded' ? (
+            <Badge variant="muted" className="normal-case">Fully refunded</Badge>
+          ) : null}
           {o.channel === 'wholesale' ? (
             <Badge variant="brand" className="normal-case">
               Wholesale
@@ -134,41 +125,34 @@ export function OrderDetail() {
           ) : null}
           <p className="text-xs">{formatDateTime(o.createdAt)}</p>
         </div>
+        {attention.length || o.rescheduledFor || o.deliveryIssue ? (
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {attention.map((a) => (
+              <span key={a} className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--warning)]">
+                <SiteIcon name="alert" size={12} /> {a}
+              </span>
+            ))}
+            {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">Delivery on {formatDeliveryDay(o.rescheduledFor)}</span>
+            ) : null}
+            {o.deliveryIssue && ['delivery_failed', 'rescheduled', 'return_in_transit'].includes(o.orderStatus) ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
+                Last failed attempt: {deliveryIssueLabel(o.deliveryIssue.reason)}
+                {o.deliveryIssue.note ? ` — ${o.deliveryIssue.note}` : ''}
+              </span>
+            ) : null}
+            {o.deliveryAttempts ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
+                {o.deliveryAttempts} failed attempt{o.deliveryAttempts === 1 ? '' : 's'}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
-      <div className="grid min-w-0 gap-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:gap-4 sm:rounded-2xl sm:p-5 lg:grid-cols-[1fr_12rem] lg:items-end">
-        <Select
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as OrderStatus)}
-          options={ORDER_STATUSES.map((s) => ({ value: s, label: s }))}
-        />
-        <div className="flex w-full flex-col gap-2 lg:w-auto">
-          <Button
-            className="w-full"
-            onClick={() => update.mutate()}
-            loading={update.isPending}
-            disabled={confirmBlocked}
-            title={confirmBlocked ? 'Mark the deposit as received first' : undefined}
-          >
-            Update status
-          </Button>
-          <Button
-            className="w-full"
-            variant="danger"
-            onClick={() => setConfirmDelete(true)}
-          >
-            Delete order
-          </Button>
-        </div>
-        <Textarea
-          className="lg:col-span-2"
-          label="Internal note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={3}
-        />
-      </div>
+      <OrderStatusActions key={`${o._id}-${o.orderStatus}`} order={o} />
+
+      <OrderContactLog order={o} />
 
       <OrderDepositPanel order={o} />
 
@@ -191,7 +175,10 @@ export function OrderDetail() {
                         <span className="break-words">
                           {item.name} × {item.qty}
                         </span>
-                        <span className="block truncate text-xs text-[var(--fg-muted)]">{item.sku}</span>
+                        <span className="block truncate text-xs text-[var(--fg-muted)]">
+                          {item.sku}
+                          {item.returnedQty ? ` · ${item.returnedQty} returned` : ''}
+                        </span>
                       </span>
                     </>
                   )
@@ -259,19 +246,12 @@ export function OrderDetail() {
               </a>
             </p>
           </div>
-          <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
-            <h2 className="font-semibold">Timeline</h2>
-            <ul className="mt-3 space-y-3 text-sm">
-              {o.timeline.map((t, i) => (
-                <li key={i} className="min-w-0">
-                  <p className="font-medium capitalize">{t.status}</p>
-                  {t.note ? (
-                    <p className="break-words text-[var(--fg-muted)]">{t.note}</p>
-                  ) : null}
-                  <p className="text-xs text-[var(--fg-muted)]">{formatDateTime(t.at)}</p>
-                </li>
-              ))}
-            </ul>
+          <OrderHistory order={o} />
+          <div className="space-y-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
+            <OrderInternalNote key={o.adminNote || ''} order={o} />
+            <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
+              Delete order
+            </Button>
           </div>
         </div>
       </div>

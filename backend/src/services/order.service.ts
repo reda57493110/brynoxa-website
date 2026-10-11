@@ -21,6 +21,18 @@ import {
   statusNotificationCopy,
 } from './orderNotify.service';
 import { invalidateDashboardCache } from './admin.service';
+import {
+  DELIVERY_ISSUES,
+  ORDER_STATUSES,
+  ORDER_STATUS_GROUPS,
+  ORDER_TRANSITIONS,
+  RECEIPT_STATUSES,
+  attentionFilter,
+  statusesInGroup,
+  wasDelivered,
+  type DeliveryIssue,
+  type OrderStatusGroup,
+} from '../utils/orderStatus';
 
 function generateOrderNumber() {
   const now = new Date();
@@ -33,13 +45,6 @@ function hashReceiptToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
 }
 
-const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['confirmed', 'cancelled'],
-  confirmed: ['shipped', 'cancelled'],
-  shipped: ['delivered'],
-  delivered: [],
-  cancelled: [],
-};
 
 export async function validateCoupon(code: string, subtotal: number) {
   const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
@@ -238,7 +243,7 @@ export async function createCodOrder(input: {
   }
 
   try {
-    const copy = statusNotificationCopy('pending');
+    const copy = statusNotificationCopy('pending')!;
     await Notification.create({
       user: input.userId,
       type: 'order',
@@ -370,41 +375,119 @@ export async function updateUserOrderItems(
   return order;
 }
 
+export interface StatusChangeExtra {
+  /** Delivery issue code (required for delivery_failed). */
+  reason?: DeliveryIssue;
+  /** New delivery day, "YYYY-MM-DD" or ISO (required for rescheduled). */
+  rescheduledFor?: string;
+  /** Staff-only remark kept on the history step. */
+  staffNote?: string;
+  /** Staff member making the change. */
+  by?: string;
+}
+
+const DELIVERY_ISSUE_LABEL: Record<DeliveryIssue, string> = {
+  customer_unavailable: 'customer unavailable',
+  no_answer: 'customer did not answer',
+  address_issue: 'address problem',
+  refused: 'customer refused the parcel',
+  other: 'other reason',
+};
+
+/** Orders delivered before `deliveredAt` existed: take the date from their history. */
+export function backfillDeliveredAt(order: InstanceType<typeof Order>) {
+  if (order.deliveredAt || order.orderStatus !== 'delivered') return;
+  const step = [...order.timeline].reverse().find((t) => t.status === 'delivered');
+  order.deliveredAt = step?.at || order.updatedAt || new Date();
+}
+
+function parseDeliveryDay(value?: string) {
+  if (!value) return null;
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(value) ? storeDayStart(value) : new Date(value);
+  return Number.isNaN(day.getTime()) ? null : day;
+}
+
+function storeDayLabel(date: Date) {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Casablanca', weekday: 'short', day: 'numeric', month: 'short' }).format(date);
+}
+
+/**
+ * Staff (or the customer cancelling) move an order to its next status. Only moves listed in
+ * ORDER_TRANSITIONS are accepted. Side effects, each at most once per order:
+ * - confirmed: stock reserved (available → reserved)
+ * - shipped: stock leaves the store (reserved → out)
+ * - cancelled (before shipping): reservation released, coupon use given back
+ * - delivered: cash collected (paymentStatus paid, deliveredAt)
+ * Refunds and returned units are never touched here: they have their own records.
+ */
 export async function updateOrderStatus(
   orderId: string,
   orderStatus: OrderStatus,
   note?: string,
-  adminNote?: string
+  adminNote?: string,
+  extra: StatusChangeExtra = {}
 ) {
-  const order = await Order.findById(orderId);
+  // unitCost is loaded so saving the lines (serials picked on reserve) keeps it
+  const order = await Order.findById(orderId).select('+items.unitCost');
   if (!order) throw new ApiError(404, 'Order not found');
 
   const prev = order.orderStatus;
-  if (prev === orderStatus) return order;
-  if (!ORDER_TRANSITIONS[prev].includes(orderStatus)) {
-    throw new ApiError(400, `Cannot move an order from ${prev} to ${orderStatus}`);
+  const rescheduledFor = parseDeliveryDay(extra.rescheduledFor);
+  const staffNote = extra.staffNote?.trim() || undefined;
+  const newDate =
+    orderStatus === 'rescheduled' && rescheduledFor && rescheduledFor.getTime() !== order.rescheduledFor?.getTime();
+
+  // Same status: only the internal note (or a new delivery date) can change; nobody is notified again
+  if (prev === orderStatus && !newDate) {
+    if (adminNote !== undefined && adminNote !== (order.adminNote || '')) {
+      order.adminNote = adminNote;
+      await order.save();
+    }
+    return order;
+  }
+  if (RECEIPT_STATUSES.includes(orderStatus)) {
+    throw new ApiError(400, 'Register the items that came back under "Returned items"; the status updates itself');
+  }
+  if (prev !== orderStatus && !ORDER_TRANSITIONS[prev].includes(orderStatus)) {
+    throw new ApiError(400, `Cannot move an order from ${prev.replace(/_/g, ' ')} to ${orderStatus.replace(/_/g, ' ')}`);
+  }
+  if (orderStatus === 'delivery_failed' && !(extra.reason && DELIVERY_ISSUES.includes(extra.reason))) {
+    throw new ApiError(400, 'Choose why the delivery failed');
+  }
+  if (orderStatus === 'rescheduled') {
+    if (!rescheduledFor) throw new ApiError(400, 'Choose the new delivery date');
+    if (rescheduledFor.getTime() < Date.now() - 36 * 60 * 60 * 1000) {
+      throw new ApiError(400, 'The new delivery date cannot be in the past');
+    }
   }
 
   if (orderStatus === 'confirmed' && order.deposit && order.deposit.status !== 'received') {
     throw new ApiError(400, 'Mark the deposit as received before confirming this order');
   }
 
+  backfillDeliveredAt(order);
+  const now = new Date();
+
   if (orderStatus === 'confirmed' && !order.stockReserved) {
-    await reserveOrderStock(order);
+    await reserveOrderStock(order, extra.by);
     order.stockReserved = true;
   }
 
   if (orderStatus === 'shipped' && order.stockReserved) {
-    await dispatchOrderStock(order);
+    await dispatchOrderStock(order, extra.by);
   }
 
   if (orderStatus === 'cancelled' && order.stockReserved) {
-    await releaseOrderStock(order, 'cancelled');
+    await releaseOrderStock(order, 'cancelled', extra.by);
     order.stockReserved = false;
   }
 
   if (orderStatus === 'delivered') {
-    order.paymentStatus = 'paid';
+    // Cash is collected once; a withdrawn return request does not collect it again
+    if (!order.deliveredAt) order.deliveredAt = now;
+    if (order.paymentStatus === 'pending' || order.paymentStatus === 'failed') order.paymentStatus = 'paid';
+    order.deliveryIssue = undefined;
+    order.rescheduledFor = undefined;
   }
 
   if (orderStatus === 'cancelled' && order.paymentStatus === 'pending') {
@@ -418,37 +501,126 @@ export async function updateOrderStatus(
     );
   }
 
+  if (orderStatus === 'no_answer') {
+    order.contactAttempts.push({ channel: 'call', outcome: 'no_answer', note: staffNote, at: now, by: extra.by as never });
+  }
+
+  if (orderStatus === 'delivery_failed') {
+    order.deliveryIssue = { reason: extra.reason!, note: staffNote, at: now };
+    order.deliveryAttempts = (order.deliveryAttempts || 0) + 1;
+    order.rescheduledFor = undefined;
+  }
+
+  if (orderStatus === 'rescheduled') {
+    order.rescheduledFor = rescheduledFor!;
+  }
+
+  const dayLabel = rescheduledFor ? storeDayLabel(rescheduledFor) : '';
+  const defaultNote =
+    orderStatus === 'delivery_failed'
+      ? `Delivery attempt failed: ${DELIVERY_ISSUE_LABEL[extra.reason!]}`
+      : orderStatus === 'rescheduled'
+        ? `Delivery rescheduled to ${dayLabel}`
+        : `Status changed to ${orderStatus.replace(/_/g, ' ')}`;
+
   order.orderStatus = orderStatus;
   order.timeline.push({
     status: orderStatus,
-    note: note || `Status changed to ${orderStatus}`,
-    at: new Date(),
+    note: note?.trim() || defaultNote,
+    reason: extra.reason,
+    staffNote,
+    at: now,
+    by: extra.by as never,
   });
   if (adminNote !== undefined) order.adminNote = adminNote;
   await order.save();
 
   invalidateDashboardCache();
 
-  try {
-    const copy = statusNotificationCopy(orderStatus);
-    await Notification.create({
-      user: order.user,
-      type: 'order',
-      title: copy.title,
-      message: `${copy.customerLine} (${order.orderNumber})`,
-      link: `/account/orders/${order.orderNumber}`,
-    });
-  } catch (error) {
-    console.error('Order status notification failed', error);
+  const copy = statusNotificationCopy(orderStatus);
+  if (copy) {
+    try {
+      await Notification.create({
+        user: order.user,
+        type: 'order',
+        title: copy.title,
+        message: `${copy.customerLine}${orderStatus === 'rescheduled' ? ` New date: ${dayLabel}.` : ''} (${order.orderNumber})`,
+        link: `/account/orders/${order.orderNumber}`,
+      });
+    } catch (error) {
+      console.error('Order status notification failed', error);
+    }
   }
 
   waitUntil(
-    notifyOrderStatusChanged(order, orderStatus).catch((error) => {
-      console.error('Order status email failed', error);
-    })
+    notifyOrderStatusChanged(order, orderStatus)
+      .then((sent) => (sent ? recordEmailSent(String(order._id), orderStatus) : undefined))
+      .catch((error) => {
+        console.error('Order status email failed', error);
+      })
   );
 
   return order;
+}
+
+/** Audit step written only after the email provider accepted the message. */
+export async function recordEmailSent(orderId: string, status: OrderStatus) {
+  await Order.updateOne(
+    { _id: orderId },
+    {
+      $push: {
+        timeline: { status, note: `Email sent to the customer (${status.replace(/_/g, ' ')})`, internal: true, at: new Date() },
+      },
+    }
+  );
+}
+
+export const CONTACT_CHANNELS = ['call', 'whatsapp', 'sms', 'email'] as const;
+export const CONTACT_OUTCOMES = ['reached', 'no_answer', 'busy', 'wrong_number', 'switched_off', 'message_sent'] as const;
+
+/** Staff log a call / message to the customer. Does not change the status. */
+export async function logContactAttempt(
+  orderId: string,
+  input: { channel: (typeof CONTACT_CHANNELS)[number]; outcome: (typeof CONTACT_OUTCOMES)[number]; note?: string },
+  by?: string
+) {
+  const res = await Order.updateOne(
+    { _id: orderId },
+    {
+      $push: {
+        contactAttempts: { channel: input.channel, outcome: input.outcome, note: input.note?.trim() || undefined, at: new Date(), by },
+      },
+    }
+  );
+  if (!res.matchedCount) throw new ApiError(404, 'Order not found');
+  invalidateDashboardCache();
+  return getOrderById(orderId);
+}
+
+/** What the customer may see of an order: no staff notes, contact log, audit steps or staff ids. */
+export function customerOrderView<T>(order: T): T {
+  if (!order || typeof order !== 'object') return order;
+  const doc = order as unknown as { toObject?: () => Record<string, unknown> };
+  const o: Record<string, unknown> = typeof doc.toObject === 'function' ? doc.toObject() : { ...(order as Record<string, unknown>) };
+  delete o.adminNote;
+  delete o.contactAttempts;
+  delete o.receiptTokenHash;
+  if (o.deliveryIssue && typeof o.deliveryIssue === 'object') {
+    const { note: _note, ...issue } = o.deliveryIssue as Record<string, unknown>;
+    o.deliveryIssue = issue;
+  }
+  if (Array.isArray(o.items)) {
+    o.items = (o.items as Record<string, unknown>[]).map(({ unitCost: _cost, ...rest }) => rest);
+  }
+  if (Array.isArray(o.timeline)) {
+    o.timeline = (o.timeline as Record<string, unknown>[])
+      .filter((t) => !t.internal)
+      .map(({ staffNote: _note, by: _by, internal: _internal, ...rest }) => rest);
+  }
+  if (Array.isArray(o.refunds)) {
+    o.refunds = (o.refunds as Record<string, unknown>[]).map(({ by: _by, ...rest }) => rest);
+  }
+  return o as T;
 }
 
 /**
@@ -461,7 +633,7 @@ export async function setOrderDeposit(
 ) {
   const order = await Order.findById(orderId);
   if (!order) throw new ApiError(404, 'Order not found');
-  if (order.orderStatus !== 'pending') {
+  if (order.orderStatus !== 'pending' && order.orderStatus !== 'no_answer') {
     throw new ApiError(400, 'The deposit can only be changed while the order is pending');
   }
 
@@ -538,8 +710,13 @@ export async function setOrderDeposit(
 }
 
 /** Money the customer has actually paid on an order: the full total once delivered, else a received deposit. */
-export function amountPaidOnOrder(order: { orderStatus: OrderStatus; pricing: { total: number }; deposit?: { amount: number; status: string } | null }) {
-  if (order.orderStatus === 'delivered') return order.pricing.total;
+export function amountPaidOnOrder(order: {
+  orderStatus: OrderStatus;
+  deliveredAt?: Date | null;
+  pricing: { total: number };
+  deposit?: { amount: number; status: string } | null;
+}) {
+  if (wasDelivered(order)) return order.pricing.total;
   return order.deposit?.status === 'received' ? order.deposit.amount : 0;
 }
 
@@ -552,8 +729,9 @@ export async function recordRefund(
   input: { amount: number; reason: string; itemsReturned?: boolean },
   actorId: string
 ) {
-  const order = await Order.findById(orderId);
+  const order = await Order.findById(orderId).select('+items.unitCost');
   if (!order) throw new ApiError(404, 'Order not found');
+  backfillDeliveredAt(order);
 
   const paid = amountPaidOnOrder(order);
   const alreadyRefunded = (order.refunds || []).reduce((sum, r) => sum + r.amount, 0);
@@ -571,13 +749,15 @@ export async function recordRefund(
     at: new Date(),
     by: actorId as never,
   });
-  if (order.orderStatus === 'delivered' && alreadyRefunded + amount >= paid) {
+  // Only money actually given back marks the payment refunded (all of it, on a delivered order)
+  if (wasDelivered(order) && alreadyRefunded + amount >= paid - 0.005) {
     order.paymentStatus = 'refunded';
   }
   order.timeline.push({
     status: order.orderStatus,
     note: `Refund of ${formatDh(amount)} recorded${input.itemsReturned ? ' (items returned)' : ''}: ${input.reason.trim()}`,
     at: new Date(),
+    by: actorId as never,
   });
   await order.save();
   invalidateDashboardCache();
@@ -614,7 +794,7 @@ export async function getUserOrder(userId: string, orderNumber: string) {
 export async function cancelUserOrder(userId: string, orderNumber: string) {
   const order = await Order.findOne({ orderNumber, user: userId });
   if (!order) throw new ApiError(404, 'Order not found');
-  if (order.orderStatus !== 'pending') {
+  if (order.orderStatus !== 'pending' && order.orderStatus !== 'no_answer') {
     throw new ApiError(400, 'Only pending orders can be cancelled');
   }
   if (order.deposit?.status === 'received') {
@@ -656,12 +836,18 @@ export async function listAllOrders(
   range: { from?: string; to?: string } = {}
 ) {
   const filter: Record<string, unknown> = {};
-  if (status) filter.orderStatus = status;
+  const and: Record<string, unknown>[] = [];
+  // A status, a group of statuses ("group:returns") or "attention"
+  if (status === 'attention') and.push(attentionFilter());
+  else if (status?.startsWith('group:') && ORDER_STATUS_GROUPS.includes(status.slice(6) as OrderStatusGroup)) {
+    filter.orderStatus = { $in: statusesInGroup(status.slice(6) as OrderStatusGroup) };
+  } else if (status && (ORDER_STATUSES as readonly string[]).includes(status)) filter.orderStatus = status;
   if (q?.trim()) {
     const rx = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     // Order number, or the customer's name / phone on the delivery address
-    filter.$or = [{ orderNumber: rx }, { 'shippingAddress.fullName': rx }, { 'shippingAddress.phone': rx }];
+    and.push({ $or: [{ orderNumber: rx }, { 'shippingAddress.fullName': rx }, { 'shippingAddress.phone': rx }] });
   }
+  if (and.length) filter.$and = and;
   // Placed between two calendar days (inclusive), Morocco time
   const createdAt: Record<string, Date> = {};
   if (range.from && DAY_RE.test(range.from)) createdAt.$gte = storeDayStart(range.from);
@@ -683,7 +869,11 @@ export async function listAllOrders(
 }
 
 export async function getOrderById(id: string) {
-  const order = await Order.findById(id).populate('user', 'name email phone');
+  const order = await Order.findById(id)
+    .populate('user', 'name email phone')
+    .populate('timeline.by', 'name')
+    .populate('contactAttempts.by', 'name')
+    .populate('refunds.by', 'name');
   if (!order) throw new ApiError(404, 'Order not found');
   return order;
 }

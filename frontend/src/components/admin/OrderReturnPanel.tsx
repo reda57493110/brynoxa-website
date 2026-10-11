@@ -7,6 +7,7 @@ import { invalidateInventory, todayInput } from '@/components/admin/inventory/Mo
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { toast } from '@/store/toastStore'
+import { RETURNABLE_STATUSES, wasDelivered } from '@/lib/orderStatus'
 import type { CustomerReturn, Order, ReturnPayload } from '@/types'
 
 interface RowState {
@@ -18,7 +19,10 @@ interface RowState {
 
 const emptyRow = (): RowState => ({ qty: '0', serials: [], reason: '', conditionNote: '' })
 
-/** Register units a customer sent back (stock side). Money goes through Refunds. */
+/**
+ * Register units that physically came back — a customer return or a parcel the courier brought
+ * back. The order becomes Returned / Partially returned. Money goes through Refunds.
+ */
 export function OrderReturnPanel({ order }: { order: Order }) {
   const qc = useQueryClient()
   const [returnedAt, setReturnedAt] = useState(todayInput())
@@ -31,10 +35,13 @@ export function OrderReturnPanel({ order }: { order: Order }) {
     return typeof p === 'string' ? p : p._id
   }
 
+  const leftOf = (i: number) => Math.max(0, order.items[i].qty - (order.items[i].returnedQty || 0))
+  const delivered = wasDelivered(order)
+
   const analysed = rows.map((r, i) => {
-    const item = order.items[i]
+    const left = leftOf(i)
     const n = Number(r.qty)
-    const qtyError = !Number.isInteger(n) || n < 0 || n > item.qty ? `0 to ${item.qty}` : undefined
+    const qtyError = !Number.isInteger(n) || n < 0 || n > left ? `0 to ${left}` : undefined
     const reasonError = n > 0 && r.reason.trim().length < 3 ? 'Reason required (3+ chars)' : undefined
     const serialError = r.serials.length && r.serials.length !== n ? `Pick ${n} serial${n === 1 ? '' : 's'} or none` : undefined
     return { n: qtyError ? 0 : n, qtyError, reasonError, serialError }
@@ -63,6 +70,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
     },
     onSuccess: (ret) => {
       qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
+      qc.invalidateQueries({ queryKey: ['admin-orders'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       invalidateInventory(qc)
       setCreated(ret)
@@ -73,12 +81,34 @@ export function OrderReturnPanel({ order }: { order: Order }) {
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
-  if (order.orderStatus !== 'shipped' && order.orderStatus !== 'delivered') return null
+  if (!RETURNABLE_STATUSES.includes(order.orderStatus)) return null
+  const remaining = order.items.reduce((a, _, i) => a + leftOf(i), 0)
+  if (!remaining) return null
+
+  const fillAll = () => {
+    setRows(
+      order.items.map((_, i) => ({
+        ...emptyRow(),
+        qty: String(leftOf(i)),
+        reason: delivered ? '' : 'Delivery failed: parcel returned by the courier',
+      }))
+    )
+  }
 
   return (
     <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
-      <h2 className="font-semibold">Returned items</h2>
-      <p className="mt-1 text-xs text-[var(--fg-muted)]">Register returned items here; record any money given back with Refunds.</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h2 className="font-semibold">Returned items</h2>
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">
+            Register only what physically arrived back{delivered ? '' : ' (a failed delivery included)'}. The order becomes Returned or
+            Partially returned. Units stay unsellable until assessed; record any money given back with Refunds.
+          </p>
+        </div>
+        <Button type="button" size="sm" variant="secondary" onClick={fillAll}>
+          Everything came back
+        </Button>
+      </div>
 
       {created ? (
         <p className="mt-3 rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-sm">
@@ -119,6 +149,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
                     <p className="break-words text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-[var(--fg-muted)]">
                       {item.sku} · {item.qty} ordered
+                      {item.returnedQty ? ` · ${item.returnedQty} already returned` : ''}
                     </p>
                   </div>
                   <div className="w-24 shrink-0">
@@ -127,7 +158,8 @@ export function OrderReturnPanel({ order }: { order: Order }) {
                       type="number"
                       inputMode="numeric"
                       min={0}
-                      max={item.qty}
+                      max={leftOf(i)}
+                      disabled={leftOf(i) === 0}
                       value={r.qty}
                       onChange={(e) => update(i, { qty: e.target.value })}
                       error={a.qtyError}

@@ -29,21 +29,21 @@ export const createOrder = asyncHandler(async (req: AuthRequest, res: Response) 
     authService.setRefreshCookie(res, auth.refreshToken);
     sendSuccess(
       res,
-      { order: result.order, user: auth.user, accessToken: auth.accessToken },
+      { order: orderService.customerOrderView(result.order), user: auth.user, accessToken: auth.accessToken },
       'Order placed',
       201
     );
     return;
   }
 
-  sendSuccess(res, { order: result.order, receiptToken: result.receiptToken }, 'Order placed', 201);
+  sendSuccess(res, { order: orderService.customerOrderView(result.order), receiptToken: result.receiptToken }, 'Order placed', 201);
 });
 
 export const myOrders = asyncHandler(async (req: AuthRequest, res: Response) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
   const result = await orderService.listUserOrders(req.user!.userId, page, limit);
-  sendPaginated(res, result.items, {
+  sendPaginated(res, result.items.map(orderService.customerOrderView), {
     page: result.page,
     limit: result.limit,
     total: result.total,
@@ -52,23 +52,23 @@ export const myOrders = asyncHandler(async (req: AuthRequest, res: Response) => 
 
 export const myOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.getUserOrder(req.user!.userId, param(req, 'orderNumber'));
-  sendSuccess(res, order);
+  sendSuccess(res, orderService.customerOrderView(order));
 });
 
 export const guestOrderReceipt = asyncHandler(async (req: AuthRequest, res: Response) => {
   const receiptToken = String(req.body.token || '');
   const order = await orderService.getGuestOrderReceipt(param(req, 'orderNumber'), receiptToken);
-  sendSuccess(res, order);
+  sendSuccess(res, orderService.customerOrderView(order));
 });
 
 export const trackGuestOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.trackGuestOrder(req.body.orderNumber, req.body.phone);
-  sendSuccess(res, order);
+  sendSuccess(res, orderService.customerOrderView(order));
 });
 
 export const cancelMyOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.cancelUserOrder(req.user!.userId, param(req, 'orderNumber'));
-  sendSuccess(res, order, 'Order cancelled');
+  sendSuccess(res, orderService.customerOrderView(order), 'Order cancelled');
 });
 
 export const updateMyOrderItems = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -77,7 +77,7 @@ export const updateMyOrderItems = asyncHandler(async (req: AuthRequest, res: Res
     param(req, 'orderNumber'),
     req.body.items
   );
-  sendSuccess(res, order, 'Order updated');
+  sendSuccess(res, orderService.customerOrderView(order), 'Order updated');
 });
 
 export const validateCoupon = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -115,9 +115,15 @@ export const updateOrderStatus = asyncHandler(async (req: AuthRequest, res: Resp
     param(req, 'id'),
     req.body.orderStatus,
     req.body.note,
-    req.body.adminNote
+    req.body.adminNote,
+    { reason: req.body.reason, rescheduledFor: req.body.rescheduledFor, staffNote: req.body.staffNote, by: req.user?.userId }
   );
-  sendSuccess(res, order, 'Order updated');
+  sendSuccess(res, await orderService.getOrderById(String(order._id)), 'Order updated');
+});
+
+export const logOrderContact = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await orderService.logContactAttempt(param(req, 'id'), req.body, req.user?.userId);
+  sendSuccess(res, order, 'Contact attempt saved');
 });
 
 export const setOrderDeposit = asyncHandler(async (req: AuthRequest, res: Response) => {

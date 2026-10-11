@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/format'
-import { orderStatusVariant } from '@/lib/admin'
+import { orderStatusLabel, orderStatusVariant } from '@/lib/admin'
 import type { CustomerMetrics, CustomerProfile } from '@/types'
 import { Section, StatCard } from './shared'
 import { money } from './utils'
@@ -144,7 +144,7 @@ export function ProfileOrders({
                     </td>
                     <td className={`${td} whitespace-nowrap`}>{formatDate(ord.createdAt)}</td>
                     <td className={td}>
-                      <Badge variant={orderStatusVariant(ord.orderStatus)}>{ord.orderStatus}</Badge>
+                      <Badge variant={orderStatusVariant(ord.orderStatus)}>{orderStatusLabel(ord.orderStatus)}</Badge>
                     </td>
                     <td className={`${td} capitalize`}>
                       {ord.channel}

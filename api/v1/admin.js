@@ -259,15 +259,22 @@ async function handleOrderRoutes(req, res, route, query) {
   if (statusMatch && req.method === 'PATCH') {
     const user = await requireStaff(req, res, ['orders:write']);
     if (!user) return;
-    const body = await readJsonBody(req);
-    const order = await orderService.updateOrderStatus(
-      statusMatch[1],
-      body.orderStatus,
-      body.note,
-      body.adminNote
-    );
+    const { updateOrderStatusSchema } = require('../../backend/dist/validators/schemas');
+    const parsed = updateOrderStatusSchema.safeParse(await readJsonBody(req));
+    if (!parsed.success) {
+      sendJson(res, 400, { success: false, message: 'Invalid status update' });
+      return;
+    }
+    const body = parsed.data;
+    const order = await orderService.updateOrderStatus(statusMatch[1], body.orderStatus, body.note, body.adminNote, {
+      reason: body.reason,
+      rescheduledFor: body.rescheduledFor,
+      staffNote: body.staffNote,
+      by: String(user._id),
+    });
     dashboardCache = { at: 0, data: null };
-    sendJson(res, 200, { success: true, message: 'Order updated', data: order });
+    const fresh = await orderService.getOrderById(String(order._id));
+    sendJson(res, 200, { success: true, message: 'Order updated', data: fresh });
     return;
   }
 
@@ -455,7 +462,7 @@ module.exports = async (req, res) => {
     }
 
     // Refunds are recorded by the Express app
-    if (/^orders\/[^/]+\/(refunds|returns)$/.test(route)) {
+    if (/^orders\/[^/]+\/(refunds|returns|contacts)$/.test(route)) {
       await delegateToExpress(req, res, route, query);
       return;
     }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { orderStatusLabel } from '@/lib/orderStatus'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -27,11 +28,20 @@ const RANGES: { value: SalesRange; label: string }[] = [
 
 const STATUS_COLOR: Record<string, string> = {
   pending: 'bg-[var(--warning)]',
+  no_answer: 'bg-amber-600',
   confirmed: 'bg-[var(--brand)]',
   shipped: 'bg-[color-mix(in_srgb,var(--brand)_60%,var(--success))]',
+  delivery_failed: 'bg-orange-500',
+  rescheduled: 'bg-sky-500',
   delivered: 'bg-[var(--success)]',
+  return_requested: 'bg-violet-400',
+  return_in_transit: 'bg-violet-500',
+  partially_returned: 'bg-violet-600',
+  returned: 'bg-violet-700',
   cancelled: 'bg-[var(--danger)]',
 }
+/** Always listed; the other statuses only when they have orders. */
+const CORE_STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']
 
 const CONDITION_LABEL: Record<string, string> = { new: 'New', refurbished: 'Refurbished', used: 'Used' }
 
@@ -290,11 +300,11 @@ export function Analytics() {
                     )}
                   </div>
                   <ul className="space-y-1.5 text-sm">
-                    {r.status.map((s) => (
+                    {r.status.filter((s) => s.orders > 0 || CORE_STATUSES.includes(s.status)).map((s) => (
                       <li key={s.status}>
                         <Link to={`/admin/orders?status=${s.status}`} className="flex items-center gap-2 rounded-lg hover:text-[var(--brand-text)]">
                           <span className={cn('h-2 w-2 shrink-0 rounded-full', STATUS_COLOR[s.status])} />
-                          <span className="flex-1 capitalize">{s.status}</span>
+                          <span className="flex-1">{orderStatusLabel(s.status)}</span>
                           <span className="tabular-nums">{s.orders}</span>
                           <span className="w-10 text-end text-xs tabular-nums text-[var(--fg-muted)]">{pct(s.orders, placed)}%</span>
                         </Link>

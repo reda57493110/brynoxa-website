@@ -23,16 +23,10 @@ import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
+import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import type { OrderItem, Product, ProductCondition } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 
-function statusVariant(status: string) {
-  if (status === 'delivered') return 'success' as const
-  if (status === 'cancelled') return 'danger' as const
-  if (status === 'shipped') return 'brand' as const
-  if (status === 'confirmed' || status === 'processing') return 'success' as const
-  return 'warning' as const
-}
 
 function productIdOf(item: OrderItem) {
   return typeof item.product === 'string' ? item.product : item.product._id
@@ -212,8 +206,11 @@ export function OrderDetail() {
         back={{ to: '/account/orders', label: t('orders.backToOrders') }}
         meta={
           <>
-            <Badge variant={statusVariant(o.orderStatus)}>{t(orderStatusKey(o.orderStatus))}</Badge>
+            <Badge variant={orderStatusVariant(o.orderStatus)}>{t(orderStatusKey(o.orderStatus))}</Badge>
             <span className="text-sm text-[var(--fg-muted)]">{formatDateTime(o.createdAt)}</span>
+            {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
+              <span className="text-sm font-medium">{t('orders.rescheduledFor', { date: formatDeliveryDay(o.rescheduledFor) })}</span>
+            ) : null}
           </>
         }
         actions={

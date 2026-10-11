@@ -10,6 +10,7 @@ import { isProd } from '../config/env';
 import { sendVerificationEmail } from './auth.service';
 import { isStaffRole, STAFF_ROLES, type StaffRole } from '../permissions';
 import { STORE_TIMEZONE } from './dashboard.service';
+import { attentionFilter } from '../utils/orderStatus';
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -62,6 +63,7 @@ async function buildDashboardStats() {
                 },
               },
             ],
+            attention: [{ $match: attentionFilter() }, { $count: 'n' }],
             byStatus: [{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }],
             // Orders placed today in the store's timezone (not the server's)
             today: [
@@ -115,6 +117,7 @@ async function buildDashboardStats() {
     todayOrderValue: facet.today[0]?.total || 0,
     orderCount: facet.counts[0]?.orderCount || 0,
     pendingOrders: facet.counts[0]?.pendingOrders || 0,
+    attentionOrders: facet.attention?.[0]?.n || 0,
     customerCount,
     productCount: n(productsFacet.productCount),
     activeProducts: n(productsFacet.activeProducts),

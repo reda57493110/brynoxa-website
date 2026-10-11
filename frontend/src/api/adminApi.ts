@@ -13,6 +13,7 @@ import type {
   NewsletterSub,
   Order,
   OrderStatus,
+  OrderContactAttempt,
   Product,
   ProductFilters,
   PushCampaign,
@@ -96,8 +97,19 @@ export const adminApi = {
     get: (id: string) => api.get<ApiResponse<Order>>(`/admin/orders/${id}`),
     updateStatus: (
       id: string,
-      payload: { orderStatus: OrderStatus; adminNote?: string; note?: string }
+      payload: {
+        orderStatus: OrderStatus
+        adminNote?: string
+        /** Shown to the customer */
+        note?: string
+        /** Staff only */
+        staffNote?: string
+        reason?: string
+        rescheduledFor?: string
+      }
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
+    logContact: (id: string, payload: Pick<OrderContactAttempt, 'channel' | 'outcome' | 'note'>) =>
+      api.post<ApiResponse<Order>>(`/admin/orders/${id}/contacts`, payload),
     setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
     recordRefund: (id: string, payload: { amount: number; reason: string; itemsReturned?: boolean }) =>

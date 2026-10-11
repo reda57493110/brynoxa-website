@@ -22,8 +22,11 @@ import { notifyCustomerOrderStatus, notifyStaffNewOrder } from './push.service';
 
 type OrderDoc = InstanceType<typeof Order>;
 
-/** Short copy reused by in-app notifications and push messages. */
-const STATUS_COPY: Record<OrderStatus, { title: string; customerLine: string }> = {
+/**
+ * Short copy reused by in-app notifications. Statuses without copy (internal steps such as a
+ * parcel on its way back) do not notify the customer.
+ */
+const STATUS_COPY: Partial<Record<OrderStatus, { title: string; customerLine: string }>> = {
   pending: {
     title: 'Order placed',
     customerLine: 'We received your order and will confirm it shortly. Pay cash on delivery.',
@@ -44,10 +47,34 @@ const STATUS_COPY: Record<OrderStatus, { title: string; customerLine: string }> 
     title: 'Order cancelled',
     customerLine: 'Your order was cancelled. Contact us on WhatsApp if you need help.',
   },
+  no_answer: {
+    title: 'We tried to reach you',
+    customerLine: 'We called to confirm your order but could not reach you. Please answer our next call or message us on WhatsApp.',
+  },
+  delivery_failed: {
+    title: 'Delivery attempt failed',
+    customerLine: 'The courier could not deliver your order. We will contact you to arrange a new delivery.',
+  },
+  rescheduled: {
+    title: 'Delivery rescheduled',
+    customerLine: 'Your delivery has been rescheduled.',
+  },
+  return_requested: {
+    title: 'Return request received',
+    customerLine: 'We received your return request and will contact you to arrange it.',
+  },
+  partially_returned: {
+    title: 'Returned items received',
+    customerLine: 'We received the items you sent back. They are being checked; any refund due will be arranged with you.',
+  },
+  returned: {
+    title: 'Return received',
+    customerLine: 'Your order came back to us. Any refund due will be arranged with you; message us on WhatsApp with any question.',
+  },
 };
 
 export function statusNotificationCopy(status: OrderStatus) {
-  return STATUS_COPY[status];
+  return STATUS_COPY[status] ?? null;
 }
 
 /** Status changes that send a customer email, and the admin switch that controls each. */

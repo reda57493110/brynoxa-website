@@ -181,10 +181,18 @@ export interface ProductFilters {
 
 export type OrderStatus =
   | 'pending'
+  | 'no_answer'
   | 'confirmed'
+  /** Legacy alias of confirmed */
   | 'processing'
   | 'shipped'
+  | 'delivery_failed'
+  | 'rescheduled'
   | 'delivered'
+  | 'return_requested'
+  | 'return_in_transit'
+  | 'partially_returned'
+  | 'returned'
   | 'cancelled'
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
@@ -210,6 +218,8 @@ export interface OrderItem {
   /** Condition of the listing when ordered */
   condition?: ProductCondition
   serials?: string[]
+  /** Units registered as returned */
+  returnedQty?: number
 }
 
 export interface OrderRefund {
@@ -217,12 +227,28 @@ export interface OrderRefund {
   reason: string
   itemsReturned?: boolean
   at: string
+  by?: { _id: string; name: string } | string
 }
 
 export interface OrderTimeline {
   status: OrderStatus
   note?: string
+  /** Delivery issue code */
+  reason?: string
+  /** Staff only */
+  staffNote?: string
+  /** Staff-only audit step */
+  internal?: boolean
   at: string
+  by?: { _id: string; name: string } | string
+}
+
+export interface OrderContactAttempt {
+  channel: 'call' | 'whatsapp' | 'sms' | 'email'
+  outcome: 'reached' | 'no_answer' | 'busy' | 'wrong_number' | 'switched_off' | 'message_sent'
+  note?: string
+  at: string
+  by?: { _id: string; name: string } | string
 }
 
 export interface OrderPricing {
@@ -249,9 +275,15 @@ export interface Order {
   deposit?: OrderDeposit
   orderStatus: OrderStatus
   timeline: OrderTimeline[]
+  contactAttempts?: OrderContactAttempt[]
+  deliveryIssue?: { reason: string; note?: string; at: string }
+  deliveryAttempts?: number
+  rescheduledFor?: string
+  deliveredAt?: string
   customerNote?: string
   adminNote?: string
   stockReserved?: boolean
+  stockDispatched?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -374,6 +406,7 @@ export interface DashboardStats {
   todayOrderValue: number
   orderCount: number
   pendingOrders: number
+  attentionOrders?: number
   customerCount: number
   productCount: number
   activeProducts: number

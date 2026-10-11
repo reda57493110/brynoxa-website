@@ -20,15 +20,9 @@ import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
+import { orderStatusVariant } from '@/lib/orderStatus'
 import type { Order } from '@/types'
 
-function statusVariant(status: string) {
-  if (status === 'delivered') return 'success' as const
-  if (status === 'cancelled') return 'danger' as const
-  if (status === 'shipped') return 'brand' as const
-  if (status === 'confirmed' || status === 'processing') return 'success' as const
-  return 'warning' as const
-}
 
 export function Orders() {
   const t = useT()
@@ -121,7 +115,7 @@ export function Orders() {
 
                     <div className="flex flex-col items-stretch gap-3 sm:items-end">
                       <div className="flex items-center gap-3">
-                        <Badge variant={statusVariant(order.orderStatus)}>
+                        <Badge variant={orderStatusVariant(order.orderStatus)}>
                           {t(orderStatusKey(order.orderStatus))}
                         </Badge>
                         <span className="font-display font-semibold">

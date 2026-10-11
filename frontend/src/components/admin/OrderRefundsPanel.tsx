@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { amountPaid } from '@/lib/orderStatus'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -13,10 +14,7 @@ import type { Order } from '@/types'
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 /** Amount actually paid on an order — mirrors the server's refund rule. */
-function orderPaidAmount(order: Order): number {
-  if (order.orderStatus === 'delivered') return order.pricing.total
-  return order.deposit?.status === 'received' ? order.deposit.amount : 0
-}
+const orderPaidAmount = amountPaid
 
 /** Staff view of an order's refunds: history, total, and a form to record a new one. */
 export function OrderRefundsPanel({ order }: { order: Order }) {

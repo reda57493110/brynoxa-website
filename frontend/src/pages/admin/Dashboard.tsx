@@ -1,3 +1,4 @@
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -11,7 +12,7 @@ import { SalesChart, type SalesMetric } from '@/components/admin/SalesChart'
 import { Change, Kpi, SalesStats, SectionTitle, analyticsCard as card, kpiGridClass } from '@/components/admin/analytics/Kit'
 import { dayLabel } from '@/lib/salesBuckets'
 import { useAdminStats } from '@/hooks/useAdminStats'
-import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
+import { ORDER_STATUSES, orderStatusLabel, orderStatusVariant } from '@/lib/admin'
 import { formatCurrency, formatCurrencyRounded, formatDate } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { hasPermission, staffHomePath } from '@/lib/permissions'
@@ -263,13 +264,26 @@ export function Dashboard() {
         <section className={cn(card, 'rounded-xl p-3 sm:rounded-2xl sm:p-5')}>
           <SectionTitle title="Order pipeline" link={{ to: '/admin/orders', label: 'Orders' }} />
           <ul className="mt-3 space-y-1">
-            {ORDER_STATUSES.map((status) => (
+            <li>
+              <Link
+                to="/admin/orders?status=attention"
+                className="flex min-w-0 items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-sm font-medium hover:bg-[var(--bg-muted)]"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <SiteIcon name="alert" size={14} className="text-[var(--warning)]" /> Needs attention
+                </span>
+                <span className="shrink-0 tabular-nums">{s ? s.attentionOrders ?? 0 : '—'}</span>
+              </Link>
+            </li>
+            {ORDER_STATUSES.filter(
+              (status) => ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].includes(status) || (s?.ordersByStatus?.[status] ?? 0) > 0
+            ).map((status) => (
               <li key={status}>
                 <Link
                   to={`/admin/orders?status=${status}`}
                   className="flex min-w-0 items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-sm hover:bg-[var(--bg-muted)]"
                 >
-                  <Badge variant={orderStatusVariant(status)}>{status}</Badge>
+                  <Badge variant={orderStatusVariant(status)}>{orderStatusLabel(status)}</Badge>
                   <span className="shrink-0 font-medium tabular-nums">{s ? s.ordersByStatus?.[status] || 0 : '—'}</span>
                 </Link>
               </li>
@@ -301,7 +315,7 @@ export function Dashboard() {
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         <span className="text-sm font-medium tabular-nums">{formatCurrency(o.pricing.total)}</span>
-                        <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+                        <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
                       </div>
                     </Link>
                   </li>
@@ -337,7 +351,7 @@ export function Dashboard() {
                           <Badge variant={PAYMENT_VARIANT[o.paymentStatus] ?? 'muted'}>{o.paymentStatus}</Badge>
                         </td>
                         <td className="py-2">
-                          <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
+                          <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
                         </td>
                       </tr>
                     )

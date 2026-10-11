@@ -288,6 +288,21 @@ const ORDER_STATUS_COPY: Partial<
     fr: { title: 'Commande annulée', body: 'Votre commande {n} a été annulée. Contactez-nous sur WhatsApp si besoin.' },
     ar: { title: 'تم إلغاء الطلب', body: 'تم إلغاء طلبك {n}. تواصل معنا عبر واتساب إذا احتجت المساعدة.' },
   },
+  no_answer: {
+    en: { title: 'We tried to reach you', body: 'We called about order {n} but could not reach you. Please answer our next call.' },
+    fr: { title: 'Nous avons essayé de vous joindre', body: 'Nous vous avons appelé pour la commande {n} sans réponse. Merci de répondre à notre prochain appel.' },
+    ar: { title: 'حاولنا الاتصال بك', body: 'اتصلنا بك بخصوص الطلب {n} دون رد. يرجى الرد على مكالمتنا القادمة.' },
+  },
+  delivery_failed: {
+    en: { title: 'Delivery attempt failed', body: 'The courier could not deliver order {n}. We will contact you to arrange a new delivery.' },
+    fr: { title: 'Échec de livraison', body: 'Le livreur n’a pas pu livrer la commande {n}. Nous vous contacterons pour une nouvelle livraison.' },
+    ar: { title: 'تعذّر التسليم', body: 'لم يتمكن عامل التوصيل من تسليم الطلب {n}. سنتواصل معك لترتيب توصيل جديد.' },
+  },
+  rescheduled: {
+    en: { title: 'Delivery rescheduled', body: 'The delivery of order {n} has been rescheduled.' },
+    fr: { title: 'Livraison reprogrammée', body: 'La livraison de la commande {n} a été reprogrammée.' },
+    ar: { title: 'تمت إعادة جدولة التسليم', body: 'تمت إعادة جدولة تسليم الطلب {n}.' },
+  },
 };
 
 /** Tells the customer's subscribed devices about a status change, in each device's language. */

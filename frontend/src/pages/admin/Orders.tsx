@@ -13,7 +13,19 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatCurrency, formatDateTime } from '@/lib/format'
-import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
+import {
+  GROUP_DOT,
+  ORDER_GROUPS,
+  ORDER_STATUS_GROUP,
+  ORDER_TRANSITIONS,
+  attentionReasons,
+  formatDeliveryDay,
+  orderStatusLabel,
+  orderStatusVariant,
+  refundState,
+  statusesInGroup,
+  type OrderStatusGroup,
+} from '@/lib/orderStatus'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import { toast } from '@/store/toastStore'
 import type { Order, OrderStatus, User } from '@/types'
@@ -34,16 +46,47 @@ const QUICK_RANGES = [
   { label: '30 days', from: () => moroccoDay(-29) },
 ]
 
+/** Statuses that may move to `to` (from the shared transition table). */
+const sourcesOf = (to: OrderStatus) =>
+  (Object.keys(ORDER_TRANSITIONS) as OrderStatus[]).filter((s) => ORDER_TRANSITIONS[s].includes(to))
+
 /**
  * Bulk status changes, each sent through the normal per-order update (stock, emails, deposit rules).
- * `from` mirrors the server transitions: pending → confirmed → shipped → delivered; cancel before shipping.
+ * Only moves that need no extra details (a failed delivery needs a reason, a reschedule a date).
  */
 const BULK_ACTIONS: { status: OrderStatus; label: string; from: OrderStatus[]; danger?: boolean }[] = [
-  { status: 'confirmed', label: 'Confirm', from: ['pending'] },
-  { status: 'shipped', label: 'Mark shipped', from: ['confirmed'] },
-  { status: 'delivered', label: 'Mark delivered', from: ['shipped'] },
-  { status: 'cancelled', label: 'Cancel', from: ['pending', 'confirmed'], danger: true },
+  { status: 'confirmed', label: 'Confirm', from: sourcesOf('confirmed') },
+  { status: 'no_answer', label: 'No answer', from: sourcesOf('no_answer') },
+  { status: 'shipped', label: 'Mark shipped', from: sourcesOf('shipped') },
+  { status: 'delivered', label: 'Mark delivered', from: sourcesOf('delivered') },
+  { status: 'cancelled', label: 'Cancel', from: sourcesOf('cancelled'), danger: true },
 ]
+
+/** Status badge plus the flags staff need to see in a list. */
+function StatusCell({ o }: { o: Order }) {
+  const refundBadge = refundState(o) === 'due'
+  // The refund badge already says it
+  const reasons = attentionReasons(o).filter((r) => !(refundBadge && r === 'Refund due'))
+  return (
+    <>
+      <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
+      {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? <Badge variant="warning">Awaiting deposit</Badge> : null}
+      {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
+        <span className="text-[11px] text-[var(--fg-muted)]">→ {formatDeliveryDay(o.rescheduledFor)}</span>
+      ) : null}
+      {refundBadge ? <Badge variant="danger">Refund pending</Badge> : null}
+      {reasons.length ? (
+        <span
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--warning)]"
+          title={reasons.join(' · ')}
+        >
+          <SiteIcon name="alert" size={12} />
+          <span className="max-w-[10rem] truncate">{reasons[0]}</span>
+        </span>
+      ) : null}
+    </>
+  )
+}
 
 const chip = (on: boolean) =>
   cn(
@@ -61,7 +104,15 @@ export function Orders() {
   const navigate = useNavigate()
   const stats = useAdminStats()
   const [params, setParams] = useSearchParams()
-  const status = (params.get('status') || '') as OrderStatus | ''
+  // A status, "group:<group>" or "attention"
+  const status = params.get('status') || ''
+  const activeGroup: OrderStatusGroup | null = status.startsWith('group:')
+    ? (status.slice(6) as OrderStatusGroup)
+    : status && status !== 'attention'
+      ? (ORDER_STATUS_GROUP[status as OrderStatus] ?? null)
+      : null
+  const count = (s: OrderStatus) => stats.data?.ordersByStatus?.[s] ?? 0
+  const groupCount = (g: OrderStatusGroup) => statusesInGroup(g).reduce((a, s) => a + count(s), 0)
   const from = params.get('from') || ''
   const to = params.get('to') || ''
   const [q, setQ] = useState(params.get('q') || '')
@@ -128,7 +179,7 @@ export function Orders() {
       refresh()
       setBulk(null)
       setSelected(new Set(failed.map((f) => f.order._id)))
-      const parts = [`${done} order${done === 1 ? '' : 's'} → ${action.status}`]
+      const parts = [`${done} order${done === 1 ? '' : 's'} → ${orderStatusLabel(action.status).toLowerCase()}`]
       if (skipped) parts.push(`${skipped} skipped (status not eligible)`)
       if (failed.length) {
         parts.push(`${failed.length} failed: ${failed.map((f) => `#${f.order.orderNumber} (${f.error})`).join('; ')}`)
@@ -173,12 +224,36 @@ export function Orders() {
         <button type="button" onClick={() => setFilter({ status: undefined })} className={chip(!status)}>
           All ({stats.data?.orderCount ?? '—'})
         </button>
-        {ORDER_STATUSES.map((s) => (
-          <button key={s} type="button" onClick={() => setFilter({ status: s })} className={cn(chip(status === s), 'capitalize')}>
-            {s} ({stats.data?.ordersByStatus?.[s] ?? 0})
+        <button type="button" onClick={() => setFilter({ status: 'attention' })} className={cn(chip(status === 'attention'), 'inline-flex items-center gap-1.5')}>
+          <SiteIcon name="alert" size={13} className="text-[var(--warning)]" />
+          Needs attention ({stats.data?.attentionOrders ?? 0})
+        </button>
+        {ORDER_GROUPS.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            onClick={() => setFilter({ status: `group:${g.id}` })}
+            className={cn(chip(activeGroup === g.id), 'inline-flex items-center gap-1.5')}
+          >
+            <span className={cn('h-2 w-2 rounded-full', GROUP_DOT[g.id])} />
+            {g.label} ({groupCount(g.id)})
           </button>
         ))}
       </div>
+      {activeGroup && statusesInGroup(activeGroup).length > 1 ? (
+        <div className="-mt-2 flex flex-wrap gap-1.5 sm:-mt-3">
+          {statusesInGroup(activeGroup).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setFilter({ status: status === s ? `group:${activeGroup}` : s })}
+              className={cn(chip(status === s), 'h-7 text-xs sm:h-7 sm:text-xs')}
+            >
+              {orderStatusLabel(s)} ({count(s)})
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       {/* Search + dates */}
       <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-end">
@@ -289,8 +364,7 @@ export function Orders() {
                     </div>
                   ) : null}
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                    <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
-                    {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? <Badge variant="warning">Awaiting deposit</Badge> : null}
+                    <StatusCell o={o} />
                     <span className="text-[11px] text-[var(--fg-muted)]">{formatDateTime(o.createdAt)}</span>
                   </div>
                 </Link>
@@ -350,8 +424,7 @@ export function Orders() {
                     <td className="whitespace-nowrap px-3 py-3">{formatDateTime(o.createdAt)}</td>
                     <td className="px-3 py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
-                        {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? <Badge variant="warning">Awaiting deposit</Badge> : null}
+                        <StatusCell o={o} />
                       </div>
                     </td>
                     <td className="px-3 py-3 text-right font-medium tabular-nums">{formatCurrency(o.pricing.total)}</td>
@@ -400,7 +473,7 @@ export function Orders() {
                   variant={a.danger ? 'ghost' : 'outline'}
                   className={a.danger ? 'text-[var(--danger)]' : undefined}
                   disabled={!eligible(a) || runBulk.isPending}
-                  title={eligible(a) ? undefined : `None of the selected orders can be set to ${a.status}`}
+                  title={eligible(a) ? undefined : `None of the selected orders can be set to ${orderStatusLabel(a.status).toLowerCase()}`}
                   onClick={() => setBulk(a)}
                 >
                   {a.label}

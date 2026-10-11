@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { OPEN_STATUSES, closedWithoutSale, wasDelivered } from '../utils/orderStatus';
 import { Order, type OrderStatus } from '../models/Order';
 import { Product } from '../models/Product';
 import { DEFAULT_SEGMENT_SETTINGS, getSettings, type ICustomerSegmentSettings } from '../models/Settings';
@@ -19,7 +20,7 @@ import { roundMoney } from '../utils/deposit';
  * - To collect      = open orders' total − deposit already received (deposits counted once).
  */
 
-const OPEN: OrderStatus[] = ['pending', 'confirmed', 'shipped'];
+const OPEN: OrderStatus[] = OPEN_STATUSES;
 // Whole order plus the staff-only line cost. (Listing "items" and "+items.unitCost" together
 // would be a MongoDB path collision, so only the opt-in is given.)
 const ORDER_FIELDS = '+items.unitCost';
@@ -31,6 +32,7 @@ type LeanOrder = {
   items: { product: Types.ObjectId; name: string; price: number; qty: number; listPrice?: number; unitCost?: number }[];
   pricing: { subtotal: number; discount: number; shipping: number; tax: number; total: number; wholesaleDiscount?: number };
   orderStatus: OrderStatus;
+  deliveredAt?: Date;
   paymentStatus: string;
   paymentMethod?: string;
   deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date } | null;
@@ -89,13 +91,16 @@ function emptySales(): SalesBlock {
 
 function orderState(o: LeanOrder) {
   const refunded = refundTotal(o);
-  const fullyRefunded = o.orderStatus === 'delivered' && refunded >= o.pricing.total - 0.005;
+  const delivered = wasDelivered(o);
+  const fullyRefunded = delivered && refunded >= o.pricing.total - 0.005;
   return {
     refunded,
+    delivered,
     fullyRefunded,
-    completed: o.orderStatus === 'delivered' && !fullyRefunded,
+    completed: delivered && !fullyRefunded,
     open: OPEN.includes(o.orderStatus),
-    cancelled: o.orderStatus === 'cancelled',
+    // Cancelled, or sent back without ever being delivered
+    cancelled: closedWithoutSale(o),
   };
 }
 
@@ -153,7 +158,7 @@ export function computeMetrics(orders: LeanOrder[]): CustomerMetrics {
       pay.depositsReceived += depositReceived;
       pay.usedDeposit = true;
     }
-    const paidOnOrder = o.orderStatus === 'delivered' ? o.pricing.total : depositReceived;
+    const paidOnOrder = st.delivered ? o.pricing.total : depositReceived;
     pay.paid += paidOnOrder - st.refunded;
     pay.refunds += st.refunded;
 
@@ -166,7 +171,7 @@ export function computeMetrics(orders: LeanOrder[]): CustomerMetrics {
       if (o.deposit?.status === 'pending') pay.depositsAwaiting += o.deposit.amount;
     }
     if (st.fullyRefunded) counts.refunded += 1;
-    else if (st.refunded > 0 && o.orderStatus === 'delivered') counts.partiallyRefunded += 1;
+    else if (st.refunded > 0 && st.delivered) counts.partiallyRefunded += 1;
 
     if (st.completed) {
       counts.completed += 1;
@@ -495,7 +500,7 @@ export async function customerProfile(
   // Products and categories bought (cancelled orders excluded)
   const bought = new Map<string, { productId: string; name: string; qty: number; orders: number; spent: number }>();
   for (const o of orders) {
-    if (o.orderStatus === 'cancelled') continue;
+    if (closedWithoutSale(o)) continue;
     for (const item of o.items) {
       const key = String(item.product);
       const row = bought.get(key) || { productId: key, name: item.name, qty: 0, orders: 0, spent: 0 };

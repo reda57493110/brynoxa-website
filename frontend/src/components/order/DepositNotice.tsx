@@ -12,7 +12,7 @@ export function DepositNotice({ order, className }: { order: Order; className?: 
   const t = useT()
   const openWhatsApp = useWhatsAppStore((s) => s.open)
   const deposit = order.deposit
-  const awaiting = deposit?.status === 'pending' && order.orderStatus === 'pending'
+  const awaiting = deposit?.status === 'pending' && (order.orderStatus === 'pending' || order.orderStatus === 'no_answer')
 
   const settings = useQuery({
     queryKey: ['settings'],

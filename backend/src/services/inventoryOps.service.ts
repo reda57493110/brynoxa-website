@@ -1,5 +1,11 @@
 import { Types } from 'mongoose';
-import { Order } from '../models/Order';
+import { Order, type OrderStatus } from '../models/Order';
+import { Coupon } from '../models/Coupon';
+import { Notification } from '../models/Notification';
+import { RETURNABLE_STATUSES, wasDelivered } from '../utils/orderStatus';
+import { backfillDeliveredAt } from './order.service';
+import { statusNotificationCopy } from './orderNotify.service';
+import { invalidateDashboardCache } from './admin.service';
 import { Product, type ProductCondition } from '../models/Product';
 import { getSettings } from '../models/Settings';
 import {
@@ -358,34 +364,41 @@ async function assertListing(targetId: string | undefined, condition: ProductCon
 /* Customer returns                                                     */
 /* ------------------------------------------------------------------ */
 
-/** Registers units a customer sent back. They wait in "returned" until someone assesses them. */
+/**
+ * Register units that physically came back (customer return or failed delivery). They land in the
+ * "returned" bucket — not sellable — until assessed. The order moves to returned / partially
+ * returned in the same transaction. Runs entirely inside the transaction, so two clicks can never
+ * register the same units twice (the second sees the first and is refused).
+ */
 export async function createReturn(
   input: { orderId: string; returnedAt?: Date; lines: { productId: string; qty: number; serials?: string[]; reason: string; conditionNote?: string }[] },
   actor: Actor
 ) {
-  const order = await Order.findById(input.orderId).select('+items.unitCost');
-  if (!order) throw new ApiError(404, 'Order not found');
-  if (order.orderStatus === 'cancelled' || !(order.stockDispatched || order.orderStatus === 'shipped' || order.orderStatus === 'delivered')) {
-    throw new ApiError(400, 'Only shipped or delivered orders can have returns');
-  }
-  const previous = await CustomerReturn.find({ order: order._id }).lean();
-  const returnedQty = (productId: string) =>
-    previous.reduce((sum, r) => sum + r.lines.filter((l) => String(l.product) === productId).reduce((a, l) => a + l.qty, 0), 0);
-
-  const lines = input.lines.map((line) => {
-    const item = order.items.find((i) => String(i.product) === line.productId);
-    if (!item) throw new ApiError(400, 'That product is not part of this order');
-    const left = item.qty - returnedQty(line.productId);
-    const qty = Math.floor(line.qty);
-    if (!(qty > 0) || qty > left) throw new ApiError(400, `You can return between 1 and ${left} unit${left === 1 ? '' : 's'} of ${item.name}`);
-    if (item.serials?.length && line.serials?.length) {
-      const bad = line.serials.filter((s) => !item.serials!.includes(s));
-      if (bad.length) throw new ApiError(400, `Serial ${bad[0]} was not sold on this order`);
+  const result = await withTransaction(async (session) => {
+    const order = await Order.findById(input.orderId).select('+items.unitCost').session(session ?? null);
+    if (!order) throw new ApiError(404, 'Order not found');
+    if (!RETURNABLE_STATUSES.includes(order.orderStatus)) {
+      throw new ApiError(400, 'Only orders that left the store can have returns');
     }
-    return { item, qty, serials: line.serials || [], reason: line.reason.trim(), conditionNote: line.conditionNote?.trim() };
-  });
+    const previous = await CustomerReturn.find({ order: order._id }).session(session ?? null).lean();
+    const returnedQty = (productId: string) =>
+      previous.reduce((sum, r) => sum + r.lines.filter((l) => String(l.product) === productId).reduce((a, l) => a + l.qty, 0), 0);
 
-  return withTransaction(async (session) => {
+    const lines = input.lines.map((line) => {
+      const item = order.items.find((i) => String(i.product) === line.productId);
+      if (!item) throw new ApiError(400, 'That product is not part of this order');
+      const left = item.qty - returnedQty(line.productId);
+      const qty = Math.floor(line.qty);
+      if (!(qty > 0) || qty > left) {
+        throw new ApiError(400, left > 0 ? `You can return between 1 and ${left} unit${left === 1 ? '' : 's'} of ${item.name}` : `All units of ${item.name} are already registered as returned`);
+      }
+      if (item.serials?.length && line.serials?.length) {
+        const bad = line.serials.filter((s) => !item.serials!.includes(s));
+        if (bad.length) throw new ApiError(400, `Serial ${bad[0]} was not sold on this order`);
+      }
+      return { item, qty, serials: line.serials || [], reason: line.reason.trim(), conditionNote: line.conditionNote?.trim() };
+    });
+
     const [ret] = await CustomerReturn.create(
       [
         {
@@ -429,14 +442,54 @@ export async function createReturn(
       );
       await Product.updateOne({ _id: l.item.product, soldCount: { $gte: l.qty } }, { $inc: { soldCount: -l.qty } }, { session });
     }
+
+    // Units back per line, then the order status that follows from it
+    for (const item of order.items) {
+      const now = lines.filter((l) => l.item === item).reduce((a, l) => a + l.qty, 0);
+      item.returnedQty = returnedQty(String(item.product)) + now;
+    }
+    order.markModified('items');
+    backfillDeliveredAt(order);
+    const prev = order.orderStatus;
+    const delivered = wasDelivered(order);
+    const allBack = order.items.every((i) => (i.returnedQty || 0) >= i.qty);
+    const next: OrderStatus = allBack ? 'returned' : 'partially_returned';
+
+    // Sent back without delivery: no cash was collected, and the coupon use is given back
+    if (allBack && !delivered) {
+      if (order.paymentStatus === 'pending') order.paymentStatus = 'failed';
+      if (order.coupon?.couponId) {
+        await Coupon.updateOne({ _id: order.coupon.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } }, { session });
+      }
+    }
+    order.orderStatus = next;
+    order.rescheduledFor = undefined;
+    const conditions = lines.filter((l) => l.conditionNote).map((l) => `${l.item.name}: ${l.conditionNote}`);
     order.timeline.push({
-      status: order.orderStatus,
-      note: `Return registered: ${lines.map((l) => `${l.qty} × ${l.item.name}`).join(', ')}`,
+      status: next,
+      note: `${delivered ? 'Returned items received' : 'Parcel received back'}: ${lines.map((l) => `${l.qty} × ${l.item.name}`).join(', ')}`,
+      staffNote: [lines.map((l) => l.reason).join('; '), ...conditions].filter(Boolean).join(' · ') || undefined,
       at: new Date(),
+      by: actor.id as never,
     });
     await order.save({ session });
-    return ret;
+    return { ret, order, changed: prev !== next, next };
   });
+
+  invalidateDashboardCache();
+  if (result.changed) {
+    const copy = statusNotificationCopy(result.next);
+    if (copy) {
+      await Notification.create({
+        user: result.order.user,
+        type: 'order',
+        title: copy.title,
+        message: `${copy.customerLine} (${result.order.orderNumber})`,
+        link: `/account/orders/${result.order.orderNumber}`,
+      }).catch((error) => console.error('Return notification failed', error));
+    }
+  }
+  return result.ret;
 }
 
 /** Decides what happens to returned units. Nothing becomes sellable without this step. */

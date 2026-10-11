@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DELIVERY_ISSUES, ORDER_STATUSES } from '../utils/orderStatus';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
@@ -174,9 +175,21 @@ export const updateOrderItemsSchema = z.object({
     .max(50),
 });
 export const updateOrderStatusSchema = z.object({
-  orderStatus: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
-  adminNote: z.string().optional(),
-  note: z.string().optional(),
+  orderStatus: z.enum(ORDER_STATUSES),
+  adminNote: z.string().max(5000).optional(),
+  /** Shown to the customer on the order history. */
+  note: z.string().max(500).optional(),
+  /** Staff-only remark on the history step. */
+  staffNote: z.string().max(1000).optional(),
+  reason: z.enum(DELIVERY_ISSUES).optional(),
+  rescheduledFor: z.string().max(40).optional(),
+});
+
+/** Staff log a call / message to the customer. */
+export const orderContactSchema = z.object({
+  channel: z.enum(['call', 'whatsapp', 'sms', 'email']),
+  outcome: z.enum(['reached', 'no_answer', 'busy', 'wrong_number', 'switched_off', 'message_sent']),
+  note: z.string().max(500).optional(),
 });
 
 /** Staff: set the deposit amount (0 removes it) and/or mark it received. */

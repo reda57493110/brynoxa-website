@@ -1,12 +1,8 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 import { IAddress } from './User';
+import { DELIVERY_ISSUES, ORDER_STATUSES, type DeliveryIssue, type OrderStatus } from '../utils/orderStatus';
 
-export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled';
+export type { OrderStatus, DeliveryIssue };
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 
@@ -26,6 +22,8 @@ export interface IOrderItem {
   condition?: string;
   /** Product cost per unit at order time; missing on orders placed before costs were recorded. */
   unitCost?: number;
+  /** Units of this line registered as returned (customer returns or failed deliveries). */
+  returnedQty?: number;
 }
 
 /** A refund recorded by staff (money given back to the customer). */
@@ -51,7 +49,24 @@ export interface IOrderDeposit {
 export interface IOrderTimeline {
   status: OrderStatus;
   note?: string;
+  /** Delivery issue / cancellation reason code, when the step has one. */
+  reason?: string;
+  /** Staff-only remark on this step (never shown to the customer). */
+  staffNote?: string;
+  /** Staff-only step (audit trail), hidden from the customer's timeline. */
+  internal?: boolean;
   at: Date;
+  /** Staff member who made the change (absent: customer or system). */
+  by?: Types.ObjectId;
+}
+
+/** A call / message to the customer, logged by staff. */
+export interface IOrderContactAttempt {
+  channel: 'call' | 'whatsapp' | 'sms' | 'email';
+  outcome: 'reached' | 'no_answer' | 'busy' | 'wrong_number' | 'switched_off' | 'message_sent';
+  note?: string;
+  at: Date;
+  by?: Types.ObjectId;
 }
 
 export interface IOrder extends Document {
@@ -82,6 +97,15 @@ export interface IOrder extends Document {
   deposit?: IOrderDeposit;
   orderStatus: OrderStatus;
   timeline: IOrderTimeline[];
+  contactAttempts: IOrderContactAttempt[];
+  /** Latest failed delivery (cleared once delivered). */
+  deliveryIssue?: { reason: DeliveryIssue; note?: string; at: Date };
+  /** Failed delivery attempts so far. */
+  deliveryAttempts?: number;
+  /** New delivery date agreed with the customer. */
+  rescheduledFor?: Date;
+  /** First time the order was delivered (cash collected); kept when items come back later. */
+  deliveredAt?: Date;
   customerNote?: string;
   adminNote?: string;
   stockReserved: boolean;
@@ -106,6 +130,7 @@ const orderItemSchema = new Schema<IOrderItem>(
     condition: { type: String },
     // Staff-only: queries that need it use .select('+items.unitCost')
     unitCost: { type: Number, select: false },
+    returnedQty: { type: Number, default: 0, min: 0 },
   },
   { _id: false }
 );
@@ -114,11 +139,30 @@ const timelineSchema = new Schema<IOrderTimeline>(
   {
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+      enum: ORDER_STATUSES,
       required: true,
     },
     note: { type: String },
+    reason: { type: String },
+    staffNote: { type: String, maxlength: 1000 },
+    internal: { type: Boolean },
     at: { type: Date, default: Date.now },
+    by: { type: Schema.Types.ObjectId, ref: 'User' },
+  },
+  { _id: false }
+);
+
+const contactAttemptSchema = new Schema<IOrderContactAttempt>(
+  {
+    channel: { type: String, enum: ['call', 'whatsapp', 'sms', 'email'], required: true },
+    outcome: {
+      type: String,
+      enum: ['reached', 'no_answer', 'busy', 'wrong_number', 'switched_off', 'message_sent'],
+      required: true,
+    },
+    note: { type: String, maxlength: 500 },
+    at: { type: Date, default: Date.now },
+    by: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { _id: false }
 );
@@ -192,10 +236,21 @@ const orderSchema = new Schema<IOrder>(
     deposit: { type: depositSchema, default: undefined },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+      enum: ORDER_STATUSES,
       default: 'pending',
     },
     timeline: [timelineSchema],
+    contactAttempts: { type: [contactAttemptSchema], default: [] },
+    deliveryIssue: {
+      type: new Schema(
+        { reason: { type: String, enum: DELIVERY_ISSUES, required: true }, note: String, at: { type: Date, default: Date.now } },
+        { _id: false }
+      ),
+      default: undefined,
+    },
+    deliveryAttempts: { type: Number, default: 0 },
+    rescheduledFor: { type: Date },
+    deliveredAt: { type: Date },
     customerNote: { type: String },
     adminNote: { type: String },
     stockReserved: { type: Boolean, default: false },

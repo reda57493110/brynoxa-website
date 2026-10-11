@@ -1,4 +1,5 @@
 import { Order } from '../models/Order';
+import { ORDER_STATUSES, deliveredExpr, deliveredFilter, placedFilter } from '../utils/orderStatus';
 import { Product } from '../models/Product';
 import { Category } from '../models/Category';
 import { User } from '../models/User';
@@ -47,11 +48,11 @@ type DayRow = {
 /** Per-day figures for every order placed since `since` (bucketed by local day). */
 async function dailyRows(since: Date): Promise<DayRow[]> {
   return Order.aggregate<DayRow>([
-    { $match: { createdAt: { $gte: since }, orderStatus: { $ne: 'cancelled' } } },
+    { $match: { createdAt: { $gte: since }, ...placedFilter } },
     {
       $project: {
         day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } },
-        status: '$orderStatus',
+        delivered: deliveredExpr,
         total: '$pricing.total',
         discount: { $ifNull: ['$pricing.discount', 0] },
         charged: { $sum: { $map: { input: '$items', as: 'i', in: { $multiply: ['$$i.price', '$$i.qty'] } } } },
@@ -64,7 +65,7 @@ async function dailyRows(since: Date): Promise<DayRow[]> {
     },
     {
       $addFields: {
-        completed: { $and: [{ $eq: ['$status', 'delivered'] }, { $lt: ['$refunded', { $subtract: ['$total', 0.005] }] }] },
+        completed: { $and: ['$delivered', { $lt: ['$refunded', { $subtract: ['$total', 0.005] }] }] },
       },
     },
     {
@@ -109,7 +110,7 @@ function totalsOf(rows: DayRow[]) {
 /** Best sellers of the period: units and revenue from completed sales (order lines, not stock). */
 async function topProducts(since: Date, days: Set<string>, limit = 5) {
   const rows = await Order.aggregate<{ _id: unknown; name: string; units: number; revenue: number }>([
-    { $match: { createdAt: { $gte: since }, orderStatus: 'delivered' } },
+    { $match: { createdAt: { $gte: since }, ...deliveredFilter } },
     {
       $addFields: {
         day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } },
@@ -210,9 +211,9 @@ export async function analyticsReport(range: SalesRange, canSeeProfit: boolean) 
   const dayExpr = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } };
   const refundedExpr = { $sum: { $map: { input: { $ifNull: ['$refunds', []] }, as: 'r', in: '$$r.amount' } } };
   const completedExpr = {
-    $and: [{ $eq: ['$orderStatus', 'delivered'] }, { $lt: ['$refunded', { $subtract: ['$pricing.total', 0.005] }] }],
+    $and: [deliveredExpr, { $lt: ['$refunded', { $subtract: ['$pricing.total', 0.005] }] }],
   };
-  const notCancelled = { orderStatus: { $ne: 'cancelled' } };
+  const notCancelled = placedFilter;
   const completedOnly = { $expr: completedExpr };
   const lineRevenue = { $multiply: ['$items.price', '$items.qty'] };
   const chargedExpr = { $sum: { $map: { input: '$items', as: 'i', in: { $multiply: ['$$i.price', '$$i.qty'] } } } };
@@ -292,7 +293,7 @@ export async function analyticsReport(range: SalesRange, canSeeProfit: boolean) 
   const periodStart = new Date(Date.now() - range * DAY_MS);
   const [returningIds, guestBuyers, newAccounts, newAccountsPrev] = await Promise.all([
     buyerIds.length
-      ? Order.distinct('user', { user: { $in: buyerIds }, createdAt: { $lt: periodStart }, orderStatus: { $ne: 'cancelled' } })
+      ? Order.distinct('user', { user: { $in: buyerIds }, createdAt: { $lt: periodStart }, ...placedFilter })
       : Promise.resolve([]),
     buyerIds.length ? User.countDocuments({ _id: { $in: buyerIds }, isGuest: true }) : Promise.resolve(0),
     User.countDocuments({ role: 'customer', isGuest: { $ne: true }, createdAt: { $gte: periodStart } }),
@@ -309,7 +310,7 @@ export async function analyticsReport(range: SalesRange, canSeeProfit: boolean) 
 
   return {
     ...sales,
-    status: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].map((s) => {
+    status: ORDER_STATUSES.map((s) => {
       const row = statusRows.find((r) => r._id === s);
       return { status: s, orders: row?.orders ?? 0, value: roundMoney(row?.value ?? 0) };
     }),

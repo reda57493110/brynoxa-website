@@ -15,16 +15,10 @@ import { formatCurrency, formatDateTime } from '@/lib/format'
 import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
+import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
 
-function statusVariant(status: string) {
-  if (status === 'delivered') return 'success' as const
-  if (status === 'cancelled') return 'danger' as const
-  if (status === 'shipped') return 'brand' as const
-  if (status === 'confirmed') return 'success' as const
-  return 'warning' as const
-}
 
 export function TrackOrder() {
   const t = useT()
@@ -104,10 +98,16 @@ export function TrackOrder() {
                       {formatCurrency(order.pricing.total)} · {t('orders.dueOnDelivery')}
                     </p>
                   </div>
-                  <Badge variant={statusVariant(order.orderStatus)}>
+                  <Badge variant={orderStatusVariant(order.orderStatus)}>
                     {t(orderStatusKey(order.orderStatus))}
                   </Badge>
                 </div>
+
+                {order.orderStatus === 'rescheduled' && order.rescheduledFor ? (
+                  <p className="text-sm font-medium">
+                    {t('orders.rescheduledFor', { date: formatDeliveryDay(order.rescheduledFor) })}
+                  </p>
+                ) : null}
 
                 <DepositNotice order={order} />
 

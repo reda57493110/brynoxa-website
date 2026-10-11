@@ -13,7 +13,7 @@ import type { Order } from '@/types'
 export function OrderDepositPanel({ order }: { order: Order }) {
   const qc = useQueryClient()
   const deposit = order.deposit
-  const editable = order.orderStatus === 'pending'
+  const editable = order.orderStatus === 'pending' || order.orderStatus === 'no_answer'
   const [amount, setAmount] = useState('')
 
   useEffect(() => {
