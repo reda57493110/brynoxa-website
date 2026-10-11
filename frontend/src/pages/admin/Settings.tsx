@@ -124,7 +124,7 @@ export function Settings() {
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-6">
         {/* Section navigation: a scrollable row on mobile, a sidebar on desktop */}
-        <nav aria-label="Settings sections" className="min-w-0 lg:sticky lg:top-4 lg:self-start">
+        <nav aria-label="Settings sections" className="min-w-0 lg:sticky lg:top-20 lg:self-start">
           <ul className="-mx-3 flex gap-1.5 overflow-x-auto px-3 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0">
             {SECTIONS.map((s) => (
               <li key={s.id} className="shrink-0">

@@ -41,19 +41,17 @@ export function AdminLayout() {
     return () => document.documentElement.classList.remove('admin-compact')
   }, [])
 
+  // The window scrolls (the page grows with its content); remember its position per entry
   useLayoutEffect(() => {
-    const main = mainRef.current
     return () => {
-      adminScrollPositions.set(location.key, main?.scrollTop ?? 0)
+      adminScrollPositions.set(location.key, window.scrollY)
     }
   }, [location.key])
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const main = mainRef.current
-        if (!main) return
-        main.scrollTo({
+        window.scrollTo({
           top: navigationType === 'POP' ? adminScrollPositions.get(location.key) ?? 0 : 0,
           behavior: 'auto',
         })
@@ -69,7 +67,9 @@ export function AdminLayout() {
   return (
     // Admin UI is English — keep LTR even when the storefront language is Arabic
     <div
-      className="flex min-h-dvh w-full max-w-[100vw] overflow-x-hidden bg-[var(--bg)] text-[var(--fg)]"
+      // overflow-x-clip (not hidden): hides sideways overflow without making a scroll container,
+      // so sticky elements (top bar, form bars) stick to the screen
+      className="flex min-h-dvh w-full max-w-[100vw] overflow-x-clip bg-[var(--bg)] text-[var(--fg)]"
       dir="ltr"
       lang="en"
     >
@@ -79,7 +79,7 @@ export function AdminLayout() {
       >
         Skip to content
       </a>
-      <div className="hidden shrink-0 lg:block">
+      <div className="hidden shrink-0 self-start lg:sticky lg:top-0 lg:block">
         <AdminSidebar />
       </div>
       <Drawer
@@ -97,7 +97,7 @@ export function AdminLayout() {
         <main
           ref={mainRef}
           id="admin-main-content"
-          className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6"
+          className="min-w-0 flex-1 overflow-x-clip px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6"
         >
           <div className="mx-auto w-full max-w-6xl min-w-0">
             <Outlet />

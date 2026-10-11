@@ -51,6 +51,60 @@ async function resolveBrandId(name: string) {
   return created.data.data._id
 }
 
+const FORM_SECTIONS = [
+  { id: 'pf-basics', label: 'Basics' },
+  { id: 'pf-pricing', label: 'Pricing' },
+  { id: 'pf-stock', label: 'Stock' },
+  { id: 'pf-specs', label: 'Specs' },
+  { id: 'pf-versions', label: 'Versions' },
+  { id: 'pf-description', label: 'Description' },
+  { id: 'pf-photos', label: 'Photos' },
+  { id: 'pf-visibility', label: 'Visibility' },
+]
+
+/** Section title inside the form grid (jump target). */
+function FormSection({ id, title }: { id: string; title: string }) {
+  return (
+    <h2
+      id={id}
+      className="scroll-mt-28 border-t border-[var(--border)] pt-4 font-display text-sm font-semibold first:border-t-0 first:pt-0 sm:col-span-2 sm:text-base"
+    >
+      {title}
+    </h2>
+  )
+}
+
+/** Invisible jump target for blocks that already carry their own title. */
+function FormAnchor({ id }: { id: string }) {
+  return <div id={id} aria-hidden="true" className="-mb-4 scroll-mt-28 sm:col-span-2" />
+}
+
+/** Sticky row of section shortcuts for the long product form. */
+function FormJumpBar({ hasVersions }: { hasVersions: boolean }) {
+  return (
+    <nav
+      aria-label="Form sections"
+      className="sticky top-14 z-20 -mx-3 flex gap-1.5 overflow-x-auto border-b border-[var(--border)] bg-[var(--bg)]/95 px-3 py-2 backdrop-blur [scrollbar-width:none] sm:top-16 sm:mx-0 sm:rounded-xl sm:border sm:px-2 [&::-webkit-scrollbar]:hidden"
+    >
+      {FORM_SECTIONS.filter((s) => hasVersions || s.id !== 'pf-versions').map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() => {
+            const el = document.getElementById(s.id)
+            if (!el) return
+            const offset = window.innerWidth >= 640 ? 136 : 112 // top bar + this bar
+            window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth' })
+          }}
+          className="h-8 shrink-0 rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--fg-muted)] transition hover:border-[var(--brand)] hover:text-[var(--fg)]"
+        >
+          {s.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
 export function ProductForm() {
   const { id } = useParams()
   const isEdit = Boolean(id)
@@ -469,8 +523,10 @@ export function ProductForm() {
         </Link>
       </div>
 
+      <FormJumpBar hasVersions={Boolean(specs)} />
+
       <form
-        className="grid min-w-0 gap-4 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:grid-cols-2 sm:rounded-2xl sm:p-6"
+        className="grid min-w-0 gap-4 overflow-clip rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:grid-cols-2 sm:rounded-2xl sm:p-6"
         onSubmit={(e) => {
           e.preventDefault()
           if (!form.name.trim() || form.name.trim().length < 2) {
@@ -561,6 +617,7 @@ export function ProductForm() {
             ))}
           </div>
         </div>
+        <FormSection id="pf-basics" title="Basics" />
         <Input
           label="Name"
           className="sm:col-span-2"
@@ -574,6 +631,7 @@ export function ProductForm() {
           onChange={(e) => setForm({ ...form, sku: e.target.value })}
           required
         />
+        <FormSection id="pf-pricing" title="Pricing & deposit" />
         <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
           <Input
             label="Sale price (DH)"
@@ -684,6 +742,7 @@ export function ProductForm() {
             The order can only be confirmed once you mark the deposit as received.
           </p>
         </div>
+        <FormSection id="pf-stock" title="Stock & catalog" />
         {isEdit ? (
           <div className="flex min-w-0 flex-col gap-1.5 text-sm">
             <span className="font-medium text-[var(--fg)]">Stock</span>
@@ -802,6 +861,7 @@ export function ProductForm() {
             </span>
           </label>
         </div>
+        <FormAnchor id="pf-specs" />
         {specs || !specTemplate ? (
           <SpecsEditor
             draft={specs ?? { template: autoTemplate, values: {}, custom: [] }}
@@ -818,6 +878,7 @@ export function ProductForm() {
             <Spinner />
           </div>
         )}
+        {specs ? <FormAnchor id="pf-versions" /> : null}
         {specs && (!isEdit || existing.data) ? (
           <VariantsPanel
             product={isEdit ? (existing.data ?? null) : null}
@@ -833,6 +894,7 @@ export function ProductForm() {
             dirty={isDirty}
           />
         ) : null}
+        <FormSection id="pf-description" title="Description" />
         <Textarea
           label="Short description"
           className="sm:col-span-2"
@@ -853,6 +915,7 @@ export function ProductForm() {
           value={form.tags}
           onChange={(e) => setForm({ ...form, tags: e.target.value })}
         />
+        <FormSection id="pf-photos" title="Photos" />
         <div className="sm:col-span-2 space-y-3">
           <div>
             <div className="flex items-baseline justify-between gap-2">
@@ -1025,6 +1088,7 @@ export function ProductForm() {
             </div>
           )}
         </div>
+        <FormSection id="pf-visibility" title="Recommendations & visibility" />
         <RecommendedPicker
           value={form.recommended}
           onChange={(recommended) => setForm({ ...form, recommended })}
@@ -1104,10 +1168,19 @@ export function ProductForm() {
             </span>
           </label>
         </div>
-        <div className="sm:col-span-2">
-          <Button type="submit" loading={save.isPending}>
-            {isEdit ? 'Save changes' : 'Create product'}
-          </Button>
+        {/* Always reachable, even at the top of a long form on a phone */}
+        <div className="sticky bottom-0 z-20 -mx-3 -mb-3 flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 backdrop-blur sm:col-span-2 sm:-mx-6 sm:-mb-6 sm:px-6">
+          <span className={cn('text-xs', isDirty ? 'text-[var(--warning)]' : 'text-[var(--fg-muted)]')}>
+            {isDirty ? '● Unsaved changes' : isEdit ? 'No changes' : 'New product'}
+          </span>
+          <div className="flex gap-2">
+            <Link to="/admin/products" className="inline-flex h-9 items-center rounded-full px-3 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)]">
+              Cancel
+            </Link>
+            <Button type="submit" size="sm" className="h-9 px-4" loading={save.isPending}>
+              {isEdit ? 'Save changes' : 'Create product'}
+            </Button>
+          </div>
         </div>
       </form>
     </div>

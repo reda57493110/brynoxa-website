@@ -280,7 +280,7 @@ export function PushNotifications() {
           </form>
         </Panel>
 
-        <div className="min-w-0 space-y-4 lg:sticky lg:top-4">
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-20">
           <Panel title="Preview">{preview}</Panel>
           {data?.configured ? <ThisDeviceCard data={data} /> : null}
         </div>

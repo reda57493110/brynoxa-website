@@ -32,66 +32,58 @@ export function CustomerTable({
 
   return (
     <>
-      {/* Mobile: stacked cards */}
-      <div className="space-y-2.5 md:hidden">
+      {/* Phones: compact cards — tap to open the customer */}
+      <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:hidden">
         {rows.map((c) => {
           const m = c.metrics
           return (
-            <div key={c._id} className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
-              <div className="flex min-w-0 items-start justify-between gap-2">
-                <Link to={`/admin/customers/${c._id}`} className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{c.name}</p>
-                  <p className="truncate text-[11px] text-[var(--fg-muted)]">
-                    {c.customerId}
-                    {c.companyName ? ` · ${c.companyName}` : ''}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs text-[var(--fg-muted)]">{c.email}</p>
-                </Link>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <StatusBadge status={c.status} />
-                  <TypeBadge type={c.customerType} tierName={c.tierName} />
+            <li key={c._id} className="min-w-0">
+              <Link to={`/admin/customers/${c._id}`} className="block min-w-0 px-3 py-2.5 active:bg-[var(--bg-muted)]">
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {c.name}
+                      {c.companyName ? <span className="font-normal text-[var(--fg-muted)]"> · {c.companyName}</span> : null}
+                    </p>
+                    <p className="truncate text-[11px] text-[var(--fg-muted)]">{c.email}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                    <StatusBadge status={c.status} />
+                    {c.customerType && c.customerType !== 'retail' ? <TypeBadge type={c.customerType} tierName={c.tierName} /> : null}
+                  </div>
                 </div>
-              </div>
-              <dl className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
-                <dt className="text-[var(--fg-muted)]">Orders</dt>
-                <dd className="text-right">
-                  {m.orders.completed}/{m.orders.total}
-                </dd>
-                <dt className="text-[var(--fg-muted)]">Amount paid</dt>
-                <dd className="text-right">{money(m.payments.totalPaid)}</dd>
-                <dt className="text-[var(--fg-muted)]">Net sales</dt>
-                <dd className="text-right">{money(m.sales.netSales)}</dd>
-                {profitVisible ? (
-                  <>
-                    <dt className="text-[var(--fg-muted)]">Gross profit</dt>
-                    <dd className="text-right">
-                      <ProfitText value={m.sales.grossProfit} missing={m.sales.ordersMissingCost} />
+                <dl className="mt-1.5 grid grid-cols-3 gap-2 text-[11px]">
+                  <div className="min-w-0">
+                    <dt className="text-[var(--fg-muted)]">Orders</dt>
+                    <dd className="font-medium tabular-nums">
+                      {m.orders.completed}/{m.orders.total}
                     </dd>
-                  </>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-[var(--fg-muted)]">Paid</dt>
+                    <dd className="truncate font-medium tabular-nums">{money(m.payments.totalPaid)}</dd>
+                  </div>
+                  <div className="min-w-0 text-end">
+                    <dt className="text-[var(--fg-muted)]">Last order</dt>
+                    <dd className="truncate font-medium">{dateOr(m.dates.lastOrder)}</dd>
+                  </div>
+                </dl>
+                {profitVisible && m.sales.completedOrders ? (
+                  <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
+                    Net {money(m.sales.netSales)} · profit{' '}
+                    <ProfitText value={m.sales.grossProfit} missing={m.sales.ordersMissingCost} className="text-[11px]" />
+                  </p>
                 ) : null}
-                <dt className="text-[var(--fg-muted)]">Last order</dt>
-                <dd className="text-right">{dateOr(m.dates.lastOrder)}</dd>
-              </dl>
-              <div className="mt-2.5 flex flex-wrap justify-end gap-2">
-                <Link
-                  to={`/admin/customers/${c._id}`}
-                  className="inline-flex h-9 items-center rounded-full border border-[var(--border)] px-3 text-sm"
-                >
-                  View
-                </Link>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  loading={togglingId === c._id}
-                  onClick={() => onToggle(c)}
-                >
-                  {isDisabled(c) ? 'Enable' : 'Disable'}
+              </Link>
+              <div className="flex justify-end px-3 pb-2">
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" loading={togglingId === c._id} onClick={() => onToggle(c)}>
+                  {isDisabled(c) ? 'Enable account' : 'Disable account'}
                 </Button>
               </div>
-            </div>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       {/* Desktop: table scrolls inside its card */}
       <div className={`${cardClass} hidden min-w-0 overflow-x-auto md:block`}>

@@ -67,7 +67,8 @@ export function AdminSidebar({
     <aside
       className={cn(
         'flex flex-col border-r border-[var(--border)] bg-[var(--bg-elevated)]',
-        embedded ? 'h-full w-full border-r-0' : 'h-full w-64'
+        // Desktop: stays in view while the page scrolls
+        embedded ? 'h-full w-full border-r-0' : 'h-dvh w-64 overflow-y-auto'
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
