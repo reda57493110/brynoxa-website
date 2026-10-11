@@ -1,13 +1,16 @@
-import { lazy, Suspense, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { StoreLayout } from '@/app/layouts/StoreLayout'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
-import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { AdminRoute } from '@/features/auth/AdminRoute'
 import { PageLoader } from '@/components/ui/PageLoader'
 
-const Home = lazy(() => import('@/pages/store/Home').then((m) => ({ default: m.Home })))
+// The landing page ships with the app: no extra download (and no loader) for most first visits
+import { Home } from '@/pages/store/Home'
+
+// Admin only: kept out of the shoppers' bundle
+const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })))
 const Shop = lazy(() => import('@/pages/store/Shop').then((m) => ({ default: m.Shop })))
 const CategoryPage = lazy(() =>
   import('@/pages/store/CategoryPage').then((m) => ({ default: m.CategoryPage }))
@@ -125,8 +128,29 @@ const AdminSecurity = lazy(() =>
   import('@/pages/admin/Security').then((m) => ({ default: m.Security }))
 )
 
+/** Shown only if a page takes a moment to download — fast loads never flash a spinner. */
+function DelayedLoader() {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const id = window.setTimeout(() => setShow(true), 350)
+    return () => window.clearTimeout(id)
+  }, [])
+  return show ? <PageLoader /> : <div className="min-h-[60vh]" aria-hidden="true" />
+}
+
 function S({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+  return <Suspense fallback={<DelayedLoader />}>{children}</Suspense>
+}
+
+// After the first page is shown, fetch the pages shoppers open next so they appear instantly
+if (typeof window !== 'undefined') {
+  const preload = () => {
+    void import('@/pages/store/Shop')
+    void import('@/pages/store/ProductDetail')
+    void import('@/pages/store/CategoryPage')
+  }
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback
+  window.addEventListener('load', () => (idle ? idle(preload) : window.setTimeout(preload, 1500)), { once: true })
 }
 
 export function AppRouter() {
@@ -204,7 +228,9 @@ export function AppRouter() {
         path="admin"
         element={
           <AdminRoute>
-            <AdminLayout />
+            <Suspense fallback={<DelayedLoader />}>
+              <AdminLayout />
+            </Suspense>
           </AdminRoute>
         }
       >

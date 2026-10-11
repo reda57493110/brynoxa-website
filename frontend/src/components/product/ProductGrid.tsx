@@ -11,7 +11,7 @@ import { useT } from '@/hooks/useT'
 function ProductCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)]">
-      <Skeleton className="aspect-[4/5] w-full rounded-none border-0 ring-0 sm:aspect-square" />
+      <Skeleton className="aspect-square w-full rounded-none border-0 ring-0" />
       <div className="space-y-2 p-2.5 sm:space-y-2.5 sm:p-4">
         <Skeleton className="h-2.5 w-1/3 ring-0 sm:h-3" />
         <Skeleton className="h-3.5 w-[80%] ring-0 sm:h-4" />
@@ -67,7 +67,7 @@ export function ProductGrid({
   const navigate = useNavigate()
   const reduceMotion = useReducedMotion()
   const gridClass = cn(
-    'grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
+    'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
     className
   )
 

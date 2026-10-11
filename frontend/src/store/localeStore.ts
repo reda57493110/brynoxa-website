@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { isLocale, LOCALES, type Locale } from '@/i18n'
+import { isLocale, loadLocale, LOCALES, type Locale } from '@/i18n'
 
 interface LocaleState {
   locale: Locale
@@ -21,8 +21,13 @@ export const useLocaleStore = create<LocaleState>()(
     (set) => ({
       locale: 'en',
       setLocale: (locale) => {
-        applyLocale(locale)
-        set({ locale })
+        // Switch once the language file is here, so the page never shows missing text
+        void loadLocale(locale)
+          .catch(() => undefined)
+          .then(() => {
+            applyLocale(locale)
+            set({ locale })
+          })
       },
       hydrateLocale: () => {
         applyLocale(useLocaleStore.getState().locale)

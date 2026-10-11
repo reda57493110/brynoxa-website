@@ -1,6 +1,4 @@
 import { en, type Messages } from './en'
-import { fr } from './fr'
-import { ar } from './ar'
 
 export type Locale = 'en' | 'fr' | 'ar'
 
@@ -10,7 +8,18 @@ export const LOCALES: { id: Locale; label: string; native: string; dir: 'ltr' | 
   { id: 'ar', label: 'العربية', native: 'AR', dir: 'rtl' },
 ]
 
-export const messages: Record<Locale, Messages> = { en, fr, ar }
+/**
+ * English is always bundled (it is also the fallback for missing keys). French and Arabic are
+ * downloaded only when used, so most visitors don't load all three dictionaries.
+ */
+const loaded: Partial<Record<Locale, Messages>> = { en }
+
+export async function loadLocale(locale: Locale) {
+  if (loaded[locale]) return
+  loaded[locale] = locale === 'fr' ? (await import('./fr')).fr : (await import('./ar')).ar
+}
+
+const dictionary = (locale: Locale): Messages => loaded[locale] ?? en
 
 export function isLocale(value: string | null | undefined): value is Locale {
   return value === 'en' || value === 'fr' || value === 'ar'
@@ -40,7 +49,7 @@ export function translate(
   key: MessageKey,
   vars?: Record<string, string | number>
 ) {
-  const raw = lookup(messages[locale], key) ?? lookup(en, key)
+  const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   let text = typeof raw === 'string' ? raw : key
   if (vars) {
     for (const [name, value] of Object.entries(vars)) {
@@ -51,13 +60,13 @@ export function translate(
 }
 
 export function getMessages(locale: Locale): Messages {
-  return messages[locale]
+  return dictionary(locale)
 }
 
 /** Localized category name by slug; falls back to API name. */
 export function categoryDisplayName(locale: Locale, slug: string, fallback: string) {
   const key = `catalog.categories.${slug}.name`
-  const raw = lookup(messages[locale], key) ?? lookup(en, key)
+  const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   return typeof raw === 'string' ? raw : fallback
 }
 
@@ -68,7 +77,7 @@ export function categoryDisplayDescription(
   fallback?: string
 ) {
   const key = `catalog.categories.${slug}.description`
-  const raw = lookup(messages[locale], key) ?? lookup(en, key)
+  const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   if (typeof raw === 'string') return raw
   return fallback || ''
 }
@@ -89,5 +98,5 @@ export function orderStatusKey(status: string): MessageKey {
   }
 }
 
-export { en, fr, ar }
+export { en }
 export type { Messages }

@@ -138,7 +138,7 @@ export function ProductCard({
           contain ? 'bg-white' : 'bg-[var(--bg-muted)]',
           spotlight
             ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]'
-            : 'aspect-[4/5] sm:aspect-square'
+            : 'aspect-square'
         )}
       >
         {/* Shimmer while the photo downloads (under the image, so it never covers it) */}

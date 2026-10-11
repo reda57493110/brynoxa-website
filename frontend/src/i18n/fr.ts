@@ -138,7 +138,7 @@ export const fr: Messages = {
     remove: 'Retirer',
     clear: 'Effacer',
     clearAll: 'Tout effacer',
-    loading: 'Chargement du catalogue…',
+    loading: 'Chargement…',
     loadingProducts: 'Chargement des produits…',
     faq: 'FAQ',
     commonQuestions: 'Questions fréquentes',

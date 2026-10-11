@@ -138,7 +138,7 @@ export const ar: Messages = {
     remove: 'إزالة',
     clear: 'مسح',
     clearAll: 'مسح الكل',
-    loading: 'جاري تحميل الكتالوج…',
+    loading: 'جارٍ التحميل…',
     loadingProducts: 'جاري تحميل المنتجات…',
     faq: 'الأسئلة الشائعة',
     commonQuestions: 'أسئلة شائعة',

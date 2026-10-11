@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
-import { optimizedImageUrl } from '@/lib/image'
+import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 
 export function ImageGallery({ images, name }: { images: ProductImage[]; name: string }) {
   const t = useT()
@@ -27,7 +27,13 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
 
   return (
     <div className="space-y-2.5 sm:space-y-3">
-      <div className="relative -mx-4 aspect-[4/5] max-h-[min(70svh,28rem)] overflow-hidden bg-[var(--bg-muted)] sm:mx-0 sm:aspect-square sm:max-h-none sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]">
+      <div
+        className={cn(
+          'relative -mx-4 aspect-square max-h-[min(70svh,28rem)] overflow-hidden sm:mx-0 sm:max-h-none sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]',
+          // Product shots (white background) are shown whole on white; lifestyle photos fill the frame
+          imageFit(current.url) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
+        )}
+      >
         <AnimatePresence mode="sync" initial={false}>
           <motion.div
             key={current.url}
@@ -38,11 +44,19 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
             className="absolute inset-0"
           >
             <SafeImage
-              src={optimizedImageUrl(current.url, 1200)}
+              src={sizedImageUrl(current.url, 1200)}
+              srcSet={imageSrcSet(current.url, [480, 768, 1080, 1440])}
+              sizes="(min-width: 1024px) 45vw, 100vw"
               alt={current.alt || name}
               referrerPolicy="no-referrer"
               decoding="async"
-              className="h-full w-full object-cover"
+              // The main photo is the largest element on the page: load it first
+              fetchPriority={active === 0 ? 'high' : undefined}
+              loading="eager"
+              className={cn(
+                'h-full w-full',
+                imageFit(current.url) === 'contain' ? 'object-contain p-4 sm:p-8' : 'object-cover'
+              )}
             />
           </motion.div>
         </AnimatePresence>
@@ -104,11 +118,14 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               )}
             >
               <SafeImage
-                src={optimizedImageUrl(img.url, 180)}
+                src={sizedImageUrl(img.url, 160)}
                 alt={img.alt || `${name} ${i + 1}`}
                 referrerPolicy="no-referrer"
                 decoding="async"
-                className="h-full w-full object-cover"
+                className={cn(
+                  'h-full w-full',
+                  imageFit(img.url) === 'contain' ? 'bg-white object-contain p-1' : 'object-cover'
+                )}
               />
             </button>
           ))}

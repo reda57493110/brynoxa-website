@@ -136,7 +136,7 @@ export const en = {
     remove: 'Remove',
     clear: 'Clear',
     clearAll: 'Clear all',
-    loading: 'Loading catalog…',
+    loading: 'Loading…',
     loadingProducts: 'Loading products…',
     faq: 'FAQ',
     commonQuestions: 'Common questions',
