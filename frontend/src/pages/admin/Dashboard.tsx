@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { AdminHeader } from '@/components/admin/AdminHeader'
-import { SalesChart, dayLabel, type SalesMetric } from '@/components/admin/SalesChart'
+import { SalesChart, type SalesMetric } from '@/components/admin/SalesChart'
+import { dayLabel } from '@/lib/salesBuckets'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
 import { formatCurrency, formatDate } from '@/lib/format'
@@ -16,7 +17,7 @@ import { optimizedImageUrl } from '@/lib/image'
 import { hasPermission, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/cn'
-import type { SalesRange, User } from '@/types'
+import type { SalesAnalytics, SalesRange, User } from '@/types'
 
 const RANGES: SalesRange[] = [7, 14, 30, 90]
 const card = 'min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]'
@@ -85,6 +86,53 @@ function Kpi({
     </Link>
   ) : (
     <div className={cls}>{body}</div>
+  )
+}
+
+/** Key figures under the chart, computed from the same daily series. */
+function SalesStats({ analytics, metric }: { analytics: SalesAnalytics; metric: SalesMetric }) {
+  const { series, totals: t, range } = analytics
+  const v = (d: SalesAnalytics['series'][number]) => (metric === 'revenue' ? d.revenue : d.orders)
+  const best = series.reduce<SalesAnalytics['series'][number] | null>((b, d) => (v(d) > 0 && (!b || v(d) > v(b)) ? d : b), null)
+  const activeDays = series.filter((d) => v(d) > 0).length
+  const total = metric === 'revenue' ? t.revenue : t.orders
+  const perDay = total / (series.length || 1)
+  const deliveryRate = t.orders > 0 ? Math.round((t.completedOrders / t.orders) * 100) : null
+  const money = (n: number) => formatCurrency(Math.round(n * 100) / 100)
+
+  const stats: { label: string; value: string; hint?: string }[] = [
+    {
+      label: metric === 'revenue' ? 'Average per day' : 'Orders per day',
+      value: metric === 'revenue' ? money(perDay) : perDay.toFixed(perDay < 10 ? 1 : 0),
+      hint: `over ${range} days`,
+    },
+    {
+      label: 'Best day',
+      value: best ? (metric === 'revenue' ? money(best.revenue) : String(best.orders)) : '—',
+      hint: best ? dayLabel(best.date) : 'No sales yet',
+    },
+    {
+      label: metric === 'revenue' ? 'Days with sales' : 'Days with orders',
+      value: `${activeDays}/${series.length}`,
+      hint: `${Math.round((activeDays / (series.length || 1)) * 100)}% of days`,
+    },
+    {
+      label: 'Delivered',
+      value: deliveryRate === null ? '—' : `${deliveryRate}%`,
+      hint: `${t.completedOrders} of ${t.orders} orders placed`,
+    },
+  ]
+
+  return (
+    <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-4">
+      {stats.map((s) => (
+        <div key={s.label} className="min-w-0 bg-[var(--bg-elevated)] px-3 py-2.5">
+          <dt className="truncate text-[11px] text-[var(--fg-muted)]">{s.label}</dt>
+          <dd className="mt-0.5 truncate font-display text-base font-semibold tabular-nums">{s.value}</dd>
+          {s.hint ? <dd className="truncate text-[10px] text-[var(--fg-muted)]">{s.hint}</dd> : null}
+        </div>
+      ))}
+    </dl>
   )
 }
 
@@ -278,13 +326,22 @@ export function Dashboard() {
         <section className={cn(card, 'p-3 sm:p-5 lg:col-span-2')}>
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <h2 className="font-display text-sm font-semibold sm:text-base">Sales ({range} days)</h2>
-              {t ? (
-                <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
-                  {metric === 'revenue'
-                    ? `${formatCurrency(t.revenue)} from ${t.completedOrders} delivered order${t.completedOrders === 1 ? '' : 's'}`
-                    : `${t.orders} order${t.orders === 1 ? '' : 's'} placed (not cancelled)`}
-                </p>
+              <h2 className="text-xs font-medium text-[var(--fg-muted)]">
+                Sales · {a ? `${dayLabel(a.from)} – ${dayLabel(a.to)}` : `${range} days`}
+              </h2>
+              {t && p ? (
+                <div className="mt-0.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                  <p className="font-display text-xl font-semibold tabular-nums sm:text-2xl">
+                    {metric === 'revenue' ? formatCurrency(t.revenue) : `${t.orders} order${t.orders === 1 ? '' : 's'}`}
+                  </p>
+                  <span className="text-xs">
+                    {metric === 'revenue' ? (
+                      <Change now={t.revenue} before={p.revenue} days={range} money />
+                    ) : (
+                      <Change now={t.orders} before={p.orders} days={range} />
+                    )}
+                  </span>
+                </div>
               ) : null}
             </div>
             <div role="radiogroup" aria-label="Chart" className="inline-flex rounded-full border border-[var(--border)] p-0.5 text-xs">
@@ -314,9 +371,10 @@ export function Dashboard() {
               <Skeleton className="h-56 rounded-xl" />
             )}
           </div>
+          {a ? <SalesStats analytics={a} metric={metric} /> : null}
           <p className="mt-3 text-[11px] text-[var(--fg-muted)]">
-            Revenue counts delivered orders (cash on delivery is paid on delivery), minus coupons and refunds, without
-            shipping. Each order is shown on the day it was placed.
+            Revenue = delivered orders (paid on delivery) minus coupons and refunds, without shipping, on the day each order
+            was placed.
           </p>
         </section>
 
