@@ -18,6 +18,7 @@ import { useAdminStats } from '@/hooks/useAdminStats'
 import { toast } from '@/store/toastStore'
 import type { Order, OrderStatus, User } from '@/types'
 import { cn } from '@/lib/cn'
+import { OrderThumbs } from '@/components/admin/OrderThumbs'
 
 /** "YYYY-MM-DD" in Morocco time, `offset` days from today. */
 function moroccoDay(offset = 0) {
@@ -282,6 +283,11 @@ export function Orders() {
                     </div>
                     <p className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(o.pricing.total)}</p>
                   </div>
+                  {o.items?.length ? (
+                    <div className="mt-1.5">
+                      <OrderThumbs items={o.items} size="sm" max={4} />
+                    </div>
+                  ) : null}
                   <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
                     <Badge variant={orderStatusVariant(o.orderStatus)}>{o.orderStatus}</Badge>
                     {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? <Badge variant="warning">Awaiting deposit</Badge> : null}
@@ -299,13 +305,14 @@ export function Orders() {
 
           {/* Desktop */}
           <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
-            <table className="w-full min-w-[820px] text-left text-sm">
+            <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
                 <tr>
                   <th className="w-10 px-4 py-3">
                     <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" disabled={!items.length} />
                   </th>
                   <th className="px-3 py-3">Order</th>
+                  <th className="px-3 py-3">Products</th>
                   <th className="px-3 py-3">Customer</th>
                   <th className="px-3 py-3">Placed</th>
                   <th className="px-3 py-3">Status</th>
@@ -329,6 +336,9 @@ export function Orders() {
                       <Link to={`/admin/orders/${o._id}`} className="font-medium text-[var(--brand-text)]">
                         #{o.orderNumber}
                       </Link>
+                    </td>
+                    <td className="px-3 py-3">
+                      {o.items?.length ? <OrderThumbs items={o.items} /> : null}
                     </td>
                     <td className="max-w-[14rem] px-3 py-3">
                       <p className="truncate">{customerName(o)}</p>
@@ -359,7 +369,7 @@ export function Orders() {
                 ))}
                 {!items.length ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-[var(--fg-muted)]">
+                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-[var(--fg-muted)]">
                       No orders found.
                     </td>
                   </tr>

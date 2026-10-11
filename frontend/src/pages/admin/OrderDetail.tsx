@@ -14,6 +14,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { OrderDepositPanel } from '@/components/admin/OrderDepositPanel'
 import { OrderRefundsPanel } from '@/components/admin/OrderRefundsPanel'
 import { OrderReturnPanel } from '@/components/admin/OrderReturnPanel'
+import { OrderItemThumb } from '@/components/admin/OrderThumbs'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
 import { ORDER_STATUSES, orderStatusVariant } from '@/lib/admin'
@@ -180,13 +181,28 @@ export function OrderDetail() {
           <h2 className="font-semibold">Items</h2>
           <ul className="mt-3 space-y-3 text-sm">
             {o.items.map((item, i) => (
-              <li key={i} className="flex min-w-0 justify-between gap-3">
-                <span className="min-w-0 overflow-hidden">
-                  <span className="break-words">
-                    {item.name} × {item.qty}
-                  </span>
-                  <span className="block truncate text-xs text-[var(--fg-muted)]">{item.sku}</span>
-                </span>
+              <li key={i} className="flex min-w-0 items-center justify-between gap-3">
+                {(() => {
+                  const productId = typeof item.product === 'string' ? item.product : item.product?._id
+                  const body = (
+                    <>
+                      <OrderItemThumb item={item} size="lg" />
+                      <span className="min-w-0 overflow-hidden">
+                        <span className="break-words">
+                          {item.name} × {item.qty}
+                        </span>
+                        <span className="block truncate text-xs text-[var(--fg-muted)]">{item.sku}</span>
+                      </span>
+                    </>
+                  )
+                  return productId ? (
+                    <Link to={`/admin/inventory/products/${productId}`} className="flex min-w-0 items-center gap-3 hover:text-[var(--brand-text)]">
+                      {body}
+                    </Link>
+                  ) : (
+                    <span className="flex min-w-0 items-center gap-3">{body}</span>
+                  )
+                })()}
                 <span className="shrink-0 text-end tabular-nums">
                   {formatCurrency(item.price * item.qty)}
                   {item.listPrice != null && item.listPrice > item.price ? (
