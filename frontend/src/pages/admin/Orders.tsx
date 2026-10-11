@@ -3,23 +3,19 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
-import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { AdminHeader } from '@/components/admin/AdminHeader'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { formatCurrency, formatDateTime } from '@/lib/format'
+import { OrderItemThumb } from '@/components/admin/OrderThumbs'
+import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 import {
-  GROUP_DOT,
   ORDER_GROUPS,
-  ORDER_STATUS_GROUP,
   ORDER_TRANSITIONS,
   attentionReasons,
-  formatDeliveryDay,
   orderStatusLabel,
   orderStatusVariant,
   refundState,
@@ -30,7 +26,6 @@ import { useAdminStats } from '@/hooks/useAdminStats'
 import { toast } from '@/store/toastStore'
 import type { Order, OrderStatus, User } from '@/types'
 import { cn } from '@/lib/cn'
-import { OrderThumbs } from '@/components/admin/OrderThumbs'
 
 /** "YYYY-MM-DD" in Morocco time, `offset` days from today. */
 function moroccoDay(offset = 0) {
@@ -40,10 +35,17 @@ function moroccoDay(offset = 0) {
   return d.toISOString().slice(0, 10)
 }
 
-const QUICK_RANGES = [
-  { label: 'Today', from: () => moroccoDay(0) },
-  { label: '7 days', from: () => moroccoDay(-6) },
-  { label: '30 days', from: () => moroccoDay(-29) },
+const RANGES = [
+  { id: 'today', label: 'Today', from: () => moroccoDay(0) },
+  { id: '7d', label: 'Last 7 days', from: () => moroccoDay(-6) },
+  { id: '30d', label: 'Last 30 days', from: () => moroccoDay(-29) },
+]
+
+const SORTS = [
+  { id: '', label: 'Newest' },
+  { id: 'oldest', label: 'Oldest' },
+  { id: 'total_desc', label: 'Highest total' },
+  { id: 'total_asc', label: 'Lowest total' },
 ]
 
 /** Statuses that may move to `to` (from the shared transition table). */
@@ -57,46 +59,54 @@ const sourcesOf = (to: OrderStatus) =>
 const BULK_ACTIONS: { status: OrderStatus; label: string; from: OrderStatus[]; danger?: boolean }[] = [
   { status: 'confirmed', label: 'Confirm', from: sourcesOf('confirmed') },
   { status: 'no_answer', label: 'No answer', from: sourcesOf('no_answer') },
-  { status: 'shipped', label: 'Mark shipped', from: sourcesOf('shipped') },
-  { status: 'delivered', label: 'Mark delivered', from: sourcesOf('delivered') },
+  { status: 'shipped', label: 'Shipped', from: sourcesOf('shipped') },
+  { status: 'delivered', label: 'Delivered', from: sourcesOf('delivered') },
   { status: 'cancelled', label: 'Cancel', from: sourcesOf('cancelled'), danger: true },
 ]
 
-/** Status badge plus the flags staff need to see in a list. */
-function StatusCell({ o }: { o: Order }) {
-  const refundBadge = refundState(o) === 'due'
-  // The refund badge already says it
-  const reasons = attentionReasons(o).filter((r) => !(refundBadge && r === 'Refund due'))
-  return (
-    <>
-      <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
-      {o.orderStatus === 'pending' && o.deposit?.status === 'pending' ? <Badge variant="warning">Awaiting deposit</Badge> : null}
-      {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
-        <span className="text-[11px] text-[var(--fg-muted)]">→ {formatDeliveryDay(o.rescheduledFor)}</span>
-      ) : null}
-      {refundBadge ? <Badge variant="danger">Refund pending</Badge> : null}
-      {reasons.length ? (
-        <span
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-[var(--warning)]"
-          title={reasons.join(' · ')}
-        >
-          <SiteIcon name="alert" size={12} />
-          <span className="max-w-[10rem] truncate">{reasons[0]}</span>
-        </span>
-      ) : null}
-    </>
-  )
-}
-
-const chip = (on: boolean) =>
-  cn(
-    'h-8 shrink-0 rounded-full border px-2.5 text-xs whitespace-nowrap sm:h-9 sm:px-3 sm:text-sm',
-    on ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]' : 'border-[var(--border)]'
-  )
+const control =
+  'h-9 min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
 
 function customerName(o: Order) {
   const user = o.user as User | undefined
   return o.shippingAddress?.fullName || user?.name || '—'
+}
+
+/** One short payment label from the money records (separate from the order status). */
+function paymentBadge(o: Order): { label: string; variant: BadgeVariant } {
+  const refund = refundState(o)
+  if (refund === 'due') return { label: 'Refund due', variant: 'danger' }
+  if (refund === 'refunded') return { label: 'Refunded', variant: 'muted' }
+  if (refund === 'partial') return { label: 'Part refunded', variant: 'warning' }
+  if (o.paymentStatus === 'paid') return { label: 'Paid', variant: 'success' }
+  if (o.paymentStatus === 'failed') return { label: 'Not collected', variant: 'muted' }
+  if (o.deposit?.status === 'received') return { label: 'Deposit paid', variant: 'brand' }
+  if (o.deposit?.status === 'pending' && o.deposit.amount > 0) return { label: 'Deposit due', variant: 'warning' }
+  return { label: 'COD', variant: 'default' }
+}
+
+/** Status badge; a small warning icon (reasons on hover) when the order needs action. */
+function StatusBadge({ o }: { o: Order }) {
+  const reasons = attentionReasons(o).filter((r) => r !== 'Refund due')
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
+      {reasons.length ? (
+        <span title={reasons.join(' · ')} aria-label={reasons.join(' · ')} className="text-[var(--warning)]">
+          <SiteIcon name="alert" size={13} />
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+function PaymentBadge({ o }: { o: Order }) {
+  const p = paymentBadge(o)
+  return (
+    <Badge variant={p.variant} className="normal-case">
+      {p.label}
+    </Badge>
+  )
 }
 
 export function Orders() {
@@ -106,27 +116,24 @@ export function Orders() {
   const [params, setParams] = useSearchParams()
   // A status, "group:<group>" or "attention"
   const status = params.get('status') || ''
-  const activeGroup: OrderStatusGroup | null = status.startsWith('group:')
-    ? (status.slice(6) as OrderStatusGroup)
-    : status && status !== 'attention'
-      ? (ORDER_STATUS_GROUP[status as OrderStatus] ?? null)
-      : null
-  const count = (s: OrderStatus) => stats.data?.ordersByStatus?.[s] ?? 0
-  const groupCount = (g: OrderStatusGroup) => statusesInGroup(g).reduce((a, s) => a + count(s), 0)
   const from = params.get('from') || ''
   const to = params.get('to') || ''
+  const sort = params.get('sort') || ''
   const [q, setQ] = useState(params.get('q') || '')
   const page = Number(params.get('page') || 1)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulk, setBulk] = useState<(typeof BULK_ACTIONS)[number] | null>(null)
 
+  const quickRange = !to ? RANGES.find((r) => r.from() === from)?.id : undefined
+  const [customDates, setCustomDates] = useState(Boolean((from || to) && !quickRange))
+
   useEffect(() => {
     setQ(params.get('q') || '')
   }, [params])
 
   const orders = useQuery({
-    queryKey: ['admin-orders', { page, status, q: params.get('q') || '', from, to }],
+    queryKey: ['admin-orders', { page, status, q: params.get('q') || '', from, to, sort }],
     queryFn: async () => {
       const res = await adminApi.orders.list({
         page,
@@ -135,6 +142,7 @@ export function Orders() {
         q: params.get('q') || undefined,
         from: from || undefined,
         to: to || undefined,
+        sort: sort || undefined,
       })
       return { items: res.data.data, meta: res.data.meta }
     },
@@ -157,6 +165,7 @@ export function Orders() {
   })
 
   const items = orders.data?.items ?? []
+  const total = orders.data?.meta?.total ?? items.length
   const selectedOrders = items.filter((o) => selected.has(o._id))
 
   // One request per order, in turn; failures are listed and stay selected
@@ -202,6 +211,16 @@ export function Orders() {
     setSelected(new Set())
   }
 
+  const onRange = (value: string) => {
+    if (value === 'custom') {
+      setCustomDates(true)
+      return
+    }
+    setCustomDates(false)
+    const r = RANGES.find((x) => x.id === value)
+    setFilter({ from: r?.from(), to: undefined })
+  }
+
   const toggle = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev)
@@ -214,102 +233,136 @@ export function Orders() {
 
   const eligible = (a: (typeof BULK_ACTIONS)[number]) => selectedOrders.filter((o) => a.from.includes(o.orderStatus)).length
   const printSlips = (ids: string[]) => navigate(`/admin-print/slips?ids=${ids.join(',')}`)
-  const hasDates = Boolean(from || to)
+
+  const count = (s: OrderStatus) => stats.data?.ordersByStatus?.[s] ?? 0
+  const groupCount = (g: OrderStatusGroup) => statusesInGroup(g).reduce((a, s) => a + count(s), 0)
+  const attention = stats.data?.attentionOrders ?? 0
+  const filtered = Boolean(status || params.get('q') || from || to)
 
   return (
-    <div className={cn('min-w-0 space-y-4 sm:space-y-6', selected.size > 0 && 'pb-20')}>
-      <AdminHeader title="Orders" description="Filter by status or date, select orders to update or print in bulk." />
-
-      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
-        <button type="button" onClick={() => setFilter({ status: undefined })} className={chip(!status)}>
-          All ({stats.data?.orderCount ?? '—'})
-        </button>
-        <button type="button" onClick={() => setFilter({ status: 'attention' })} className={cn(chip(status === 'attention'), 'inline-flex items-center gap-1.5')}>
-          <SiteIcon name="alert" size={13} className="text-[var(--warning)]" />
-          Needs attention ({stats.data?.attentionOrders ?? 0})
-        </button>
-        {ORDER_GROUPS.map((g) => (
+    <div className={cn('min-w-0 space-y-3', selected.size > 0 && 'pb-20')}>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
+        {attention ? (
           <button
-            key={g.id}
             type="button"
-            onClick={() => setFilter({ status: `group:${g.id}` })}
-            className={cn(chip(activeGroup === g.id), 'inline-flex items-center gap-1.5')}
+            onClick={() => setFilter({ status: status === 'attention' ? undefined : 'attention' })}
+            className={cn(
+              'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium',
+              status === 'attention'
+                ? 'border-[var(--warning)] text-[var(--warning)]'
+                : 'border-[var(--border)] text-[var(--fg-muted)] hover:text-[var(--fg)]'
+            )}
           >
-            <span className={cn('h-2 w-2 rounded-full', GROUP_DOT[g.id])} />
-            {g.label} ({groupCount(g.id)})
+            <SiteIcon name="alert" size={13} className="text-[var(--warning)]" />
+            {attention} need{attention === 1 ? 's' : ''} attention
           </button>
-        ))}
+        ) : null}
       </div>
-      {activeGroup && statusesInGroup(activeGroup).length > 1 ? (
-        <div className="-mt-2 flex flex-wrap gap-1.5 sm:-mt-3">
-          {statusesInGroup(activeGroup).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setFilter({ status: status === s ? `group:${activeGroup}` : s })}
-              className={cn(chip(status === s), 'h-7 text-xs sm:h-7 sm:text-xs')}
-            >
-              {orderStatusLabel(s)} ({count(s)})
-            </button>
-          ))}
-        </div>
-      ) : null}
 
-      {/* Search + dates */}
-      <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:items-end">
+      {/* Toolbar */}
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         <form
-          className="min-w-0 flex-1 lg:max-w-sm"
+          className="relative min-w-0 basis-full sm:flex-[1_1_14rem] sm:basis-auto"
           onSubmit={(e) => {
             e.preventDefault()
             setFilter({ q: q.trim() || undefined })
           }}
         >
-          <Input
+          <SiteIcon name="search" size={15} className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+          <input
             type="search"
             aria-label="Search orders"
-            placeholder="Order number, customer name or phone"
+            placeholder="Order #, name or phone"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            className={cn(control, 'w-full ps-8')}
           />
         </form>
-        <div className="flex min-w-0 flex-wrap items-end gap-2">
-          <label className="flex min-w-[8.5rem] flex-1 flex-col gap-1 text-xs text-[var(--fg-muted)] sm:flex-none">
-            From
+        <select
+          aria-label="Status"
+          value={status}
+          onChange={(e) => setFilter({ status: e.target.value || undefined })}
+          className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}
+        >
+          <option value="">All statuses ({stats.data?.orderCount ?? '—'})</option>
+          <option value="attention">Needs attention ({attention})</option>
+          {ORDER_GROUPS.map((g) => (
+            <optgroup key={g.id} label={g.label}>
+              {statusesInGroup(g.id).length > 1 ? (
+                <option value={`group:${g.id}`}>
+                  All {g.label.toLowerCase()} ({groupCount(g.id)})
+                </option>
+              ) : null}
+              {statusesInGroup(g.id).map((s) => (
+                <option key={s} value={s}>
+                  {orderStatusLabel(s)} ({count(s)})
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <select
+          aria-label="Date"
+          value={customDates ? 'custom' : (quickRange ?? '')}
+          onChange={(e) => onRange(e.target.value)}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+        >
+          <option value="">Any date</option>
+          {RANGES.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+          <option value="custom">Custom…</option>
+        </select>
+        {customDates ? (
+          <span className="flex min-w-0 items-center gap-1">
             <input
               type="date"
+              aria-label="From"
               value={from}
               max={to || undefined}
               onChange={(e) => setFilter({ from: e.target.value || undefined })}
-              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)]"
+              className={cn(control, 'w-[9.5rem]')}
             />
-          </label>
-          <label className="flex min-w-[8.5rem] flex-1 flex-col gap-1 text-xs text-[var(--fg-muted)] sm:flex-none">
-            To
+            <span className="text-xs text-[var(--fg-muted)]">–</span>
             <input
               type="date"
+              aria-label="To"
               value={to}
               min={from || undefined}
               onChange={(e) => setFilter({ to: e.target.value || undefined })}
-              className="h-10 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)]"
+              className={cn(control, 'w-[9.5rem]')}
             />
-          </label>
-          <div className="flex w-full gap-1.5 sm:w-auto">
-            {QUICK_RANGES.map((r) => {
-              const f = r.from()
-              const on = from === f && (!to || to === moroccoDay(0))
-              return (
-                <button key={r.label} type="button" className={chip(on)} onClick={() => setFilter({ from: f, to: undefined })}>
-                  {r.label}
-                </button>
-              )
-            })}
-            {hasDates ? (
-              <button type="button" className={chip(false)} onClick={() => setFilter({ from: undefined, to: undefined })} aria-label="Clear dates">
-                <SiteIcon name="close" size={12} />
-              </button>
-            ) : null}
-          </div>
-        </div>
+          </span>
+        ) : null}
+        <select
+          aria-label="Sort"
+          value={sort}
+          onChange={(e) => setFilter({ sort: e.target.value || undefined })}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+        >
+          {SORTS.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+        {filtered ? (
+          <button
+            type="button"
+            className="h-9 px-1 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            onClick={() => {
+              setCustomDates(false)
+              setQ('')
+              setParams(new URLSearchParams(sort ? { sort } : {}))
+              setSelected(new Set())
+            }}
+          >
+            Clear
+          </button>
+        ) : null}
       </div>
 
       {orders.isPending && !orders.data ? (
@@ -320,84 +373,79 @@ export function Orders() {
         <QueryErrorState onRetry={() => orders.refetch()} />
       ) : (
         <>
-          <div className="flex items-center justify-between gap-2 text-xs text-[var(--fg-muted)]">
-            <label className="inline-flex cursor-pointer items-center gap-2">
-              <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" checked={allOnPage} onChange={toggleAll} disabled={!items.length} />
-              Select all on this page
-            </label>
-            <span>
-              {orders.data?.meta?.total ?? items.length} order{(orders.data?.meta?.total ?? items.length) === 1 ? '' : 's'}
-            </span>
-          </div>
-
           {/* Phones */}
-          <div className="space-y-2 md:hidden">
-            {items.map((o) => (
-              <div
-                key={o._id}
-                className={cn(
-                  'flex min-w-0 gap-2.5 overflow-hidden rounded-xl border bg-[var(--bg-elevated)] p-3',
-                  selected.has(o._id) ? 'border-[var(--brand)]' : 'border-[var(--border)]'
-                )}
-              >
-                <input
-                  type="checkbox"
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--brand)]"
-                  checked={selected.has(o._id)}
-                  onChange={() => toggle(o._id)}
-                  aria-label={`Select order ${o.orderNumber}`}
-                />
-                <Link to={`/admin/orders/${o._id}`} className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[var(--brand-text)]">#{o.orderNumber}</p>
-                      <p className="truncate text-xs">
-                        {customerName(o)}
-                        {o.shippingAddress?.city ? <span className="text-[var(--fg-muted)]"> · {o.shippingAddress.city}</span> : null}
-                      </p>
+          <div className="md:hidden">
+            <div className="flex items-center justify-between px-1 pb-1.5 text-xs text-[var(--fg-muted)]">
+              <label className="inline-flex items-center gap-2">
+                <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" checked={allOnPage} onChange={toggleAll} disabled={!items.length} />
+                Select all
+              </label>
+              <span>
+                {total} order{total === 1 ? '' : 's'}
+              </span>
+            </div>
+            <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
+              {items.map((o) => (
+                <li
+                  key={o._id}
+                  className={cn('flex min-w-0 items-start gap-2.5 px-3 py-2.5', selected.has(o._id) && 'bg-[color-mix(in_srgb,var(--brand)_6%,transparent)]')}
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 shrink-0 accent-[var(--brand)]"
+                    checked={selected.has(o._id)}
+                    onChange={() => toggle(o._id)}
+                    aria-label={`Select order ${o.orderNumber}`}
+                  />
+                  <Link to={`/admin/orders/${o._id}`} className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-medium">#{o.orderNumber}</span>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(o.pricing.total)}</span>
                     </div>
-                    <p className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(o.pricing.total)}</p>
-                  </div>
-                  {o.items?.length ? (
-                    <div className="mt-1.5">
-                      <OrderThumbs items={o.items} size="sm" max={4} />
+                    <p className="truncate text-xs text-[var(--fg-muted)]">
+                      {customerName(o)} · {formatDate(o.createdAt)}
+                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      <StatusBadge o={o} />
+                      <PaymentBadge o={o} />
                     </div>
-                  ) : null}
-                  <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
-                    <StatusCell o={o} />
-                    <span className="text-[11px] text-[var(--fg-muted)]">{formatDateTime(o.createdAt)}</span>
-                  </div>
-                </Link>
-              </div>
-            ))}
-            {!items.length ? (
-              <p className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-8 text-center text-sm text-[var(--fg-muted)]">
-                No orders found.
-              </p>
-            ) : null}
+                  </Link>
+                </li>
+              ))}
+              {!items.length ? <li className="px-4 py-8 text-center text-sm text-[var(--fg-muted)]">No orders found.</li> : null}
+            </ul>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
+          {/* Tablet / desktop */}
+          <div className="hidden min-w-0 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="border-b border-[var(--border)] text-xs text-[var(--fg-muted)]">
                 <tr>
-                  <th className="w-10 px-4 py-3">
-                    <input type="checkbox" className="h-4 w-4 accent-[var(--brand)]" checked={allOnPage} onChange={toggleAll} aria-label="Select all on this page" disabled={!items.length} />
+                  <th className="w-9 py-2 ps-3">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-[var(--brand)]"
+                      checked={allOnPage}
+                      onChange={toggleAll}
+                      aria-label="Select all on this page"
+                      disabled={!items.length}
+                    />
                   </th>
-                  <th className="px-3 py-3">Order</th>
-                  <th className="px-3 py-3">Products</th>
-                  <th className="px-3 py-3">Customer</th>
-                  <th className="px-3 py-3">Placed</th>
-                  <th className="px-3 py-3">Status</th>
-                  <th className="px-3 py-3 text-right">Total</th>
-                  <th className="px-3 py-3" />
+                  <th className="px-2 py-2 font-medium">Order</th>
+                  <th className="px-2 py-2 font-medium">Customer</th>
+                  <th className="px-2 py-2 font-medium">Date</th>
+                  <th className="px-2 py-2 text-right font-medium">Total</th>
+                  <th className="px-2 py-2 font-medium">Payment</th>
+                  <th className="px-2 py-2 font-medium">Status</th>
+                  <th className="whitespace-nowrap py-2 pe-3 text-right font-normal">
+                    {total} order{total === 1 ? '' : 's'}
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--border)]">
                 {items.map((o) => (
-                  <tr key={o._id} className={cn('border-t border-[var(--border)]', selected.has(o._id) && 'bg-[color-mix(in_srgb,var(--brand)_6%,transparent)]')}>
-                    <td className="px-4 py-3">
+                  <tr key={o._id} className={cn('hover:bg-[var(--bg-muted)]', selected.has(o._id) && 'bg-[color-mix(in_srgb,var(--brand)_6%,transparent)]')}>
+                    <td className="py-2 ps-3">
                       <input
                         type="checkbox"
                         className="h-4 w-4 accent-[var(--brand)]"
@@ -406,36 +454,42 @@ export function Orders() {
                         aria-label={`Select order ${o.orderNumber}`}
                       />
                     </td>
-                    <td className="px-3 py-3">
-                      <Link to={`/admin/orders/${o._id}`} className="font-medium text-[var(--brand-text)]">
-                        #{o.orderNumber}
+                    <td className="px-2 py-2">
+                      <Link to={`/admin/orders/${o._id}`} className="flex items-center gap-2 font-medium hover:text-[var(--brand-text)]">
+                        {o.items?.[0] ? <OrderItemThumb item={o.items[0]} size="sm" className="h-8 w-8" /> : null}
+                        <span className="whitespace-nowrap">#{o.orderNumber}</span>
                       </Link>
                     </td>
-                    <td className="px-3 py-3">
-                      {o.items?.length ? <OrderThumbs items={o.items} /> : null}
-                    </td>
-                    <td className="max-w-[14rem] px-3 py-3">
+                    <td className="max-w-[12rem] px-2 py-2">
                       <p className="truncate">{customerName(o)}</p>
-                      <p className="truncate text-xs text-[var(--fg-muted)]">
-                        {o.shippingAddress?.phone}
-                        {o.shippingAddress?.city ? ` · ${o.shippingAddress.city}` : ''}
-                      </p>
+                      <p className="truncate text-xs text-[var(--fg-muted)]">{o.shippingAddress?.phone}</p>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3">{formatDateTime(o.createdAt)}</td>
-                    <td className="px-3 py-3">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <StatusCell o={o} />
-                      </div>
+                    <td className="whitespace-nowrap px-2 py-2 text-[var(--fg-muted)]" title={formatDateTime(o.createdAt)}>
+                      {formatDate(o.createdAt)}
                     </td>
-                    <td className="px-3 py-3 text-right font-medium tabular-nums">{formatCurrency(o.pricing.total)}</td>
-                    <td className="px-3 py-3 text-right">
-                      <div className="flex justify-end gap-1">
+                    <td className="whitespace-nowrap px-2 py-2 text-right font-medium tabular-nums">{formatCurrency(o.pricing.total)}</td>
+                    <td className="px-2 py-2">
+                      <PaymentBadge o={o} />
+                    </td>
+                    <td className="px-2 py-2">
+                      <StatusBadge o={o} />
+                    </td>
+                    <td className="py-2 pe-3">
+                      <div className="flex justify-end">
                         <Button variant="ghost" size="sm" aria-label="Print delivery slip" title="Print delivery slip" onClick={() => printSlips([o._id])}>
-                          <SiteIcon name="package" size={16} />
+                          <SiteIcon name="package" size={15} />
                         </Button>
-                        <Button variant="ghost" size="sm" aria-label="Delete order" onClick={() => setDeleteId(o._id)}>
-                          <SiteIcon name="trash" size={16} />
+                        <Button variant="ghost" size="sm" aria-label="Delete order" title="Delete order" onClick={() => setDeleteId(o._id)}>
+                          <SiteIcon name="trash" size={15} />
                         </Button>
+                        <Link
+                          to={`/admin/orders/${o._id}`}
+                          aria-label={`Open order ${o.orderNumber}`}
+                          title="Open"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
+                        >
+                          <SiteIcon name="chevron-right" size={15} />
+                        </Link>
                       </div>
                     </td>
                   </tr>
@@ -454,32 +508,33 @@ export function Orders() {
         </>
       )}
 
-      {/* Bulk bar */}
+      {/* Bulk bar: only the actions the selected orders allow */}
       {selected.size > 0 ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] shadow-lg backdrop-blur lg:left-64">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] backdrop-blur lg:left-64">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-1.5">
             <span className="text-sm font-medium">{selected.size} selected</span>
             <button type="button" className="text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]" onClick={() => setSelected(new Set())}>
               Clear
             </button>
             <div className="ms-auto flex flex-wrap gap-1.5">
               <Button size="sm" variant="outline" onClick={() => printSlips([...selected])}>
-                <SiteIcon name="package" size={14} /> Print slips
+                <SiteIcon name="package" size={14} /> Slips
               </Button>
-              {BULK_ACTIONS.map((a) => (
-                <Button
-                  key={a.status}
-                  size="sm"
-                  variant={a.danger ? 'ghost' : 'outline'}
-                  className={a.danger ? 'text-[var(--danger)]' : undefined}
-                  disabled={!eligible(a) || runBulk.isPending}
-                  title={eligible(a) ? undefined : `None of the selected orders can be set to ${orderStatusLabel(a.status).toLowerCase()}`}
-                  onClick={() => setBulk(a)}
-                >
-                  {a.label}
-                  {eligible(a) && eligible(a) !== selected.size ? ` (${eligible(a)})` : ''}
-                </Button>
-              ))}
+              {BULK_ACTIONS.map((a) =>
+                eligible(a) ? (
+                  <Button
+                    key={a.status}
+                    size="sm"
+                    variant={a.danger ? 'ghost' : 'outline'}
+                    className={a.danger ? 'text-[var(--danger)]' : undefined}
+                    disabled={runBulk.isPending}
+                    onClick={() => setBulk(a)}
+                  >
+                    {a.label}
+                    {eligible(a) !== selected.size ? ` (${eligible(a)})` : ''}
+                  </Button>
+                ) : null
+              )}
             </div>
           </div>
         </div>
@@ -487,12 +542,12 @@ export function Orders() {
 
       <ConfirmDialog
         open={Boolean(bulk)}
-        title={bulk ? `${bulk.label} ${eligible(bulk)} order${eligible(bulk) === 1 ? '' : 's'}?` : ''}
+        title={bulk ? `${bulk.label}: ${eligible(bulk)} order${eligible(bulk) === 1 ? '' : 's'}?` : ''}
         description={
           bulk
-            ? `Each order is updated like on its own page (stock, customer email, deposit checks). ${
-                selected.size - eligible(bulk) ? `${selected.size - eligible(bulk)} selected order(s) are skipped because their status doesn't allow it. ` : ''
-              }Orders that fail stay selected.`
+            ? `Each order is updated as on its own page (stock, customer email, deposit checks).${
+                selected.size - eligible(bulk) ? ` ${selected.size - eligible(bulk)} selected order(s) are skipped.` : ''
+              } Orders that fail stay selected.`
             : ''
         }
         confirmLabel={bulk?.label ?? 'Confirm'}

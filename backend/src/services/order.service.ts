@@ -833,10 +833,19 @@ export async function listAllOrders(
   limit = 20,
   status?: string,
   q?: string,
-  range: { from?: string; to?: string } = {}
+  range: { from?: string; to?: string } = {},
+  sort?: string
 ) {
   const filter: Record<string, unknown> = {};
   const and: Record<string, unknown>[] = [];
+  const order: Record<string, 1 | -1> =
+    sort === 'oldest'
+      ? { createdAt: 1 }
+      : sort === 'total_desc'
+        ? { 'pricing.total': -1, createdAt: -1 }
+        : sort === 'total_asc'
+          ? { 'pricing.total': 1, createdAt: -1 }
+          : { createdAt: -1 };
   // A status, a group of statuses ("group:returns") or "attention"
   if (status === 'attention') and.push(attentionFilter());
   else if (status?.startsWith('group:') && ORDER_STATUS_GROUPS.includes(status.slice(6) as OrderStatusGroup)) {
@@ -858,7 +867,7 @@ export async function listAllOrders(
   if (Object.keys(createdAt).length) filter.createdAt = createdAt;
   const [items, total] = await Promise.all([
     Order.find(filter)
-      .sort({ createdAt: -1 })
+      .sort(order)
       .skip((page - 1) * limit)
       .limit(limit)
       .populate('user', 'name email')

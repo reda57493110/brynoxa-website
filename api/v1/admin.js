@@ -250,7 +250,7 @@ async function handleOrderRoutes(req, res, route, query) {
     if (!user) return;
     const page = Number(query.page || 1);
     const limit = Number(query.limit || 20);
-    const result = await orderService.listAllOrders(page, limit, query.status, query.q, { from: query.from, to: query.to });
+    const result = await orderService.listAllOrders(page, limit, query.status, query.q, { from: query.from, to: query.to }, query.sort);
     sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
     return;
   }
