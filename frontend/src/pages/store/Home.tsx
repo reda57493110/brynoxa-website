@@ -1,8 +1,9 @@
+import { useSyncExternalStore } from 'react'
 import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHomeDeals } from '@/hooks/useHomeDeals'
 import { HeroBackdrop } from '@/components/home/HeroBackdrop'
-import { HomeDealsShowcase, HomeDealsStrips } from '@/components/home/HomeDeals'
+import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
@@ -61,6 +62,18 @@ const fadeUp = (reduce: boolean | null, delay = 0) =>
         transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
       }
 
+function useMediaQuery(query: string) {
+  return useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia(query)
+      mq.addEventListener('change', onChange)
+      return () => mq.removeEventListener('change', onChange)
+    },
+    () => window.matchMedia(query).matches,
+    () => false
+  )
+}
+
 const TRUST = [
   { key: 'home.proofCod', icon: 'banknote' },
   { key: 'home.proofDelivery', icon: 'truck' },
@@ -77,6 +90,8 @@ export function Home() {
   // Admin → Settings → Home page deals (up to 4; automatic: best in-stock featured deals)
   const deals = useHomeDeals()
   const showDeals = deals.products.length > 0 || deals.pending
+  // One showcase only (beside the headline on desktop, under it on phones)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
@@ -171,16 +186,16 @@ export function Home() {
             ))}
           </motion.ul>
 
-          {/* Phones / tablets: slim product strip */}
-          {showDeals ? (
-            <motion.div {...fadeUp(reduceMotion, 0.36)} className="order-2 mt-3 max-w-2xl sm:mt-6 lg:hidden">
-              {deals.products.length ? <HomeDealsStrips products={deals.products} /> : <HomeSpotlightSkeleton strip />}
+          {/* Phones / tablets: the same deals showcase as desktop, under the headline */}
+          {showDeals && !isDesktop ? (
+            <motion.div {...fadeUp(reduceMotion, 0.16)} className="order-2 mx-auto mt-4 w-full max-w-md sm:mt-6 lg:hidden">
+              {deals.products.length ? <HomeDealsShowcase products={deals.products} /> : <HomeSpotlightSkeleton />}
             </motion.div>
           ) : null}
           </div>
 
           {/* Desktop: product card beside the headline */}
-          {showDeals ? (
+          {showDeals && isDesktop ? (
             <motion.div {...fadeUp(reduceMotion, 0.2)} className="hidden lg:block">
               {deals.products.length ? <HomeDealsShowcase products={deals.products} /> : <HomeSpotlightSkeleton />}
             </motion.div>

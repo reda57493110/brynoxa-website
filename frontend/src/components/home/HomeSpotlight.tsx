@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ImageSpinner, LoadingImage } from '@/components/ui/ImageLoader'
+import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { Link } from 'react-router-dom'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
@@ -107,7 +107,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
     <div className="relative will-change-transform motion-safe:animate-[spotlight-float_7s_ease-in-out_infinite]">
       {/* Halo */}
       <div
-        className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-[radial-gradient(closest-side,rgb(0_170_230/0.16),transparent)] dark:bg-[radial-gradient(closest-side,rgb(0_194_255/0.4),transparent)]"
+        className="pointer-events-none absolute -inset-4 rounded-[3rem] sm:-inset-8 bg-[radial-gradient(closest-side,rgb(0_170_230/0.16),transparent)] dark:bg-[radial-gradient(closest-side,rgb(0_194_255/0.4),transparent)]"
         aria-hidden="true"
       />
 
@@ -119,7 +119,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             key={p._id}
             percent={d.percent}
             className={cn(
-              'absolute -end-5 -top-5 z-20 h-20 w-20 text-xl transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'absolute -end-2.5 -top-3 z-20 h-14 w-14 text-base transition-[opacity,transform] sm:-end-5 sm:-top-5 sm:h-20 sm:w-20 sm:text-xl duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
               i === active ? 'rotate-12 scale-100 opacity-100' : 'pointer-events-none rotate-0 scale-75 opacity-0'
             )}
           />
@@ -195,7 +195,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         {/* Whole picture opens the product; buttons below stay clickable */}
         <Link to={href} className="absolute inset-0 z-0" aria-label={product.name} />
 
-        <span className="pointer-events-none absolute start-4 top-4 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-3 text-xs font-semibold">
+        <span className="pointer-events-none absolute start-3 top-3 z-10 inline-flex h-7 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-2.5 text-[11px] font-semibold sm:start-4 sm:top-4 sm:h-8 sm:px-3 sm:text-xs">
           <SiteIcon name="star" size={13} solid className="text-[var(--brand)]" />
           {d ? t('home.spotlightDeal') : t('product.featuredPick')}
         </span>
@@ -203,15 +203,15 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent" aria-hidden="true" />
       </div>
 
-      <div className="relative z-10 -mt-6 space-y-3 p-5 pt-0">
+      <div className="relative z-10 -mt-6 space-y-2.5 p-3.5 pt-0 sm:space-y-3 sm:p-5 sm:pt-0">
         <div className="min-w-0">
-          {brand ? <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand)]">{brand}</p> : null}
-          <p className="mt-1 line-clamp-2 font-display text-xl font-semibold leading-snug drop-shadow xl:text-2xl">
+          {brand ? <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand)] sm:text-xs">{brand}</p> : null}
+          <p className="mt-0.5 line-clamp-2 font-display text-base font-semibold leading-snug drop-shadow sm:mt-1 sm:text-xl xl:text-2xl">
             {product.name}
             {product.variantLabel ? <span className="font-normal text-white/65"> · {product.variantLabel}</span> : null}
           </p>
           {specs.length ? (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+            <ul className="mt-2 flex flex-wrap gap-1.5 max-sm:hidden">
               {specs.map((s) => (
                 <li
                   key={s.key}
@@ -227,19 +227,19 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
 
         <div className="flex items-end justify-between gap-3">
           <div className="leading-tight">
-            <p className="flex items-baseline gap-2">
-              <span className="font-display text-[2rem] font-bold tracking-tight xl:text-[2.25rem]">{formatCurrency(product.price)}</span>
-              {d ? <span className="text-base text-white/50 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="whitespace-nowrap font-display text-[1.45rem] font-bold tracking-tight sm:text-[2rem] xl:text-[2.25rem]">{formatCurrency(product.price)}</span>
+              {d ? <span className="whitespace-nowrap text-sm text-white/50 line-through sm:text-base">{formatCurrency(product.compareAtPrice!)}</span> : null}
             </p>
             {d ? (
-              <p className="mt-1 inline-flex rounded-md bg-[var(--brand)]/20 px-2 py-0.5 text-xs font-semibold text-[#7adfff]">
+              <p className="mt-1 inline-flex rounded-md bg-[var(--brand)]/20 px-2 py-0.5 text-[11px] font-semibold text-[#7adfff] sm:text-xs">
                 {t('home.spotlightSave', { amount: formatCurrency(d.saved) })}
               </p>
             ) : null}
           </div>
-          <div className="space-y-1.5 text-end text-xs">
+          <div className="shrink-0 space-y-1 text-end text-[11px] sm:space-y-1.5 sm:text-xs">
             <StockLine product={product} className="justify-end" />
-            <p className="flex items-center justify-end gap-1 text-white/65">
+            <p className="flex items-center justify-end gap-1 whitespace-nowrap text-white/65 max-sm:hidden">
               <SiteIcon name="banknote" size={12} />
               {t('deposit.payOnDelivery')}
             </p>
@@ -250,7 +250,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           <button
             type="button"
             onClick={add}
-            className="relative inline-flex h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--brand)] px-5 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--brand)] px-4 text-sm font-semibold sm:h-12 sm:px-5 sm:text-base text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             {/* Shine only on the visible deal (hidden ones stay idle) */}
             {active ? (
@@ -266,7 +266,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             to={href}
             aria-label={t('product.viewProduct')}
             title={t('product.viewProduct')}
-            className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-black/30 text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/30 sm:h-12 sm:w-12 text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
           >
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
           </Link>
@@ -288,75 +288,6 @@ export function HomeSpotlightCard({ product, products, active = 0 }: { product?:
         <SpotlightArticle key={p._id} product={p} active={i === active} />
       ))}
     </SpotlightShell>
-  )
-}
-
-/** Phones and tablets: a glowing strip under the hero buttons (keeps them above the fold). */
-export function HomeSpotlightStrip({ product }: { product: Product }) {
-  const t = useT()
-  const add = useAddToCart(product)
-  const image = primaryImage(product)
-  const contain = imageFit(image) === 'contain'
-  const d = deal(product)
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl p-px shadow-[0_16px_40px_-16px_rgb(0_194_255/0.55)]">
-      <div
-        className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,var(--brand)_70deg,transparent_140deg,transparent_200deg,rgb(122_223_255/0.7)_260deg,transparent_320deg)] motion-safe:animate-[spotlight-spin_9s_linear_infinite]"
-        aria-hidden="true"
-      />
-      <div className="relative flex min-w-0 items-center gap-3 rounded-[15px] bg-[#0b1116] p-2.5 pe-3 text-white">
-        <Link to={`/product/${product.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
-          <span
-            className={cn(
-              'relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl',
-              contain ? 'bg-[radial-gradient(circle_at_50%_40%,#ffffff,#e9eef3)]' : 'bg-white/10'
-            )}
-          >
-            {image ? (
-              <LoadingImage
-                src={sizedImageUrl(image, 200)}
-                alt=""
-                width={80}
-                height={80}
-                loading="eager"
-                referrerPolicy="no-referrer"
-                spinnerSize="sm"
-                frameClassName="h-full w-full"
-                className={cn('h-full w-full', contain ? 'object-contain p-1' : 'object-cover')}
-              />
-            ) : (
-              <SiteIcon name="package" size={18} />
-            )}
-            {d ? (
-              <span className="absolute bottom-0.5 start-0.5 rounded-md bg-[var(--brand)] px-1.5 text-[11px] font-bold leading-5 text-[var(--brand-fg)]">
-                −{d.percent}%
-              </span>
-            ) : null}
-          </span>
-          <span className="min-w-0">
-            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--brand)]">
-              <SiteIcon name="star" size={10} solid />
-              {d ? t('home.spotlightDeal') : t('product.featuredPick')}
-            </span>
-            <span className="line-clamp-2 text-[15px] font-semibold leading-snug">{product.name}</span>
-            <span className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 text-sm">
-              <span className="text-base font-bold">{formatCurrency(product.price)}</span>
-              {d ? <span className="text-[11px] text-white/50 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
-              {isLow(product) ? <StockLine product={product} className="text-[11px]" /> : null}
-            </span>
-          </span>
-        </Link>
-        <button
-          type="button"
-          onClick={add}
-          aria-label={t('common.addToCart')}
-          className="relative inline-flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-        >
-          <SiteIcon name="cart" size={17} />
-        </button>
-      </div>
-    </div>
   )
 }
 
