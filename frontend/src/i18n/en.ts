@@ -100,6 +100,7 @@ export const en = {
     spotlightDeal: 'Hot deal',
     dealsLabel: 'Deals',
     addShort: 'Add',
+    offLabel: 'Off',
     featuredKicker: 'Featured',
     featuredTitle: 'Featured',
     featuredBody: 'Hand-picked picks ready to order.',

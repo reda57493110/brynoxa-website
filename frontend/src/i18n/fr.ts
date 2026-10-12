@@ -102,6 +102,7 @@ export const fr: Messages = {
     spotlightDeal: 'Bonne affaire',
     dealsLabel: 'Bons plans',
     addShort: 'Ajouter',
+    offLabel: 'Remise',
     featuredKicker: 'À la une',
     featuredTitle: 'À la une',
     featuredBody: 'Sélections prêtes à commander.',

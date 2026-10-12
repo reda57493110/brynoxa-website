@@ -129,7 +129,7 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
                   ) : null}
                   {off ? (
                     <span className="absolute end-1 top-1 rounded-md bg-[var(--brand)] px-1.5 text-[10px] font-bold leading-4 text-[var(--brand-fg)] shadow-glow">
-                      −{off}%
+                      -{off}%
                     </span>
                   ) : null}
                 </span>

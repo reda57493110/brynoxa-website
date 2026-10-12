@@ -102,6 +102,7 @@ export const ar: Messages = {
     spotlightDeal: 'عرض مميز',
     dealsLabel: 'العروض',
     addShort: 'أضف',
+    offLabel: 'خصم',
     featuredKicker: 'مميز',
     featuredTitle: 'مميز',
     featuredBody: 'اختيارات جاهزة للطلب.',

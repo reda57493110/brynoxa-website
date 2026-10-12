@@ -70,15 +70,33 @@ export function deal(p: Product) {
 const isLow = (p: Product) => p.stock > 0 && p.stock <= (p.lowStockThreshold ?? 5)
 
 /** "−14%" sticker in the brand colour. */
+/**
+ * Discount sticker: brand-blue gradient disc with "-11%" and a small "OFF" label, a crisp outline
+ * (white in light mode, dark in dark mode), a soft glow and a slow pulse ring.
+ * Uses a plain hyphen: the display font draws the true minus sign (−) like a tilde.
+ */
 function DealSticker({ percent, className }: { percent: number; className?: string }) {
+  const t = useT()
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center rounded-full bg-[var(--brand)] font-display font-bold text-[var(--brand-fg)] shadow-glow ring-4 ring-[#0b1116]',
+        'relative inline-flex flex-col items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_26%,#9be8ff_0%,var(--brand)_48%,#0091c2_100%)] text-[var(--brand-fg)] shadow-[0_10px_28px_-6px_rgb(0_194_255/0.75)] ring-[3px] ring-white dark:ring-[#0b1116]',
         className
       )}
+      aria-label={`-${percent}% ${t('home.offLabel')}`}
     >
-      −{percent}%
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[var(--brand)] motion-safe:animate-[sticker-pulse_2.6s_ease-out_infinite]"
+        aria-hidden="true"
+      />
+      <span className="font-display font-extrabold leading-none tracking-tight" aria-hidden="true">
+        <span className="font-sans">-</span>
+        {percent}
+        <span className="text-[0.7em]">%</span>
+      </span>
+      <span className="mt-0.5 text-[0.42em] font-bold uppercase leading-none tracking-[0.14em] opacity-80" aria-hidden="true">
+        {t('home.offLabel')}
+      </span>
     </span>
   )
 }
@@ -120,7 +138,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             percent={d.percent}
             className={cn(
               'absolute -end-2.5 -top-3 z-20 h-14 w-14 text-base transition-[opacity,transform] sm:-end-5 sm:-top-5 sm:h-20 sm:w-20 sm:text-xl duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
-              i === active ? 'rotate-12 scale-100 opacity-100' : 'pointer-events-none rotate-0 scale-75 opacity-0'
+              i === active ? '-rotate-6 scale-100 opacity-100' : 'pointer-events-none rotate-6 scale-75 opacity-0'
             )}
           />
         ) : null
