@@ -67,7 +67,7 @@ export function CartNotice() {
       className={cn(
         'cart-notice fixed z-[95] rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-[var(--fg)] shadow-soft',
         'inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))]',
-        'sm:inset-x-auto sm:bottom-auto sm:end-6 sm:top-24 sm:w-[26rem] sm:p-5 lg:end-12 lg:w-[30rem]'
+        'sm:inset-x-auto sm:bottom-auto sm:end-3 sm:top-24 sm:w-[26rem] sm:p-5 lg:w-[30rem]'
       )}
     >
       <div className="flex items-center gap-2">
