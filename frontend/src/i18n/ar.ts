@@ -293,6 +293,12 @@ export const ar: Messages = {
     continueShopping: 'متابعة التسوق',
   },
   checkout: {
+    stepCart: 'السلة',
+    stepDetails: 'المعلومات',
+    stepDone: 'تم التأكيد',
+    paymentTitle: 'الدفع',
+    paymentBody: 'ادفع نقدًا لموظف التوصيل عند وصول طلبك. افتح العلبة وتحقق منها أولًا — لا حاجة لبطاقة.',
+    optional: '(اختياري)',
     title: 'الدفع — برينوكسا',
     kicker: 'الدفع',
     heading: 'الدفع',

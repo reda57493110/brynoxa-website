@@ -291,6 +291,12 @@ export const en = {
     continueShopping: 'Continue shopping',
   },
   checkout: {
+    stepCart: 'Cart',
+    stepDetails: 'Details',
+    stepDone: 'Confirmed',
+    paymentTitle: 'Payment',
+    paymentBody: 'Pay the courier in cash when your order arrives. Open the box and check it first — no card needed.',
+    optional: '(optional)',
     title: 'Checkout — Brynoxa',
     kicker: 'Checkout',
     heading: 'Checkout',

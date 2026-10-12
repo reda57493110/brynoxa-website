@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { imageFit, sizedImageUrl } from '@/lib/image'
 import { ordersApi } from '@/api/ordersApi'
 import { couponsApi } from '@/api/couponsApi'
 import { productsApi } from '@/api/productsApi'
@@ -370,35 +372,193 @@ export function Checkout() {
     }
   }
 
+  const itemCount = items.reduce((n, i) => n + i.qty, 0)
+  const busy = placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading
+  const step = (n: number) => (isAuth ? n - 1 : n)
+
+  const summaryItems = (
+    <ul className="space-y-3">
+      {items.map((i) => {
+        const condition =
+          currentProducts.data?.find((p) => p._id === i.productId)?.condition ?? i.condition
+        const fit = imageFit(i.image)
+        return (
+          <li key={i.productId} className="flex items-center gap-3">
+            <span className="relative shrink-0">
+              <span
+                className={cn(
+                  'block h-14 w-14 overflow-hidden rounded-xl border border-[var(--border)]',
+                  fit === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
+                )}
+              >
+                {i.image ? (
+                  <SafeImage
+                    src={sizedImageUrl(i.image, 160)}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    className={cn(
+                      'h-full w-full',
+                      fit === 'contain' ? 'object-contain p-1 mix-blend-multiply' : 'object-cover'
+                    )}
+                  />
+                ) : null}
+              </span>
+              <span className="absolute -end-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold tabular-nums text-[var(--brand-fg)]">
+                {i.qty}
+              </span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <Link
+                to={`/product/${i.slug}`}
+                className="line-clamp-2 text-sm font-medium leading-snug hover:text-[var(--brand-text)]"
+              >
+                {i.name}
+              </Link>
+              {isPreOwned(condition) ? (
+                <ConditionBadge condition={condition} size="sm" className="mt-1" />
+              ) : null}
+            </span>
+            <span className="shrink-0 text-sm font-medium tabular-nums">
+              {formatCurrency(
+                (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ?? i.price) *
+                  i.qty
+              )}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+
+  const totalsRows = (
+    <div className="space-y-2 text-sm">
+      <div className="flex justify-between">
+        <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
+        <span className="tabular-nums">{formatCurrency(listSubtotal)}</span>
+      </div>
+      {wholesaleRow}
+      {discount > 0 ? (
+        <div className="flex justify-between">
+          <span className="text-[var(--fg-muted)]">
+            {t('checkout.discount')}
+            {appliedCoupon ? ` · ${appliedCoupon}` : ''}
+          </span>
+          <span className="tabular-nums text-[var(--success)]">-{formatCurrency(discount)}</span>
+        </div>
+      ) : null}
+      <div className="flex justify-between">
+        <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
+        <span className={cn('tabular-nums', shipping === 0 && 'font-medium text-[var(--success)]')}>
+          {shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}
+        </span>
+      </div>
+      {taxRate > 0 ? (
+        <div className="flex justify-between">
+          <span className="text-[var(--fg-muted)]">{t('checkout.tax')}</span>
+          <span className="tabular-nums">{formatCurrency(tax)}</span>
+        </div>
+      ) : null}
+      <div className="flex items-baseline justify-between border-t border-[var(--border)] pt-3">
+        <span className="font-display text-base font-semibold">{t('checkout.totalCod')}</span>
+        <span className="font-display text-xl font-semibold tabular-nums">{formatCurrency(total)}</span>
+      </div>
+      {depositRows}
+    </div>
+  )
+
+  const trust = (
+    <ul className="grid grid-cols-2 gap-2 text-[11px] text-[var(--fg-muted)] sm:text-xs">
+      <li className="flex items-center gap-1.5 rounded-xl bg-[var(--bg-muted)] px-2.5 py-2">
+        <SiteIcon name="banknote" size={14} className="shrink-0 text-[var(--brand-text)]" />
+        {t('checkout.payOnArrival')}
+      </li>
+      <li className="flex items-center gap-1.5 rounded-xl bg-[var(--bg-muted)] px-2.5 py-2">
+        <SiteIcon name="shield" size={14} className="shrink-0 text-[var(--brand-text)]" />
+        {t('checkout.warranty6')}
+      </li>
+    </ul>
+  )
+
   return (
     <>
-      <PageHero
-        kicker={t('checkout.heroKicker')}
-        title={t('checkout.heading')}
-        description={t('checkout.heroBody')}
-      >
-        <Link
-          to="/cart"
-          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-xs font-medium text-[var(--brand-text)] transition hover:border-[var(--brand)]"
-        >
-          {t('checkout.backToCart')}
-        </Link>
-      </PageHero>
+      <Container className="pb-32 pt-4 sm:pb-12 sm:pt-8">
+        {/* Compact header: back to cart, title, progress */}
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+          <div>
+            <Link
+              to="/cart"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-text)] hover:underline sm:text-sm"
+            >
+              <SiteIcon name="arrow-left" size={13} className="rtl:rotate-180" />
+              {t('checkout.backToCart')}
+            </Link>
+            <h1 className="mt-1 font-display text-2xl font-semibold sm:text-4xl">{t('checkout.heading')}</h1>
+            <p className="mt-1 hidden text-sm text-[var(--fg-muted)] sm:block">{t('checkout.heroBody')}</p>
+          </div>
+          <ol className="flex items-center gap-2 text-[11px] font-medium sm:text-xs" aria-label={t('checkout.heading')}>
+            {[
+              { label: t('checkout.stepCart'), state: 'done' },
+              { label: t('checkout.stepDetails'), state: 'current' },
+              { label: t('checkout.stepDone'), state: 'next' },
+            ].map((s, index) => (
+              <li key={s.label} className="flex items-center gap-2" aria-current={s.state === 'current' ? 'step' : undefined}>
+                {index > 0 ? (
+                  <span className={cn('h-px w-5 sm:w-8', s.state === 'next' ? 'bg-[var(--border)]' : 'bg-[var(--brand)]')} />
+                ) : null}
+                <span
+                  className={cn(
+                    'flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold',
+                    s.state === 'done' && 'bg-[var(--brand)] text-[var(--brand-fg)]',
+                    s.state === 'current' && 'border-2 border-[var(--brand)] text-[var(--brand-text)]',
+                    s.state === 'next' && 'border border-[var(--border)] text-[var(--fg-muted)]'
+                  )}
+                >
+                  {s.state === 'done' ? <SiteIcon name="check" size={12} /> : index + 1}
+                </span>
+                <span className={s.state === 'next' ? 'text-[var(--fg-muted)]' : ''}>{s.label}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
 
-      <Container className="pb-28 pt-5 sm:py-10 lg:pb-10">
+        {/* Phones: the products, folded under a one-line summary */}
+        <details className={cn(surfaceCard, 'group mt-4 overflow-hidden lg:hidden')}>
+          <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex -space-x-2 rtl:space-x-reverse">
+              {items.slice(0, 3).map((i) => (
+                <span
+                  key={i.productId}
+                  className={cn(
+                    'h-8 w-8 overflow-hidden rounded-lg border-2 border-[var(--bg-elevated)]',
+                    imageFit(i.image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
+                  )}
+                >
+                  {i.image ? (
+                    <SafeImage src={sizedImageUrl(i.image, 80)} alt="" loading="eager" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+                  ) : null}
+                </span>
+              ))}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{t('checkout.orderSummary')}</span>
+              <span className="block text-xs text-[var(--fg-muted)]">{t('cart.itemsInCart', { count: itemCount })}</span>
+            </span>
+            <span className="shrink-0 font-display text-base font-semibold tabular-nums">{formatCurrency(total)}</span>
+            <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)] transition group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-[var(--border)] px-4 py-4">{summaryItems}</div>
+        </details>
+
         <form
           id="checkout-form"
-          className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-8"
+          className="mt-4 grid gap-4 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-8"
           onSubmit={onSubmit}
         >
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-5">
             {!isAuth ? (
               <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-                <h2 className="font-display text-base font-semibold sm:text-lg">
-                  {t('checkout.yourInfo')}
-                </h2>
-                <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('checkout.guestBody')}</p>
-                <p className="mt-3 text-sm text-[var(--fg-muted)]">
+                <SectionTitle n={1} icon="user" title={t('checkout.yourInfo')} />
+                <p className="mt-2 text-sm text-[var(--fg-muted)]">
                   {t('checkout.haveAccount')}{' '}
                   <Link
                     to="/login"
@@ -408,16 +568,17 @@ export function Checkout() {
                     {t('checkout.signIn')}
                   </Link>
                 </p>
-                <div className="mt-4 grid gap-3 sm:mt-5">
+                <div className="mt-4 grid gap-3">
                   <Input
                     label={t('ui.email')}
                     type="email"
                     autoComplete="email"
+                    inputMode="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-3">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-3 transition has-[:checked]:border-[var(--brand)]">
                     <input
                       type="checkbox"
                       className="mt-1 h-4 w-4 accent-[var(--brand)]"
@@ -460,12 +621,10 @@ export function Checkout() {
             ) : null}
 
             <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-              <h2 className="font-display text-base font-semibold sm:text-lg">
-                {t('checkout.shippingTitle')}
-              </h2>
+              <SectionTitle n={step(2)} icon="truck" title={t('checkout.shippingTitle')} />
               <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('checkout.shippingBody')}</p>
               {isAuth && user?.addresses?.length ? (
-                <label className="mt-4 flex flex-col gap-1.5 text-sm sm:mt-5">
+                <label className="mt-4 flex flex-col gap-1.5 text-sm">
                   <span className="font-medium">{t('account.addresses')}</span>
                   <select
                     value={selectedAddressId}
@@ -495,34 +654,43 @@ export function Checkout() {
                   </select>
                 </label>
               ) : null}
-              <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Input
                   label={t('checkout.fullName')}
+                  autoComplete="name"
                   value={address.fullName}
                   onChange={(e) => set('fullName', e.target.value)}
                   required
                 />
                 <Input
                   label={t('ui.phone')}
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  dir="ltr"
                   value={address.phone}
                   onChange={(e) => set('phone', e.target.value)}
                   required
                 />
-                <Input
-                  className="sm:col-span-2"
-                  label={t('checkout.address')}
-                  value={address.line1}
-                  onChange={(e) => set('line1', e.target.value)}
-                  required
-                />
-                <Input
-                  className="sm:col-span-2"
-                  label={t('checkout.city')}
-                  value={address.city}
-                  onChange={(e) => set('city', e.target.value)}
-                  list={cityRateOptions.length ? 'checkout-city-rates' : undefined}
-                  required
-                />
+                <div className="sm:col-span-2">
+                  <Input
+                    label={t('checkout.address')}
+                    autoComplete="street-address"
+                    value={address.line1}
+                    onChange={(e) => set('line1', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <Input
+                    label={t('checkout.city')}
+                    autoComplete="address-level2"
+                    value={address.city}
+                    onChange={(e) => set('city', e.target.value)}
+                    list={cityRateOptions.length ? 'checkout-city-rates' : undefined}
+                    required
+                  />
+                </div>
                 {cityRateOptions.length ? (
                   <datalist id="checkout-city-rates">
                     {cityRateOptions.map((row) => (
@@ -530,187 +698,119 @@ export function Checkout() {
                     ))}
                   </datalist>
                 ) : null}
-                {!qualifiesFreeShipping && address.city.trim() ? (
-                  <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
-                    {t('checkout.shippingForCity', {
-                      amount: formatCurrency(shipping),
-                    })}
+                {address.city.trim() ? (
+                  <p className="flex items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:col-span-2">
+                    <SiteIcon name="truck" size={13} className="text-[var(--brand-text)]" />
+                    {qualifiesFreeShipping || shipping === 0
+                      ? t('cart.freeShippingUnlocked')
+                      : t('checkout.shippingForCity', { amount: formatCurrency(shipping) })}
                   </p>
                 ) : null}
               </div>
             </section>
 
             <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-              <h2 className="font-display text-base font-semibold sm:text-lg">
-                {t('checkout.couponTitle')}
-              </h2>
-              <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row">
+              <SectionTitle n={step(3)} icon="banknote" title={t('checkout.paymentTitle')} />
+              <div className="mt-4 flex items-start gap-3 rounded-xl border-2 border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_6%,transparent)] p-3 sm:p-4">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)]">
+                  <SiteIcon name="check" size={12} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{t('checkout.heroKicker')}</span>
+                  <span className="mt-0.5 block text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
+                    {t('checkout.paymentBody')}
+                  </span>
+                </span>
+                <SiteIcon name="banknote" size={22} className="ms-auto shrink-0 text-[var(--brand-text)]" />
+              </div>
+            </section>
+
+            <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
+              <SectionTitle n={step(4)} icon="ticket" title={t('checkout.couponTitle')} optional={t('checkout.optional')} />
+              <div className="mt-4 flex gap-2">
                 <Input
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="CODE"
+                  placeholder={t('checkout.couponCode')}
                   aria-label={t('checkout.couponCode')}
+                  className="uppercase placeholder:normal-case"
                 />
                 <Button
                   type="button"
                   variant="outline"
                   loading={validating}
                   onClick={validateCoupon}
-                  className="h-11 w-full rounded-full sm:w-auto sm:shrink-0"
+                  className="h-11 shrink-0 rounded-xl px-4"
                 >
                   {t('checkout.apply')}
                 </Button>
               </div>
               {appliedCoupon && discount > 0 ? (
-                <p className="mt-2 text-xs font-medium text-[var(--success)]">
-                  {t('checkout.couponApplied')}: {appliedCoupon}
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--success)]">
+                  <SiteIcon name="check" size={12} />
+                  {t('checkout.couponApplied')}: {appliedCoupon} (-{formatCurrency(discount)})
                 </p>
               ) : null}
-              <Textarea
-                className="mt-3 sm:mt-4"
-                label={t('checkout.orderNote')}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder={t('checkout.notePlaceholder')}
-                rows={3}
-              />
+              <div className="mt-4">
+                <Textarea
+                  label={t('checkout.orderNote')}
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder={t('checkout.notePlaceholder')}
+                  rows={2}
+                />
+              </div>
             </section>
 
             {formError ? (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+              >
+                <SiteIcon name="alert" size={16} className="mt-0.5 shrink-0" />
                 {formError}
               </p>
             ) : null}
+
+            {/* Phones: totals before the sticky Place order bar */}
+            <div className={cn(surfaceCard, 'space-y-4 p-4 lg:hidden')}>
+              {wholesaleBadge}
+              {totalsRows}
+              {trust}
+              <LegalConsent action="order" className="text-center" />
+            </div>
           </div>
 
           <aside
             className={cn(
               surfaceCard,
-              'hidden h-fit p-5 sm:block sm:p-6 lg:sticky lg:top-[calc(var(--nav-height)+0.75rem)]'
+              'hidden h-fit p-6 lg:sticky lg:top-[calc(var(--nav-height)+0.75rem)] lg:block'
             )}
           >
-            <h2 className="font-display text-lg font-semibold">{t('checkout.orderSummary')}</h2>
-            {wholesaleBadge ? <div className="mt-2">{wholesaleBadge}</div> : null}
-            <ul className="mt-4 space-y-2 text-sm">
-              {items.map((i) => {
-                const condition =
-                  currentProducts.data?.find((p) => p._id === i.productId)?.condition ?? i.condition
-                return (
-                  <li key={i.productId} className="flex justify-between gap-3">
-                    <span className="min-w-0 text-[var(--fg-muted)]">
-                      <span className="line-clamp-1">
-                        {i.name} × {i.qty}
-                      </span>
-                      {isPreOwned(condition) ? (
-                        <ConditionBadge condition={condition} size="sm" className="mt-1" />
-                      ) : null}
-                    </span>
-                    <span className="shrink-0">
-                      {formatCurrency(
-                        (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ??
-                          i.price) * i.qty
-                      )}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-            <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4 text-sm">
-              <div className="flex justify-between">
-                <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
-                <span>{formatCurrency(listSubtotal)}</span>
-              </div>
-              {wholesaleRow}
-              {discount > 0 ? (
-                <div className="flex justify-between">
-                  <span className="text-[var(--fg-muted)]">{t('checkout.discount')}</span>
-                  <span>-{formatCurrency(discount)}</span>
-                </div>
-              ) : null}
-              <div className="flex justify-between">
-                <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
-                <span>{shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}</span>
-              </div>
-              {taxRate > 0 ? (
-                <div className="flex justify-between">
-                  <span className="text-[var(--fg-muted)]">{t('checkout.tax')}</span>
-                  <span>{formatCurrency(tax)}</span>
-                </div>
-              ) : null}
-              <div className="flex justify-between font-display text-base font-semibold">
-                <span>{t('checkout.totalCod')}</span>
-                <span>{formatCurrency(total)}</span>
-              </div>
-              {depositRows}
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-lg font-semibold">{t('checkout.orderSummary')}</h2>
+              <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-xs text-[var(--fg-muted)]">
+                {t('cart.itemsInCart', { count: itemCount })}
+              </span>
             </div>
-            <ul className="mt-4 space-y-2 text-xs text-[var(--fg-muted)]">
-              <li className="flex items-center gap-2">
-                <SiteIcon name="package-check" size={14} className="text-[var(--brand-text)]" />
-                {t('checkout.payOnArrival')}
-              </li>
-              <li className="flex items-center gap-2">
-                <SiteIcon name="shield" size={14} className="text-[var(--brand-text)]" />
-                {t('checkout.warranty6')}
-              </li>
-            </ul>
-            <Button
-              type="submit"
-              className="mt-6 w-full rounded-full"
-              loading={placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading}
-              disabled={settings.isLoading || currentProducts.isLoading}
-            >
+            {wholesaleBadge ? <div className="mt-2">{wholesaleBadge}</div> : null}
+            <div className="mt-5 max-h-[18rem] overflow-y-auto pe-1 pt-1.5 [scrollbar-width:thin]">{summaryItems}</div>
+            <div className="mt-5 border-t border-[var(--border)] pt-4">{totalsRows}</div>
+            <Button type="submit" className="mt-5 h-12 w-full rounded-full text-base" loading={busy} disabled={settings.isLoading || currentProducts.isLoading}>
               {t('checkout.placeOrder')}
+              <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Button>
+            <div className="mt-4">{trust}</div>
             <LegalConsent action="order" className="mt-3 text-center" />
-            <Link
-              to="/cart"
-              className="mt-3 block text-center text-sm font-medium text-[var(--brand-text)]"
-            >
-              {t('checkout.backToCart')}
-            </Link>
           </aside>
         </form>
-
-        <div className={cn(surfaceCard, 'mt-5 p-4 sm:hidden')}>
-          {wholesaleBadge ? <div className="mb-3">{wholesaleBadge}</div> : null}
-          <div className="flex justify-between text-sm">
-            <span className="text-[var(--fg-muted)]">{t('cart.subtotal')}</span>
-            <span>{formatCurrency(listSubtotal)}</span>
-          </div>
-          {wholesaleRow ? <div className="mt-2 text-sm">{wholesaleRow}</div> : null}
-          {discount > 0 ? (
-            <div className="mt-2 flex justify-between text-sm">
-              <span className="text-[var(--fg-muted)]">{t('checkout.discount')}</span>
-              <span>-{formatCurrency(discount)}</span>
-            </div>
-          ) : null}
-          <div className="mt-2 flex justify-between text-sm">
-            <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
-            <span>{shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}</span>
-          </div>
-          <div className="mt-3 flex justify-between border-t border-[var(--border)] pt-3 font-display text-base font-semibold">
-            <span>{t('checkout.totalCod')}</span>
-            <span>{formatCurrency(total)}</span>
-          </div>
-          {depositRows ? <div className="mt-2 space-y-2 text-sm">{depositRows}</div> : null}
-          <ul className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--fg-muted)]">
-            <li className="inline-flex items-center gap-1">
-              <SiteIcon name="package-check" size={12} className="text-[var(--brand-text)]" />
-              {t('checkout.payOnArrival')}
-            </li>
-            <li className="inline-flex items-center gap-1">
-              <SiteIcon name="shield" size={12} className="text-[var(--brand-text)]" />
-              {t('checkout.warranty6')}
-            </li>
-          </ul>
-        </div>
       </Container>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
-        <div className="mx-auto flex max-w-7xl items-center gap-3">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.12)] lg:hidden">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
           <div className="min-w-0">
             <p className="text-[11px] text-[var(--fg-muted)]">{t('checkout.totalCod')}</p>
-            <p className="font-display text-base font-semibold">{formatCurrency(total)}</p>
+            <p className="font-display text-lg font-semibold tabular-nums">{formatCurrency(total)}</p>
             {deposit > 0 ? (
               <p className="text-[11px] text-[var(--fg-muted)]">
                 {t('deposit.payNow')}: {formatCurrency(deposit)}
@@ -720,8 +820,8 @@ export function Checkout() {
           <Button
             type="submit"
             form="checkout-form"
-            className="h-11 flex-1 rounded-full text-sm"
-            loading={placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading}
+            className="h-12 flex-1 rounded-full text-sm sm:text-base"
+            loading={busy}
             disabled={settings.isLoading || currentProducts.isLoading}
           >
             {t('checkout.placeOrder')}
@@ -729,5 +829,18 @@ export function Checkout() {
         </div>
       </div>
     </>
+  )
+}
+
+function SectionTitle({ n, icon, title, optional }: { n: number; icon: SiteIconName; title: string; optional?: string }) {
+  return (
+    <h2 className="flex items-center gap-2.5 font-display text-base font-semibold sm:text-lg">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-xs font-bold text-[var(--brand-text)]">
+        {n}
+      </span>
+      {title}
+      {optional ? <span className="text-xs font-normal text-[var(--fg-muted)]">{optional}</span> : null}
+      <SiteIcon name={icon} size={16} className="ms-auto text-[var(--fg-muted)]" />
+    </h2>
   )
 }

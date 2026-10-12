@@ -293,6 +293,12 @@ export const fr: Messages = {
     continueShopping: 'Continuer les achats',
   },
   checkout: {
+    stepCart: 'Panier',
+    stepDetails: 'Informations',
+    stepDone: 'Confirmée',
+    paymentTitle: 'Paiement',
+    paymentBody: 'Payez le livreur en espèces à la réception. Ouvrez le colis et vérifiez-le d’abord — aucune carte nécessaire.',
+    optional: '(facultatif)',
     title: 'Paiement — Brynoxa',
     kicker: 'Paiement',
     heading: 'Paiement',
