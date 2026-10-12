@@ -144,18 +144,26 @@ function DealMiniCard({ product }: { product: Product }) {
   return (
     <article className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-[#0b1116] text-white shadow-[0_18px_40px_-22px_rgb(15_23_42/0.7)] ring-1 ring-black/5 dark:shadow-[0_18px_44px_-20px_rgb(0_194_255/0.4)] dark:ring-white/10">
       <Link to={href} className="relative block" tabIndex={-1} aria-hidden="true">
-        <div className={cn('relative aspect-[4/3] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
+        <div
+          className={cn(
+            'relative aspect-[4/3] overflow-hidden',
+            contain ? 'bg-[radial-gradient(circle_at_50%_45%,#ffffff_55%,#e9eef3)]' : 'bg-white/5'
+          )}
+        >
           {image ? (
             <LoadingImage
-              src={sizedImageUrl(image, 640)}
+              src={sizedImageUrl(image, 800)}
               alt=""
-              width={640}
-              height={400}
+              width={800}
+              height={600}
               loading="eager"
               decoding="async"
               referrerPolicy="no-referrer"
               frameClassName="absolute inset-0"
-              className={cn('h-full w-full', contain ? 'object-contain p-2 pb-4 mix-blend-multiply' : 'object-cover')}
+              className={cn(
+                'h-full w-full',
+                contain ? 'object-contain p-1.5 mix-blend-multiply drop-shadow-[0_10px_12px_rgb(0_0_0/0.18)]' : 'object-cover'
+              )}
             />
           ) : null}
           <span className="absolute start-2 top-2 inline-flex h-5 items-center gap-1 rounded-full bg-[#0b1116]/85 px-1.5 text-[9px] font-semibold uppercase tracking-wide">
@@ -167,11 +175,13 @@ function DealMiniCard({ product }: { product: Product }) {
               −{d.percent}%
             </span>
           ) : null}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0b1116] to-transparent" />
+          {contain ? null : (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0b1116] to-transparent" />
+          )}
         </div>
       </Link>
 
-      <div className="relative -mt-1 flex flex-1 flex-col gap-1 p-2.5 pt-0">
+      <div className="relative flex flex-1 flex-col gap-1 p-2.5">
         <Link to={href} className="line-clamp-1 text-xs font-semibold leading-tight hover:text-[var(--brand)]">
           {product.name}
         </Link>
@@ -187,9 +197,10 @@ function DealMiniCard({ product }: { product: Product }) {
             type="button"
             onClick={add}
             aria-label={t('common.addToCart')}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition active:scale-95"
+            className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg bg-[var(--brand)] px-2 text-[11px] font-semibold text-[var(--brand-fg)] shadow-glow transition active:scale-95"
           >
-            <SiteIcon name="cart" size={15} />
+            <SiteIcon name="cart" size={13} />
+            {t('home.addShort')}
           </button>
         </div>
       </div>

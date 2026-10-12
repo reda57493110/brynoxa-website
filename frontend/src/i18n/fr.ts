@@ -101,6 +101,7 @@ export const fr: Messages = {
     spotlightSave: 'Vous économisez {amount}',
     spotlightDeal: 'Bonne affaire',
     dealsLabel: 'Bons plans',
+    addShort: 'Ajouter',
     featuredKicker: 'À la une',
     featuredTitle: 'À la une',
     featuredBody: 'Sélections prêtes à commander.',

@@ -123,7 +123,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="order-1 max-w-2xl font-display text-[1.15rem] font-semibold leading-tight tracking-tight sm:mt-4 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
+            className="order-1 max-w-2xl font-display text-base font-semibold leading-snug tracking-tight sm:mt-4 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
@@ -138,18 +138,18 @@ export function Home() {
 
           <motion.div
             {...fadeUp(reduceMotion, 0.24)}
-            className="order-3 mt-3 grid w-full grid-cols-2 gap-2 sm:mt-8 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
+            className="order-3 mt-3 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3"
           >
             <Link
               to="/shop"
-              className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-3 py-1 text-center text-xs font-semibold leading-tight text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[var(--brand)] px-3.5 text-[11px] font-semibold leading-none text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:gap-2 sm:px-6 sm:text-base"
             >
               {t('common.shopNow')}
-              <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
+              <SiteIcon name="arrow-right" size={12} className="rtl:rotate-180" />
             </Link>
             <a
               href="#categories"
-              className="inline-flex min-h-9 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3 py-1 text-center text-xs font-medium leading-tight text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3.5 text-[11px] font-medium leading-none text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:px-5 sm:text-base"
             >
               {t('common.browseCategories')}
             </a>
