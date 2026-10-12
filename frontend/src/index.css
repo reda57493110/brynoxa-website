@@ -358,6 +358,34 @@ html[lang="ar"] {
 }
 
 /* Home spotlight: gentle float, rotating border light, shine sweep on the button */
+/* Home hero backdrop */
+@keyframes hero-glow-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4%, 6%, 0) scale(1.08);
+  }
+}
+
+@keyframes hero-grid-move {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 0 64px;
+  }
+}
+
+@keyframes hero-circuit-pulse {
+  from {
+    stroke-dashoffset: 936;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 /* Image loading: shine sweeping across the frame */
 @keyframes image-shimmer {
   from {

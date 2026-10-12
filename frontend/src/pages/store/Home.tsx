@@ -1,6 +1,7 @@
 import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHomeDeals } from '@/hooks/useHomeDeals'
+import { HeroBackdrop } from '@/components/home/HeroBackdrop'
 import { HomeDealsShowcase, HomeDealsStrips } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { useQuery } from '@tanstack/react-query'
@@ -12,8 +13,6 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { SafeImage } from '@/components/ui/SafeImage'
-import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -111,23 +110,7 @@ export function Home() {
         aria-labelledby="home-hero-heading"
         className="relative -mt-[var(--nav-height)] flex min-h-[85svh] w-full flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
       >
-        <div className="absolute inset-0" aria-hidden="true">
-          <SafeImage
-            src={sizedImageUrl(HERO_IMAGE, 1920)}
-            srcSet={imageSrcSet(HERO_IMAGE, [768, 1280, 1920, 2560])}
-            alt=""
-            width={2560}
-            height={1440}
-            sizes="100vw"
-            className={cn(
-              'home-hero-photo absolute inset-0 h-full w-full max-w-none object-cover object-[32%_48%] dark:object-[72%_42%]',
-              !reduceMotion && 'animate-[home-hero-ken_18s_ease-out_forwards]'
-            )}
-            fetchPriority="high"
-          />
-          <div className="absolute inset-0 hidden dark:block bg-[linear-gradient(105deg,rgba(8,11,14,0.94)_0%,rgba(8,11,14,0.72)_46%,rgba(8,11,14,0.38)_100%)]" />
-          <div className="absolute inset-0 dark:hidden bg-[linear-gradient(90deg,rgb(0_0_0/0.32)_0%,rgb(0_0_0/0.12)_36%,transparent_58%)]" />
-        </div>
+        <HeroBackdrop />
 
         <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
           <div className="min-w-0">
