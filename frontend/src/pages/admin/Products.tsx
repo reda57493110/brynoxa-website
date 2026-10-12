@@ -213,21 +213,54 @@ export function Products() {
     spotlight: place.featuredList[0]?.name,
     shopHeader: place.shopHero.product?.name,
   }
+  // Featured row products that are listed in an earlier section (e.g. also a top deal)
+  const rowAbove = place.row
+    .map((product, index) => ({ product, index }))
+    .filter(({ product }) => groupOf(place.placementsOf(product)) !== 'row')
+  const RowAbove = () =>
+    rowAbove.length ? (
+      <span className="flex flex-wrap items-center gap-1 ps-7 text-[11px] text-[var(--fg-muted)]">
+        Also in this row (listed above):
+        {rowAbove.map(({ product, index }) => (
+          <button
+            key={product._id}
+            type="button"
+            onClick={() => setPlacing(product)}
+            className="inline-flex max-w-[14rem] items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-1.5 py-0.5 hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+          >
+            <span className="font-semibold tabular-nums text-[var(--brand-text)]">#{index + 1}</span>
+            <span className="truncate">{product.name}</span>
+          </button>
+        ))}
+      </span>
+    ) : null
+
   const groupHeading = (i: number) => {
     if (sort !== 'placement' || !place.ready || (i > 0 && groups[i] === groups[i - 1])) return null
     const from = i === 0 && page === 1 ? 0 : i === 0 ? GROUP_ORDER.indexOf(groups[0]) : GROUP_ORDER.indexOf(groups[i - 1]) + 1
     const to = GROUP_ORDER.indexOf(groups[i])
-    const skipped = GROUP_ORDER.slice(from, to).filter((g) => alsoAbove[g] && groupCount[g])
+    // Sections whose products are all listed above still get their heading
+    const allRowAbove = place.row.length > 0 && rowAbove.length === place.row.length
+    const skipped = GROUP_ORDER.slice(from, to).filter((g) => (alsoAbove[g] || (g === 'row' && allRowAbove)) && groupCount[g])
     return (
       <span className="flex flex-col gap-1">
         {skipped.map((g) => (
-          <SectionHeading key={g} group={g} count={groupCount[g]} note={`${alsoAbove[g]} (listed above)`} onManage={MANAGED[g] ? () => setManaging(MANAGED[g]!) : undefined} />
+          <Fragment key={g}>
+            <SectionHeading
+              group={g}
+              count={groupCount[g]}
+              note={g === 'row' ? undefined : `${alsoAbove[g]} (listed above)`}
+              onManage={MANAGED[g] ? () => setManaging(MANAGED[g]!) : undefined}
+            />
+            {g === 'row' ? <RowAbove /> : null}
+          </Fragment>
         ))}
         <SectionHeading
           group={groups[i]}
           count={groupCount[groups[i]]}
           onManage={MANAGED[groups[i]] ? () => setManaging(MANAGED[groups[i]]!) : undefined}
         />
+        {groups[i] === 'row' ? <RowAbove /> : null}
       </span>
     )
   }
