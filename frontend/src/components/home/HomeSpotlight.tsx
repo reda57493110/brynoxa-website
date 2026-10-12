@@ -40,7 +40,7 @@ function keySpecs(p: Product, locale: ReturnType<typeof useLocaleStore.getState>
     .map((k) => ({ key: k, icon: SPEC_ICON[k] ?? 'sliders', value: formatSpecValue(k, String(specs[k]), locale) }))
 }
 
-function useAddToCart(product: Product) {
+export function useAddToCart(product: Product) {
   const addItem = useCartStore((s) => s.addItem)
   const t = useT()
   return () => {
@@ -62,7 +62,7 @@ function useAddToCart(product: Product) {
   }
 }
 
-function deal(p: Product) {
+export function deal(p: Product) {
   if (p.compareAtPrice == null || p.compareAtPrice <= p.price) return null
   return { percent: Math.round((1 - p.price / p.compareAtPrice) * 100), saved: p.compareAtPrice - p.price }
 }
@@ -84,7 +84,7 @@ function DealSticker({ percent, className }: { percent: number; className?: stri
 }
 
 /** Pulsing dot + "Only 3 left" / "In stock". */
-function StockLine({ product, className }: { product: Product; className?: string }) {
+export function StockLine({ product, className }: { product: Product; className?: string }) {
   const t = useT()
   const low = isLow(product)
   return (
@@ -363,7 +363,7 @@ export function HomeSpotlightStrip({ product }: { product: Product }) {
 /** Same footprint as the card while the product loads, so the hero does not jump. */
 export function HomeSpotlightSkeleton({ strip }: { strip?: boolean }) {
   return strip ? (
-    <div className="relative h-[6.25rem] overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+    <div className="relative aspect-[4/3.4] w-[78%] max-w-[20rem] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-muted)] dark:border-white/10 dark:bg-white/10">
       <ImageSpinner size="sm" tone="dark" />
     </div>
   ) : (

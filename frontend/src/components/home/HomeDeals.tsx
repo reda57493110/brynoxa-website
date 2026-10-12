@@ -6,7 +6,10 @@ import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { Product } from '@/types'
-import { HomeSpotlightCard, HomeSpotlightStrip } from './HomeSpotlight'
+import { Link } from 'react-router-dom'
+import { LoadingImage } from '@/components/ui/ImageLoader'
+import { SiteIcon } from '@/components/ui/SiteIcon'
+import { HomeSpotlightCard, StockLine, deal, useAddToCart } from './HomeSpotlight'
 
 /** Time each deal stays in the big card before the next one (desktop). */
 const ROTATE_MS = 6000
@@ -129,52 +132,158 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
   )
 }
 
-/** Phones / tablets: deals as a swipeable row of strips, with dots. */
+/** Phone / tablet deal card: big photo, deal tag and discount, name, price, stock and a cart button. */
+function DealMiniCard({ product }: { product: Product }) {
+  const t = useT()
+  const add = useAddToCart(product)
+  const image = primaryImage(product)
+  const contain = imageFit(image) === 'contain'
+  const d = deal(product)
+  const href = `/product/${product.slug}`
+
+  return (
+    <article className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-[#0b1116] text-white shadow-[0_18px_40px_-22px_rgb(15_23_42/0.7)] ring-1 ring-black/5 dark:shadow-[0_18px_44px_-20px_rgb(0_194_255/0.4)] dark:ring-white/10">
+      <Link to={href} className="relative block" tabIndex={-1} aria-hidden="true">
+        <div className={cn('relative aspect-[16/10] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
+          {image ? (
+            <LoadingImage
+              src={sizedImageUrl(image, 640)}
+              alt=""
+              width={640}
+              height={400}
+              loading="eager"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              frameClassName="absolute inset-0"
+              className={cn('h-full w-full', contain ? 'object-contain p-4 pb-6 mix-blend-multiply' : 'object-cover')}
+            />
+          ) : null}
+          <span className="absolute start-2.5 top-2.5 inline-flex h-6 items-center gap-1 rounded-full bg-[#0b1116]/85 px-2 text-[10px] font-semibold uppercase tracking-wide">
+            <SiteIcon name="star" size={10} solid className="text-[var(--brand)]" />
+            {d ? t('home.spotlightDeal') : t('product.featuredPick')}
+          </span>
+          {d ? (
+            <span className="absolute end-2.5 top-2.5 inline-flex h-7 items-center rounded-full bg-[var(--brand)] px-2.5 font-display text-sm font-bold text-[var(--brand-fg)] shadow-glow">
+              −{d.percent}%
+            </span>
+          ) : null}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0b1116] to-transparent" />
+        </div>
+      </Link>
+
+      <div className="relative -mt-2 flex flex-1 flex-col gap-2 p-3.5 pt-0">
+        <Link to={href} className="line-clamp-2 min-h-[2.5rem] text-[15px] font-semibold leading-tight hover:text-[var(--brand)]">
+          {product.name}
+        </Link>
+        <div className="mt-auto flex items-end justify-between gap-2">
+          <div className="min-w-0 leading-tight">
+            <p className="font-display text-xl font-bold tracking-tight">{formatCurrency(product.price)}</p>
+            <p className="flex flex-wrap items-center gap-x-2 text-[11px]">
+              {d ? <span className="text-white/45 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
+              <StockLine product={product} />
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={add}
+            aria-label={t('common.addToCart')}
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition active:scale-95"
+          >
+            <SiteIcon name="cart" size={18} />
+          </button>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+/** Time each deal stays in view before the row moves on (phones). */
+const PHONE_ROTATE_MS = 5000
+
+/**
+ * Phones / tablets: deal cards in a swipeable row (native scroll-snap, so swiping is smooth), with
+ * dots. Moves on by itself while the hero is on screen; stops for good once the visitor touches it.
+ */
 export function HomeDealsStrips({ products }: { products: Product[] }) {
   const t = useT()
+  const reduceMotion = useReducedMotion()
   const scroller = useRef<HTMLDivElement>(null)
   const [current, setCurrent] = useState(0)
+  const [touched, setTouched] = useState(false)
+  const [onScreen, setOnScreen] = useState(true)
   const many = products.length > 1
+
+  const step = () => {
+    const el = scroller.current
+    const child = el?.firstElementChild as HTMLElement | null
+    return child ? child.offsetWidth + 12 : (el?.clientWidth ?? 0)
+  }
 
   const onScroll = () => {
     const el = scroller.current
     if (!el) return
-    const child = el.firstElementChild as HTMLElement | null
-    const step = child ? child.offsetWidth + 12 : el.clientWidth
-    setCurrent(Math.min(products.length - 1, Math.round(Math.abs(el.scrollLeft) / step)))
+    setCurrent(Math.min(products.length - 1, Math.round(Math.abs(el.scrollLeft) / step())))
   }
 
   const goTo = (i: number) => {
     const el = scroller.current
-    const child = el?.children[i] as HTMLElement | undefined
-    child?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+    if (!el) return
+    const rtl = getComputedStyle(el).direction === 'rtl'
+    el.scrollTo({ left: (rtl ? -1 : 1) * i * step(), behavior: reduceMotion ? 'auto' : 'smooth' })
   }
 
-  if (!many) return products[0] ? <HomeSpotlightStrip product={products[0]} /> : null
+  // Only move while the row is visible
+  useEffect(() => {
+    const el = scroller.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.6 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!many || touched || !onScreen || reduceMotion) return
+    const id = window.setTimeout(() => goTo((current + 1) % products.length), PHONE_ROTATE_MS)
+    return () => window.clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, many, touched, onScreen, reduceMotion, products.length])
+
+  if (!many) return products[0] ? <DealMiniCard product={products[0]} /> : null
 
   return (
     <div aria-roledescription="carousel" aria-label={t('home.dealsLabel')}>
       <div
         ref={scroller}
         onScroll={onScroll}
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
+        onPointerDown={() => setTouched(true)}
+        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 pt-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
       >
         {products.map((p) => (
-          <div key={p._id} className="w-[88%] max-w-md shrink-0 snap-start">
-            <HomeSpotlightStrip product={p} />
+          <div key={p._id} className="w-[78%] max-w-[20rem] shrink-0 snap-start">
+            <DealMiniCard product={p} />
           </div>
         ))}
       </div>
-      <div className="mt-2.5 flex justify-center gap-1.5">
+      <div className="mt-2 flex justify-center gap-1.5">
         {products.map((p, i) => (
           <button
             key={p._id}
             type="button"
-            onClick={() => goTo(i)}
+            onClick={() => {
+              setTouched(true)
+              goTo(i)
+            }}
             aria-label={`${i + 1} / ${products.length}`}
             aria-current={i === current}
-            className={cn('h-1.5 rounded-full transition-all', i === current ? 'w-5 bg-[var(--brand)]' : 'w-1.5 bg-[color-mix(in_srgb,var(--fg)_25%,transparent)] dark:bg-white/40')}
-          />
+            className="flex h-6 items-center px-0.5"
+          >
+            <span
+              className={cn(
+                'block h-1.5 rounded-full transition-all duration-300',
+                i === current ? 'w-6 bg-[var(--brand)]' : 'w-1.5 bg-[color-mix(in_srgb,var(--fg)_25%,transparent)] dark:bg-white/40'
+              )}
+            />
+          </button>
         ))}
       </div>
     </div>

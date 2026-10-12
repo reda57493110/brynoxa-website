@@ -108,7 +108,7 @@ export function Home() {
     <>
       <section
         aria-labelledby="home-hero-heading"
-        className="relative -mt-[var(--nav-height)] flex min-h-[85svh] w-full flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
+        className="relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
       >
         <HeroBackdrop />
 
@@ -124,7 +124,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="mt-3 max-w-2xl font-display text-2xl font-semibold tracking-tight text-balance text-[var(--fg)] sm:mt-4 sm:text-5xl md:text-6xl dark:text-white"
+            className="mt-3 max-w-2xl font-display text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-balance text-[var(--fg)] sm:mt-4 sm:text-5xl md:text-6xl dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
@@ -139,18 +139,18 @@ export function Home() {
 
           <motion.div
             {...fadeUp(reduceMotion, 0.24)}
-            className="mt-6 flex w-full flex-col gap-2.5 sm:mt-8 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
+            className="mt-5 grid w-full grid-cols-2 gap-2.5 sm:mt-8 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
           >
             <Link
               to="/shop"
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-3 py-2 text-center text-sm font-semibold leading-tight text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.shopNow')}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Link>
             <a
               href="#categories"
-              className="inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-5 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.browseCategories')}
             </a>
@@ -171,7 +171,7 @@ export function Home() {
 
           {/* Phones / tablets: slim product strip */}
           {showDeals ? (
-            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-6 max-w-xl lg:hidden">
+            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-6 max-w-2xl lg:hidden">
               {deals.products.length ? <HomeDealsStrips products={deals.products} /> : <HomeSpotlightSkeleton strip />}
             </motion.div>
           ) : null}
