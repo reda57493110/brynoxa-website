@@ -127,6 +127,7 @@ module.exports = async (req, res) => {
       admin: isAdmin,
       isActive: toBool(raw.isActive),
       condition: raw.condition,
+      placement: raw.placement,
     });
 
     sendJson(res, 200, {

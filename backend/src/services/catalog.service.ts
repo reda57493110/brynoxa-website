@@ -1,3 +1,4 @@
+import { getSettings } from '../models/Settings';
 import mongoose from 'mongoose';
 import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
@@ -227,6 +228,8 @@ type ProductQuery = {
   isActive?: boolean;
   admin?: boolean;
   condition?: string;
+  /** Admin only: on the home page (deals / featured / carousel), in the top deals, or on neither. */
+  placement?: string;
 };
 
 export async function listProducts(query: ProductQuery) {
@@ -278,6 +281,16 @@ export async function listProducts(query: ProductQuery) {
   if (!query.admin && !query.featured && !query.carousel) filter.variantListed = { $ne: false };
   if (query.featured) filter.isFeatured = true;
   if (query.carousel) filter.isCarousel = true;
+  if (query.admin && (query.placement === 'home' || query.placement === 'deals' || query.placement === 'none')) {
+    const dealIds = ((await getSettings()).homeDeals || []).map((id) => new mongoose.Types.ObjectId(id));
+    const placementFilter =
+      query.placement === 'deals'
+        ? { _id: { $in: dealIds } }
+        : query.placement === 'home'
+          ? { $or: [{ isFeatured: true }, { isCarousel: true }, { _id: { $in: dealIds } }] }
+          : { isFeatured: { $ne: true }, isCarousel: { $ne: true }, _id: { $nin: dealIds } };
+    filter.$and = [...((filter.$and as unknown[]) || []), placementFilter];
+  }
   if (query.inStock) filter.stock = { $gt: 0 };
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
     filter.price = {};

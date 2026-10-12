@@ -6,19 +6,70 @@ import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SafeImage } from '@/components/ui/SafeImage'
-import { optimizedImageUrl } from '@/lib/image'
-import { Badge } from '@/components/ui/Badge'
+import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
-import { AdminHeader } from '@/components/admin/AdminHeader'
-import { formatCurrency } from '@/lib/format'
-import { toast } from '@/store/toastStore'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
-import type { Category, ProductCondition } from '@/types'
+import { ProductPlacementDialog } from '@/components/admin/ProductPlacementDialog'
+import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
+import { useStorefrontPlacements, type Placement } from '@/hooks/useStorefrontPlacements'
+import { optimizedImageUrl } from '@/lib/image'
+import { formatCurrency } from '@/lib/format'
+import { cn } from '@/lib/cn'
+import { toast } from '@/store/toastStore'
+import type { Category, Product, ProductCondition } from '@/types'
+
+type PlacementFilter = '' | 'home' | 'deals' | 'featured' | 'carousel' | 'none'
+
+const control = 'h-9 min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
+
+const SHORT: Record<string, string> = {
+  deals: 'Top deals',
+  spotlight: 'Featured card',
+  row: 'Featured row',
+  shopHeader: 'Shop header',
+  featuredWaiting: 'Featured · waiting',
+  carouselWaiting: 'Row · waiting',
+}
+
+function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: string } {
+  const text = `${SHORT[pl.key] ?? pl.label}${pl.detail && !pl.waiting ? ` ${pl.detail}` : ''}`
+  return {
+    text,
+    variant: pl.waiting ? 'warning' : 'brand',
+    title: `${pl.label}${pl.detail ? ` — ${pl.detail}` : ''}${pl.auto ? ' (automatic)' : ''}`,
+  }
+}
+
+/** Home / shop placements as small badges (category is shown in its own column). */
+function PlacementBadges({ placements, onMore, max = 2 }: { placements: Placement[]; onMore: () => void; max?: number }) {
+  const list = placements.filter((p) => p.key !== 'category' && p.key !== 'hidden')
+  if (placements.some((p) => p.key === 'hidden')) return <span className="text-xs text-[var(--fg-muted)]">Not on storefront</span>
+  if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">Shop &amp; category only</span>
+  const shown = list.slice(0, max)
+  return (
+    <span className="flex flex-wrap items-center gap-1">
+      {shown.map((pl) => {
+        const b = badgeFor(pl)
+        return (
+          <span key={pl.key} title={b.title}>
+            <Badge variant={b.variant} className="normal-case">
+              {b.text}
+            </Badge>
+          </span>
+        )
+      })}
+      {list.length > max ? (
+        <button type="button" onClick={onMore} className="text-[11px] font-medium text-[var(--brand-text)] hover:underline">
+          +{list.length - max}
+        </button>
+      ) : null}
+    </span>
+  )
+}
 
 export function Products() {
   const qc = useQueryClient()
@@ -27,7 +78,10 @@ export function Products() {
   const [category, setCategory] = useState('')
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
   const [condition, setCondition] = useState<ProductCondition | ''>('')
+  const [placement, setPlacement] = useState<PlacementFilter>('')
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [placing, setPlacing] = useState<Product | null>(null)
+  const place = useStorefrontPlacements()
 
   const cats = useQuery({
     queryKey: ['categories', 'all'],
@@ -37,14 +91,17 @@ export function Products() {
   const filters = useMemo(
     () => ({
       page,
-      limit: 12,
+      limit: 15,
       q: q || undefined,
       category: category || undefined,
       isActive: active === 'all' ? undefined : active === 'true',
       condition: condition || undefined,
+      featured: placement === 'featured' ? true : undefined,
+      carousel: placement === 'carousel' ? true : undefined,
+      placement: placement === 'home' || placement === 'deals' || placement === 'none' ? placement : undefined,
       admin: true,
     }),
-    [page, q, category, active, condition]
+    [page, q, category, active, condition, placement]
   )
 
   const products = useQuery({
@@ -66,77 +123,129 @@ export function Products() {
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
+  const items = products.data?.items ?? []
+  // Keep the open placement panel in sync with fresh data after each change
+  const placingLive = placing ? (items.find((p) => p._id === placing._id) ?? placing) : null
   const pages = products.data?.meta?.pages || 1
+  const total = products.data?.meta?.total ?? 0
+  const filtered = Boolean(q || category || active !== 'all' || condition || placement)
+  const setFilter = (fn: () => void) => {
+    fn()
+    setPage(1)
+  }
+
+  const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
+  const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
 
   return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      <AdminHeader
-        title="Products"
-        description={`${products.data?.meta?.total ?? '—'} in catalog · includes inactive items`}
-        actions={
-          <Link to="/admin/products/new" className="w-full sm:w-auto">
-            <Button size="sm" className="w-full sm:h-11 sm:px-4 sm:text-sm">
-              <SiteIcon name="plus" size={16} /> Add product
-            </Button>
-          </Link>
-        }
-      />
+    <div className="min-w-0 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Products</h1>
+        <Link to="/admin/products/new">
+          <Button size="sm">
+            <SiteIcon name="plus" size={15} /> Add product
+          </Button>
+        </Link>
+      </div>
 
-      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap">
-        <div className="min-w-0 flex-1 sm:min-w-[12rem]">
-          <Input
-            placeholder="Search name or SKU"
+      {/* What the storefront shows right now */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-xs">
+        <span className="font-semibold text-[var(--fg-muted)]">Storefront</span>
+        <button type="button" onClick={() => setFilter(() => setPlacement('deals'))} className="hover:text-[var(--brand-text)]">
+          Top deals{' '}
+          <span className="font-semibold tabular-nums">
+            {place.deals.products.length}/{MAX_HOME_DEALS}
+          </span>
+          {place.pinnedDeals.length ? null : <span className="text-[var(--fg-muted)]"> (automatic)</span>}
+        </button>
+        <span className="max-w-[16rem] truncate" title={place.featuredList[0]?.name}>
+          Featured card: <span className="font-semibold">{place.featuredList[0]?.name ?? '—'}</span>
+        </span>
+        <button type="button" onClick={() => setFilter(() => setPlacement(place.rowFromCarousel ? 'carousel' : 'featured'))} className="hover:text-[var(--brand-text)]">
+          Featured row <span className="font-semibold tabular-nums">{place.row.length}</span>
+        </button>
+        <span className="max-w-[16rem] truncate" title={place.shopHero.product?.name}>
+          Shop header: <span className="font-semibold">{place.shopHero.product?.name ?? '—'}</span>
+          {place.shopHeroSetting ? null : <span className="text-[var(--fg-muted)]"> (auto)</span>}
+        </span>
+        <Link to="/admin/settings" className="ms-auto text-[var(--brand-text)] hover:underline">
+          Order deals →
+        </Link>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div className="relative min-w-0 basis-full sm:flex-[1_1_14rem] sm:basis-auto">
+          <SiteIcon name="search" size={15} className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
+          <input
+            type="search"
+            aria-label="Search products"
+            placeholder="Name or SKU"
             value={q}
-            onChange={(e) => {
-              setQ(e.target.value)
-              setPage(1)
-            }}
+            onChange={(e) => setFilter(() => setQ(e.target.value))}
+            className={cn(control, 'w-full ps-8')}
           />
         </div>
-        <div className="grid min-w-0 grid-cols-3 gap-2 sm:contents">
-          <select
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value)
-              setPage(1)
-            }}
-            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
+        <select aria-label="Category" value={category} onChange={(e) => setFilter(() => setCategory(e.target.value))} className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}>
+          <option value="">All categories</option>
+          {(cats.data as Category[] | undefined)?.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select aria-label="Status" value={active} onChange={(e) => setFilter(() => setActive(e.target.value as typeof active))} className={cn(control, 'flex-[1_1_7rem] sm:flex-none')}>
+          <option value="all">Any status</option>
+          <option value="true">Published</option>
+          <option value="false">Hidden</option>
+        </select>
+        <select
+          aria-label="Placement"
+          value={placement}
+          onChange={(e) => setFilter(() => setPlacement(e.target.value as PlacementFilter))}
+          className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}
+        >
+          <option value="">Any placement</option>
+          <option value="home">On the home page</option>
+          <option value="deals">Top deals</option>
+          <option value="featured">Featured</option>
+          <option value="carousel">Featured row</option>
+          <option value="none">Not on the home page</option>
+        </select>
+        <select
+          aria-label="Condition"
+          value={condition}
+          onChange={(e) => setFilter(() => setCondition(e.target.value as typeof condition))}
+          className={cn(control, 'flex-[1_1_7rem] sm:flex-none')}
+        >
+          <option value="">Any condition</option>
+          <option value="new">New</option>
+          <option value="refurbished">Refurbished</option>
+          <option value="used">Used</option>
+        </select>
+        {filtered ? (
+          <button
+            type="button"
+            className="h-9 px-1 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
+            onClick={() =>
+              setFilter(() => {
+                setQ('')
+                setCategory('')
+                setActive('all')
+                setCondition('')
+                setPlacement('')
+              })
+            }
           >
-            <option value="">All categories</option>
-            {(cats.data as Category[] | undefined)?.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={active}
-            onChange={(e) => {
-              setActive(e.target.value as typeof active)
-              setPage(1)
-            }}
-            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
-          >
-            <option value="all">All status</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
-          <select
-            value={condition}
-            onChange={(e) => {
-              setCondition(e.target.value as typeof condition)
-              setPage(1)
-            }}
-            aria-label="Condition"
-            className="h-10 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm sm:h-11 sm:px-3"
-          >
-            <option value="">Any condition</option>
-            <option value="new">New</option>
-            <option value="refurbished">Refurbished</option>
-            <option value="used">Used</option>
-          </select>
-        </div>
+            Clear
+          </button>
+        ) : null}
       </div>
+      {placement === 'home' || placement === 'deals' ? (
+        <p className="text-[11px] text-[var(--fg-muted)]">
+          Products marked for the home page. A badge marked “waiting” is flagged but not shown yet (newer products take the limited places).
+        </p>
+      ) : null}
 
       {products.isPending && !products.data ? (
         <div className="flex justify-center py-16">
@@ -144,12 +253,10 @@ export function Products() {
         </div>
       ) : products.isError ? (
         <QueryErrorState onRetry={() => products.refetch()} />
-      ) : !products.data?.items.length ? (
-        <div className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-10 text-center">
-          <p className="text-sm text-[var(--fg-muted)]">
-            {q || category || active !== 'all' || condition ? 'No products match these filters.' : 'No products yet.'}
-          </p>
-          {!q && !category && active === 'all' && !condition ? (
+      ) : !items.length ? (
+        <div className="rounded-xl border border-dashed border-[var(--border)] px-4 py-10 text-center">
+          <p className="text-sm text-[var(--fg-muted)]">{filtered ? 'No products match these filters.' : 'No products yet.'}</p>
+          {!filtered ? (
             <Link to="/admin/products/new" className="mt-3 inline-block text-sm font-medium text-[var(--brand-text)] hover:underline">
               Add your first product
             </Link>
@@ -157,155 +264,138 @@ export function Products() {
         </div>
       ) : (
         <>
-          <div className="space-y-2.5 md:hidden">
-            {products.data?.items.map((p) => {
-              const img = p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
-              const cat = typeof p.category === 'object' ? p.category.name : ''
+          {/* Phones */}
+          <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:hidden">
+            {items.map((p) => {
+              const img = imgOf(p)
+              const cat = catOf(p)
+              const placements = place.placementsOf(p)
               return (
-                <div
-                  key={p._id}
-                  className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
-                >
-                  <div className="flex min-w-0 gap-2.5">
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
-                      {img ? (
-                        <SafeImage src={optimizedImageUrl(img, 240)} alt="" className="h-full w-full object-cover" />
-                      ) : null}
-                    </div>
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <p className="truncate text-sm font-medium">
-                        {p.name}
-                        {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
-                      </p>
-                      <p className="mt-0.5 truncate text-[11px] text-[var(--fg-muted)]">
-                        {cat || '—'} · {p.sku}
-                      </p>
-                      <div className="mt-1 flex min-w-0 flex-wrap items-baseline gap-1.5 text-sm">
-                        <span className="font-semibold tabular-nums">{formatCurrency(p.price)}</span>
-                        {p.compareAtPrice && p.compareAtPrice > p.price ? (
-                          <span className="text-[11px] text-[var(--fg-muted)] line-through tabular-nums">
-                            {formatCurrency(p.compareAtPrice)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
+                <li key={p._id} className="flex min-w-0 gap-2.5 px-3 py-2.5">
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
+                    {img ? <SafeImage src={optimizedImageUrl(img, 160)} alt="" className="h-full w-full object-cover" /> : null}
                   </div>
-                  <div className="mt-2.5 flex min-w-0 flex-wrap items-center gap-1">
-                    <ActiveToggle product={p} size="sm" />
-                    {p.condition && p.condition !== 'new' ? (
-                      <Badge variant="muted">{p.condition === 'used' ? 'Used' : 'Refurbished'}</Badge>
-                    ) : null}
-                    {p.stock <= p.lowStockThreshold ? (
-                      <Badge variant="warning">{p.stock} left</Badge>
-                    ) : (
-                      <span className="text-[11px] text-[var(--fg-muted)]">{p.stock} in stock</span>
-                    )}
-                    {p.isFeatured ? <Badge variant="brand">Featured</Badge> : null}
-                    {p.isCarousel ? <Badge variant="brand">Carousel</Badge> : null}
-                  </div>
-                  <div className="mt-2.5 flex min-w-0 items-center gap-2">
-                    <Link to={`/admin/products/${p._id}/edit`} className="min-w-0 flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
-                        <SiteIcon name="pencil" size={14} /> Edit
+                  <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 items-start justify-between gap-2">
+                      <Link to={`/admin/products/${p._id}/edit`} className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {p.name}
+                          {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
+                        </p>
+                        <p className="truncate text-[11px] text-[var(--fg-muted)]">
+                          {cat?.name ?? '—'} · {p.sku}
+                        </p>
+                      </Link>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(p.price)}</span>
+                    </div>
+                    <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1">
+                      <ActiveToggle product={p} size="sm" />
+                      <PlacementBadges placements={placements} onMore={() => setPlacing(p)} />
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-1">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setPlacing(p)}>
+                        <SiteIcon name="layers" size={13} /> Placement
                       </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0"
-                      aria-label="Delete product"
-                      onClick={() => {
-                        setDeleteId(p._id)
-                      }}
-                    >
-                      <SiteIcon name="trash" size={16} />
-                    </Button>
+                      <Link to={`/admin/products/${p._id}/edit`}>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs">
+                          <SiteIcon name="pencil" size={13} /> Edit
+                        </Button>
+                      </Link>
+                      <Button size="sm" variant="ghost" className="ms-auto h-7 px-2" aria-label="Delete product" onClick={() => setDeleteId(p._id)}>
+                        <SiteIcon name="trash" size={14} />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                </li>
               )
             })}
-          </div>
+          </ul>
 
-          <div className="hidden min-w-0 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="bg-[var(--bg-muted)] text-[var(--fg-muted)]">
+          {/* Tablet / desktop */}
+          <div className="hidden min-w-0 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
+            <table className="w-full min-w-[820px] text-left text-sm">
+              <thead className="border-b border-[var(--border)] text-xs text-[var(--fg-muted)]">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Product</th>
-                  <th className="px-4 py-3 font-medium">SKU</th>
-                  <th className="px-4 py-3 font-medium">Price</th>
-                  <th className="px-4 py-3 font-medium">Stock</th>
-                  <th className="px-4 py-3 font-medium">Status</th>
-                  <th className="px-4 py-3 font-medium" />
+                  <th className="px-3 py-2 font-medium">Product</th>
+                  <th className="px-3 py-2 font-medium">Category</th>
+                  <th className="px-3 py-2 text-right font-medium">Price</th>
+                  <th className="px-3 py-2 font-medium">Status</th>
+                  <th className="px-3 py-2 font-medium">Storefront</th>
+                  <th className="whitespace-nowrap px-3 py-2 text-right font-normal">
+                    {total} product{total === 1 ? '' : 's'}
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {products.data?.items.map((p) => {
-                  const img = p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
-                  const cat = typeof p.category === 'object' ? p.category.name : ''
+              <tbody className="divide-y divide-[var(--border)]">
+                {items.map((p) => {
+                  const img = imgOf(p)
+                  const cat = catOf(p)
+                  const placements = place.placementsOf(p)
                   return (
-                    <tr key={p._id} className="border-t border-[var(--border)]">
-                      <td className="max-w-[16rem] px-4 py-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
-                            {img ? (
-                              <SafeImage src={optimizedImageUrl(img, 240)} alt="" className="h-full w-full object-cover" />
-                            ) : null}
+                    <tr key={p._id} className="hover:bg-[var(--bg-muted)]">
+                      <td className="max-w-[18rem] px-3 py-2">
+                        <Link to={`/admin/products/${p._id}/edit`} className="flex min-w-0 items-center gap-2.5 hover:text-[var(--brand-text)]">
+                          <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
+                            {img ? <SafeImage src={optimizedImageUrl(img, 120)} alt="" className="h-full w-full object-cover" /> : null}
                           </div>
                           <div className="min-w-0">
                             <p className="truncate font-medium">
-                        {p.name}
-                        {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
-                      </p>
-                            <p className="truncate text-xs text-[var(--fg-muted)]">{cat}</p>
+                              {p.name}
+                              {p.variantLabel ? <span className="ms-1 font-normal text-[var(--fg-muted)]">({p.variantLabel})</span> : null}
+                            </p>
+                            <p className="truncate text-[11px] text-[var(--fg-muted)]">
+                              {p.sku}
+                              {p.condition && p.condition !== 'new' ? ` · ${p.condition === 'used' ? 'Used' : 'Refurbished'}` : ''}
+                            </p>
                           </div>
-                        </div>
+                        </Link>
                       </td>
-                      <td className="px-4 py-3 text-[var(--fg-muted)]">
-                        <span className="block max-w-[8rem] truncate">{p.sku}</span>
+                      <td className="max-w-[10rem] px-3 py-2">
+                        <span className={cn('block truncate', cat?.isActive === false && 'text-[var(--warning)]')} title={cat?.isActive === false ? 'Category is hidden' : undefined}>
+                          {cat?.name ?? '—'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap items-baseline gap-1.5">
-                          <span className="font-medium tabular-nums">{formatCurrency(p.price)}</span>
-                          {p.compareAtPrice && p.compareAtPrice > p.price ? (
-                            <span className="text-xs text-[var(--fg-muted)] line-through tabular-nums">
-                              {formatCurrency(p.compareAtPrice)}
-                            </span>
-                          ) : null}
-                        </div>
+                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                        <span className="font-medium tabular-nums">{formatCurrency(p.price)}</span>
+                        {p.compareAtPrice && p.compareAtPrice > p.price ? (
+                          <span className="block text-[11px] text-[var(--fg-muted)] line-through tabular-nums">{formatCurrency(p.compareAtPrice)}</span>
+                        ) : null}
                       </td>
-                      <td className="px-4 py-3">
-                        {p.stock <= p.lowStockThreshold ? (
-                          <Badge variant="warning">{p.stock}</Badge>
-                        ) : (
-                          p.stock
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex max-w-[12rem] flex-wrap gap-1">
+                      <td className="px-3 py-2">
+                        <div className="flex flex-wrap items-center gap-1">
                           <ActiveToggle product={p} size="sm" />
-                          {p.condition && p.condition !== 'new' ? (
-                            <Badge variant="muted">{p.condition === 'used' ? 'Used' : 'Refurbished'}</Badge>
+                          {p.stock <= 0 ? (
+                            <Link to={`/admin/inventory/products/${p._id}`} title="Manage stock in Inventory">
+                              <Badge variant="muted" className="normal-case">Out of stock</Badge>
+                            </Link>
                           ) : null}
-                          {p.isFeatured ? <Badge variant="brand">Featured</Badge> : null}
-                          {p.isCarousel ? <Badge variant="brand">Carousel</Badge> : null}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
+                      <td className="max-w-[16rem] px-3 py-2">
+                        <PlacementBadges placements={placements} onMore={() => setPlacing(p)} />
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex justify-end">
+                          <Button variant="ghost" size="sm" aria-label="Storefront placement" title="Storefront placement" onClick={() => setPlacing(p)}>
+                            <SiteIcon name="layers" size={15} />
+                          </Button>
                           <Link to={`/admin/products/${p._id}/edit`}>
-                            <Button variant="ghost" size="sm" aria-label="Edit">
-                              <SiteIcon name="pencil" size={16} />
+                            <Button variant="ghost" size="sm" aria-label="Edit" title="Edit">
+                              <SiteIcon name="pencil" size={15} />
                             </Button>
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            aria-label="Delete"
-                            onClick={() => {
-                              setDeleteId(p._id)
-                            }}
+                          <a
+                            href={`/product/${p.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            aria-label="View on store"
+                            title="View on store"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
                           >
-                            <SiteIcon name="trash" size={16} />
+                            <SiteIcon name="external" size={14} />
+                          </a>
+                          <Button variant="ghost" size="sm" aria-label="Delete" title="Delete" onClick={() => setDeleteId(p._id)}>
+                            <SiteIcon name="trash" size={15} />
                           </Button>
                         </div>
                       </td>
@@ -318,6 +408,9 @@ export function Products() {
           <Pagination page={page} pages={pages} onChange={setPage} />
         </>
       )}
+
+      <ProductPlacementDialog product={placingLive} onClose={() => setPlacing(null)} />
+
       <ConfirmDialog
         open={Boolean(deleteId)}
         title="Delete product?"

@@ -63,7 +63,8 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   const admin = isStaffRole(req.user?.role) && req.query.admin === 'true';
   const isActive =
     req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
-  const result = await catalog.listProducts({ ...query, admin, isActive });
+  const placement = typeof req.query.placement === 'string' ? req.query.placement : undefined;
+  const result = await catalog.listProducts({ ...query, admin, isActive, placement });
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,

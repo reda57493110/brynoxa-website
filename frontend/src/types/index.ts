@@ -177,6 +177,8 @@ export interface ProductFilters {
   isActive?: boolean
   admin?: boolean
   condition?: ProductCondition
+  /** Admin: home | deals | none */
+  placement?: string
 }
 
 export type OrderStatus =
