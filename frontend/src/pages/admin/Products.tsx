@@ -14,6 +14,7 @@ import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Pagination } from '@/components/ui/Pagination'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { ProductPlacementDialog } from '@/components/admin/ProductPlacementDialog'
+import { SectionManager, type ManagedSection } from '@/components/admin/SectionManager'
 import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
 import { useStorefrontPlacements, type Placement } from '@/hooks/useStorefrontPlacements'
 import { optimizedImageUrl } from '@/lib/image'
@@ -94,7 +95,7 @@ function groupOf(placements: Placement[]): Group {
   return 'shop'
 }
 
-function SectionHeading({ group, count, note }: { group: Group; count?: number; note?: string }) {
+function SectionHeading({ group, count, note, onManage }: { group: Group; count?: number; note?: string; onManage?: () => void }) {
   const g = GROUPS[group]
   return (
     <span className="flex min-w-0 items-center gap-2">
@@ -114,9 +115,20 @@ function SectionHeading({ group, count, note }: { group: Group; count?: number; 
       ) : (
         <span className="hidden truncate text-[11px] text-[var(--fg-muted)] sm:inline">· {g.hint}</span>
       )}
+      {onManage ? (
+        <button
+          type="button"
+          onClick={onManage}
+          className="ms-auto inline-flex h-6 shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2 text-[11px] font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
+        >
+          <SiteIcon name="sliders" size={11} /> Manage
+        </button>
+      ) : null}
     </span>
   )
 }
+
+const MANAGED: Partial<Record<Group, ManagedSection>> = { deals: 'deals', spotlight: 'featured', row: 'row' }
 
 const GROUP_ORDER: Group[] = ['deals', 'spotlight', 'row', 'shopHeader', 'shop', 'hidden']
 
@@ -132,6 +144,7 @@ export function Products() {
   const [sort, setSort] = useState<'placement' | 'newest' | 'name' | 'price_asc' | 'price_desc'>('placement')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [placing, setPlacing] = useState<Product | null>(null)
+  const [managing, setManaging] = useState<ManagedSection | null>(null)
   const place = useStorefrontPlacements()
 
   const cats = useQuery({
@@ -208,9 +221,13 @@ export function Products() {
     return (
       <span className="flex flex-col gap-1">
         {skipped.map((g) => (
-          <SectionHeading key={g} group={g} count={groupCount[g]} note={`${alsoAbove[g]} (listed above)`} />
+          <SectionHeading key={g} group={g} count={groupCount[g]} note={`${alsoAbove[g]} (listed above)`} onManage={MANAGED[g] ? () => setManaging(MANAGED[g]!) : undefined} />
         ))}
-        <SectionHeading group={groups[i]} count={groupCount[groups[i]]} />
+        <SectionHeading
+          group={groups[i]}
+          count={groupCount[groups[i]]}
+          onManage={MANAGED[groups[i]] ? () => setManaging(MANAGED[groups[i]]!) : undefined}
+        />
       </span>
     )
   }
@@ -232,17 +249,17 @@ export function Products() {
       {/* What the storefront shows right now */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-xs">
         <span className="font-semibold text-[var(--fg-muted)]">Storefront</span>
-        <button type="button" onClick={() => setFilter(() => setPlacement('deals'))} className="hover:text-[var(--brand-text)]">
+        <button type="button" onClick={() => setManaging('deals')} className="hover:text-[var(--brand-text)]">
           Top deals{' '}
           <span className="font-semibold tabular-nums">
             {place.deals.products.length}/{MAX_HOME_DEALS}
           </span>
           {place.pinnedDeals.length ? null : <span className="text-[var(--fg-muted)]"> (automatic)</span>}
         </button>
-        <span className="max-w-[16rem] truncate" title={place.featuredList[0]?.name}>
+        <button type="button" onClick={() => setManaging('featured')} className="max-w-[16rem] truncate hover:text-[var(--brand-text)]" title={place.featuredList[0]?.name}>
           Featured card: <span className="font-semibold">{place.featuredList[0]?.name ?? '—'}</span>
-        </span>
-        <button type="button" onClick={() => setFilter(() => setPlacement(place.rowFromCarousel ? 'carousel' : 'featured'))} className="hover:text-[var(--brand-text)]">
+        </button>
+        <button type="button" onClick={() => setManaging('row')} className="hover:text-[var(--brand-text)]">
           Featured row <span className="font-semibold tabular-nums">{place.row.length}</span>
         </button>
         <span className="max-w-[16rem] truncate" title={place.shopHero.product?.name}>
@@ -514,6 +531,7 @@ export function Products() {
       )}
 
       <ProductPlacementDialog product={placingLive} onClose={() => setPlacing(null)} />
+      <SectionManager section={managing} onClose={() => setManaging(null)} />
 
       <ConfirmDialog
         open={Boolean(deleteId)}
