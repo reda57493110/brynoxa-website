@@ -144,7 +144,7 @@ function DealMiniCard({ product }: { product: Product }) {
   return (
     <article className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-[#0b1116] text-white shadow-[0_18px_40px_-22px_rgb(15_23_42/0.7)] ring-1 ring-black/5 dark:shadow-[0_18px_44px_-20px_rgb(0_194_255/0.4)] dark:ring-white/10">
       <Link to={href} className="relative block" tabIndex={-1} aria-hidden="true">
-        <div className={cn('relative aspect-[16/11] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
+        <div className={cn('relative aspect-[4/3] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
           {image ? (
             <LoadingImage
               src={sizedImageUrl(image, 640)}
@@ -155,7 +155,7 @@ function DealMiniCard({ product }: { product: Product }) {
               decoding="async"
               referrerPolicy="no-referrer"
               frameClassName="absolute inset-0"
-              className={cn('h-full w-full', contain ? 'object-contain p-3 pb-5 mix-blend-multiply' : 'object-cover')}
+              className={cn('h-full w-full', contain ? 'object-contain p-2 pb-4 mix-blend-multiply' : 'object-cover')}
             />
           ) : null}
           <span className="absolute start-2 top-2 inline-flex h-5 items-center gap-1 rounded-full bg-[#0b1116]/85 px-1.5 text-[9px] font-semibold uppercase tracking-wide">
@@ -171,13 +171,13 @@ function DealMiniCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      <div className="relative -mt-1 flex flex-1 flex-col gap-1.5 p-3 pt-0">
-        <Link to={href} className="line-clamp-2 min-h-[2.1rem] text-[13px] font-semibold leading-tight hover:text-[var(--brand)]">
+      <div className="relative -mt-1 flex flex-1 flex-col gap-1 p-2.5 pt-0">
+        <Link to={href} className="line-clamp-1 text-xs font-semibold leading-tight hover:text-[var(--brand)]">
           {product.name}
         </Link>
         <div className="mt-auto flex items-end justify-between gap-2">
           <div className="min-w-0 leading-tight">
-            <p className="font-display text-base font-bold tracking-tight">{formatCurrency(product.price)}</p>
+            <p className="font-display text-[15px] font-bold tracking-tight">{formatCurrency(product.price)}</p>
             <p className="flex flex-wrap items-center gap-x-1.5 text-[10px]">
               {d ? <span className="text-white/45 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
               <StockLine product={product} />
@@ -259,7 +259,7 @@ export function HomeDealsStrips({ products }: { products: Product[] }) {
         className="-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 pt-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
       >
         {products.map((p) => (
-          <div key={p._id} className="w-[60%] max-w-[15rem] shrink-0 snap-start sm:w-[42%] sm:max-w-[17rem]">
+          <div key={p._id} className="w-[70%] max-w-[16.5rem] shrink-0 snap-start sm:w-[42%] sm:max-w-[17rem]">
             <DealMiniCard product={p} />
           </div>
         ))}

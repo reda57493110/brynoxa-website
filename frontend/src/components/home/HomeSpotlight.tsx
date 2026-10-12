@@ -363,7 +363,7 @@ export function HomeSpotlightStrip({ product }: { product: Product }) {
 /** Same footprint as the card while the product loads, so the hero does not jump. */
 export function HomeSpotlightSkeleton({ strip }: { strip?: boolean }) {
   return strip ? (
-    <div className="relative aspect-[4/3.9] w-[60%] max-w-[15rem] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-muted)] dark:border-white/10 dark:bg-white/10">
+    <div className="relative aspect-[4/4.1] w-[70%] max-w-[16.5rem] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-muted)] dark:border-white/10 dark:bg-white/10">
       <ImageSpinner size="sm" tone="dark" />
     </div>
   ) : (
