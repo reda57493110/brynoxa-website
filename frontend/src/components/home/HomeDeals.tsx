@@ -90,10 +90,10 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
                 }}
                 title={p.name}
                 className={cn(
-                  'group/deal relative flex min-w-0 flex-col overflow-hidden rounded-xl border text-start backdrop-blur-md transition hover:-translate-y-0.5',
+                  'group/deal relative flex min-w-0 flex-col overflow-hidden rounded-xl border text-start transition duration-200 hover:-translate-y-0.5',
                   on
-                    ? 'border-[var(--brand)] bg-[#0b1116]/90 shadow-glow'
-                    : 'border-white/10 bg-[#0b1116]/60 hover:border-white/30 hover:bg-[#0b1116]/80'
+                    ? 'border-[var(--brand)] bg-[#0b1116] shadow-glow'
+                    : 'border-[var(--border)] bg-[#0b1116] hover:border-[var(--brand)] dark:border-white/10 dark:hover:border-white/30'
                 )}
               >
                 <span
@@ -184,7 +184,7 @@ export function HomeDealsStrips({ products }: { products: Product[] }) {
             onClick={() => goTo(i)}
             aria-label={`${i + 1} / ${products.length}`}
             aria-current={i === current}
-            className={cn('h-1.5 rounded-full transition-all', i === current ? 'w-5 bg-[var(--brand)]' : 'w-1.5 bg-white/40')}
+            className={cn('h-1.5 rounded-full transition-all', i === current ? 'w-5 bg-[var(--brand)]' : 'w-1.5 bg-[color-mix(in_srgb,var(--fg)_25%,transparent)] dark:bg-white/40')}
           />
         ))}
       </div>

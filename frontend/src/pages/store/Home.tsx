@@ -116,7 +116,7 @@ export function Home() {
           <div className="min-w-0">
           <motion.p
             {...fadeUp(reduceMotion, 0)}
-            className="kicker text-[var(--brand)] sm:text-sm"
+            className="kicker text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]"
           >
             {t('home.kicker')}
           </motion.p>
@@ -124,15 +124,15 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="mt-3 max-w-2xl font-display text-2xl font-semibold tracking-tight text-balance text-white sm:mt-4 sm:text-5xl md:text-6xl"
+            className="mt-3 max-w-2xl font-display text-2xl font-semibold tracking-tight text-balance text-[var(--fg)] sm:mt-4 sm:text-5xl md:text-6xl dark:text-white"
           >
             {t('home.heroTitleLead')}
-            <span className="block text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
+            <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
           </motion.h1>
 
           <motion.p
             {...fadeUp(reduceMotion, 0.16)}
-            className="mt-3 max-w-lg text-[13px] leading-relaxed text-white/80 sm:mt-5 sm:text-lg"
+            className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-5 sm:text-lg dark:text-white/80"
           >
             {t('home.heroBody')}
           </motion.p>
@@ -159,11 +159,11 @@ export function Home() {
           {/* Why buy here, at a glance */}
           <motion.ul
             {...fadeUp(reduceMotion, 0.3)}
-            className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] text-white/90 [text-shadow:0_1px_3px_rgb(0_0_0/0.65)] sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-5 sm:text-sm"
+            className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] text-[var(--fg)] sm:mt-6 dark:text-white/90 sm:flex sm:flex-wrap sm:gap-x-5 sm:text-sm"
           >
             {TRUST.map((item) => (
               <li key={item.key} className="flex items-center gap-1.5">
-                <SiteIcon name={item.icon} size={15} className="shrink-0 text-[var(--brand)]" />
+                <SiteIcon name={item.icon} size={15} className="shrink-0 text-[var(--brand-text)] dark:text-[var(--brand)]" />
                 {t(item.key)}
               </li>
             ))}

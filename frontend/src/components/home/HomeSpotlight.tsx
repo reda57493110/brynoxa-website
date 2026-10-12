@@ -115,7 +115,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
     <div className="relative motion-safe:animate-[spotlight-float_7s_ease-in-out_infinite]">
       {/* Halo */}
       <div
-        className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-[radial-gradient(closest-side,rgb(0_194_255/0.4),transparent)] blur-2xl"
+        className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-[radial-gradient(closest-side,rgb(0_194_255/0.4),transparent)]"
         aria-hidden="true"
       />
 
@@ -161,7 +161,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
           {/* Whole picture opens the product; buttons below stay clickable */}
           <Link to={href} className="absolute inset-0 z-0" aria-label={product.name} />
 
-          <span className="pointer-events-none absolute start-4 top-4 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-3 text-xs font-semibold backdrop-blur-md">
+          <span className="pointer-events-none absolute start-4 top-4 z-10 inline-flex h-8 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-3 text-xs font-semibold">
             <SiteIcon name="star" size={13} solid className="text-[var(--brand)]" />
             {d ? t('home.spotlightDeal') : t('product.featuredPick')}
           </span>
@@ -229,7 +229,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
                 to={href}
                 aria-label={t('product.viewProduct')}
                 title={t('product.viewProduct')}
-                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-black/30 text-white backdrop-blur-sm transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-black/30 text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
               >
                 <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
               </Link>
@@ -255,7 +255,7 @@ export function HomeSpotlightStrip({ product }: { product: Product }) {
         className="absolute inset-[-150%] bg-[conic-gradient(from_0deg,transparent_0deg,var(--brand)_70deg,transparent_140deg,transparent_200deg,rgb(122_223_255/0.7)_260deg,transparent_320deg)] motion-safe:animate-[spotlight-spin_9s_linear_infinite]"
         aria-hidden="true"
       />
-      <div className="relative flex min-w-0 items-center gap-3 rounded-[15px] bg-[#0b1116]/92 p-2.5 pe-3 text-white backdrop-blur-xl">
+      <div className="relative flex min-w-0 items-center gap-3 rounded-[15px] bg-[#0b1116] p-2.5 pe-3 text-white">
         <Link to={`/product/${product.slug}`} className="flex min-w-0 flex-1 items-center gap-3">
           <span
             className={cn(
