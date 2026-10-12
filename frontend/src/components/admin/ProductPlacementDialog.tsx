@@ -4,7 +4,6 @@ import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
@@ -108,13 +107,11 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
   const dealIndex = place.deals.products.findIndex((d) => d._id === p._id)
   const dealsStatus = inDeals
     ? dealIndex >= 0
-      ? `Shown #${dealIndex + 1} of ${place.deals.products.length}`
-      : 'Chosen, but skipped (sold out or hidden)'
+      ? `#${dealIndex + 1}`
+      : 'Skipped (sold out or hidden)'
     : dealIndex >= 0
-      ? `Shown #${dealIndex + 1} automatically (no deals chosen in Settings)`
-      : pinned.length
-        ? 'Not in the deals'
-        : 'Not in the deals (automatic: in-stock featured products, biggest discounts first)'
+      ? `#${dealIndex + 1} · auto`
+      : 'Off'
 
   // Featured card / row
   const isSpotlight = place.featuredList[0]?._id === p._id
@@ -122,24 +119,24 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
   const featuredStatus = !p.isFeatured
     ? 'Off'
     : isSpotlight
-      ? 'This is the Featured product on the home page'
+      ? 'Shown'
       : !place.rowFromCarousel && rowIndex >= 0
-        ? `Flag on — shown in the carousel #${rowIndex + 1}`
+        ? `Flag on · in the carousel #${rowIndex + 1}`
         : dealIndex >= 0 && !inDeals
-          ? 'Flag on — used for the automatic Hero; the newest featured product is the Featured one'
-          : 'Flag on, not shown — the newest featured product is the Featured one'
+          ? 'Flag on · feeds the auto Hero'
+          : 'Flag on · not shown'
   const carouselStatus = !p.isCarousel
     ? 'Off'
     : place.rowFromCarousel && rowIndex >= 0
-      ? `Shown #${rowIndex + 1} of ${place.row.length}`
-      : `On, but not shown — only the ${HOME_ROW_LIMIT} newest are shown`
+      ? `#${rowIndex + 1}`
+      : `Not shown (over ${HOME_ROW_LIMIT})`
 
   // Shop header
   const isShopHeader = place.shopHero.product?._id === p._id
   const shopPinned = place.shopHeroSetting === p._id
 
   return (
-    <Modal open={Boolean(product)} onClose={onClose} title="Storefront placement" size="md">
+    <Modal open={Boolean(product)} onClose={onClose} title="Placement" size="md">
       <div className="space-y-4">
         <div className="flex min-w-0 items-center justify-between gap-2">
           <div className="min-w-0">
@@ -151,13 +148,13 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
 
         <ul className="divide-y divide-[var(--border)] rounded-xl border border-[var(--border)] px-3">
           <Row
-            title="Category page"
+            title="Category"
             status={
               !p.isActive
-                ? 'Hidden products are not shown anywhere'
+                ? 'Product hidden'
                 : category?.isActive === false
-                  ? `${category.name} is hidden, so this product is not listed`
-                  : `Listed in ${category?.name ?? '—'} and in the Shop`
+                  ? 'Category hidden'
+                  : 'Listed'
             }
             tone={p.isActive && category?.isActive !== false ? 'on' : 'warn'}
           >
@@ -177,7 +174,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </select>
           </Row>
 
-          <Row title="Home · Hero (top deals)" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
+          <Row title="Hero" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
             {inDeals ? (
               <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ homeDeals: pinned.filter((x) => x !== p._id) })}>
                 Remove
@@ -195,10 +192,10 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             )}
           </Row>
 
-          <Row title="Home · Featured (one product)" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
+          <Row title="Featured" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
             {p.isFeatured && !isSpotlight ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isFeatured: true })}>
-                Make it the Featured one
+                Make Featured
               </Button>
             ) : null}
             <Button
@@ -211,7 +208,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </Button>
           </Row>
 
-          <Row title="Home · Carousel" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
+          <Row title="Carousel" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
             {p.isCarousel && rowIndex !== 0 ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isCarousel: true })}>
                 Show first
@@ -228,8 +225,8 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
           </Row>
 
           <Row
-            title="Shop · Header"
-            status={isShopHeader ? (shopPinned ? 'Shown at the top of the Shop page' : 'Shown automatically (first featured product)') : 'Not the Shop header'}
+            title="Shop header"
+            status={isShopHeader ? (shopPinned ? 'Shown' : 'Shown · auto') : 'Off'}
             tone={isShopHeader ? 'on' : 'muted'}
           >
             {shopPinned ? (
@@ -245,7 +242,6 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
         </ul>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="text-[var(--fg-muted)]">See it:</span>
           <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[var(--brand-text)] hover:underline">
             Product page <SiteIcon name="external" size={11} />
           </a>
@@ -258,11 +254,6 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </a>
           ) : null}
         </div>
-
-        <p className="flex items-start gap-1.5 text-[11px] text-[var(--fg-muted)]">
-          <Badge variant="muted" className="normal-case">Note</Badge>
-          Placement never changes stock or price. Order the top deals in Settings → Storefront; stock is managed in Inventory.
-        </p>
       </div>
     </Modal>
   )

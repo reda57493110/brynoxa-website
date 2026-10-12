@@ -48,8 +48,8 @@ function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: 
 /** Home / shop placements as small badges (category is shown in its own column). */
 function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placement[]; onMore: () => void; max?: number }) {
   const list = placements.filter((p) => p.key !== 'category' && p.key !== 'hidden')
-  if (placements.some((p) => p.key === 'hidden')) return <span className="text-xs text-[var(--fg-muted)]">Not on storefront</span>
-  if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">Shop &amp; category only</span>
+  if (placements.some((p) => p.key === 'hidden')) return <span className="text-xs text-[var(--fg-muted)]">—</span>
+  if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">Shop</span>
   const shown = list.slice(0, max)
   return (
     <span className="flex flex-wrap items-center gap-1">
@@ -76,9 +76,9 @@ function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placemen
 type Group = 'home' | 'shopHeader' | 'shop' | 'hidden'
 
 const GROUP_LABEL: Record<Group, string> = {
-  home: 'On the home page',
-  shopHeader: 'Shop page header',
-  shop: 'Other products in the Shop',
+  home: 'Home page',
+  shopHeader: 'Shop header',
+  shop: 'Shop',
   hidden: 'Hidden',
 }
 
@@ -213,11 +213,11 @@ export function Products() {
           className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}
         >
           <option value="">Any placement</option>
-          <option value="home">On the home page</option>
-          <option value="deals">Hero (top deals)</option>
-          <option value="featured">Featured flag</option>
+          <option value="home">Home page</option>
+          <option value="deals">Hero</option>
+          <option value="featured">Featured</option>
           <option value="carousel">Carousel</option>
-          <option value="none">Not on the home page</option>
+          <option value="none">Not on home page</option>
         </select>
         <select
           aria-label="Condition"
@@ -307,12 +307,12 @@ export function Products() {
                       <PlacementBadges placements={placements} onMore={() => setPlacing(p)} />
                     </div>
                     <div className="mt-1.5 flex items-center gap-1">
-                      <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => setPlacing(p)}>
-                        <SiteIcon name="layers" size={13} /> Placement
+                      <Button size="sm" variant="ghost" className="h-7 w-8 !px-0" aria-label="Placement" onClick={() => setPlacing(p)}>
+                        <SiteIcon name="layers" size={14} />
                       </Button>
-                      <Link to={`/admin/products/${p._id}/edit`}>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs">
-                          <SiteIcon name="pencil" size={13} /> Edit
+                      <Link to={`/admin/products/${p._id}/edit`} aria-label="Edit">
+                        <Button size="sm" variant="ghost" className="h-7 w-8 !px-0">
+                          <SiteIcon name="pencil" size={14} />
                         </Button>
                       </Link>
                       <Button size="sm" variant="ghost" className="ms-auto h-7 px-2" aria-label="Delete product" onClick={() => setDeleteId(p._id)}>

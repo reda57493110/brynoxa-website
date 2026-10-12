@@ -17,15 +17,15 @@ import type { Product } from '@/types'
 export type ManagedSection = 'deals' | 'featured' | 'row'
 
 const TITLES: Record<ManagedSection, string> = {
-  deals: 'Home · Hero (top deals)',
-  featured: 'Home · Featured',
-  row: 'Home · Carousel',
+  deals: 'Hero',
+  featured: 'Featured',
+  row: 'Carousel',
 }
 
 const HINTS: Record<ManagedSection, string> = {
-  deals: `Up to ${MAX_HOME_DEALS}, shown in this order at the very top of the home page. Sold-out or hidden ones are skipped.`,
-  featured: `Products with the Featured flag. The first is the big Featured product on the home page; the others feed the automatic Hero (when no deals are chosen) and fill the carousel only when it is empty.`,
-  row: `The first ${HOME_ROW_LIMIT} are shown in this order in the carousel under Featured.`,
+  deals: `Up to ${MAX_HOME_DEALS}, in this order.`,
+  featured: 'The first is the Featured product. The others feed the auto Hero.',
+  row: `The first ${HOME_ROW_LIMIT} are shown, in this order.`,
 }
 
 /**
@@ -147,12 +147,12 @@ export function SectionManager({ section, onClose }: { section: ManagedSection |
         <p className="text-xs text-[var(--fg-muted)]">{HINTS[section]}</p>
         {section === 'row' && !place.rowFromCarousel ? (
           <p className="rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-xs">
-            The carousel is empty, so it shows your next featured products. Add products here to control it.
+            Empty: showing your next featured products instead.
           </p>
         ) : null}
         {section === 'deals' && !dealIds.length ? (
           <p className="rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-xs">
-            Automatic: showing {place.deals.products.map((p) => p.name).join(', ') || 'your featured products'}. Add a deal to choose them yourself.
+            Automatic (featured products, biggest discount first). Add one to choose them yourself.
           </p>
         ) : null}
 
@@ -219,7 +219,7 @@ export function SectionManager({ section, onClose }: { section: ManagedSection |
             )}
           </Button>
           {save.isPending ? <Spinner size="sm" /> : null}
-          <span className="text-[11px] text-[var(--fg-muted)]">Changes are live on the storefront right away. Stock and prices are not touched.</span>
+
         </div>
 
         {adding ? (

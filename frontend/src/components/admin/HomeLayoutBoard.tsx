@@ -58,12 +58,12 @@ function Section({
   empty: string
 }) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 max-w-full">
       <div className="flex min-w-0 items-center gap-1.5">
         <SiteIcon name={icon} size={13} className="shrink-0 text-[var(--brand-text)]" />
         <p className="truncate text-xs font-semibold">{title}</p>
         <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{products.length}</span>
-        {note ? <span className="truncate text-[11px] text-[var(--fg-muted)]">{note}</span> : null}
+        {note ? <span className="rounded-full border border-[var(--border)] px-1.5 text-[10px] text-[var(--fg-muted)]">{note}</span> : null}
         {onManage ? (
           <button
             type="button"
@@ -106,17 +106,18 @@ export function HomeLayoutBoard({ onManage, onOpen }: { onManage: (s: ManagedSec
   const featured = place.featuredList[0] ? [place.featuredList[0]] : []
 
   return (
-    <section className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
-      <div className="flex items-center justify-between gap-2">
+    <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="text-sm font-semibold">Home page</h2>
         <a href="/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
           View <SiteIcon name="external" size={11} />
         </a>
       </div>
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
       <Section
         icon="tag"
-        title="1 · Hero (top deals)"
-        note={place.pinnedDeals.length ? undefined : '· automatic: featured products in stock, biggest discount first'}
+        title="Hero"
+        note={place.pinnedDeals.length ? undefined : 'auto'}
         products={place.deals.products}
         onManage={() => onManage('deals')}
         onOpen={onOpen}
@@ -124,8 +125,7 @@ export function HomeLayoutBoard({ onManage, onOpen }: { onManage: (s: ManagedSec
       />
       <Section
         icon="star"
-        title="2 · Featured"
-        note="· the big product card"
+        title="Featured"
         products={featured}
         numbered={false}
         onManage={() => onManage('featured')}
@@ -134,18 +134,17 @@ export function HomeLayoutBoard({ onManage, onOpen }: { onManage: (s: ManagedSec
       />
       <Section
         icon="layers"
-        title="3 · Carousel"
-        note={place.rowFromCarousel ? '· the product row under Featured' : '· empty, so it shows your next featured products'}
+        title="Carousel"
+        note={place.rowFromCarousel ? undefined : 'using featured'}
         products={place.row}
         onManage={() => onManage('row')}
         onOpen={onOpen}
         empty="No products in the carousel."
       />
-      <div className="border-t border-[var(--border)] pt-3">
-        <Section
+      <Section
           icon="monitor"
-          title="Shop page · Header"
-          note={place.shopHeroSetting ? undefined : '· automatic'}
+          title="Shop header"
+          note={place.shopHeroSetting ? undefined : 'auto'}
           products={place.shopHero.product ? [place.shopHero.product] : []}
           numbered={false}
           onOpen={onOpen}
