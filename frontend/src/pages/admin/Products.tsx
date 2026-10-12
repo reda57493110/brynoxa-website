@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -71,6 +71,22 @@ function PlacementBadges({ placements, onMore, max = 2 }: { placements: Placemen
   )
 }
 
+type Group = 'home' | 'shopHeader' | 'shop' | 'hidden'
+
+const GROUP_LABEL: Record<Group, string> = {
+  home: 'On the home page',
+  shopHeader: 'Shop page header',
+  shop: 'Other products in the Shop',
+  hidden: 'Hidden',
+}
+
+function groupOf(placements: Placement[]): Group {
+  if (placements.some((p) => p.key === 'hidden')) return 'hidden'
+  if (placements.some((p) => !p.waiting && (p.key === 'deals' || p.key === 'spotlight' || p.key === 'row'))) return 'home'
+  if (placements.some((p) => p.key === 'shopHeader')) return 'shopHeader'
+  return 'shop'
+}
+
 export function Products() {
   const qc = useQueryClient()
   const [q, setQ] = useState('')
@@ -79,6 +95,8 @@ export function Products() {
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
   const [condition, setCondition] = useState<ProductCondition | ''>('')
   const [placement, setPlacement] = useState<PlacementFilter>('')
+  // Default: the storefront's own order (home page top to bottom, shop header, the rest)
+  const [sort, setSort] = useState<'placement' | 'newest' | 'name' | 'price_asc' | 'price_desc'>('placement')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [placing, setPlacing] = useState<Product | null>(null)
   const place = useStorefrontPlacements()
@@ -99,9 +117,10 @@ export function Products() {
       featured: placement === 'featured' ? true : undefined,
       carousel: placement === 'carousel' ? true : undefined,
       placement: placement === 'home' || placement === 'deals' || placement === 'none' ? placement : undefined,
+      sort,
       admin: true,
     }),
-    [page, q, category, active, condition, placement]
+    [page, q, category, active, condition, placement, sort]
   )
 
   const products = useQuery({
@@ -133,6 +152,10 @@ export function Products() {
     fn()
     setPage(1)
   }
+
+  const groups = items.map((p) => groupOf(place.placementsOf(p)))
+  const groupHeading = (i: number) =>
+    sort === 'placement' && place.ready && (i === 0 || groups[i] !== groups[i - 1]) ? GROUP_LABEL[groups[i]] : null
 
   const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
   const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
@@ -223,6 +246,13 @@ export function Products() {
           <option value="refurbished">Refurbished</option>
           <option value="used">Used</option>
         </select>
+        <select aria-label="Sort" value={sort} onChange={(e) => setFilter(() => setSort(e.target.value as typeof sort))} className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}>
+          <option value="placement">Storefront order</option>
+          <option value="newest">Newest</option>
+          <option value="name">Name A–Z</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
+        </select>
         {filtered ? (
           <button
             type="button"
@@ -266,12 +296,17 @@ export function Products() {
         <>
           {/* Phones */}
           <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:hidden">
-            {items.map((p) => {
+            {items.map((p, i) => {
               const img = imgOf(p)
               const cat = catOf(p)
               const placements = place.placementsOf(p)
+              const heading = groupHeading(i)
               return (
-                <li key={p._id} className="flex min-w-0 gap-2.5 px-3 py-2.5">
+                <Fragment key={p._id}>
+                {heading ? (
+                  <li className="bg-[var(--bg-muted)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{heading}</li>
+                ) : null}
+                <li className="flex min-w-0 gap-2.5 px-3 py-2.5">
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
                     {img ? <SafeImage src={optimizedImageUrl(img, 160)} alt="" className="h-full w-full object-cover" /> : null}
                   </div>
@@ -307,6 +342,7 @@ export function Products() {
                     </div>
                   </div>
                 </li>
+                </Fragment>
               )
             })}
           </ul>
@@ -327,12 +363,21 @@ export function Products() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
-                {items.map((p) => {
+                {items.map((p, i) => {
                   const img = imgOf(p)
                   const cat = catOf(p)
                   const placements = place.placementsOf(p)
+                  const heading = groupHeading(i)
                   return (
-                    <tr key={p._id} className="hover:bg-[var(--bg-muted)]">
+                    <Fragment key={p._id}>
+                    {heading ? (
+                      <tr className="bg-[var(--bg-muted)]">
+                        <td colSpan={6} className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+                          {heading}
+                        </td>
+                      </tr>
+                    ) : null}
+                    <tr className="hover:bg-[var(--bg-muted)]">
                       <td className="max-w-[18rem] px-3 py-2">
                         <Link to={`/admin/products/${p._id}/edit`} className="flex min-w-0 items-center gap-2.5 hover:text-[var(--brand-text)]">
                           <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
@@ -400,6 +445,7 @@ export function Products() {
                         </div>
                       </td>
                     </tr>
+                    </Fragment>
                   )
                 })}
               </tbody>

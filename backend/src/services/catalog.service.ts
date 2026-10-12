@@ -326,6 +326,24 @@ export async function listProducts(query: ProductQuery) {
   }
 
   const skip = (query.page - 1) * query.limit;
+
+  // Admin: the storefront's own order — home page top to bottom, Shop header, other shop
+  // products (newest first), hidden products last. Ranked over all matches, then paged.
+  if (query.admin && query.sort === 'placement') {
+    const ranks = await storefrontRanks();
+    const lite = await Product.find(filter).select('_id isActive createdAt').lean<{ _id: unknown; isActive: boolean; createdAt: Date }[]>();
+    const rankOf = (p: { _id: unknown; isActive: boolean }) => ranks.get(String(p._id)) ?? (p.isActive ? 1000 : 100000);
+    lite.sort((a, b) => rankOf(a) - rankOf(b) || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const pageIds = lite.slice(skip, skip + query.limit).map((p) => p._id);
+    const docs = await Product.find({ _id: { $in: pageIds } })
+      .populate('category', 'name slug isActive specTemplate')
+      .populate('brand', 'name slug logo')
+      .lean();
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+    const items = pageIds.map((id) => byId.get(String(id))).filter((d): d is NonNullable<typeof d> => Boolean(d));
+    return { items, total: lite.length, page: query.page, limit: query.limit };
+  }
+
   const listQuery = Product.find(filter)
     .skip(skip)
     .limit(query.limit)
@@ -338,6 +356,74 @@ export async function listProducts(query: ProductQuery) {
   const [items, total] = await Promise.all([listQuery, Product.countDocuments(filter)]);
 
   return { items, total, page: query.page, limit: query.limit };
+}
+
+type RankedProduct = { _id: unknown; price: number; compareAtPrice?: number | null; stock: number };
+
+/**
+ * Position of each product on the storefront, using the same queries and rules as the storefront
+ * (pages/store/Home.tsx, useHomeDeals, useHeroProduct): top deals 0–3, Featured card 20, Featured
+ * row 30+, Shop header 100. Products not listed here are ranked by the caller.
+ */
+async function storefrontRanks(): Promise<Map<string, number>> {
+  const settings = await getSettings();
+  const ranks = new Map<string, number>();
+  const set = (id: unknown, rank: number) => {
+    const key = String(id);
+    const current = ranks.get(key);
+    if (current === undefined || rank < current) ranks.set(key, rank);
+  };
+  const discount = (p: RankedProduct) =>
+    p.compareAtPrice && p.compareAtPrice > p.price ? 1 - p.price / p.compareAtPrice : 0;
+
+  const [featured, carousel, featuredInStock] = await Promise.all([
+    listProducts({ page: 1, limit: 4, featured: true }),
+    listProducts({ page: 1, limit: 12, carousel: true }),
+    listProducts({ page: 1, limit: 12, featured: true, inStock: true }),
+  ]);
+  const featuredItems = featured.items as unknown as RankedProduct[];
+  const carouselItems = carousel.items as unknown as RankedProduct[];
+  const featuredStock = featuredInStock.items as unknown as RankedProduct[];
+
+  // 1. Top deals (Settings, or the older single home product, or automatic)
+  const legacy = settings.pageHeroProducts?.home || '';
+  const dealsHidden = !settings.homeDeals?.length && legacy === 'none';
+  const dealIds = settings.homeDeals?.length ? settings.homeDeals : legacy && legacy !== 'none' ? [legacy] : [];
+  let deals: RankedProduct[] = [];
+  if (dealIds.length) {
+    const found = (await getProductsByIds(dealIds)) as unknown as RankedProduct[];
+    const byId = new Map(found.map((p) => [String(p._id), p]));
+    deals = dealIds.map((id) => byId.get(id)).filter((p): p is RankedProduct => Boolean(p && p.stock > 0));
+  }
+  if (!deals.length && !dealsHidden) {
+    const pool = featuredStock.length
+      ? featuredStock
+      : ((await listProducts({ page: 1, limit: 12, inStock: true })).items as unknown as RankedProduct[]);
+    deals = [...pool].sort((a, b) => discount(b) - discount(a)).slice(0, 4);
+  }
+  deals.forEach((p, i) => set(p._id, i));
+
+  // 2. Featured card, 3. Featured row (carousel products, or the next featured ones)
+  if (featuredItems[0]) set(featuredItems[0]._id, 20);
+  const row = carouselItems.length ? carouselItems : featuredItems.slice(1);
+  row.forEach((p, i) => set(p._id, 30 + i));
+
+  // 4. Shop page header (chosen, or the first featured in stock, or the newest in stock)
+  const shopSetting = settings.pageHeroProducts?.shop || '';
+  if (shopSetting !== 'none') {
+    let header: RankedProduct | undefined
+    if (shopSetting) {
+      const [chosen] = (await getProductsByIds([shopSetting])) as unknown as RankedProduct[];
+      if (chosen && chosen.stock > 0) header = chosen;
+    }
+    if (!header) {
+      header =
+        featuredStock[0] ??
+        ((await listProducts({ page: 1, limit: 1, inStock: true })).items as unknown as RankedProduct[])[0];
+    }
+    if (header) set(header._id, 100);
+  }
+  return ranks;
 }
 
 export async function getProductBySlug(slug: string) {
