@@ -221,7 +221,7 @@ export function ProductCard({
             'font-display font-semibold leading-snug text-[var(--fg)] transition duration-200 hover:text-[var(--brand-text)]',
             spotlight
               ? 'text-base sm:text-xl lg:text-2xl'
-              : 'line-clamp-2 min-h-[2.25rem] text-[0.8125rem] leading-snug sm:min-h-[2.75rem] sm:text-base'
+              : 'line-clamp-2 min-h-[2rem] text-xs leading-snug sm:min-h-[2.75rem] sm:text-base'
           )}
         >
           {product.name}

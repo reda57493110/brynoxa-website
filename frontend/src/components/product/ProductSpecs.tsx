@@ -24,7 +24,7 @@ export function ProductSpecs({ specs, template }: { specs?: Record<string, strin
   const canExpand = rows.length > keyRows.length
 
   return (
-    <section aria-label={t('productPage.specifications')} className="mt-4">
+    <section aria-label={t('productPage.specifications')} className="mt-3 sm:mt-4">
       {all ? (
         <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
           {sections.map((s) => (
@@ -32,7 +32,7 @@ export function ProductSpecs({ specs, template }: { specs?: Record<string, strin
               <h3 className="text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{s.title}</h3>
               <dl className="mt-1 divide-y divide-[var(--border)]">
                 {s.rows.map((r) => (
-                  <div key={r.key} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3 py-1.5 text-[13px]">
+                  <div key={r.key} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3 py-1.5 text-xs sm:text-[13px]">
                     <dt className="text-[var(--fg-muted)]">{r.label}</dt>
                     <dd className="min-w-0 font-medium break-words text-[var(--fg)]">{r.value}</dd>
                   </div>
@@ -42,11 +42,11 @@ export function ProductSpecs({ specs, template }: { specs?: Record<string, strin
           ))}
         </div>
       ) : (
-        <dl className="grid grid-cols-2 gap-2">
+        <dl className="grid grid-cols-2 gap-1.5 sm:gap-2">
           {keyRows.map((r) => (
-            <div key={r.key} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2">
-              <dt className="truncate text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">{r.label}</dt>
-              <dd className="mt-0.5 line-clamp-2 text-[13px] font-semibold leading-snug text-[var(--fg)]">{r.value}</dd>
+            <div key={r.key} className="min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 sm:rounded-xl sm:px-3 sm:py-2">
+              <dt className="truncate text-[10px] font-medium uppercase tracking-wide text-[var(--fg-muted)] sm:text-[11px]">{r.label}</dt>
+              <dd className="mt-0.5 line-clamp-2 text-xs font-semibold sm:text-[13px] leading-snug text-[var(--fg)]">{r.value}</dd>
             </div>
           ))}
         </dl>
@@ -56,7 +56,7 @@ export function ProductSpecs({ specs, template }: { specs?: Record<string, strin
           type="button"
           onClick={() => setAll((v) => !v)}
           aria-expanded={all}
-          className={cn('mt-2 text-sm font-medium text-[var(--brand-text)] hover:underline')}
+          className={cn('mt-2 text-xs font-medium text-[var(--brand-text)] hover:underline sm:text-sm')}
         >
           {all ? t('productPage.keySpecs') : t('productPage.allSpecs', { count: rows.length })}
         </button>

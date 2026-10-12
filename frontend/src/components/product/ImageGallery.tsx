@@ -26,10 +26,10 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
   }, [list.length, active])
 
   return (
-    <div className="space-y-2.5 sm:space-y-3">
+    <div className="space-y-2 sm:space-y-3">
       <div
         className={cn(
-          'relative -mx-4 aspect-square max-h-[min(70svh,28rem)] overflow-hidden sm:mx-0 sm:max-h-none sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]',
+          'relative -mx-4 aspect-[4/3] max-h-[42svh] w-[calc(100%+2rem)] overflow-hidden sm:mx-0 sm:aspect-square sm:max-h-none sm:w-auto sm:rounded-[1.35rem] sm:border sm:border-[var(--border)]',
           // Product shots (white background) are shown whole on white; lifestyle photos fill the frame
           imageFit(current.url) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
         )}
@@ -55,7 +55,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               loading="eager"
               className={cn(
                 'h-full w-full',
-                imageFit(current.url) === 'contain' ? 'object-contain p-4 sm:p-8' : 'object-cover'
+                imageFit(current.url) === 'contain' ? 'object-contain p-3 sm:p-8' : 'object-cover'
               )}
             />
           </motion.div>
@@ -66,7 +66,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
             <button
               type="button"
               onClick={() => go(active - 1)}
-              className="absolute start-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:start-3 sm:h-10 sm:w-10"
+              className="absolute start-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:start-3 sm:h-10 sm:w-10"
               aria-label={t('ui.previousPage')}
             >
               <SiteIcon name="chevron-left" size={18} />
@@ -74,7 +74,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
             <button
               type="button"
               onClick={() => go(active + 1)}
-              className="absolute end-2 top-1/2 z-10 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:end-3 sm:h-10 sm:w-10"
+              className="absolute end-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:end-3 sm:h-10 sm:w-10"
               aria-label={t('ui.nextPage')}
             >
               <SiteIcon name="chevron-right" size={18} />
@@ -111,7 +111,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               aria-selected={i === active}
               onClick={() => setActive(i)}
               className={cn(
-                'h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-[var(--bg-muted)] transition duration-200 sm:h-16 sm:w-16',
+                'h-11 w-11 shrink-0 overflow-hidden rounded-lg border-2 bg-[var(--bg-muted)] transition duration-200 sm:h-16 sm:w-16 sm:rounded-xl',
                 i === active
                   ? 'border-[var(--brand)] opacity-100'
                   : 'border-transparent opacity-60 hover:opacity-100'

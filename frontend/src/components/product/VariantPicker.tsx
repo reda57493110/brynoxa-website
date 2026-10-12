@@ -13,12 +13,12 @@ export function VariantPicker({ product, template }: { product: Product; templat
   if (!axes.length) return null
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="mt-3 space-y-2.5 sm:mt-4 sm:space-y-3">
       {axes.map((axis) => {
         const selected = axis.options.find((o) => o.selected)
         return (
           <div key={axis.key}>
-            <p className="text-xs text-[var(--fg-muted)]">
+            <p className="text-[11px] text-[var(--fg-muted)] sm:text-xs">
               {axis.label}
               {selected ? <span className="ms-1 font-semibold text-[var(--fg)]">{selected.label}</span> : null}
             </p>
@@ -32,7 +32,7 @@ export function VariantPicker({ product, template }: { product: Product; templat
                   preventScrollReset
                   aria-current={o.selected ? 'true' : undefined}
                   className={cn(
-                    'inline-flex min-h-10 items-center gap-1.5 rounded-xl border px-3 text-sm transition',
+                    'inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition sm:min-h-10 sm:rounded-xl sm:px-3 sm:text-sm',
                     o.selected
                       ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] font-semibold text-[var(--fg)]'
                       : 'border-[var(--border)] hover:border-[var(--brand)]',

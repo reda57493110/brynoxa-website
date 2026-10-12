@@ -7,7 +7,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 
-const cardWidth = 'w-[46vw] max-w-[15rem] shrink-0 snap-start sm:w-[13.5rem] lg:w-[14.5rem]'
+const cardWidth = 'w-[40vw] max-w-[11rem] shrink-0 snap-start sm:w-[13.5rem] sm:max-w-[15rem] lg:w-[14.5rem]'
 const arrowBtn =
   'hidden h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:inline-flex'
 
@@ -47,17 +47,17 @@ export function CompleteSetup({ productId }: { productId: string }) {
   return (
     <section
       aria-labelledby="complete-setup-heading"
-      className="mt-6 overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-soft sm:mt-8 sm:p-5"
+      className="mt-5 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:mt-8 sm:rounded-[1.35rem] sm:p-5"
     >
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2
             id="complete-setup-heading"
-            className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
+            className="font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-xl"
           >
             {t('productPage.completeSetup')}
           </h2>
-          <p className="mt-0.5 text-xs text-[var(--fg-muted)] sm:text-sm">{t('productPage.completeSetupBody')}</p>
+          <p className="mt-0.5 text-[11px] text-[var(--fg-muted)] sm:text-sm">{t('productPage.completeSetupBody')}</p>
         </div>
         <div className={overflowing ? 'flex gap-2' : 'hidden'}>
           <button type="button" className={arrowBtn} onClick={() => scroll(-1)} aria-label={t('productPage.scrollBack')}>
@@ -71,7 +71,7 @@ export function CompleteSetup({ productId }: { productId: string }) {
 
       <div
         ref={rowRef}
-        className="-mx-4 mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0 sm:gap-4 [&::-webkit-scrollbar]:hidden"
+        className="-mx-3 mt-2.5 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-3 px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:scroll-px-0 sm:px-0 sm:gap-4 [&::-webkit-scrollbar]:hidden"
       >
         {recommendations.data
           ? recommendations.data.map((product) => (

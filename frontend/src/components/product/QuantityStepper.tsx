@@ -14,7 +14,7 @@ export function QuantityStepper({
 }) {
   const t = useT()
   const btn =
-    'inline-flex h-9 w-9 items-center justify-center rounded-full text-[var(--fg)] transition hover:bg-[var(--bg-muted)] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
+    'inline-flex h-8 w-8 items-center justify-center rounded-full text-[var(--fg)] transition sm:h-9 sm:w-9 hover:bg-[var(--bg-muted)] disabled:pointer-events-none disabled:opacity-40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
 
   return (
     <div className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--bg-input)] p-0.5">
@@ -27,7 +27,7 @@ export function QuantityStepper({
       >
         <SiteIcon name="minus" size={14} />
       </button>
-      <span className="min-w-10 text-center text-sm font-semibold tabular-nums">{value}</span>
+      <span className="min-w-8 text-center text-[13px] font-semibold tabular-nums sm:min-w-10 sm:text-sm">{value}</span>
       <button
         type="button"
         className={btn}

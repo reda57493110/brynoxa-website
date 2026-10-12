@@ -285,7 +285,7 @@ export function ProductDetail() {
       <Container className="pb-24 pt-3 sm:pb-10 sm:pt-6">
         <motion.nav
           {...fade(0)}
-          className="mb-3 flex flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:mb-4 sm:text-sm"
+          className="mb-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--fg-muted)] sm:mb-4 sm:text-sm"
         >
           <Link to="/shop" className="hover:text-[var(--brand-text)]">
             {t('common.shop')}
@@ -302,13 +302,13 @@ export function ProductDetail() {
           <span className="line-clamp-1 text-[var(--fg)]">{p.name}</span>
         </motion.nav>
 
-        <div className="grid items-start gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10">
+        <div className="grid items-start gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10">
           <motion.div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
             <ImageGallery images={p.images || []} name={p.name} />
           </motion.div>
 
           <motion.div {...fade(0.1)} className="flex min-w-0 flex-col">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--fg-muted)] sm:text-sm">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:text-sm">
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
               {brand && category ? <span aria-hidden="true">·</span> : null}
               {category ? (
@@ -319,29 +319,29 @@ export function ProductDetail() {
               {p.sku ? (
                 <>
                   <span aria-hidden="true">·</span>
-                  <span className="font-mono text-[11px] tracking-wide sm:text-xs">{p.sku}</span>
+                  <span className="font-mono text-[10px] tracking-wide sm:text-xs">{p.sku}</span>
                 </>
               ) : null}
             </div>
 
-            <h1 className="mt-1.5 font-display text-xl font-semibold leading-tight tracking-tight text-[var(--fg)] sm:text-2xl lg:text-3xl">
+            <h1 className="mt-1 font-display text-base font-semibold leading-snug tracking-tight text-[var(--fg)] sm:mt-1.5 sm:text-2xl lg:text-3xl">
               {p.name}
             </h1>
 
-            <div className="mt-2 flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 sm:mt-2 sm:gap-3">
               <ConditionBadge condition={p.condition} />
               <StockBadge stock={p.stock} threshold={p.lowStockThreshold} />
             </div>
 
             <Price
-              className="mt-3 [&>span:first-child]:text-2xl sm:[&>span:first-child]:text-[1.75rem]"
+              className="mt-2 [&>span:first-child]:text-xl sm:mt-3 sm:[&>span:first-child]:text-[1.75rem]"
               price={p.price}
               compareAt={p.compareAtPrice}
             />
 
             {isPreOwned(p.condition) ? (
-              <div className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/50 px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
-                <SiteIcon name="refresh" size={16} className="mt-0.5 shrink-0 text-[var(--fg-muted)]" />
+              <div className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/50 px-2.5 py-1.5 text-xs leading-relaxed text-[var(--fg)] sm:px-3 sm:py-2 sm:text-sm">
+                <SiteIcon name="refresh" size={14} className="mt-0.5 shrink-0 text-[var(--fg-muted)]" />
                 <div className="min-w-0">
                   <p className="font-semibold">
                     {t('condition.noteTitle')}: {t(`condition.${p.condition}`)}
@@ -355,8 +355,8 @@ export function ProductDetail() {
             ) : null}
 
             {p.deposit && p.deposit.value > 0 ? (
-              <p className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-3 py-2 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
-                <SiteIcon name="banknote" size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
+              <p className="mt-2 flex items-start gap-2 rounded-xl border border-[var(--brand)]/40 bg-[var(--brand)]/[0.06] px-2.5 py-1.5 text-xs leading-relaxed text-[var(--fg)] sm:px-3 sm:py-2 sm:text-sm">
+                <SiteIcon name="banknote" size={14} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
                 {p.deposit.type === 'percent'
                   ? t('deposit.productPercent', { percent: p.deposit.value })
                   : t('deposit.productFixed', { amount: formatCurrency(p.deposit.value) })}
@@ -364,7 +364,7 @@ export function ProductDetail() {
             ) : null}
 
             {p.shortDescription ? (
-              <p className="mt-3 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-[0.95rem]">
+              <p className="mt-2.5 text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-[0.95rem]">
                 {p.shortDescription}
               </p>
             ) : null}
@@ -373,7 +373,7 @@ export function ProductDetail() {
 
             <ProductSpecs specs={p.specs} template={specTemplate} />
 
-            <div className="mt-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
+            <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2.5 sm:mt-4 sm:rounded-2xl sm:p-4">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, p.stock)} />
                 <Button
@@ -393,14 +393,14 @@ export function ProductDetail() {
                   {t('productPage.buyNow')}
                 </Button>
               </div>
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-3 text-sm">
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-2.5 text-xs sm:mt-3 sm:pt-3 sm:text-sm">
                 <button
                   type="button"
                   onClick={onWishlist}
                   aria-pressed={wishlisted}
                   className="inline-flex items-center gap-1.5 font-medium text-[var(--fg-muted)] transition hover:text-[var(--brand-text)] aria-pressed:text-[var(--brand-text)]"
                 >
-                  <SiteIcon name="heart" size={16} />
+                  <SiteIcon name="heart" size={14} />
                   {wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
                 </button>
                 <button
@@ -408,19 +408,19 @@ export function ProductDetail() {
                   onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}
                   className="inline-flex items-center gap-1.5 font-medium text-[var(--fg-muted)] transition hover:text-[var(--brand-text)]"
                 >
-                  <WhatsAppIcon size={16} />
+                  <WhatsAppIcon size={14} />
                   {t('contact.whatsapp')}
                 </button>
               </div>
             </div>
 
-            <ul className="mt-3 flex flex-wrap gap-2">
+            <ul className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
               {proofChips.map(({ icon, label }) => (
                 <li
                   key={label}
-                  className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[11px] font-medium text-[var(--fg)] sm:text-xs"
+                  className="inline-flex h-7 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2 text-[10px] font-medium text-[var(--fg)] sm:h-8 sm:gap-1.5 sm:px-2.5 sm:text-xs"
                 >
-                  <SiteIcon name={icon} size={14} className="text-[var(--brand-text)]" />
+                  <SiteIcon name={icon} size={12} className="text-[var(--brand-text)] sm:size-3.5" />
                   {label}
                 </li>
               ))}
@@ -430,23 +430,23 @@ export function ProductDetail() {
 
         <motion.div
           {...fade(0.12)}
-          className="mt-6 sm:mt-8"
+          className="mt-5 sm:mt-8"
         >
           <section
             aria-labelledby="product-description-heading"
-            className="relative overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft sm:p-7"
+            className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5 shadow-soft sm:rounded-[1.35rem] sm:p-7"
           >
             <span className="absolute inset-y-0 start-0 w-1 bg-[var(--brand)]" aria-hidden="true" />
             <h2
               id="product-description-heading"
-              className="flex items-center gap-2.5 font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl"
+              className="flex items-center gap-2 font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:gap-2.5 sm:text-2xl"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--brand)]/15 text-[var(--brand-text)]">
-                <SiteIcon name="package" size={18} />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)]/15 text-[var(--brand-text)] sm:h-9 sm:w-9 sm:rounded-xl">
+                <SiteIcon name="package" size={15} />
               </span>
               {t('productPage.description')}
             </h2>
-            <p className="mt-4 max-w-4xl whitespace-pre-wrap text-[15px] font-medium leading-7 text-[var(--fg)] sm:text-base sm:leading-8">
+            <p className="mt-2.5 max-w-4xl whitespace-pre-wrap text-[13px] leading-6 text-[var(--fg)] sm:mt-4 sm:text-base sm:font-medium sm:leading-8">
               {p.description}
             </p>
           </section>
@@ -456,21 +456,21 @@ export function ProductDetail() {
       </Container>
 
       {/* Mobile sticky buy bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2 backdrop-blur-md pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:hidden">
         <div className="mx-auto flex max-w-7xl items-center gap-2">
           <Button
             onClick={onAddCart}
             disabled={outOfStock}
             variant="outline"
-            className="h-11 min-w-0 flex-1 gap-1.5 whitespace-nowrap rounded-full px-3 text-[13px]"
+            className="h-10 min-w-0 flex-1 gap-1.5 whitespace-nowrap rounded-full px-3 text-xs"
           >
-            <SiteIcon name="cart" size={15} />
+            <SiteIcon name="cart" size={14} />
             {t('common.addToCart')}
           </Button>
           <Button
             onClick={onBuyNow}
             disabled={outOfStock}
-            className="h-11 min-w-0 flex-1 whitespace-nowrap rounded-full px-3 text-[13px]"
+            className="h-10 min-w-0 flex-1 whitespace-nowrap rounded-full px-3 text-xs"
           >
             {t('productPage.buyNow')}
           </Button>
