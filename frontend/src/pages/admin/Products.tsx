@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
@@ -71,21 +71,54 @@ function PlacementBadges({ placements, onMore, max = 2 }: { placements: Placemen
   )
 }
 
-type Group = 'home' | 'shopHeader' | 'shop' | 'hidden'
+/** Storefront sections, in the order customers see them (same order as the server's 'placement' sort). */
+type Group = 'deals' | 'spotlight' | 'row' | 'shopHeader' | 'shop' | 'hidden'
 
-const GROUP_LABEL: Record<Group, string> = {
-  home: 'On the home page',
-  shopHeader: 'Shop page header',
-  shop: 'Other products in the Shop',
-  hidden: 'Hidden',
+const GROUPS: Record<Group, { n: number; title: string; hint: string; icon: SiteIconName }> = {
+  deals: { n: 1, title: 'Home · Top deals (hero)', hint: 'Very top of the home page', icon: 'tag' },
+  spotlight: { n: 2, title: 'Home · Featured card', hint: 'Big card of the “Featured” section', icon: 'star' },
+  row: { n: 3, title: 'Home · Featured row (carousel)', hint: 'Product row under the Featured card', icon: 'layers' },
+  shopHeader: { n: 4, title: 'Shop · Header', hint: 'Top of the Shop page', icon: 'monitor' },
+  shop: { n: 5, title: 'Shop · Other products', hint: 'Listed in the Shop and their category', icon: 'cart' },
+  hidden: { n: 6, title: 'Hidden', hint: 'Not on the storefront', icon: 'close' },
 }
 
+/** First section the product appears in (it is listed once, under that section). */
 function groupOf(placements: Placement[]): Group {
+  const shown = (key: string) => placements.some((p) => p.key === key && !p.waiting)
   if (placements.some((p) => p.key === 'hidden')) return 'hidden'
-  if (placements.some((p) => !p.waiting && (p.key === 'deals' || p.key === 'spotlight' || p.key === 'row'))) return 'home'
-  if (placements.some((p) => p.key === 'shopHeader')) return 'shopHeader'
+  if (shown('deals')) return 'deals'
+  if (shown('spotlight')) return 'spotlight'
+  if (shown('row')) return 'row'
+  if (shown('shopHeader')) return 'shopHeader'
   return 'shop'
 }
+
+function SectionHeading({ group, count, note }: { group: Group; count?: number; note?: string }) {
+  const g = GROUPS[group]
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[10px] font-bold text-[var(--brand-fg)]">
+        {g.n}
+      </span>
+      <SiteIcon name={g.icon} size={13} className="shrink-0 text-[var(--brand-text)]" />
+      <span className="min-w-0 truncate text-xs font-semibold text-[var(--fg)]">{g.title}</span>
+      {count !== undefined ? (
+        <span className="rounded-full bg-[var(--bg-elevated)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{count}</span>
+      ) : null}
+      {note ? (
+        <>
+          <span className="shrink-0 text-[11px] text-[var(--fg-muted)] sm:hidden">↑ above</span>
+          <span className="truncate text-[11px] text-[var(--fg-muted)] max-sm:hidden">→ {note}</span>
+        </>
+      ) : (
+        <span className="hidden truncate text-[11px] text-[var(--fg-muted)] sm:inline">· {g.hint}</span>
+      )}
+    </span>
+  )
+}
+
+const GROUP_ORDER: Group[] = ['deals', 'spotlight', 'row', 'shopHeader', 'shop', 'hidden']
 
 export function Products() {
   const qc = useQueryClient()
@@ -154,8 +187,33 @@ export function Products() {
   }
 
   const groups = items.map((p) => groupOf(place.placementsOf(p)))
-  const groupHeading = (i: number) =>
-    sort === 'placement' && place.ready && (i === 0 || groups[i] !== groups[i - 1]) ? GROUP_LABEL[groups[i]] : null
+  // Products per home / shop section (the whole storefront, not just this page)
+  const groupCount: Partial<Record<Group, number>> = {
+    deals: place.deals.products.length,
+    spotlight: place.featuredList[0] ? 1 : 0,
+    row: place.row.length,
+    shopHeader: place.shopHero.product ? 1 : 0,
+  }
+  // A section whose product is already listed in an earlier one (e.g. top deal #1 is also the
+  // Featured card) still gets its heading, pointing to that product
+  const alsoAbove: Partial<Record<Group, string | undefined>> = {
+    spotlight: place.featuredList[0]?.name,
+    shopHeader: place.shopHero.product?.name,
+  }
+  const groupHeading = (i: number) => {
+    if (sort !== 'placement' || !place.ready || (i > 0 && groups[i] === groups[i - 1])) return null
+    const from = i === 0 && page === 1 ? 0 : i === 0 ? GROUP_ORDER.indexOf(groups[0]) : GROUP_ORDER.indexOf(groups[i - 1]) + 1
+    const to = GROUP_ORDER.indexOf(groups[i])
+    const skipped = GROUP_ORDER.slice(from, to).filter((g) => alsoAbove[g] && groupCount[g])
+    return (
+      <span className="flex flex-col gap-1">
+        {skipped.map((g) => (
+          <SectionHeading key={g} group={g} count={groupCount[g]} note={`${alsoAbove[g]} (listed above)`} />
+        ))}
+        <SectionHeading group={groups[i]} count={groupCount[groups[i]]} />
+      </span>
+    )
+  }
 
   const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
   const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
@@ -304,7 +362,7 @@ export function Products() {
               return (
                 <Fragment key={p._id}>
                 {heading ? (
-                  <li className="bg-[var(--bg-muted)] px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{heading}</li>
+                  <li className="bg-[var(--bg-muted)] px-3 py-1.5">{heading}</li>
                 ) : null}
                 <li className="flex min-w-0 gap-2.5 px-3 py-2.5">
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
@@ -372,7 +430,7 @@ export function Products() {
                     <Fragment key={p._id}>
                     {heading ? (
                       <tr className="bg-[var(--bg-muted)]">
-                        <td colSpan={6} className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+                        <td colSpan={6} className="px-3 py-1.5">
                           {heading}
                         </td>
                       </tr>
