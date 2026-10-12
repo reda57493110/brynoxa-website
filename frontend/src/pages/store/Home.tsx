@@ -1,7 +1,8 @@
 import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
-import { useHeroProduct } from '@/hooks/useHeroProduct'
-import { HomeSpotlightCard, HomeSpotlightSkeleton, HomeSpotlightStrip } from '@/components/home/HomeSpotlight'
+import { useHomeDeals } from '@/hooks/useHomeDeals'
+import { HomeDealsShowcase, HomeDealsStrips } from '@/components/home/HomeDeals'
+import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
 import { productsApi } from '@/api/productsApi'
@@ -74,8 +75,9 @@ export function Home() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
 
-  // Admin → Settings → Page header → Home page (falls back to the first featured product in stock)
-  const spotlight = useHeroProduct('home')
+  // Admin → Settings → Home page deals (up to 4; automatic: best in-stock featured deals)
+  const deals = useHomeDeals()
+  const showDeals = deals.products.length > 0 || deals.pending
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
@@ -185,17 +187,17 @@ export function Home() {
           </motion.ul>
 
           {/* Phones / tablets: slim product strip */}
-          {spotlight.product || spotlight.pending ? (
+          {showDeals ? (
             <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-6 max-w-xl lg:hidden">
-              {spotlight.product ? <HomeSpotlightStrip product={spotlight.product} /> : <HomeSpotlightSkeleton strip />}
+              {deals.products.length ? <HomeDealsStrips products={deals.products} /> : <HomeSpotlightSkeleton strip />}
             </motion.div>
           ) : null}
           </div>
 
           {/* Desktop: product card beside the headline */}
-          {spotlight.product || spotlight.pending ? (
+          {showDeals ? (
             <motion.div {...fadeUp(reduceMotion, 0.2)} className="hidden lg:block">
-              {spotlight.product ? <HomeSpotlightCard product={spotlight.product} /> : <HomeSpotlightSkeleton />}
+              {deals.products.length ? <HomeDealsShowcase products={deals.products} /> : <HomeSpotlightSkeleton />}
             </motion.div>
           ) : null}
         </Container>

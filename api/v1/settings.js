@@ -26,6 +26,7 @@ const ALLOWED_FIELDS = [
   'requireInspection',
   'notifyStaffLoginEmail',
   'pageHeroProducts',
+  'homeDeals',
 ];
 
 module.exports = async (req, res) => {
@@ -46,6 +47,7 @@ module.exports = async (req, res) => {
       const {
         getSettings,
         sanitizePageHeroProducts,
+        sanitizeHomeDeals,
         sanitizeEmailNotifications,
         sanitizeEmailMessages,
         sanitizeSegmentSettings,
@@ -75,6 +77,8 @@ module.exports = async (req, res) => {
           settings[key] = sanitizeEmailMessages(body[key], settings.emailMessages);
         } else if (key === 'depositInstructions') {
           settings[key] = String(body[key]).slice(0, 2000);
+        } else if (key === 'homeDeals') {
+          settings[key] = sanitizeHomeDeals(body[key]);
         } else if (key === 'pageHeroProducts') {
           settings[key] = sanitizePageHeroProducts(body[key], settings.pageHeroProducts);
         } else {

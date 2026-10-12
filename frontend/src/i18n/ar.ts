@@ -100,6 +100,7 @@ export const ar: Messages = {
     spotlightMore: 'شاهد المزيد من المنتجات',
     spotlightSave: 'توفّر {amount}',
     spotlightDeal: 'عرض مميز',
+    dealsLabel: 'العروض',
     featuredKicker: 'مميز',
     featuredTitle: 'مميز',
     featuredBody: 'اختيارات جاهزة للطلب.',

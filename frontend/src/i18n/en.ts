@@ -98,6 +98,7 @@ export const en = {
     spotlightMore: 'See more products',
     spotlightSave: 'You save {amount}',
     spotlightDeal: 'Hot deal',
+    dealsLabel: 'Deals',
     featuredKicker: 'Featured',
     featuredTitle: 'Featured',
     featuredBody: 'Hand-picked picks ready to order.',

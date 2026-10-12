@@ -368,6 +368,16 @@ html[lang="ar"] {
   }
 }
 
+/* Home deals: time left before the next deal */
+@keyframes deal-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 @keyframes spotlight-float {
   0%,
   100% {

@@ -260,6 +260,7 @@ export const settingsSchema = z.object({
     })
     .optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
+  homeDeals: z.array(z.string().max(24)).max(4).optional(),
   pageHeroProducts: z
     .object({
       home: z.string().max(24).optional(),

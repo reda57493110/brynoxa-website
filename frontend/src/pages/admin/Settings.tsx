@@ -7,6 +7,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
+import { HomeDealsSettings } from '@/components/admin/HomeDealsSettings'
 import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
 import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
@@ -39,12 +40,20 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
       return <OrdersSettings settings={settings} />
     case 'storefront':
       return (
+        <>
+        <SettingsCard
+          title="Home page deals"
+          description="Up to 4 products shown at the top of the home page, in this order. Saved immediately."
+        >
+          <HomeDealsSettings value={settings?.homeDeals} />
+        </SettingsCard>
         <SettingsCard
           title="Shop page header"
           description="The product at the top of the Shop page. Automatic uses your first featured product. Saved immediately."
         >
           <PageHeaderProducts value={settings?.pageHeroProducts} />
         </SettingsCard>
+        </>
       )
     case 'catalog':
       return <CategoriesSettings />

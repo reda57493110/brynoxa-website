@@ -15,7 +15,6 @@ import { optimizedImageUrl } from '@/lib/image'
 import type { HeroPage, Product } from '@/types'
 
 const PAGES: { page: HeroPage; label: string; path: string }[] = [
-  { page: 'home', label: 'Home page', path: '/' },
   { page: 'shop', label: 'Shop page', path: '/shop' },
 ]
 
@@ -23,7 +22,7 @@ function primaryImage(p: Product) {
   return p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
 }
 
-function Thumb({ product }: { product?: Product | null }) {
+export function Thumb({ product }: { product?: Product | null }) {
   const img = product ? primaryImage(product) : undefined
   return (
     <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-muted)]">
@@ -194,12 +193,17 @@ function PageRow({
   )
 }
 
-function ProductSearch({
+export function ProductSearch({
   currentId,
+  chosenIds = [],
+  actionLabel = 'Use this',
   saving,
   onSelect,
 }: {
   currentId: string
+  /** Already picked (shown as added, not selectable) */
+  chosenIds?: string[]
+  actionLabel?: string
   saving: boolean
   onSelect: (id: string) => void
 }) {
@@ -226,7 +230,7 @@ function ProductSearch({
       ) : results.data?.length ? (
         <ul className="max-h-80 space-y-2 overflow-y-auto">
           {results.data.map((p) => {
-            const selected = p._id === currentId
+            const selected = p._id === currentId || chosenIds.includes(p._id)
             return (
               <li
                 key={p._id}
@@ -245,7 +249,7 @@ function ProductSearch({
                   disabled={selected || saving}
                   onClick={() => onSelect(p._id)}
                 >
-                  {selected ? 'Current' : 'Use this'}
+                  {selected ? (chosenIds.includes(p._id) ? 'Added' : 'Current') : actionLabel}
                 </Button>
               </li>
             )

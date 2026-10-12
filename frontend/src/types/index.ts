@@ -370,6 +370,8 @@ export interface StoreSettings {
   requireInspection?: boolean
   notifyStaffLoginEmail?: boolean
   pageHeroProducts?: Partial<Record<HeroPage, string>>
+  /** Home page deals (product ids, max 4, in order). Empty: automatic. */
+  homeDeals?: string[]
 }
 
 export type HeroPage = 'home' | 'shop' | 'services' | 'contact'

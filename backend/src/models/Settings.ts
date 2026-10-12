@@ -82,6 +82,8 @@ export interface ISettings extends Document {
   notifyStaffLoginEmail: boolean;
   /** Product id featured in each store page header; empty shows the default photo. */
   pageHeroProducts: Record<HeroPage, string>;
+  /** Products shown as deals at the top of the home page (max 4, in order). Empty: automatic. */
+  homeDeals: string[];
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -146,6 +148,7 @@ const settingsSchema = new Schema<ISettings>(
       default: () => ({}),
     },
     notifyStaffLoginEmail: { type: Boolean, default: true },
+    homeDeals: { type: [String], default: [] },
     pageHeroProducts: {
       home: { type: String, default: '' },
       shop: { type: String, default: '' },
@@ -161,6 +164,15 @@ export const Settings = mongoose.model<ISettings>('Settings', settingsSchema);
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
 /** Stored instead of a product id when the page should show its photo, not a product. */
 export const HERO_NONE = 'none';
+
+export const MAX_HOME_DEALS = 4;
+
+/** Unique, valid product ids for the home page deals, in the given order (max 4). */
+export function sanitizeHomeDeals(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const ids = input.map((v) => String(v ?? '').trim()).filter((id) => OBJECT_ID.test(id));
+  return [...new Set(ids)].slice(0, MAX_HOME_DEALS);
+}
 
 /** Keeps only known pages with a valid product id, HERO_NONE, or '' (automatic). */
 export function sanitizePageHeroProducts(
