@@ -17,15 +17,15 @@ import type { Product } from '@/types'
 export type ManagedSection = 'deals' | 'featured' | 'row'
 
 const TITLES: Record<ManagedSection, string> = {
-  deals: 'Home · Top deals (hero)',
-  featured: 'Home · Featured card',
-  row: 'Home · Featured row (carousel)',
+  deals: 'Home · Hero (top deals)',
+  featured: 'Home · Featured',
+  row: 'Home · Carousel',
 }
 
 const HINTS: Record<ManagedSection, string> = {
   deals: `Up to ${MAX_HOME_DEALS}, shown in this order at the very top of the home page. Sold-out or hidden ones are skipped.`,
-  featured: `The first one is the big Featured card. The next ${HOME_FEATURED_LIMIT - 1} only show in the row when the carousel is empty.`,
-  row: `The first ${HOME_ROW_LIMIT} are shown in this order under the Featured card.`,
+  featured: `Products with the Featured flag. The first is the big Featured product on the home page; the others feed the automatic Hero (when no deals are chosen) and fill the carousel only when it is empty.`,
+  row: `The first ${HOME_ROW_LIMIT} are shown in this order in the carousel under Featured.`,
 }
 
 /**
@@ -128,9 +128,16 @@ export function SectionManager({ section, onClose }: { section: ManagedSection |
   const statusOf = (p: Product, i: number) => {
     if (!p.isActive) return <Badge variant="danger">Hidden — skipped</Badge>
     if (section === 'deals' && p.stock <= 0) return <Badge variant="danger">Sold out — skipped</Badge>
-    if (section === 'featured' && shownIndex(i) === 0) return <Badge variant="brand">Featured card</Badge>
+    if (section === 'featured' && shownIndex(i) === 0) return <Badge variant="brand">The Featured product</Badge>
+    if (section === 'featured') {
+      const inHero = place.deals.products.some((d) => d._id === p._id)
+      return (
+        <span className="text-[11px] text-[var(--fg-muted)]">
+          {inHero ? 'In the Hero (automatic)' : !place.rowFromCarousel && shownIndex(i) < limit ? 'In the carousel' : 'Not shown'}
+        </span>
+      )
+    }
     if (shownIndex(i) >= limit) return <Badge variant="warning">Not shown (over {limit})</Badge>
-    if (section === 'featured') return <span className="text-[11px] text-[var(--fg-muted)]">{place.rowFromCarousel ? 'Waiting' : 'Shown in the row'}</span>
     return <span className="text-[11px] text-[var(--success)]">Shown</span>
   }
 
@@ -140,7 +147,7 @@ export function SectionManager({ section, onClose }: { section: ManagedSection |
         <p className="text-xs text-[var(--fg-muted)]">{HINTS[section]}</p>
         {section === 'row' && !place.rowFromCarousel ? (
           <p className="rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-xs">
-            The carousel is empty, so the row shows your next featured products. Add products here to control the row.
+            The carousel is empty, so it shows your next featured products. Add products here to control it.
           </p>
         ) : null}
         {section === 'deals' && !dealIds.length ? (

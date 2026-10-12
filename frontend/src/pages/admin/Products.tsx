@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
-import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
@@ -15,7 +15,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { ProductPlacementDialog } from '@/components/admin/ProductPlacementDialog'
 import { SectionManager, type ManagedSection } from '@/components/admin/SectionManager'
-import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
+import { HomeLayoutBoard } from '@/components/admin/HomeLayoutBoard'
 import { useStorefrontPlacements, type Placement } from '@/hooks/useStorefrontPlacements'
 import { optimizedImageUrl } from '@/lib/image'
 import { formatCurrency } from '@/lib/format'
@@ -28,12 +28,12 @@ type PlacementFilter = '' | 'home' | 'deals' | 'featured' | 'carousel' | 'none'
 const control = 'h-9 min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
 
 const SHORT: Record<string, string> = {
-  deals: 'Top deals',
-  spotlight: 'Featured card',
-  row: 'Featured row',
+  deals: 'Hero',
+  spotlight: 'Featured',
+  row: 'Carousel',
   shopHeader: 'Shop header',
-  featuredWaiting: 'Featured · waiting',
-  carouselWaiting: 'Row · waiting',
+  featuredWaiting: 'Featured flag · not shown',
+  carouselWaiting: 'Carousel · not shown',
 }
 
 function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: string } {
@@ -46,7 +46,7 @@ function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: 
 }
 
 /** Home / shop placements as small badges (category is shown in its own column). */
-function PlacementBadges({ placements, onMore, max = 2 }: { placements: Placement[]; onMore: () => void; max?: number }) {
+function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placement[]; onMore: () => void; max?: number }) {
   const list = placements.filter((p) => p.key !== 'category' && p.key !== 'hidden')
   if (placements.some((p) => p.key === 'hidden')) return <span className="text-xs text-[var(--fg-muted)]">Not on storefront</span>
   if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">Shop &amp; category only</span>
@@ -72,65 +72,23 @@ function PlacementBadges({ placements, onMore, max = 2 }: { placements: Placemen
   )
 }
 
-/** Storefront sections, in the order customers see them (same order as the server's 'placement' sort). */
-type Group = 'deals' | 'spotlight' | 'row' | 'shopHeader' | 'shop' | 'hidden'
+/** Table groups, in storefront order (the board above shows each home section in full). */
+type Group = 'home' | 'shopHeader' | 'shop' | 'hidden'
 
-const GROUPS: Record<Group, { n: number; title: string; hint: string; icon: SiteIconName }> = {
-  deals: { n: 1, title: 'Home · Top deals (hero)', hint: 'Very top of the home page', icon: 'tag' },
-  spotlight: { n: 2, title: 'Home · Featured card', hint: 'Big card of the “Featured” section', icon: 'star' },
-  row: { n: 3, title: 'Home · Featured row (carousel)', hint: 'Product row under the Featured card', icon: 'layers' },
-  shopHeader: { n: 4, title: 'Shop · Header', hint: 'Top of the Shop page', icon: 'monitor' },
-  shop: { n: 5, title: 'Shop · Other products', hint: 'Listed in the Shop and their category', icon: 'cart' },
-  hidden: { n: 6, title: 'Hidden', hint: 'Not on the storefront', icon: 'close' },
+const GROUP_LABEL: Record<Group, string> = {
+  home: 'On the home page',
+  shopHeader: 'Shop page header',
+  shop: 'Other products in the Shop',
+  hidden: 'Hidden',
 }
 
-/** First section the product appears in (it is listed once, under that section). */
 function groupOf(placements: Placement[]): Group {
   const shown = (key: string) => placements.some((p) => p.key === key && !p.waiting)
   if (placements.some((p) => p.key === 'hidden')) return 'hidden'
-  if (shown('deals')) return 'deals'
-  if (shown('spotlight')) return 'spotlight'
-  if (shown('row')) return 'row'
+  if (shown('deals') || shown('spotlight') || shown('row')) return 'home'
   if (shown('shopHeader')) return 'shopHeader'
   return 'shop'
 }
-
-function SectionHeading({ group, count, note, onManage }: { group: Group; count?: number; note?: string; onManage?: () => void }) {
-  const g = GROUPS[group]
-  return (
-    <span className="flex min-w-0 items-center gap-2">
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[10px] font-bold text-[var(--brand-fg)]">
-        {g.n}
-      </span>
-      <SiteIcon name={g.icon} size={13} className="shrink-0 text-[var(--brand-text)]" />
-      <span className="min-w-0 truncate text-xs font-semibold text-[var(--fg)]">{g.title}</span>
-      {count !== undefined ? (
-        <span className="rounded-full bg-[var(--bg-elevated)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{count}</span>
-      ) : null}
-      {note ? (
-        <>
-          <span className="shrink-0 text-[11px] text-[var(--fg-muted)] sm:hidden">↑ above</span>
-          <span className="truncate text-[11px] text-[var(--fg-muted)] max-sm:hidden">→ {note}</span>
-        </>
-      ) : (
-        <span className="hidden truncate text-[11px] text-[var(--fg-muted)] sm:inline">· {g.hint}</span>
-      )}
-      {onManage ? (
-        <button
-          type="button"
-          onClick={onManage}
-          className="ms-auto inline-flex h-6 shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2 text-[11px] font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
-        >
-          <SiteIcon name="sliders" size={11} /> Manage
-        </button>
-      ) : null}
-    </span>
-  )
-}
-
-const MANAGED: Partial<Record<Group, ManagedSection>> = { deals: 'deals', spotlight: 'featured', row: 'row' }
-
-const GROUP_ORDER: Group[] = ['deals', 'spotlight', 'row', 'shopHeader', 'shop', 'hidden']
 
 export function Products() {
   const qc = useQueryClient()
@@ -200,70 +158,10 @@ export function Products() {
   }
 
   const groups = items.map((p) => groupOf(place.placementsOf(p)))
-  // Products per home / shop section (the whole storefront, not just this page)
-  const groupCount: Partial<Record<Group, number>> = {
-    deals: place.deals.products.length,
-    spotlight: place.featuredList[0] ? 1 : 0,
-    row: place.row.length,
-    shopHeader: place.shopHero.product ? 1 : 0,
-  }
-  // A section whose product is already listed in an earlier one (e.g. top deal #1 is also the
-  // Featured card) still gets its heading, pointing to that product
-  const alsoAbove: Partial<Record<Group, string | undefined>> = {
-    spotlight: place.featuredList[0]?.name,
-    shopHeader: place.shopHero.product?.name,
-  }
-  // Featured row products that are listed in an earlier section (e.g. also a top deal)
-  const rowAbove = place.row
-    .map((product, index) => ({ product, index }))
-    .filter(({ product }) => groupOf(place.placementsOf(product)) !== 'row')
-  const RowAbove = () =>
-    rowAbove.length ? (
-      <span className="flex flex-wrap items-center gap-1 ps-7 text-[11px] text-[var(--fg-muted)]">
-        Also in this row (listed above):
-        {rowAbove.map(({ product, index }) => (
-          <button
-            key={product._id}
-            type="button"
-            onClick={() => setPlacing(product)}
-            className="inline-flex max-w-[14rem] items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-1.5 py-0.5 hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-          >
-            <span className="font-semibold tabular-nums text-[var(--brand-text)]">#{index + 1}</span>
-            <span className="truncate">{product.name}</span>
-          </button>
-        ))}
-      </span>
+  const groupHeading = (i: number) =>
+    sort === 'placement' && place.ready && (i === 0 || groups[i] !== groups[i - 1]) ? (
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{GROUP_LABEL[groups[i]]}</span>
     ) : null
-
-  const groupHeading = (i: number) => {
-    if (sort !== 'placement' || !place.ready || (i > 0 && groups[i] === groups[i - 1])) return null
-    const from = i === 0 && page === 1 ? 0 : i === 0 ? GROUP_ORDER.indexOf(groups[0]) : GROUP_ORDER.indexOf(groups[i - 1]) + 1
-    const to = GROUP_ORDER.indexOf(groups[i])
-    // Sections whose products are all listed above still get their heading
-    const allRowAbove = place.row.length > 0 && rowAbove.length === place.row.length
-    const skipped = GROUP_ORDER.slice(from, to).filter((g) => (alsoAbove[g] || (g === 'row' && allRowAbove)) && groupCount[g])
-    return (
-      <span className="flex flex-col gap-1">
-        {skipped.map((g) => (
-          <Fragment key={g}>
-            <SectionHeading
-              group={g}
-              count={groupCount[g]}
-              note={g === 'row' ? undefined : `${alsoAbove[g]} (listed above)`}
-              onManage={MANAGED[g] ? () => setManaging(MANAGED[g]!) : undefined}
-            />
-            {g === 'row' ? <RowAbove /> : null}
-          </Fragment>
-        ))}
-        <SectionHeading
-          group={groups[i]}
-          count={groupCount[groups[i]]}
-          onManage={MANAGED[groups[i]] ? () => setManaging(MANAGED[groups[i]]!) : undefined}
-        />
-        {groups[i] === 'row' ? <RowAbove /> : null}
-      </span>
-    )
-  }
 
   const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
   const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
@@ -279,30 +177,8 @@ export function Products() {
         </Link>
       </div>
 
-      {/* What the storefront shows right now */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-xs">
-        <span className="font-semibold text-[var(--fg-muted)]">Storefront</span>
-        <button type="button" onClick={() => setManaging('deals')} className="hover:text-[var(--brand-text)]">
-          Top deals{' '}
-          <span className="font-semibold tabular-nums">
-            {place.deals.products.length}/{MAX_HOME_DEALS}
-          </span>
-          {place.pinnedDeals.length ? null : <span className="text-[var(--fg-muted)]"> (automatic)</span>}
-        </button>
-        <button type="button" onClick={() => setManaging('featured')} className="max-w-[16rem] truncate hover:text-[var(--brand-text)]" title={place.featuredList[0]?.name}>
-          Featured card: <span className="font-semibold">{place.featuredList[0]?.name ?? '—'}</span>
-        </button>
-        <button type="button" onClick={() => setManaging('row')} className="hover:text-[var(--brand-text)]">
-          Featured row <span className="font-semibold tabular-nums">{place.row.length}</span>
-        </button>
-        <span className="max-w-[16rem] truncate" title={place.shopHero.product?.name}>
-          Shop header: <span className="font-semibold">{place.shopHero.product?.name ?? '—'}</span>
-          {place.shopHeroSetting ? null : <span className="text-[var(--fg-muted)]"> (auto)</span>}
-        </span>
-        <Link to="/admin/settings" className="ms-auto text-[var(--brand-text)] hover:underline">
-          Order deals →
-        </Link>
-      </div>
+      {/* The home page, section by section, exactly as customers see it */}
+      <HomeLayoutBoard onManage={setManaging} onOpen={setPlacing} />
 
       {/* Toolbar */}
       <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -338,9 +214,9 @@ export function Products() {
         >
           <option value="">Any placement</option>
           <option value="home">On the home page</option>
-          <option value="deals">Top deals</option>
-          <option value="featured">Featured</option>
-          <option value="carousel">Featured row</option>
+          <option value="deals">Hero (top deals)</option>
+          <option value="featured">Featured flag</option>
+          <option value="carousel">Carousel</option>
           <option value="none">Not on the home page</option>
         </select>
         <select
@@ -379,11 +255,6 @@ export function Products() {
           </button>
         ) : null}
       </div>
-      {placement === 'home' || placement === 'deals' ? (
-        <p className="text-[11px] text-[var(--fg-muted)]">
-          Products marked for the home page. A badge marked “waiting” is flagged but not shown yet (newer products take the limited places).
-        </p>
-      ) : null}
 
       {products.isPending && !products.data ? (
         <div className="flex justify-center py-16">

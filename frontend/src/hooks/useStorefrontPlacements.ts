@@ -59,24 +59,24 @@ export function useStorefrontPlacements() {
 
     const dealIndex = deals.products.findIndex((d) => d._id === p._id)
     if (dealIndex >= 0) {
-      out.push({ key: 'deals', label: 'Home · Top deals', detail: `#${dealIndex + 1}`, auto: !deals.pinned, href: '/' })
+      out.push({ key: 'deals', label: 'Home · Hero (top deals)', detail: `#${dealIndex + 1}`, auto: !deals.pinned, href: '/' })
     } else if (pinnedDeals.includes(p._id)) {
-      out.push({ key: 'deals', label: 'Home · Top deals', detail: 'skipped (sold out)', waiting: true, href: '/' })
+      out.push({ key: 'deals', label: 'Home · Hero (top deals)', detail: 'skipped (sold out)', waiting: true, href: '/' })
     }
 
     if (featuredList[0]?._id === p._id) {
-      out.push({ key: 'spotlight', label: 'Home · Featured card', href: '/#featured' })
+      out.push({ key: 'spotlight', label: 'Home · Featured', href: '/#featured' })
     }
     const rowIndex = row.findIndex((r) => r._id === p._id)
-    if (rowIndex >= 0) out.push({ key: 'row', label: 'Home · Featured row', detail: `#${rowIndex + 1}`, href: '/#featured' })
+    if (rowIndex >= 0) out.push({ key: 'row', label: 'Home · Carousel', detail: `#${rowIndex + 1}`, href: '/#featured' })
 
     // Flagged but not visible: newer featured / carousel products take the limited places
-    const shownAsFeatured = featuredList[0]?._id === p._id || (!rowFromCarousel && rowIndex >= 0)
+    const shownAsFeatured = featuredList[0]?._id === p._id || (!rowFromCarousel && rowIndex >= 0) || dealIndex >= 0
     if (p.isFeatured && !shownAsFeatured) {
-      out.push({ key: 'featuredWaiting', label: 'Featured · not shown', waiting: true })
+      out.push({ key: 'featuredWaiting', label: 'Featured flag · not shown', waiting: true })
     }
     if (p.isCarousel && !(rowFromCarousel && rowIndex >= 0)) {
-      out.push({ key: 'carouselWaiting', label: 'Featured row · not shown', waiting: true })
+      out.push({ key: 'carouselWaiting', label: `Carousel · not shown (over ${HOME_ROW_LIMIT})`, waiting: true })
     }
 
     if (shopHero.product?._id === p._id) {

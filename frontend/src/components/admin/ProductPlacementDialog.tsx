@@ -122,10 +122,12 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
   const featuredStatus = !p.isFeatured
     ? 'Off'
     : isSpotlight
-      ? 'Shown as the big Featured card'
+      ? 'This is the Featured product on the home page'
       : !place.rowFromCarousel && rowIndex >= 0
-        ? `Shown in the Featured row #${rowIndex + 1}`
-        : 'On, but not shown — the newest featured product takes the card'
+        ? `Flag on — shown in the carousel #${rowIndex + 1}`
+        : dealIndex >= 0 && !inDeals
+          ? 'Flag on — used for the automatic Hero; the newest featured product is the Featured one'
+          : 'Flag on, not shown — the newest featured product is the Featured one'
   const carouselStatus = !p.isCarousel
     ? 'Off'
     : place.rowFromCarousel && rowIndex >= 0
@@ -175,7 +177,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </select>
           </Row>
 
-          <Row title="Home · Top deals" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
+          <Row title="Home · Hero (top deals)" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
             {inDeals ? (
               <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ homeDeals: pinned.filter((x) => x !== p._id) })}>
                 Remove
@@ -193,10 +195,10 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             )}
           </Row>
 
-          <Row title="Home · Featured" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
+          <Row title="Home · Featured (one product)" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
             {p.isFeatured && !isSpotlight ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isFeatured: true })}>
-                Show first
+                Make it the Featured one
               </Button>
             ) : null}
             <Button
@@ -209,7 +211,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </Button>
           </Row>
 
-          <Row title="Home · Featured row" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
+          <Row title="Home · Carousel" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
             {p.isCarousel && rowIndex !== 0 ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isCarousel: true })}>
                 Show first
