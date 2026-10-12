@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useReducedMotion } from 'framer-motion'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
@@ -52,19 +52,8 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <div className="relative">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={active._id}
-            initial={reduceMotion ? false : { opacity: 0, x: 24, scale: 0.98 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -24, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <HomeSpotlightCard product={active} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      {/* All deals rendered once inside one frame; switching crossfades them (no reload, no jump) */}
+      <HomeSpotlightCard products={products} active={products.indexOf(active)} />
 
       {many ? (
         <div
@@ -93,7 +82,7 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
                   'group/deal relative flex min-w-0 flex-col overflow-hidden rounded-xl border text-start transition duration-200 hover:-translate-y-0.5',
                   on
                     ? 'border-[var(--brand)] bg-[#0b1116] shadow-glow'
-                    : 'border-[var(--border)] bg-[#0b1116] hover:border-[var(--brand)] dark:border-white/10 dark:hover:border-white/30'
+                    : 'border-transparent bg-[#0b1116] shadow-[0_8px_20px_-12px_rgb(15_23_42/0.45)] hover:border-[var(--brand)] dark:border-white/10 dark:shadow-none dark:hover:border-white/30'
                 )}
               >
                 <span
