@@ -1,3 +1,4 @@
+import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { HomeSpotlightCard, HomeSpotlightSkeleton, HomeSpotlightStrip } from '@/components/home/HomeSpotlight'
@@ -9,7 +10,6 @@ import { Container } from '@/components/ui/Container'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { Skeleton } from '@/components/ui/Skeleton'
-import { PageLoader } from '@/components/ui/PageLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
@@ -246,19 +246,14 @@ export function Home() {
           ) : featured.isPending || carousel.isPending ? (
             // First load only: background refetches keep the cards (and their loaded photos) on screen
             <div className="relative min-h-[18rem] space-y-5" role="status" aria-live="polite" aria-busy="true">
-              <Skeleton className="h-64 rounded-[1.35rem] lg:h-[22rem]" />
+              <Skeleton spinner="lg" className="h-64 rounded-[1.35rem] lg:h-[22rem]" />
               <div className="flex gap-4 overflow-hidden" aria-hidden="true">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-80 w-[18.5rem] shrink-0 rounded-[1.35rem]" />
+                  <Skeleton spinner key={i} className="h-80 w-[18.5rem] shrink-0 rounded-[1.35rem]" />
                 ))}
               </div>
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--bg)_45%,transparent)]">
-                <PageLoader
-                  compact
-                  label={t('ui.loadingProducts')}
-                  className="min-h-0 rounded-2xl bg-[var(--bg-elevated)]/90 px-5 shadow-soft"
-                />
-              </div>
+              {/* Each placeholder shows its own loading indicator; the label is for screen readers */}
+              <span className="sr-only">{t('ui.loadingProducts')}</span>
             </div>
           ) : !featured.data?.length && !carousel.data?.length ? (
             <EmptyState
@@ -374,12 +369,13 @@ export function Home() {
                             )}
                           >
                             {photo ? (
-                              <SafeImage
+                              <LoadingImage
                                 src={photo}
                                 alt=""
                                 width={800}
                                 height={500}
                                 sizes="(min-width: 1024px) 33vw, 100vw"
+                                frameClassName="absolute inset-0"
                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                                 loading="lazy"
                               />

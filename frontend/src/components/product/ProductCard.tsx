@@ -1,3 +1,4 @@
+import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { Link } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Product } from '@/types'
@@ -141,8 +142,8 @@ export function ProductCard({
             : 'aspect-square'
         )}
       >
-        {/* Shimmer while the photo downloads (under the image, so it never covers it) */}
-        {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-[var(--bg-muted)]" aria-hidden="true" />}
+        {/* Loading indicator while the photo downloads */}
+        {photo.loaded ? null : <ImageSpinner size={spotlight ? 'lg' : 'md'} />}
         <Link to={`/product/${product.slug}`} className="relative block h-full w-full">
           <SafeImage
             src={imageSrc}

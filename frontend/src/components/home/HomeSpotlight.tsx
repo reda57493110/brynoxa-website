@@ -1,3 +1,4 @@
+import { ImageSpinner, LoadingImage } from '@/components/ui/ImageLoader'
 import { Link } from 'react-router-dom'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
@@ -136,7 +137,7 @@ export function HomeSpotlightCard({ product }: { product: Product }) {
               contain ? 'bg-white' : 'bg-[#0b1116]'
             )}
           >
-          {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-white/10" />}
+          {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
           <SafeImage
             src={src}
             srcSet={imageSrcSet(image, [640, 960, 1280, 1600])}
@@ -263,13 +264,15 @@ export function HomeSpotlightStrip({ product }: { product: Product }) {
             )}
           >
             {image ? (
-              <SafeImage
+              <LoadingImage
                 src={sizedImageUrl(image, 200)}
                 alt=""
                 width={80}
                 height={80}
                 loading="eager"
                 referrerPolicy="no-referrer"
+                spinnerSize="sm"
+                frameClassName="h-full w-full"
                 className={cn('h-full w-full', contain ? 'object-contain p-1' : 'object-cover')}
               />
             ) : (
@@ -310,8 +313,12 @@ export function HomeSpotlightStrip({ product }: { product: Product }) {
 /** Same footprint as the card while the product loads, so the hero does not jump. */
 export function HomeSpotlightSkeleton({ strip }: { strip?: boolean }) {
   return strip ? (
-    <div className="h-[6.25rem] animate-pulse rounded-2xl border border-white/10 bg-white/10" aria-hidden="true" />
+    <div className="relative h-[6.25rem] overflow-hidden rounded-2xl border border-white/10 bg-white/10">
+      <ImageSpinner size="sm" tone="dark" />
+    </div>
   ) : (
-    <div className="aspect-square animate-pulse rounded-[1.6rem] border border-white/10 bg-white/10 [@media(max-height:820px)]:aspect-[5/4]" aria-hidden="true" />
+    <div className="relative aspect-square overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/10 [@media(max-height:820px)]:aspect-[5/4]">
+      <ImageSpinner size="lg" tone="dark" />
+    </div>
   )
 }

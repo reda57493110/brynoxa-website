@@ -358,6 +358,16 @@ html[lang="ar"] {
 }
 
 /* Home spotlight: gentle float, rotating border light, shine sweep on the button */
+/* Image loading: shine sweeping across the frame */
+@keyframes image-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
 @keyframes spotlight-float {
   0%,
   100% {
