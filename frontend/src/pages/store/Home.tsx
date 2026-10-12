@@ -112,19 +112,17 @@ export function Home() {
       >
         <HeroBackdrop />
 
-        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-8 pt-[calc(var(--nav-height)+1.75rem)] sm:pb-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
+        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-6 pt-[calc(var(--nav-height)+0.75rem)] sm:pb-10 sm:pt-[calc(var(--nav-height)+1.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
           <div className="min-w-0">
-          <motion.p
-            {...fadeUp(reduceMotion, 0)}
-            className="kicker text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]"
-          >
-            {t('home.kicker')}
-          </motion.p>
+          {/* Hidden on phones (wrapper: .kicker sets its own display) */}
+          <motion.div {...fadeUp(reduceMotion, 0)} className="max-sm:hidden">
+            <p className="kicker text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]">{t('home.kicker')}</p>
+          </motion.div>
 
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="mt-3 max-w-2xl font-display text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-balance text-[var(--fg)] sm:mt-4 sm:text-5xl md:text-6xl dark:text-white"
+            className="max-w-2xl font-display text-[1.4rem] font-semibold leading-[1.15] tracking-tight sm:mt-4 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
@@ -132,25 +130,25 @@ export function Home() {
 
           <motion.p
             {...fadeUp(reduceMotion, 0.16)}
-            className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-5 sm:text-lg dark:text-white/80"
+            className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] max-sm:hidden sm:mt-5 sm:text-lg dark:text-white/80"
           >
             {t('home.heroBody')}
           </motion.p>
 
           <motion.div
             {...fadeUp(reduceMotion, 0.24)}
-            className="mt-5 grid w-full grid-cols-2 gap-2.5 sm:mt-8 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
+            className="mt-3.5 grid w-full grid-cols-2 gap-2 sm:mt-8 sm:flex sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-3"
           >
             <Link
               to="/shop"
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-3 py-2 text-center text-sm font-semibold leading-tight text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-3 py-1.5 text-center text-[13px] font-semibold leading-tight text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.shopNow')}
-              <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+              <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
             </Link>
             <a
               href="#categories"
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3 py-1.5 text-center text-[13px] font-medium leading-tight text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:w-auto sm:text-base"
             >
               {t('common.browseCategories')}
             </a>
@@ -159,11 +157,14 @@ export function Home() {
           {/* Why buy here, at a glance */}
           <motion.ul
             {...fadeUp(reduceMotion, 0.3)}
-            className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2 text-[12px] text-[var(--fg)] sm:mt-6 dark:text-white/90 sm:flex sm:flex-wrap sm:gap-x-5 sm:text-sm"
+            className="-mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 text-[11px] text-[var(--fg)] [scrollbar-width:none] sm:mx-0 sm:mt-6 sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:overflow-visible sm:px-0 sm:text-sm dark:text-white/90 [&::-webkit-scrollbar]:hidden"
           >
             {TRUST.map((item) => (
-              <li key={item.key} className="flex items-center gap-1.5">
-                <SiteIcon name={item.icon} size={15} className="shrink-0 text-[var(--brand-text)] dark:text-[var(--brand)]" />
+              <li
+                key={item.key}
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/70 px-2 py-1 sm:border-0 sm:bg-transparent sm:p-0 dark:border-white/10 dark:bg-white/5 sm:dark:bg-transparent"
+              >
+                <SiteIcon name={item.icon} size={13} className="shrink-0 text-[var(--brand-text)] dark:text-[var(--brand)]" />
                 {t(item.key)}
               </li>
             ))}
@@ -171,7 +172,7 @@ export function Home() {
 
           {/* Phones / tablets: slim product strip */}
           {showDeals ? (
-            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-6 max-w-2xl lg:hidden">
+            <motion.div {...fadeUp(reduceMotion, 0.36)} className="mt-4 max-w-2xl sm:mt-6 lg:hidden">
               {deals.products.length ? <HomeDealsStrips products={deals.products} /> : <HomeSpotlightSkeleton strip />}
             </motion.div>
           ) : null}

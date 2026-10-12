@@ -144,7 +144,7 @@ function DealMiniCard({ product }: { product: Product }) {
   return (
     <article className="relative flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-[#0b1116] text-white shadow-[0_18px_40px_-22px_rgb(15_23_42/0.7)] ring-1 ring-black/5 dark:shadow-[0_18px_44px_-20px_rgb(0_194_255/0.4)] dark:ring-white/10">
       <Link to={href} className="relative block" tabIndex={-1} aria-hidden="true">
-        <div className={cn('relative aspect-[16/10] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
+        <div className={cn('relative aspect-[16/11] overflow-hidden', contain ? 'bg-white' : 'bg-white/5')}>
           {image ? (
             <LoadingImage
               src={sizedImageUrl(image, 640)}
@@ -155,30 +155,30 @@ function DealMiniCard({ product }: { product: Product }) {
               decoding="async"
               referrerPolicy="no-referrer"
               frameClassName="absolute inset-0"
-              className={cn('h-full w-full', contain ? 'object-contain p-4 pb-6 mix-blend-multiply' : 'object-cover')}
+              className={cn('h-full w-full', contain ? 'object-contain p-3 pb-5 mix-blend-multiply' : 'object-cover')}
             />
           ) : null}
-          <span className="absolute start-2.5 top-2.5 inline-flex h-6 items-center gap-1 rounded-full bg-[#0b1116]/85 px-2 text-[10px] font-semibold uppercase tracking-wide">
-            <SiteIcon name="star" size={10} solid className="text-[var(--brand)]" />
+          <span className="absolute start-2 top-2 inline-flex h-5 items-center gap-1 rounded-full bg-[#0b1116]/85 px-1.5 text-[9px] font-semibold uppercase tracking-wide">
+            <SiteIcon name="star" size={9} solid className="text-[var(--brand)]" />
             {d ? t('home.spotlightDeal') : t('product.featuredPick')}
           </span>
           {d ? (
-            <span className="absolute end-2.5 top-2.5 inline-flex h-7 items-center rounded-full bg-[var(--brand)] px-2.5 font-display text-sm font-bold text-[var(--brand-fg)] shadow-glow">
+            <span className="absolute end-2 top-2 inline-flex h-6 items-center rounded-full bg-[var(--brand)] px-2 font-display text-xs font-bold text-[var(--brand-fg)] shadow-glow">
               −{d.percent}%
             </span>
           ) : null}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0b1116] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-[#0b1116] to-transparent" />
         </div>
       </Link>
 
-      <div className="relative -mt-2 flex flex-1 flex-col gap-2 p-3.5 pt-0">
-        <Link to={href} className="line-clamp-2 min-h-[2.5rem] text-[15px] font-semibold leading-tight hover:text-[var(--brand)]">
+      <div className="relative -mt-1 flex flex-1 flex-col gap-1.5 p-3 pt-0">
+        <Link to={href} className="line-clamp-2 min-h-[2.1rem] text-[13px] font-semibold leading-tight hover:text-[var(--brand)]">
           {product.name}
         </Link>
         <div className="mt-auto flex items-end justify-between gap-2">
           <div className="min-w-0 leading-tight">
-            <p className="font-display text-xl font-bold tracking-tight">{formatCurrency(product.price)}</p>
-            <p className="flex flex-wrap items-center gap-x-2 text-[11px]">
+            <p className="font-display text-base font-bold tracking-tight">{formatCurrency(product.price)}</p>
+            <p className="flex flex-wrap items-center gap-x-1.5 text-[10px]">
               {d ? <span className="text-white/45 line-through">{formatCurrency(product.compareAtPrice!)}</span> : null}
               <StockLine product={product} />
             </p>
@@ -187,9 +187,9 @@ function DealMiniCard({ product }: { product: Product }) {
             type="button"
             onClick={add}
             aria-label={t('common.addToCart')}
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition active:scale-95"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition active:scale-95"
           >
-            <SiteIcon name="cart" size={18} />
+            <SiteIcon name="cart" size={15} />
           </button>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function HomeDealsStrips({ products }: { products: Product[] }) {
   const step = () => {
     const el = scroller.current
     const child = el?.firstElementChild as HTMLElement | null
-    return child ? child.offsetWidth + 12 : (el?.clientWidth ?? 0)
+    return child ? child.offsetWidth + 10 : (el?.clientWidth ?? 0)
   }
 
   const onScroll = () => {
@@ -256,15 +256,15 @@ export function HomeDealsStrips({ products }: { products: Product[] }) {
         ref={scroller}
         onScroll={onScroll}
         onPointerDown={() => setTouched(true)}
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 pt-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto overscroll-x-contain scroll-px-4 px-4 pb-2 pt-1 [scrollbar-width:none] sm:-mx-6 sm:scroll-px-6 sm:px-6 [&::-webkit-scrollbar]:hidden"
       >
         {products.map((p) => (
-          <div key={p._id} className="w-[78%] max-w-[20rem] shrink-0 snap-start">
+          <div key={p._id} className="w-[60%] max-w-[15rem] shrink-0 snap-start sm:w-[42%] sm:max-w-[17rem]">
             <DealMiniCard product={p} />
           </div>
         ))}
       </div>
-      <div className="mt-2 flex justify-center gap-1.5">
+      <div className="mt-1 flex justify-center gap-1.5">
         {products.map((p, i) => (
           <button
             key={p._id}
