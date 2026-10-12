@@ -269,6 +269,9 @@ export const fr: Messages = {
       'Cet espace est réservé au personnel. Connectez-vous avec le compte admin pour ouvrir le back-office.',
   },
   cart: {
+    viewCart: 'Voir le panier',
+    cartTotal: 'Total du panier',
+    itemsInCart: '{count} dans le panier',
     title: 'Panier — Brynoxa',
     kicker: 'Panier',
     heading: 'Panier',

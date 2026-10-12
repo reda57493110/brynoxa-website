@@ -217,7 +217,6 @@ export function ProductDetail() {
 
   const onAddCart = () => {
     addItem(cartLine)
-    toast.success(t('product.addedToCart'))
   }
 
   // Buy now: put this product in the cart (once) and go straight to checkout

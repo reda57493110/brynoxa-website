@@ -517,3 +517,19 @@ html[lang="ar"] {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* "Added to cart" panel: rises from the bottom on phones, drops in under the header on larger screens */
+@keyframes cart-notice-up {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes cart-notice-down {
+  from { opacity: 0; transform: translateY(-0.5rem); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cart-notice { animation: cart-notice-up 240ms cubic-bezier(0.22, 1, 0.36, 1); }
+  @media (min-width: 40rem) {
+    .cart-notice { animation-name: cart-notice-down; }
+  }
+}

@@ -12,6 +12,9 @@ export type CartItem = BaseCartItem & { condition?: ProductCondition }
 
 interface CartState {
   items: CartItem[]
+  /** Last "Add to cart" (not persisted) so the store can show the added-to-cart panel */
+  lastAdded: { productId: string; qty: number; at: number } | null
+  dismissAdded: () => void
   addItem: (item: Omit<CartItem, 'qty'> & { qty?: number }) => void
   removeItem: (productId: string) => void
   updateQty: (productId: string, qty: number) => void
@@ -24,6 +27,8 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      lastAdded: null,
+      dismissAdded: () => set({ lastAdded: null }),
       addItem: (item) => {
         const qty = item.qty ?? 1
         set((state) => {
@@ -41,6 +46,7 @@ export const useCartStore = create<CartState>()(
             items: [...state.items, { ...item, qty: Math.min(qty, item.stock) }],
           }
         })
+        set({ lastAdded: { productId: item.productId, qty, at: Date.now() } })
         trackAddToCart({
           item_id: item.productId,
           item_name: item.name,
@@ -66,6 +72,6 @@ export const useCartStore = create<CartState>()(
       subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.qty, 0),
       itemCount: () => get().items.reduce((sum, i) => sum + i.qty, 0),
     }),
-    { name: 'brynoxa-cart' }
+    { name: 'brynoxa-cart', partialize: (s) => ({ items: s.items }) }
   )
 )

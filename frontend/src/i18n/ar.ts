@@ -269,6 +269,9 @@ export const ar: Messages = {
       'هذه المنطقة للموظفين. سجّل الدخول بحساب المدير لفتح لوحة التحكم.',
   },
   cart: {
+    viewCart: 'عرض السلة',
+    cartTotal: 'مجموع السلة',
+    itemsInCart: '{count} في السلة',
     title: 'السلة — برينوكسا',
     kicker: 'السلة',
     heading: 'السلة',

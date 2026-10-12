@@ -58,7 +58,6 @@ export function useAddToCart(product: Product) {
       sku: product.sku,
       condition: product.condition,
     })
-    toast.success(t('product.addedToCart'))
   }
 }
 

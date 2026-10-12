@@ -5,6 +5,7 @@ import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { WhatsAppHost } from '@/components/contact/WhatsAppHost'
 import { PushPrompt } from '@/components/push/PushPrompt'
+import { CartNotice } from '@/components/cart/CartNotice'
 import { useT } from '@/hooks/useT'
 
 const scrollPositions = new Map<string, number>()
@@ -87,7 +88,7 @@ export function StoreLayout() {
   }, [location.key, location.hash, navigationType])
 
   return (
-    <div className="flex min-h-screen max-w-full flex-col overflow-x-hidden bg-[var(--bg)] text-[var(--fg)]">
+    <div className="flex min-h-screen max-w-full flex-col overflow-x-clip bg-[var(--bg)] text-[var(--fg)]">
       <a
         href="#main-content"
         className="fixed left-3 top-3 z-[110] -translate-y-20 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-[var(--brand-fg)] transition focus:translate-y-0"
@@ -108,6 +109,7 @@ export function StoreLayout() {
       </motion.main>
       <Footer />
       <WhatsAppHost />
+      <CartNotice />
       <PushPrompt />
     </div>
   )

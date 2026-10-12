@@ -88,7 +88,6 @@ export function ProductCard({
       sku: product.sku,
       condition: product.condition,
     })
-    toast.success(t('product.addedToCart'))
   }
 
   const onWishlist = async () => {

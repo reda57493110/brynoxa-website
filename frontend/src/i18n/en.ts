@@ -267,6 +267,9 @@ export const en = {
       'This area is for staff. Sign in with the admin account to open the back office.',
   },
   cart: {
+    viewCart: 'View cart',
+    cartTotal: 'Cart total',
+    itemsInCart: '{count} in cart',
     title: 'Cart — Brynoxa',
     kicker: 'Cart',
     heading: 'Cart',
