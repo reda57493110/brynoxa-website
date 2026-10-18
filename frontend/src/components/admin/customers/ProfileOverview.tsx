@@ -334,8 +334,13 @@ function WholesaleCard({
         </div>
       ) : null}
 
-      {w.status === 'pending' ? (
+      {w.status !== 'approved' ? (
         <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
+          {w.status !== 'pending' ? (
+            <p className="text-xs text-[var(--fg-muted)]">
+              Retail customer. Choose a tier to give them wholesale or business prices — they see it in their account settings.
+            </p>
+          ) : null}
           {mode === 'reject' ? (
             <form
               className="space-y-3"
@@ -404,15 +409,17 @@ function WholesaleCard({
                         customerType: approveType,
                         paymentTerms: terms.trim() || undefined,
                       },
-                      'Wholesale account approved'
+                      w.status === 'pending' ? 'Wholesale account approved' : 'Customer upgraded'
                     )
                   }
                 >
-                  Approve
+                  {w.status === 'pending' ? 'Approve' : `Make ${approveType} customer`}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setMode('reject')}>
-                  Reject
-                </Button>
+                {w.status === 'pending' ? (
+                  <Button size="sm" variant="outline" onClick={() => setMode('reject')}>
+                    Reject
+                  </Button>
+                ) : null}
               </div>
             </>
           )}
