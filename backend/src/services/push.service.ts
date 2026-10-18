@@ -265,6 +265,29 @@ export async function notifyStaffNewOrder(order: InstanceType<typeof Order>) {
   );
 }
 
+/** Staff alert: a customer says they paid the deposit (check it, then mark it received). */
+export async function notifyStaffDepositReported(order: InstanceType<typeof Order>) {
+  if (!ensureVapid()) return;
+  const roles = STAFF_ROLES.filter((role) => hasPermission(role, 'orders:write'));
+  const staff = await User.find({ role: { $in: roles }, isActive: true }).select('_id').lean();
+  if (!staff.length) return;
+  const subscriptions = await PushSubscription.find({ user: { $in: staff.map((u) => u._id) } })
+    .select('endpoint keys locale')
+    .lean();
+  if (!subscriptions.length) return;
+  const payment = order.deposit?.payment;
+  await deliver(
+    subscriptions,
+    () => ({
+      title: `Deposit sent · ${order.orderNumber} — ${formatMad(order.deposit?.amount ?? 0)}`,
+      body: `${order.shippingAddress.fullName} paid with ${payment?.methodName ?? '—'}${payment?.reference ? ` · ref ${payment.reference}` : ''}. Check it and mark it received.`,
+      url: `/admin/orders/${order._id}`,
+      tag: `admin-deposit-${order.orderNumber}`,
+    }),
+    { urgency: 'high' }
+  );
+}
+
 const ORDER_STATUS_COPY: Partial<
   Record<OrderStatus, Record<PushLocale, { title: string; body: string }>>
 > = {

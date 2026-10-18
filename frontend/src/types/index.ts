@@ -205,6 +205,29 @@ export interface OrderDeposit {
   source: 'products' | 'admin'
   status: 'pending' | 'received'
   receivedAt?: string
+  /** What the customer reported after paying; staff still checks it and marks it received */
+  payment?: DepositPaymentReport
+}
+
+export interface DepositPaymentReport {
+  methodId: string
+  methodName: string
+  reference?: string
+  note?: string
+  hasReceipt: boolean
+  reportedAt: string
+}
+
+export type DepositMethodType = 'bank' | 'cashplus' | 'wafacash' | 'barid' | 'other'
+
+/** A way to pay a deposit, set in Admin → Settings */
+export interface DepositMethod {
+  id: string
+  type: DepositMethodType
+  name: string
+  holder: string
+  account: string
+  note: string
 }
 
 export interface OrderItem {
@@ -363,6 +386,7 @@ export interface StoreSettings {
   supportEmail: string
   codEnabled: boolean
   depositInstructions?: string
+  depositMethods?: DepositMethod[]
   emailNotifications?: Partial<Record<EmailEvent, boolean>>
   emailMessages?: Partial<Record<EmailMessageEvent, string>>
   wholesaleTiers?: WholesaleTier[]

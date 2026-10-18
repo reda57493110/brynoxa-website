@@ -9,6 +9,7 @@ import {
   updateOrderItemsSchema,
   updateOrderStatusSchema,
   orderDepositSchema,
+  depositPaymentSchema,
   orderContactSchema,
   validateCouponSchema,
   guestOrderReceiptSchema,
@@ -56,6 +57,13 @@ router.patch(
   validate(updateOrderItemsSchema),
   order.updateMyOrderItems
 );
+router.post(
+  '/orders/:orderNumber/deposit-payment',
+  requireAuth,
+  orderLimiter,
+  validate(depositPaymentSchema),
+  order.reportMyDepositPayment
+);
 router.get('/orders/:orderNumber', requireAuth, order.myOrder);
 router.post('/coupons/validate', optionalAuth, validate(validateCouponSchema), order.validateCoupon);
 
@@ -81,6 +89,12 @@ router.patch(
   requirePermission('orders:write'),
   validate(orderDepositSchema),
   order.setOrderDeposit
+);
+router.get(
+  '/admin/orders/:id/deposit-receipt',
+  requireAuth,
+  requirePermission('orders:read'),
+  order.depositReceipt
 );
 router.delete(
   '/admin/orders/:id',

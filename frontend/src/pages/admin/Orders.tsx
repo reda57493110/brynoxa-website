@@ -81,6 +81,7 @@ function paymentBadge(o: Order): { label: string; variant: BadgeVariant } {
   if (o.paymentStatus === 'paid') return { label: 'Paid', variant: 'success' }
   if (o.paymentStatus === 'failed') return { label: 'Not collected', variant: 'muted' }
   if (o.deposit?.status === 'received') return { label: 'Deposit paid', variant: 'brand' }
+  if (o.deposit?.status === 'pending' && o.deposit.amount > 0 && o.deposit.payment) return { label: 'Deposit sent · check', variant: 'brand' }
   if (o.deposit?.status === 'pending' && o.deposit.amount > 0) return { label: 'Deposit due', variant: 'warning' }
   return { label: 'COD', variant: 'default' }
 }

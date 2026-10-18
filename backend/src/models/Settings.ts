@@ -54,6 +54,22 @@ export const DEFAULT_SEGMENT_SETTINGS: ICustomerSegmentSettings = {
 export const HERO_PAGES = ['home', 'shop', 'services', 'contact'] as const;
 export type HeroPage = (typeof HERO_PAGES)[number];
 
+/** Ways customers can pay a deposit (shown on their order). */
+export const DEPOSIT_METHOD_TYPES = ['bank', 'cashplus', 'wafacash', 'barid', 'other'] as const;
+export type DepositMethodType = (typeof DEPOSIT_METHOD_TYPES)[number];
+export interface DepositMethod {
+  id: string;
+  type: DepositMethodType;
+  /** Shown name, e.g. "CIH Bank" or "Cash Plus" */
+  name: string;
+  /** Who receives the money */
+  holder: string;
+  /** RIB, account or phone number to send to */
+  account: string;
+  note: string;
+}
+export const MAX_DEPOSIT_METHODS = 8;
+
 export interface ISettings extends Document {
   storeName: string;
   currency: string;
@@ -66,6 +82,7 @@ export interface ISettings extends Document {
   codEnabled: boolean;
   /** Shown to customers whose order needs a deposit: how to pay it (bank RIB, transfer agency…). */
   depositInstructions: string;
+  depositMethods: DepositMethod[];
   /** On/off per automatic email; missing keys count as on. */
   emailNotifications: Partial<Record<EmailEvent, boolean>>;
   /** Optional extra paragraph added to a customer email. */
@@ -105,6 +122,22 @@ const settingsSchema = new Schema<ISettings>(
     supportEmail: { type: String, default: 'brynoxa.shop@gmail.com' },
     codEnabled: { type: Boolean, default: true },
     depositInstructions: { type: String, default: '', maxlength: 2000 },
+    depositMethods: {
+      type: [
+        new Schema(
+          {
+            id: { type: String, required: true },
+            type: { type: String, enum: DEPOSIT_METHOD_TYPES, required: true },
+            name: { type: String, default: '', maxlength: 60 },
+            holder: { type: String, default: '', maxlength: 80 },
+            account: { type: String, default: '', maxlength: 80 },
+            note: { type: String, default: '', maxlength: 300 },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     emailNotifications: {
       type: Object.fromEntries(EMAIL_EVENTS.map((key) => [key, { type: Boolean, default: true }])),
       default: () => ({}),
@@ -166,6 +199,32 @@ const OBJECT_ID = /^[a-f0-9]{24}$/i;
 export const HERO_NONE = 'none';
 
 export const MAX_HOME_DEALS = 4;
+
+/** Valid deposit payment methods from admin input (at most MAX_DEPOSIT_METHODS). */
+export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
+  if (!Array.isArray(input)) return [];
+  const text = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
+  const out: DepositMethod[] = [];
+  const ids = new Set<string>();
+  for (const row of input) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const type = DEPOSIT_METHOD_TYPES.includes(r.type as DepositMethodType) ? (r.type as DepositMethodType) : 'other';
+    const method = {
+      id: text(r.id, 24) || Math.random().toString(36).slice(2, 10),
+      type,
+      name: text(r.name, 60),
+      holder: text(r.holder, 80),
+      account: text(r.account, 80),
+      note: text(r.note, 300),
+    };
+    if (!method.name && !method.account) continue;
+    if (ids.has(method.id)) method.id = Math.random().toString(36).slice(2, 10);
+    ids.add(method.id);
+    out.push(method);
+  }
+  return out.slice(0, MAX_DEPOSIT_METHODS);
+}
 
 /** Unique, valid product ids for the home page deals, in the given order (max 4). */
 export function sanitizeHomeDeals(input: unknown): string[] {

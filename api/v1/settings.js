@@ -17,6 +17,7 @@ const ALLOWED_FIELDS = [
   'taxRate',
   'supportEmail',
   'depositInstructions',
+  'depositMethods',
   'emailNotifications',
   'emailMessages',
   'wholesaleTiers',
@@ -48,6 +49,7 @@ module.exports = async (req, res) => {
         getSettings,
         sanitizePageHeroProducts,
         sanitizeHomeDeals,
+        sanitizeDepositMethods,
         sanitizeEmailNotifications,
         sanitizeEmailMessages,
         sanitizeSegmentSettings,
@@ -77,6 +79,8 @@ module.exports = async (req, res) => {
           settings[key] = sanitizeEmailMessages(body[key], settings.emailMessages);
         } else if (key === 'depositInstructions') {
           settings[key] = String(body[key]).slice(0, 2000);
+        } else if (key === 'depositMethods') {
+          settings[key] = sanitizeDepositMethods(body[key]);
         } else if (key === 'homeDeals') {
           settings[key] = sanitizeHomeDeals(body[key]);
         } else if (key === 'pageHeroProducts') {

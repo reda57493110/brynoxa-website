@@ -20,6 +20,11 @@ export const ordersApi = {
   cancel: (orderNumber: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/cancel`),
 
+  reportDeposit: (
+    orderNumber: string,
+    payload: { methodId: string; reference?: string; note?: string; receipt?: string }
+  ) => api.post<ApiResponse<Order>>(`/orders/${orderNumber}/deposit-payment`, payload),
+
   updateItems: (orderNumber: string, items: { productId: string; qty: number }[]) =>
     api.patch<ApiResponse<Order>>(`/orders/${orderNumber}/items`, { items }),
 }

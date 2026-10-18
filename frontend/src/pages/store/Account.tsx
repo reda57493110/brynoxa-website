@@ -3,6 +3,7 @@ import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Button } from '@/components/ui/Button'
 import { Container } from '@/components/ui/Container'
 import { AccountHeader } from '@/components/layout/AccountHeader'
+import { DepositDueBanner } from '@/components/order/DepositDueBanner'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { authApi } from '@/api/authApi'
 import { useAuthStore } from '@/store/authStore'
@@ -42,6 +43,7 @@ export function Account() {
         meta={user?.name ? <span className="text-sm text-[var(--fg-muted)]">{user.name}</span> : null}
       />
       <Container className="pt-5 pb-8 sm:pb-10">
+        <DepositDueBanner className="mb-6" />
         <div className="mb-6 flex flex-wrap gap-3">
           <Link
             to="/shop"

@@ -110,6 +110,8 @@ export const adminApi = {
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
     logContact: (id: string, payload: Pick<OrderContactAttempt, 'channel' | 'outcome' | 'note'>) =>
       api.post<ApiResponse<Order>>(`/admin/orders/${id}/contacts`, payload),
+    depositReceipt: (id: string) =>
+      api.get<Blob>(`/admin/orders/${id}/deposit-receipt`, { responseType: 'blob' }),
     setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
     recordRefund: (id: string, payload: { amount: number; reason: string; itemsReturned?: boolean }) =>

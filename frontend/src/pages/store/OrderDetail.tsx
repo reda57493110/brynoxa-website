@@ -222,7 +222,7 @@ export function OrderDetail() {
         }
       />
       <Container className="pt-5 pb-8 sm:pb-10">
-        <DepositNotice order={o} className="mb-4" />
+        <DepositNotice order={o} className="mb-4" canReport />
         {canEdit ? (
           <p className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-sm text-[var(--fg)]">
             {t('orders.editHint')}

@@ -44,6 +44,18 @@ export interface IOrderDeposit {
   source: 'products' | 'admin';
   status: 'pending' | 'received';
   receivedAt?: Date;
+  /** What the customer reported after paying (staff still checks and marks it received). */
+  payment?: IDepositPayment;
+}
+
+export interface IDepositPayment {
+  methodId: string;
+  /** Method name at the time, e.g. "Cash Plus" */
+  methodName: string;
+  reference?: string;
+  note?: string;
+  hasReceipt: boolean;
+  reportedAt: Date;
 }
 
 export interface IOrderTimeline {
@@ -167,8 +179,21 @@ const contactAttemptSchema = new Schema<IOrderContactAttempt>(
   { _id: false }
 );
 
+const depositPaymentSchema = new Schema<IDepositPayment>(
+  {
+    methodId: { type: String, required: true },
+    methodName: { type: String, required: true },
+    reference: { type: String, maxlength: 80 },
+    note: { type: String, maxlength: 300 },
+    hasReceipt: { type: Boolean, default: false },
+    reportedAt: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
 const depositSchema = new Schema<IOrderDeposit>(
   {
+    payment: { type: depositPaymentSchema, default: undefined },
     amount: { type: Number, required: true, min: 0 },
     source: { type: String, enum: ['products', 'admin'], required: true },
     status: { type: String, enum: ['pending', 'received'], default: 'pending' },

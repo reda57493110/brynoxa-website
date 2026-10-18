@@ -22,6 +22,8 @@ import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
 import { orderStatusVariant } from '@/lib/orderStatus'
 import type { Order } from '@/types'
+import { DepositDueBanner } from '@/components/order/DepositDueBanner'
+import { depositState } from '@/components/order/DepositNotice'
 
 
 export function Orders() {
@@ -75,9 +77,11 @@ export function Orders() {
           />
         ) : (
           <div className="space-y-3">
+            <DepositDueBanner className="mb-5" />
             {orders.data.map((order) => {
               const open = Boolean(expanded[order._id])
               const pending = order.orderStatus === 'pending'
+              const dep = depositState(order)
               return (
                 <div key={order._id} className={`${surfaceCard} overflow-hidden`}>
                   <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -114,7 +118,12 @@ export function Orders() {
                     </div>
 
                     <div className="flex flex-col items-stretch gap-3 sm:items-end">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2 sm:justify-end sm:gap-3">
+                        {dep ? (
+                          <Badge variant={dep === 'paid' ? 'success' : dep === 'reported' ? 'default' : 'warning'}>
+                            {t(dep === 'paid' ? 'deposit.badgePaid' : dep === 'reported' ? 'deposit.badgeReported' : 'deposit.badgeDue')}
+                          </Badge>
+                        ) : null}
                         <Badge variant={orderStatusVariant(order.orderStatus)}>
                           {t(orderStatusKey(order.orderStatus))}
                         </Badge>

@@ -77,7 +77,7 @@ export function OrderConfirmation() {
               {t('cart.warrantyFromDelivery')}
             </li>
           </ul>
-          {order.data ? <DepositNotice order={order.data} className="mt-5 sm:mt-6" /> : null}
+          {order.data ? <DepositNotice order={order.data} className="mt-5 sm:mt-6" canReport={isAuth} /> : null}
           {order.data?.orderStatus === 'pending' && isAuth ? (
             <p className="mt-5 text-sm text-[var(--fg-muted)] sm:mt-6">{t('orders.cancelHint')}</p>
           ) : null}

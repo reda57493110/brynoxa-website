@@ -235,6 +235,19 @@ export const settingsSchema = z.object({
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
   depositInstructions: z.string().max(2000).optional(),
+  depositMethods: z
+    .array(
+      z.object({
+        id: z.string().max(24).optional(),
+        type: z.string().max(20),
+        name: z.string().max(60).optional(),
+        holder: z.string().max(80).optional(),
+        account: z.string().max(80).optional(),
+        note: z.string().max(300).optional(),
+      })
+    )
+    .max(8)
+    .optional(),
   emailNotifications: z.record(z.string(), z.boolean()).optional(),
   emailMessages: z.record(z.string(), z.string().max(1000)).optional(),
   inventoryStatuses: z
@@ -576,4 +589,12 @@ export const repairCompleteSchema = z.object({
   finalStatus: z.enum(['new', 'refurbished', 'used', 'defective', 'write-off']),
   targetProductId: objectId.optional(),
   qcNote: z.string().trim().max(500).optional(),
+});
+
+/** Customer: "I've paid the deposit" — method, reference and/or a receipt photo (data URL). */
+export const depositPaymentSchema = z.object({
+  methodId: z.string().max(24),
+  reference: z.string().trim().max(80).optional(),
+  note: z.string().trim().max(300).optional(),
+  receipt: z.string().max(2_000_000).optional(),
 });

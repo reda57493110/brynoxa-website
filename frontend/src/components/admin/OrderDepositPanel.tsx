@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
@@ -7,7 +7,33 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
+import { Modal } from '@/components/ui/Modal'
+import { Spinner } from '@/components/ui/Spinner'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { Order } from '@/types'
+
+/** The customer's receipt photo, loaded with staff auth (it is never public). */
+function ReceiptViewer({ orderId, open, onClose }: { orderId: string; open: boolean; onClose: () => void }) {
+  const receipt = useQuery({
+    queryKey: ['admin-deposit-receipt', orderId],
+    queryFn: async () => URL.createObjectURL((await adminApi.orders.depositReceipt(orderId)).data),
+    enabled: open,
+    staleTime: Infinity,
+  })
+  return (
+    <Modal open={open} onClose={onClose} title="Deposit receipt" size="md">
+      {receipt.isLoading ? (
+        <div className="flex justify-center py-10"><Spinner /></div>
+      ) : receipt.data ? (
+        <a href={receipt.data} target="_blank" rel="noreferrer" className="block">
+          <img src={receipt.data} alt="Deposit receipt sent by the customer" className="max-h-[70vh] w-full rounded-lg object-contain" />
+        </a>
+      ) : (
+        <p className="text-sm text-[var(--fg-muted)]">The receipt could not be loaded.</p>
+      )}
+    </Modal>
+  )
+}
 
 /** Staff view of an order's deposit: set or remove it while pending, and mark it received. */
 export function OrderDepositPanel({ order }: { order: Order }) {
@@ -15,6 +41,8 @@ export function OrderDepositPanel({ order }: { order: Order }) {
   const deposit = order.deposit
   const editable = order.orderStatus === 'pending' || order.orderStatus === 'no_answer'
   const [amount, setAmount] = useState('')
+  const [viewReceipt, setViewReceipt] = useState(false)
+  const payment = deposit?.payment
 
   useEffect(() => {
     setAmount(deposit?.amount ? String(deposit.amount) : '')
@@ -45,7 +73,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
           deposit.status === 'received' ? (
             <Badge variant="success">Received</Badge>
           ) : (
-            <Badge variant="warning">Awaiting deposit</Badge>
+            <Badge variant={payment ? 'brand' : 'warning'}>{payment ? 'Customer says paid' : 'Awaiting deposit'}</Badge>
           )
         ) : (
           <Badge variant="muted">None</Badge>
@@ -73,6 +101,42 @@ export function OrderDepositPanel({ order }: { order: Order }) {
             <p className="text-xs text-[var(--fg-muted)]">Received {formatDateTime(deposit.receivedAt)}</p>
           ) : null}
         </dl>
+      ) : null}
+
+      {payment ? (
+        <div className="mt-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] p-3 text-sm">
+          <p className="flex items-center gap-1.5 font-medium">
+            <SiteIcon name="banknote" size={14} className="text-[var(--brand-text)]" />
+            Customer payment · {payment.methodName}
+          </p>
+          <dl className="mt-2 space-y-1 text-xs">
+            <div className="flex justify-between gap-3">
+              <dt className="text-[var(--fg-muted)]">Sent</dt>
+              <dd>{formatDateTime(payment.reportedAt)}</dd>
+            </div>
+            {payment.reference ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-[var(--fg-muted)]">Reference</dt>
+                <dd className="break-all font-mono font-semibold">{payment.reference}</dd>
+              </div>
+            ) : null}
+            {payment.note ? (
+              <div className="flex justify-between gap-3">
+                <dt className="text-[var(--fg-muted)]">Note</dt>
+                <dd className="text-end">{payment.note}</dd>
+              </div>
+            ) : null}
+          </dl>
+          {payment.hasReceipt ? (
+            <Button size="sm" variant="outline" className="mt-2 h-8" onClick={() => setViewReceipt(true)}>
+              <SiteIcon name="external" size={13} /> View receipt photo
+            </Button>
+          ) : null}
+          {deposit?.status === 'pending' ? (
+            <p className="mt-2 text-[11px] text-[var(--fg-muted)]">Check the money arrived, then click Mark as received.</p>
+          ) : null}
+          <ReceiptViewer orderId={order._id} open={viewReceipt} onClose={() => setViewReceipt(false)} />
+        </div>
       ) : null}
 
       {deposit?.status === 'pending' && editable ? (

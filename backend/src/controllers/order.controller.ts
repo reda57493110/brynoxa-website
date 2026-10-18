@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as orderService from '../services/order.service';
 import * as authService from '../services/auth.service';
+import * as depositPayment from '../services/depositPayment.service';
 import { param } from '../utils/params';
 import { AuthRequest } from '../types/express';
 
@@ -135,4 +136,16 @@ export const setOrderDeposit = asyncHandler(async (req: AuthRequest, res: Respon
 export const deleteOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   await orderService.deleteOrder(param(req, 'id'));
   sendSuccess(res, null, 'Order deleted');
+});
+
+export const reportMyDepositPayment = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await depositPayment.reportDepositPayment(req.user!.userId, param(req, 'orderNumber'), req.body);
+  sendSuccess(res, orderService.customerOrderView(order), 'Payment details sent');
+});
+
+export const depositReceipt = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const receipt = await depositPayment.getDepositReceipt(param(req, 'id'));
+  res.setHeader('Content-Type', receipt.contentType);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.send(receipt.data);
 });

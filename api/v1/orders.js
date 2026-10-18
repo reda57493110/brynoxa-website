@@ -167,6 +167,16 @@ module.exports = async (req, res) => {
         return;
       }
 
+      if (action === 'deposit-payment' && req.method === 'POST') {
+        const user = await requireUser(req, res);
+        if (!user) return;
+        const body = parseBody(schemas.depositPaymentSchema, await readJsonBody(req));
+        const { reportDepositPayment } = require('../../backend/dist/services/depositPayment.service');
+        const order = await reportDepositPayment(user._id.toString(), orderNumber, body);
+        sendJson(res, 200, { success: true, message: 'Payment details sent', data: orderService.customerOrderView(order) });
+        return;
+      }
+
       if (action === 'cancel' && req.method === 'POST') {
         const user = await requireUser(req, res);
         if (!user) return;
