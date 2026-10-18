@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Navbar } from '@/components/layout/Navbar'
+import { AccountBar } from '@/components/layout/AccountBar'
 import { Footer } from '@/components/layout/Footer'
 import { WhatsAppHost } from '@/components/contact/WhatsAppHost'
 import { PushPrompt } from '@/components/push/PushPrompt'
@@ -23,6 +24,7 @@ export function StoreLayout() {
   const navigationType = useNavigationType()
   const reduceMotion = useReducedMotion()
   const t = useT()
+  const isAccount = location.pathname === '/account' || location.pathname.startsWith('/account/')
 
   useLayoutEffect(() => {
     const previousRestoration = window.history.scrollRestoration
@@ -95,7 +97,8 @@ export function StoreLayout() {
       >
         {t('common.skipToContent')}
       </a>
-      <Navbar />
+      {/* Account pages: no store menu or footer, just a way back to the store */}
+      {isAccount ? <AccountBar /> : <Navbar />}
       {/* No exit fade — mode="wait" + opacity 0 made the page flash black between routes */}
       <motion.main
         key={location.pathname}
@@ -107,7 +110,7 @@ export function StoreLayout() {
       >
         <Outlet />
       </motion.main>
-      <Footer />
+      {isAccount ? null : <Footer />}
       <WhatsAppHost />
       <CartNotice />
       <PushPrompt />

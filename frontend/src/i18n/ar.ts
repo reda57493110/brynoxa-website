@@ -431,6 +431,7 @@ export const ar: Messages = {
     continueShopping: 'متابعة التسوق',
   },
   account: {
+    backToStore: "العودة إلى المتجر",
     title: 'الحساب — برينوكسا',
     heading: 'الحساب',
     continueShopping: 'متابعة التسوق',

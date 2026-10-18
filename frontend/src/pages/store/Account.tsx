@@ -45,12 +45,6 @@ export function Account() {
       <Container className="pt-5 pb-8 sm:pb-10">
         <DepositDueBanner className="mb-6" />
         <div className="mb-6 flex flex-wrap gap-3">
-          <Link
-            to="/shop"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 ring-brand"
-          >
-            {t('account.continueShopping')}
-          </Link>
           <Button type="button" variant="outline" className="rounded-full" onClick={signOut}>
             <SiteIcon name="logout" size={16} />
             {t('common.signOut')}

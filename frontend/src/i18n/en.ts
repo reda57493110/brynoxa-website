@@ -429,6 +429,7 @@ export const en = {
     continueShopping: 'Continue shopping',
   },
   account: {
+    backToStore: "Back to store",
     title: 'Account — Brynoxa',
     heading: 'Account',
     continueShopping: 'Continue shopping',

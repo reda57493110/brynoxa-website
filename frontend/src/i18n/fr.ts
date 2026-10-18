@@ -435,6 +435,7 @@ export const fr: Messages = {
     continueShopping: 'Continuer les achats',
   },
   account: {
+    backToStore: "Retour à la boutique",
     title: 'Compte — Brynoxa',
     heading: 'Compte',
     continueShopping: 'Continuer vos achats',
