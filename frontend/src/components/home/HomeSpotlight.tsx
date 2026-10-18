@@ -71,7 +71,7 @@ const isLow = (p: Product) => p.stock > 0 && p.stock <= (p.lowStockThreshold ?? 
 /** "−14%" sticker in the brand colour. */
 /**
  * Discount sticker: brand-blue gradient disc with "-11%" and a small "OFF" label, a crisp outline
- * (white in light mode, dark in dark mode), a soft glow and a slow pulse ring.
+ * (white in light mode, dark in dark mode) and a soft glow.
  * Uses a plain hyphen: the display font draws the true minus sign (−) like a tilde.
  */
 function DealSticker({ percent, className }: { percent: number; className?: string }) {
@@ -79,15 +79,11 @@ function DealSticker({ percent, className }: { percent: number; className?: stri
   return (
     <span
       className={cn(
-        'relative inline-flex flex-col items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_26%,#9be8ff_0%,var(--brand)_48%,#0091c2_100%)] text-[var(--brand-fg)] shadow-[0_10px_28px_-6px_rgb(0_194_255/0.75)] ring-[3px] ring-white dark:ring-[#0b1116]',
+        'relative inline-flex flex-col items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_26%,#9be8ff_0%,var(--brand)_48%,#0091c2_100%)] text-[var(--brand-fg)] shadow-[0_8px_20px_-8px_rgb(0_145_194/0.6)] ring-[3px] ring-white dark:ring-[#0b1116]',
         className
       )}
       aria-label={`-${percent}% ${t('home.offLabel')}`}
     >
-      <span
-        className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[var(--brand)] motion-safe:animate-[sticker-pulse_2.6s_ease-out_infinite]"
-        aria-hidden="true"
-      />
       <span className="font-display font-extrabold leading-none tracking-tight" aria-hidden="true">
         <span className="font-sans">-</span>
         {percent}
@@ -116,15 +112,16 @@ export function StockLine({ product, className }: { product: Product; className?
 }
 
 /**
- * The glowing frame around the spotlight (float, halo, rotating border light, deal sticker).
+ * The frame around the spotlight (still border, soft dark-mode halo, deal sticker). Nothing moves but
+ * the products inside, so it stays calm and matches both themes.
  * Rendered once; the products inside it change without rebuilding it.
  */
 function SpotlightShell({ products, active, children }: { products: Product[]; active: number; children: ReactNode }) {
   return (
-    <div className="relative will-change-transform motion-safe:animate-[spotlight-float_7s_ease-in-out_infinite]">
+    <div className="relative">
       {/* Halo */}
       <div
-        className="pointer-events-none absolute -inset-4 rounded-[3rem] sm:-inset-8 bg-[radial-gradient(closest-side,rgb(0_170_230/0.16),transparent)] dark:bg-[radial-gradient(closest-side,rgb(0_194_255/0.4),transparent)]"
+        className="pointer-events-none absolute -inset-4 rounded-[3rem] sm:-inset-8 hidden dark:block dark:bg-[radial-gradient(closest-side,rgb(0_194_255/0.22),transparent)]"
         aria-hidden="true"
       />
 
@@ -143,12 +140,8 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
         ) : null
       })}
 
-      {/* Rotating light on the border */}
-      <div className="group relative overflow-hidden rounded-[1.6rem] p-[1.5px] shadow-[0_28px_60px_-26px_rgb(15_23_42/0.5)] transition duration-300 hover:-translate-y-1 dark:shadow-[0_30px_80px_-24px_rgb(0_0_0/0.8)]">
-        <div
-          className="absolute inset-[-60%] bg-[conic-gradient(from_0deg,transparent_0deg,var(--brand)_70deg,transparent_140deg,transparent_200deg,rgb(122_223_255/0.7)_260deg,transparent_320deg)] will-change-transform motion-safe:animate-[spotlight-spin_9s_linear_infinite]"
-          aria-hidden="true"
-        />
+      {/* Still border: neutral in light mode, a faint brand tint in dark mode */}
+      <div className="group relative overflow-hidden rounded-[1.6rem] bg-[#dfe5ec] p-px shadow-[0_24px_50px_-28px_rgb(15_23_42/0.35)] dark:bg-[linear-gradient(160deg,rgb(0_194_255/0.45),rgb(255_255_255/0.08)_45%,rgb(0_194_255/0.25))] dark:shadow-[0_30px_80px_-24px_rgb(0_0_0/0.8)]">
         {/* Products stacked in the same cell: the frame keeps the tallest height, so it never jumps */}
         <div className="relative grid">{children}</div>
       </div>

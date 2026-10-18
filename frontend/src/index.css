@@ -417,18 +417,6 @@ html[lang="ar"] {
 }
 
 /* Home deals: discount sticker pulse ring */
-@keyframes sticker-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  70%,
-  100% {
-    transform: scale(1.35);
-    opacity: 0;
-  }
-}
-
 /* Home deals: time left before the next deal */
 @keyframes deal-progress {
   from {
@@ -436,22 +424,6 @@ html[lang="ar"] {
   }
   to {
     transform: scaleX(1);
-  }
-}
-
-@keyframes spotlight-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-@keyframes spotlight-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 
