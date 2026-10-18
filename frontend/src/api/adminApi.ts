@@ -110,6 +110,12 @@ export const adminApi = {
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
     logContact: (id: string, payload: Pick<OrderContactAttempt, 'channel' | 'outcome' | 'note'>) =>
       api.post<ApiResponse<Order>>(`/admin/orders/${id}/contacts`, payload),
+    addDepositProof: (id: string, image: string) =>
+      api.post<ApiResponse<Order>>(`/admin/orders/${id}/deposit-proofs`, { image }),
+    removeDepositProof: (id: string, proofId: string) =>
+      api.delete<ApiResponse<Order>>(`/admin/orders/${id}/deposit-proofs/${proofId}`),
+    depositProofImage: (id: string, proofId: string) =>
+      api.get<Blob>(`/admin/orders/${id}/deposit-proofs/${proofId}`, { responseType: 'blob' }),
     depositReceipt: (id: string) =>
       api.get<Blob>(`/admin/orders/${id}/deposit-receipt`, { responseType: 'blob' }),
     setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>

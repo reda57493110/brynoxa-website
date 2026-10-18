@@ -661,6 +661,8 @@ export const en = {
     ],
   },
   deposit: {
+    openPhoto: "Open full size",
+    proofTitle: 'Payment proof',
     typeBank: "Bank transfer",
     typeCashplus: "Cash Plus",
     typeWafacash: "Wafacash",

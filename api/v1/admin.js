@@ -462,7 +462,7 @@ module.exports = async (req, res) => {
     }
 
     // Refunds are recorded by the Express app
-    if (/^orders\/[^/]+\/(refunds|returns|contacts|deposit-receipt)$/.test(route)) {
+    if (/^orders\/[^/]+\/(refunds|returns|contacts|deposit-receipt|deposit-proofs(\/[a-f0-9]{24})?)$/.test(route)) {
       await delegateToExpress(req, res, route, query);
       return;
     }

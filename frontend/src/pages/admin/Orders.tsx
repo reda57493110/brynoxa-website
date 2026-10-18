@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -114,6 +115,7 @@ export function Orders() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const stats = useAdminStats()
+  const [recording, setRecording] = useState(false)
   const [params, setParams] = useSearchParams()
   // A status, "group:<group>" or "attention"
   const status = params.get('status') || ''
@@ -244,6 +246,14 @@ export function Orders() {
     <div className={cn('min-w-0 space-y-3', selected.size > 0 && 'pb-20')}>
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setRecording(true)}
+          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
+        >
+          <SiteIcon name="banknote" size={13} /> Record deposit
+        </button>
         {attention ? (
           <button
             type="button"
@@ -259,7 +269,9 @@ export function Orders() {
             {attention} need{attention === 1 ? 's' : ''} attention
           </button>
         ) : null}
+        </div>
       </div>
+      <RecordDepositDialog open={recording} onClose={() => setRecording(false)} />
 
       {/* Toolbar */}
       <div className="flex min-w-0 flex-wrap items-center gap-2">

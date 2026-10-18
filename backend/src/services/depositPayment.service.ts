@@ -1,5 +1,7 @@
 import { Order } from '../models/Order';
 import { DepositReceipt } from '../models/DepositReceipt';
+import { DepositProof } from '../models/DepositProof';
+import { User } from '../models/User';
 import { getSettings } from '../models/Settings';
 import { ApiError } from '../utils/ApiError';
 import { notifyStaffDepositReported } from './push.service';
@@ -93,4 +95,63 @@ export async function getDepositReceipt(orderId: string) {
   const receipt = await DepositReceipt.findOne({ order: orderId });
   if (!receipt) throw new ApiError(404, 'No receipt for this order');
   return { data: receipt.data, contentType: receipt.contentType };
+}
+
+export const MAX_DEPOSIT_PROOFS = 6;
+
+/** Staff: add a proof photo (screenshot of the transfer, Cash Plus slip…) to an order's deposit. */
+export async function addDepositProof(orderId: string, dataUrl: string, staffId?: string) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (!order.deposit || !(order.deposit.amount > 0)) throw new ApiError(400, 'Set a deposit amount first');
+  const proofs = order.deposit.proofs ?? [];
+  if (proofs.length >= MAX_DEPOSIT_PROOFS) {
+    throw new ApiError(400, `Up to ${MAX_DEPOSIT_PROOFS} photos per deposit. Delete one first.`);
+  }
+  const image = decodeReceipt(dataUrl);
+  const staff = staffId ? await User.findById(staffId).select('name').lean() : null;
+  const doc = await DepositProof.create({
+    order: order._id,
+    data: image.data,
+    contentType: image.contentType,
+    size: image.data.length,
+    addedBy: staffId,
+  });
+  order.deposit.proofs = [...proofs, { id: String(doc._id), addedAt: new Date(), addedByName: staff?.name }];
+  order.timeline.push({ status: order.orderStatus, note: 'Deposit proof photo added', internal: true, at: new Date() });
+  order.markModified('deposit');
+  await order.save();
+  return order;
+}
+
+/** Staff: delete a proof photo. */
+export async function removeDepositProof(orderId: string, proofId: string) {
+  const order = await Order.findById(orderId);
+  if (!order) throw new ApiError(404, 'Order not found');
+  const proofs = order.deposit?.proofs ?? [];
+  if (!order.deposit || !proofs.some((p) => p.id === proofId)) throw new ApiError(404, 'Photo not found');
+  order.deposit.proofs = proofs.filter((p) => p.id !== proofId);
+  order.markModified('deposit');
+  await order.save();
+  await DepositProof.deleteOne({ _id: proofId, order: order._id });
+  return order;
+}
+
+async function proofImage(orderId: unknown, proofId: string) {
+  if (!/^[a-f0-9]{24}$/i.test(proofId)) throw new ApiError(404, 'Photo not found');
+  const proof = await DepositProof.findOne({ _id: proofId, order: orderId });
+  if (!proof) throw new ApiError(404, 'Photo not found');
+  return { data: proof.data, contentType: proof.contentType };
+}
+
+/** Staff: one proof photo. */
+export function getDepositProofImage(orderId: string, proofId: string) {
+  return proofImage(orderId, proofId);
+}
+
+/** Customer: a proof photo on their own order. */
+export async function getMyDepositProofImage(userId: string, orderNumber: string, proofId: string) {
+  const order = await Order.findOne({ orderNumber, user: userId }).select('_id').lean();
+  if (!order) throw new ApiError(404, 'Order not found');
+  return proofImage(order._id, proofId);
 }

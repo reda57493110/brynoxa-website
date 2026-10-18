@@ -10,6 +10,7 @@ import {
   updateOrderStatusSchema,
   orderDepositSchema,
   depositPaymentSchema,
+  depositProofSchema,
   orderContactSchema,
   validateCouponSchema,
   guestOrderReceiptSchema,
@@ -64,6 +65,7 @@ router.post(
   validate(depositPaymentSchema),
   order.reportMyDepositPayment
 );
+router.get('/orders/:orderNumber/deposit-proofs/:proofId', requireAuth, order.myDepositProofImage);
 router.get('/orders/:orderNumber', requireAuth, order.myOrder);
 router.post('/coupons/validate', optionalAuth, validate(validateCouponSchema), order.validateCoupon);
 
@@ -95,6 +97,25 @@ router.get(
   requireAuth,
   requirePermission('orders:read'),
   order.depositReceipt
+);
+router.post(
+  '/admin/orders/:id/deposit-proofs',
+  requireAuth,
+  requirePermission('orders:write'),
+  validate(depositProofSchema),
+  order.addDepositProof
+);
+router.get(
+  '/admin/orders/:id/deposit-proofs/:proofId',
+  requireAuth,
+  requirePermission('orders:read'),
+  order.depositProofImage
+);
+router.delete(
+  '/admin/orders/:id/deposit-proofs/:proofId',
+  requireAuth,
+  requirePermission('orders:write'),
+  order.removeDepositProof
 );
 router.delete(
   '/admin/orders/:id',

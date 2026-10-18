@@ -598,3 +598,6 @@ export const depositPaymentSchema = z.object({
   note: z.string().trim().max(300).optional(),
   receipt: z.string().max(2_000_000).optional(),
 });
+
+/** Staff: a deposit proof photo as a data URL (resized in the browser). */
+export const depositProofSchema = z.object({ image: z.string().min(30).max(2_000_000) });

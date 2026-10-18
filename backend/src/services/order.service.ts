@@ -358,6 +358,10 @@ export async function updateUserOrderItems(
 
   order.items = orderItems;
   order.pricing = pricing;
+  if (deposit && order.deposit) {
+    deposit.payment = order.deposit.payment;
+    deposit.proofs = order.deposit.proofs;
+  }
   if (deposit) order.deposit = deposit;
   else order.set('deposit', undefined);
   if (couponMeta) {
@@ -605,6 +609,12 @@ export function customerOrderView<T>(order: T): T {
   delete o.adminNote;
   delete o.contactAttempts;
   delete o.receiptTokenHash;
+  if (o.deposit && typeof o.deposit === 'object') {
+    const dep = o.deposit as Record<string, unknown>;
+    if (Array.isArray(dep.proofs)) {
+      o.deposit = { ...dep, proofs: (dep.proofs as Record<string, unknown>[]).map(({ addedByName: _n, ...p }) => p) };
+    }
+  }
   if (o.deliveryIssue && typeof o.deliveryIssue === 'object') {
     const { note: _note, ...issue } = o.deliveryIssue as Record<string, unknown>;
     o.deliveryIssue = issue;
@@ -653,7 +663,7 @@ export async function setOrderDeposit(
         customerMessage = 'No deposit is needed for this order anymore';
       }
     } else if (amount !== order.deposit?.amount) {
-      order.deposit = { amount, source: 'admin', status: 'pending' };
+      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs };
       notes.push(`Deposit of ${formatDh(amount)} requested`);
       customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
       email = 'requested';

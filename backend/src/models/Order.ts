@@ -46,6 +46,14 @@ export interface IOrderDeposit {
   receivedAt?: Date;
   /** What the customer reported after paying (staff still checks and marks it received). */
   payment?: IDepositPayment;
+  /** Proof photos added by staff (images in DepositProof), oldest first */
+  proofs?: IDepositProofRef[];
+}
+
+export interface IDepositProofRef {
+  id: string;
+  addedAt: Date;
+  addedByName?: string;
 }
 
 export interface IDepositPayment {
@@ -191,8 +199,18 @@ const depositPaymentSchema = new Schema<IDepositPayment>(
   { _id: false }
 );
 
+const depositProofRefSchema = new Schema<IDepositProofRef>(
+  {
+    id: { type: String, required: true },
+    addedAt: { type: Date, required: true },
+    addedByName: { type: String },
+  },
+  { _id: false }
+);
+
 const depositSchema = new Schema<IOrderDeposit>(
   {
+    proofs: { type: [depositProofRefSchema], default: undefined },
     payment: { type: depositPaymentSchema, default: undefined },
     amount: { type: Number, required: true, min: 0 },
     source: { type: String, enum: ['products', 'admin'], required: true },

@@ -167,6 +167,18 @@ module.exports = async (req, res) => {
         return;
       }
 
+      if (action === 'deposit-proofs' && parts[2] && req.method === 'GET') {
+        const user = await requireUser(req, res);
+        if (!user) return;
+        const { getMyDepositProofImage } = require('../../backend/dist/services/depositPayment.service');
+        const image = await getMyDepositProofImage(user._id.toString(), orderNumber, parts[2]);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', image.contentType);
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.end(image.data);
+        return;
+      }
+
       if (action === 'deposit-payment' && req.method === 'POST') {
         const user = await requireUser(req, res);
         if (!user) return;

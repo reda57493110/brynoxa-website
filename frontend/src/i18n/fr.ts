@@ -667,6 +667,8 @@ export const fr: Messages = {
     ],
   },
   deposit: {
+    openPhoto: "Ouvrir en grand",
+    proofTitle: 'Preuve de paiement',
     typeBank: "Virement bancaire",
     typeCashplus: "Cash Plus",
     typeWafacash: "Wafacash",

@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
+import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -38,6 +39,7 @@ export function CustomerProfile() {
   const tabParam = params.get('tab') as TabId | null
   const tab: TabId = TABS.some((t) => t.id === tabParam) ? (tabParam as TabId) : 'overview'
   const [confirm, setConfirm] = useState<null | 'toggle' | 'delete'>(null)
+  const [recording, setRecording] = useState(false)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const setParam = (patch: Record<string, string | undefined>) =>
@@ -206,6 +208,10 @@ export function CustomerProfile() {
           >
             <SiteIcon name="mail" size={14} /> Email customer
           </Link>
+          <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
+            <SiteIcon name="banknote" size={14} /> Record deposit
+          </Button>
+          <RecordDepositDialog open={recording} onClose={() => setRecording(false)} customer={{ id, name: c.name, email: c.email }} />
           <Button size="sm" variant="outline" onClick={() => setConfirm('toggle')}>
             {c.isActive ? 'Disable' : 'Enable'}
           </Button>

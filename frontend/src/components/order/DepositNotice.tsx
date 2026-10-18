@@ -13,6 +13,7 @@ import { useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import type { DepositMethod, DepositMethodType, Order } from '@/types'
+import { PhotoLightbox, PhotoTile } from '@/components/order/PrivatePhoto'
 
 const TYPE_KEY = {
   bank: 'deposit.typeBank',
@@ -226,6 +227,7 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
   const t = useT()
   const openWhatsApp = useWhatsAppStore((s) => s.open)
   const [reporting, setReporting] = useState(false)
+  const [viewing, setViewing] = useState<string | null>(null)
   const deposit = order.deposit
   const awaiting = deposit?.status === 'pending' && (order.orderStatus === 'pending' || order.orderStatus === 'no_answer')
   const settings = useQuery({
@@ -283,6 +285,23 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
           <dd className="font-semibold text-[var(--fg)]">{formatCurrency(Math.max(0, order.pricing.total - deposit.amount))}</dd>
         </div>
       </dl>
+
+      {deposit.proofs?.length ? (
+        <div className="mt-3">
+          <p className="text-xs font-semibold text-[var(--fg)]">{t('deposit.proofTitle')}</p>
+          <div className="mt-1.5 grid grid-cols-4 gap-2 sm:grid-cols-6">
+            {deposit.proofs.map((p) => (
+              <PhotoTile
+                key={p.id}
+                photoKey={['my-deposit-proof', p.id]}
+                load={() => ordersApi.depositProofImage(order.orderNumber, p.id)}
+                onOpen={setViewing}
+              />
+            ))}
+          </div>
+          <PhotoLightbox url={viewing} title={t('deposit.proofTitle')} openLabel={t('deposit.openPhoto')} onClose={() => setViewing(null)} />
+        </div>
+      ) : null}
 
       {received ? (
         <p className="mt-3 text-sm leading-relaxed text-[var(--fg-muted)]">{t('deposit.receivedBody')}</p>

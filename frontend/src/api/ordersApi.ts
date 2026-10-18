@@ -25,6 +25,9 @@ export const ordersApi = {
     payload: { methodId: string; reference?: string; note?: string; receipt?: string }
   ) => api.post<ApiResponse<Order>>(`/orders/${orderNumber}/deposit-payment`, payload),
 
+  depositProofImage: (orderNumber: string, proofId: string) =>
+    api.get<Blob>(`/orders/${orderNumber}/deposit-proofs/${proofId}`, { responseType: 'blob' }),
+
   updateItems: (orderNumber: string, items: { productId: string; qty: number }[]) =>
     api.patch<ApiResponse<Order>>(`/orders/${orderNumber}/items`, { items }),
 }

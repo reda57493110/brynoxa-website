@@ -207,6 +207,14 @@ export interface OrderDeposit {
   receivedAt?: string
   /** What the customer reported after paying; staff still checks it and marks it received */
   payment?: DepositPaymentReport
+  /** Proof photos added by staff */
+  proofs?: DepositProofRef[]
+}
+
+export interface DepositProofRef {
+  id: string
+  addedAt: string
+  addedByName?: string
 }
 
 export interface DepositPaymentReport {

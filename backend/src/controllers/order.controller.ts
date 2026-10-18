@@ -149,3 +149,27 @@ export const depositReceipt = asyncHandler(async (req: AuthRequest, res: Respons
   res.setHeader('Cache-Control', 'private, no-store');
   res.send(receipt.data);
 });
+
+function sendImage(res: Response, image: { data: Buffer; contentType: string }) {
+  res.setHeader('Content-Type', image.contentType);
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.send(image.data);
+}
+
+export const addDepositProof = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await depositPayment.addDepositProof(param(req, 'id'), String(req.body.image || ''), req.user?.userId);
+  sendSuccess(res, order, 'Photo added');
+});
+
+export const removeDepositProof = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await depositPayment.removeDepositProof(param(req, 'id'), param(req, 'proofId'));
+  sendSuccess(res, order, 'Photo deleted');
+});
+
+export const depositProofImage = asyncHandler(async (req: AuthRequest, res: Response) => {
+  sendImage(res, await depositPayment.getDepositProofImage(param(req, 'id'), param(req, 'proofId')));
+});
+
+export const myDepositProofImage = asyncHandler(async (req: AuthRequest, res: Response) => {
+  sendImage(res, await depositPayment.getMyDepositProofImage(req.user!.userId, param(req, 'orderNumber'), param(req, 'proofId')));
+});

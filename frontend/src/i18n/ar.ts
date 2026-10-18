@@ -663,6 +663,8 @@ export const ar: Messages = {
     ],
   },
   deposit: {
+    openPhoto: "فتح بالحجم الكامل",
+    proofTitle: 'إثبات الدفع',
     typeBank: "تحويل بنكي",
     typeCashplus: "كاش بلوس",
     typeWafacash: "وفاكاش",
