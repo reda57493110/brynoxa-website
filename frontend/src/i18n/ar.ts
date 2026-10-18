@@ -126,6 +126,7 @@ export const ar: Messages = {
     resumeFeatured: 'استئناف',
   },
   product: {
+    details: "التفاصيل",
     featuredPick: 'اختيار مميز',
     viewProduct: 'عرض المنتج',
     outOfStock: 'غير متوفر',

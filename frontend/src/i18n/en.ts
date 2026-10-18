@@ -124,6 +124,7 @@ export const en = {
     resumeFeatured: 'Resume',
   },
   product: {
+    details: "Details",
     featuredPick: 'Featured pick',
     viewProduct: 'View product',
     outOfStock: 'Out of stock',

@@ -126,6 +126,7 @@ export const fr: Messages = {
     resumeFeatured: 'Reprendre',
   },
   product: {
+    details: "Détails",
     featuredPick: 'Sélection',
     viewProduct: 'Voir le produit',
     outOfStock: 'Rupture de stock',

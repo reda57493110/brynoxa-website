@@ -198,6 +198,22 @@ export function ProductCard({
         >
           <SiteIcon name="heart" size={14} solid={wishlisted} />
         </button>
+        {!spotlight ? (
+          <button
+            type="button"
+            onClick={onCompare}
+            className={cn(
+              'absolute end-2 top-11 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition sm:end-3 sm:top-14 sm:h-9 sm:w-9',
+              compareHas
+                ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
+                : 'border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+            )}
+            aria-label={compareHas ? t('compare.remove') : t('compare.add')}
+            title={compareHas ? t('compare.remove') : t('compare.add')}
+          >
+            <SiteIcon name="layers" size={14} />
+          </button>
+        ) : null}
       </div>
 
       <div
@@ -247,21 +263,32 @@ export function ProductCard({
           ) : product.variantGroup ? (
             <p className="-mt-1 text-xs font-medium text-[var(--brand-text)]">{t('productPage.moreOptions')}</p>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div className={cn('flex items-center', spotlight ? 'gap-2' : 'gap-1 sm:gap-2')}>
+            {!spotlight ? (
+              <Link
+                to={`/product/${product.slug}`}
+                className="inline-flex h-8 min-w-0 flex-1 items-center justify-center gap-1 rounded-full border border-[var(--border)] px-1 text-xs font-semibold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:h-9 sm:px-3 sm:text-sm"
+              >
+                <span className="truncate">{t('product.details')}</span>
+                <SiteIcon name="arrow-right" size={13} className="hidden shrink-0 rtl:rotate-180 sm:block" />
+              </Link>
+            ) : null}
             <Button
               size="sm"
               className={cn(
                 'rounded-full',
                 spotlight
                   ? 'h-8 px-3 text-xs sm:h-10 sm:px-5 sm:text-sm'
-                  : 'h-8 flex-1 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm'
+                  : 'h-8 min-w-0 flex-1 gap-1 px-1 text-xs sm:h-9 sm:gap-2 sm:px-3 sm:text-sm'
               )}
               onClick={onAddCart}
               disabled={product.stock <= 0}
+              aria-label={spotlight ? undefined : t('common.addToCart')}
             >
               <SiteIcon name="cart" size={14} />
               {spotlight ? t('common.addToCart') : t('common.add')}
             </Button>
+            {spotlight ? (
             <Button
               type="button"
               size="sm"
@@ -273,6 +300,7 @@ export function ProductCard({
             >
               <SiteIcon name="layers" size={14} />
             </Button>
+            ) : null}
           </div>
         </div>
       </div>
