@@ -138,6 +138,8 @@ export interface Product {
   /** Hand-picked recommendations (ids; populated objects in the admin product view) */
   recommended?: (string | Product)[]
   recommendedOnly?: boolean
+  /** Automatic suggestions hidden by staff for this product */
+  recommendedHidden?: (string | Product)[]
   stock: number
   lowStockThreshold: number
   specs: Record<string, string>

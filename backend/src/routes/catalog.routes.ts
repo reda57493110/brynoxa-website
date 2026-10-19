@@ -9,6 +9,7 @@ import {
   brandSchema,
   productSchema,
   inventorySchema,
+  setupPreviewSchema,
 } from '../validators/schemas';
 
 const router = Router();
@@ -68,6 +69,14 @@ router.get(
   requireAuth,
   requirePermission('products:read'),
   catalog.getProductAdmin
+);
+// 'Complete your setup' preview for the product form (works before the product is saved)
+router.post(
+  '/admin/setup-preview',
+  requireAuth,
+  requirePermission('products:read'),
+  validate(setupPreviewSchema),
+  catalog.setupPreview
 );
 router.post(
   '/admin/products',

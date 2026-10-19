@@ -46,6 +46,21 @@ export const adminApi = {
     api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),
 
   products: {
+    /** "Complete your setup" preview for the product form (unsaved values) */
+    setupPreview: (payload: {
+      productId?: string
+      name: string
+      category: string
+      specTemplate?: string
+      tags: string[]
+      specs: Record<string, string>
+      picks: string[]
+      hidden: string[]
+    }) =>
+      api.post<ApiResponse<{ kind: string; wanted: { kind: string; available: number }[]; items: Product[] }>>(
+        '/admin/setup-preview',
+        payload
+      ),
     get: (id: string) => api.get<ApiResponse<Product>>(`/admin/products/${id}`),
     create: (payload: Partial<Product>) =>
       api.post<ApiResponse<Product>>('/admin/products', payload),

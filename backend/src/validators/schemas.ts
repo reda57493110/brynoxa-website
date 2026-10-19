@@ -114,6 +114,7 @@ export const productSchema = z.object({
     .optional(),
   recommended: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
   recommendedOnly: z.boolean().optional(),
+  recommendedHidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(50).optional(),
   condition: z.enum(['new', 'refurbished', 'used']).optional(),
   conditionNote: z.string().trim().max(500).optional(),
   serialTracking: z.boolean().optional(),
@@ -601,3 +602,15 @@ export const depositPaymentSchema = z.object({
 
 /** Staff: a deposit proof photo as a data URL (resized in the browser). */
 export const depositProofSchema = z.object({ image: z.string().min(30).max(2_000_000) });
+
+/** Admin: preview "Complete your setup" for a product being created or edited (unsaved values). */
+export const setupPreviewSchema = z.object({
+  productId: z.string().regex(/^[a-f0-9]{24}$/i).optional(),
+  name: z.string().max(200).optional(),
+  category: z.string().max(24).optional(),
+  specTemplate: z.string().max(40).optional(),
+  tags: z.array(z.string().max(60)).max(40).optional(),
+  specs: z.record(z.string(), z.string().max(300)).optional(),
+  picks: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
+  hidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(50).optional(),
+});

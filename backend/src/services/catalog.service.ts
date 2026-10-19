@@ -446,6 +446,13 @@ function sanitizeRecommended(input: unknown, selfId?: string): mongoose.Types.Ob
   return ids.slice(0, 12).map((id) => new mongoose.Types.ObjectId(id));
 }
 
+/** Hidden automatic suggestions: unique valid ids (max 50). */
+function sanitizeHidden(input: unknown, selfId?: string): mongoose.Types.ObjectId[] {
+  if (!Array.isArray(input)) return [];
+  const ids = [...new Set(input.map((v) => String(v)))].filter((id) => looksLikeObjectId(id) && id !== selfId);
+  return ids.slice(0, 50).map((id) => new mongoose.Types.ObjectId(id));
+}
+
 /** A valid cost price, or undefined to leave it unset (empty / null / negative). */
 function costPriceOf(value: unknown): number | undefined {
   if (value === null || value === undefined || value === '') return undefined;
@@ -458,7 +465,8 @@ export async function getProductById(id: string) {
     .select('+costPrice')
     .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug logo')
-    .populate('recommended', 'name sku slug images price stock isActive');
+    .populate('recommended', 'name sku slug images price stock isActive')
+    .populate('recommendedHidden', 'name sku slug images price stock isActive');
   if (!product) throw new ApiError(404, 'Product not found');
   return Object.assign(product.toJSON(), { variants: await variantsOf(product, false) });
 }
@@ -484,6 +492,7 @@ export async function createProduct(data: Record<string, unknown>) {
     recommended: sanitizeRecommended(data.recommended),
     costPrice: costPriceOf(data.costPrice),
     recommendedOnly: Boolean(data.recommendedOnly),
+    recommendedHidden: sanitizeHidden(data.recommendedHidden),
     specs: sanitizeSpecs(data.specs) ?? {},
     specTemplate: sanitizeSpecTemplate(data.specTemplate) || undefined,
     slug,
@@ -570,6 +579,9 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   }
   if (data.recommendedOnly !== undefined) {
     product.recommendedOnly = Boolean(data.recommendedOnly);
+  }
+  if (data.recommendedHidden !== undefined) {
+    product.recommendedHidden = sanitizeHidden(data.recommendedHidden, String(product._id));
   }
 
   if (data.isFeatured !== undefined) {

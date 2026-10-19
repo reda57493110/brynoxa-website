@@ -363,7 +363,7 @@ export async function getRecommendations(productId: string, limit = DEFAULT_LIMI
   if (product.recommendedOnly || picks.length >= limit) {
     items = picks as Recommended[];
   } else {
-    const automatic = await automaticRecommendations(product, activeCategories, limit + picks.length);
+    const automatic = await automaticRecommendations(product, activeCategories, limit + picks.length, (product.recommendedHidden || []).map(String));
     const pickedSet = new Set(picks.map((doc) => String(doc._id)));
     items = [...picks, ...automatic.filter((doc) => !pickedSet.has(String(doc._id)))].slice(0, limit) as Recommended[];
   }
@@ -376,7 +376,8 @@ export async function getRecommendations(productId: string, limit = DEFAULT_LIMI
 async function automaticRecommendations(
   product: Classifiable & { _id: unknown },
   activeCategories: { _id: unknown; slug: string }[],
-  limit: number
+  limit: number,
+  hidden: string[] = []
 ) {
   const { kind } = classifyProduct(product);
   const targets = COMPLEMENTS[kind];
@@ -407,7 +408,7 @@ async function automaticRecommendations(
 
   const [candidates, paired] = await Promise.all([
     Product.find({
-      _id: { $ne: product._id },
+      _id: { $nin: [product._id, ...hidden.filter((id) => mongoose.Types.ObjectId.isValid(id)).map((id) => new mongoose.Types.ObjectId(id))] },
       isActive: true,
       stock: { $gt: 0 },
       category: { $in: activeCategories.map((c) => c._id) },
@@ -479,4 +480,48 @@ export function rankRecommendations<
     if (picked.length >= limit) break;
   }
   return picked;
+}
+
+/* ---------- Admin preview ---------- */
+
+/**
+ * What "Complete your setup" will show for a product being created or edited, from the form's
+ * current (unsaved) values: the detected kind, every kind it looks for with how many matching
+ * products the shop has, and the automatic suggestions in order.
+ */
+export async function previewRecommendations(input: {
+  productId?: string;
+  name?: string;
+  category?: string;
+  specTemplate?: string;
+  tags?: string[];
+  specs?: Record<string, string>;
+  picks?: string[];
+  hidden?: string[];
+}) {
+  const activeCategories = await Category.find({ isActive: true }).select('_id slug').lean();
+  const category = activeCategories.find((c) => String(c._id) === input.category);
+  const draft = {
+    _id: input.productId && mongoose.Types.ObjectId.isValid(input.productId) ? new mongoose.Types.ObjectId(input.productId) : new mongoose.Types.ObjectId(),
+    name: input.name || '',
+    tags: input.tags || [],
+    specs: input.specs || {},
+    specTemplate: input.specTemplate || undefined,
+    category: category ? { slug: category.slug } : undefined,
+  };
+  const { kind } = classifyProduct(draft);
+  const wantedKinds = COMPLEMENTS[kind];
+
+  // Rank more than needed so we can tell which wanted kinds the shop has at all
+  const exclude = [...(input.picks || []), ...(input.hidden || [])];
+  const ranked = await automaticRecommendations(draft, activeCategories, 60, exclude);
+  const perKind = new Map<string, number>();
+  for (const item of ranked) perKind.set(item.setupKind, (perKind.get(item.setupKind) || 0) + 1);
+
+  const picks = (input.picks || []).length;
+  return {
+    kind,
+    wanted: wantedKinds.map((k) => ({ kind: k, available: perKind.get(k) || 0 })),
+    items: ranked.slice(0, Math.max(0, DEFAULT_LIMIT - picks)),
+  };
 }

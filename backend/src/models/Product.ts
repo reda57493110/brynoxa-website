@@ -43,6 +43,8 @@ export interface IProduct extends Document {
   recommended: Types.ObjectId[];
   /** When true, only `recommended` is shown — no automatic suggestions. */
   recommendedOnly: boolean;
+  /** Automatic suggestions staff hid for this product. */
+  recommendedHidden: Types.ObjectId[];
   /** Units for sale on this listing (checkout uses this). */
   stock: number;
   lowStockThreshold: number;
@@ -115,6 +117,7 @@ const productSchema = new Schema<IProduct>(
     deposit: { type: depositRuleSchema, default: undefined },
     recommended: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     recommendedOnly: { type: Boolean, default: false },
+    recommendedHidden: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     stock: { type: Number, required: true, min: 0, default: 0 },
     lowStockThreshold: { type: Number, default: 5 },
     condition: { type: String, enum: ['new', 'refurbished', 'used'], default: 'new' },

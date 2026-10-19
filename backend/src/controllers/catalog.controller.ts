@@ -3,7 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
 import * as variants from '../services/variants.service';
-import { getRecommendations } from '../services/recommendation.service';
+import { getRecommendations, previewRecommendations } from '../services/recommendation.service';
 import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../services/upload.service';
 import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
@@ -80,6 +80,10 @@ export const getProduct = asyncHandler(async (req: Request, res: Response) => {
 export const getProductAdmin = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.getProductById(param(req, 'id'));
   sendSuccess(res, item);
+});
+
+export const setupPreview = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await previewRecommendations(req.body));
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {

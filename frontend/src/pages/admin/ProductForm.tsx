@@ -21,6 +21,7 @@ import { cn } from '@/lib/cn'
 import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
+import { SetupPreview } from '@/components/admin/SetupPreview'
 import { SpecsEditor } from '@/components/admin/SpecsEditor'
 import { VariantsPanel, defaultVariantOptions } from '@/components/admin/VariantsPanel'
 import { createVersions, validateVersionRows, type VersionRow } from '@/components/admin/VariantRows'
@@ -174,6 +175,7 @@ export function ProductForm() {
     images: FormImage[]
     recommended: PickedProduct[]
     recommendedOnly: boolean
+    recommendedHidden: PickedProduct[]
   }>({
     name: '',
     sku: '',
@@ -198,6 +200,7 @@ export function ProductForm() {
     images: [],
     recommended: [],
     recommendedOnly: false,
+    recommendedHidden: [],
   })
   const initialFormRef = useRef(JSON.stringify(form))
 
@@ -248,6 +251,9 @@ export function ProductForm() {
           .filter((r): r is Product => typeof r === 'object' && r !== null)
           .map(toPicked),
         recommendedOnly: Boolean(p.recommendedOnly),
+        recommendedHidden: (p.recommendedHidden || [])
+          .filter((r): r is Product => typeof r === 'object' && r !== null)
+          .map(toPicked),
       }
       initialFormRef.current = JSON.stringify(nextForm)
       setForm(nextForm)
@@ -372,6 +378,7 @@ export function ProductForm() {
         isActive: form.isActive,
         recommended: form.recommended.map((r) => r._id),
         recommendedOnly: form.recommendedOnly,
+        recommendedHidden: form.recommendedHidden.map((r) => r._id),
         // Full set of specs (empty ones left out); not sent until the spec fields are ready
         ...(specs ? { specs: draftToSpecs(specs) } : {}),
         specTemplate: specOverride,
@@ -1118,7 +1125,29 @@ export function ProductForm() {
             </p>
             </div>
         </details>
-        <FormSection id="pf-visibility" title="Recommendations & visibility" />
+        <FormSection id="pf-visibility" title="Complete your setup & visibility" />
+        <SetupPreview
+          draft={{
+            productId: id,
+            name: form.name,
+            category: form.category,
+            specTemplate: specTemplate || undefined,
+            tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+            specs: specs ? draftToSpecs(specs) : {},
+          }}
+          picks={form.recommended}
+          hidden={form.recommendedHidden}
+          only={form.recommendedOnly}
+          onPin={(p) =>
+            setForm((f) => (f.recommended.some((r) => r._id === p._id) ? f : { ...f, recommended: [...f.recommended, p] }))
+          }
+          onHide={(p) =>
+            setForm((f) =>
+              f.recommendedHidden.some((r) => r._id === p._id) ? f : { ...f, recommendedHidden: [...f.recommendedHidden, p] }
+            )
+          }
+          onUnhide={(hid) => setForm((f) => ({ ...f, recommendedHidden: f.recommendedHidden.filter((r) => r._id !== hid) }))}
+        />
         <RecommendedPicker
           value={form.recommended}
           onChange={(recommended) => setForm({ ...form, recommended })}
