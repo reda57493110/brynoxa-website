@@ -77,6 +77,9 @@ const AdminProducts = lazy(() =>
 const AdminProductForm = lazy(() =>
   import('@/pages/admin/ProductForm').then((m) => ({ default: m.ProductForm }))
 )
+const AdminCompleteSetup = lazy(() =>
+  import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin }))
+)
 const AdminInventory = lazy(() =>
   import('@/pages/admin/Inventory').then((m) => ({ default: m.Inventory }))
 )
@@ -254,6 +257,7 @@ export function AppRouter() {
         <Route path="products" element={<S><AdminProducts /></S>} />
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />
+        <Route path="setup" element={<S><AdminCompleteSetup /></S>} />
         <Route path="inventory" element={<S><AdminInventory /></S>} />
         <Route path="inventory/products/:id" element={<S><AdminInventoryProduct /></S>} />
         <Route path="inventory/receive" element={<S><AdminInventoryReceive /></S>} />

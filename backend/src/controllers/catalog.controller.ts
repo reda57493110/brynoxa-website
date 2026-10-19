@@ -4,6 +4,7 @@ import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
 import * as variants from '../services/variants.service';
 import { getRecommendations, previewRecommendations } from '../services/recommendation.service';
+import * as setupService from '../services/setup.service';
 import { getStoredImage, STORED_IMAGE_CACHE, uploadProductImage } from '../services/upload.service';
 import { hasValidImageSignature } from '../middleware/upload';
 import { paginationQuerySchema } from '../validators/schemas';
@@ -80,6 +81,18 @@ export const getProduct = asyncHandler(async (req: Request, res: Response) => {
 export const getProductAdmin = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.getProductById(param(req, 'id'));
   sendSuccess(res, item);
+});
+
+export const listSetups = asyncHandler(async (_req: Request, res: Response) => {
+  sendSuccess(res, await setupService.listConfiguredSetups());
+});
+
+export const getSetup = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await setupService.getSetup(param(req, 'id')));
+});
+
+export const saveSetup = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await setupService.saveSetup(param(req, 'id'), req.body), 'Recommendations saved');
 });
 
 export const setupPreview = asyncHandler(async (req: Request, res: Response) => {

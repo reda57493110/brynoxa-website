@@ -1,4 +1,5 @@
 import { useDeferredValue } from 'react'
+import { Link } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -87,6 +88,14 @@ export function SetupPreview({
               : 'Enter a name and a category to see what customers will be offered.'}
           </p>
         </div>
+        {draft.productId ? (
+          <Link
+            to={`/admin/setup?product=${draft.productId}`}
+            className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
+          >
+            <SiteIcon name="sliders" size={12} /> Order, on/off & more
+          </Link>
+        ) : null}
       </div>
 
       {data?.wanted.length ? (

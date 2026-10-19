@@ -614,3 +614,11 @@ export const setupPreviewSchema = z.object({
   picks: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
   hidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(50).optional(),
 });
+
+/** Admin → Complete your setup: the picks of one main product, in order. */
+export const setupSaveSchema = z.object({
+  items: z
+    .array(z.object({ productId: z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid product reference'), enabled: z.boolean() }))
+    .max(12),
+  fillWithAutomatic: z.boolean(),
+});

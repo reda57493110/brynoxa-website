@@ -29,6 +29,8 @@ import type {
   WholesaleReviewPayload,
   SentEmail,
   User,
+  SetupDetail,
+  SetupListRow,
 } from '@/types'
 
 /** Drops empty filter values so they are not sent as "?type=". */
@@ -44,6 +46,14 @@ export const adminApi = {
   /** Revenue / orders per day, totals vs the previous period, best sellers (owner view). */
   dashboardSales: (days: SalesRange) =>
     api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),
+
+  /** Admin → Complete your setup: hand-picked recommendations per main product */
+  setup: {
+    list: () => api.get<ApiResponse<SetupListRow[]>>('/admin/setup'),
+    get: (productId: string) => api.get<ApiResponse<SetupDetail>>(`/admin/setup/${productId}`),
+    save: (productId: string, payload: { items: { productId: string; enabled: boolean }[]; fillWithAutomatic: boolean }) =>
+      api.put<ApiResponse<SetupDetail>>(`/admin/setup/${productId}`, payload),
+  },
 
   products: {
     /** "Complete your setup" preview for the product form (unsaved values) */

@@ -341,7 +341,8 @@ export async function getRecommendations(productId: string, limit = DEFAULT_LIMI
   const activeCategoryIds = activeCategories.map((c) => c._id);
 
   // Staff picks first, in the order chosen in the admin product form
-  const pickedIds = (product.recommended || []).map(String);
+  const disabledPicks = new Set((product.recommendedDisabled || []).map(String));
+  const pickedIds = (product.recommended || []).map(String).filter((id) => !disabledPicks.has(id));
   const pickedDocs = pickedIds.length
     ? await Product.find({
         _id: { $in: pickedIds, $ne: product._id },

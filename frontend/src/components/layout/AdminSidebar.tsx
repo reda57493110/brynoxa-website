@@ -27,6 +27,7 @@ const items: {
   { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending' },
   { to: '/admin/products', label: 'Products', icon: 'package' },
   { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock' },
+  { to: '/admin/setup', label: 'Complete your setup', icon: 'layers' },
   { to: '/admin/customers', label: 'Customers', icon: 'users' },
   { to: '/admin/roles', label: 'Roles', icon: 'shield' },
   { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },

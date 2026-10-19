@@ -77,6 +77,7 @@ export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin/orders': 'orders:read',
   '/admin/products': 'products:read',
   '/admin/inventory': 'inventory:write',
+  '/admin/setup': 'products:read',
   '/admin/customers': 'customers:read',
   '/admin/roles': 'users:manage',
   '/admin/messages': 'messages',

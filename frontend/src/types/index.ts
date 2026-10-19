@@ -1180,3 +1180,37 @@ export interface ProductInventoryDetail extends InventorySnapshot {
   /** New / Refurbished / Used listings of the same model */
   listings: ListingRef[]
 }
+
+/** Admin → Complete your setup */
+export interface SetupProductRef {
+  _id: string
+  name: string
+  sku: string
+  slug: string
+  image: string
+  price: number
+  stock: number
+  isActive: boolean
+  category: string
+}
+
+export interface SetupListRow {
+  _id: string
+  name: string
+  sku: string
+  slug: string
+  image: string
+  category: string
+  isActive: boolean
+  total: number
+  enabled: number
+  fillWithAutomatic: boolean
+  updatedAt: string
+}
+
+export interface SetupDetail {
+  product: SetupProductRef
+  items: { product: SetupProductRef; enabled: boolean }[]
+  fillWithAutomatic: boolean
+  automatic: { kind: string; wanted: { kind: string; available: number }[]; items: Product[] }
+}

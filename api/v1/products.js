@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
     if (recommendationsMatch) {
       const { getRecommendations } = require('../../backend/dist/services/recommendation.service');
       const items = await getRecommendations(recommendationsMatch[1]);
-      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
       sendJson(res, 200, { success: true, message: 'Success', data: items });
       return;
     }

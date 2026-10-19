@@ -10,6 +10,7 @@ import {
   productSchema,
   inventorySchema,
   setupPreviewSchema,
+  setupSaveSchema,
 } from '../validators/schemas';
 
 const router = Router();
@@ -70,6 +71,11 @@ router.get(
   requirePermission('products:read'),
   catalog.getProductAdmin
 );
+// Admin → Complete your setup: hand-picked recommendations per main product
+router.get('/admin/setup', requireAuth, requirePermission('products:read'), catalog.listSetups);
+router.get('/admin/setup/:id', requireAuth, requirePermission('products:read'), catalog.getSetup);
+router.put('/admin/setup/:id', requireAuth, requirePermission('products:write'), validate(setupSaveSchema), catalog.saveSetup);
+
 // 'Complete your setup' preview for the product form (works before the product is saved)
 router.post(
   '/admin/setup-preview',
