@@ -145,6 +145,8 @@ export interface Product {
   specTemplate?: string
   /** Products sold as options of the same model share this id. */
   variantGroup?: string
+  /** "Complete your setup" only: what this suggestion is (mouse, usb-hub…) */
+  setupKind?: string
   /** Spec keys that differ between the variants (e.g. ram_gb, storage). */
   variantAttributes?: string[]
   /** Short option summary, e.g. "16 GB · 512 GB". */

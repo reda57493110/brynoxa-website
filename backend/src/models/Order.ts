@@ -308,5 +308,7 @@ orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ receiptTokenHash: 1 }, { sparse: true });
 orderSchema.index({ user: 1, orderStatus: 1, 'items.product': 1 });
+// 'Bought together' lookups for Complete your setup
+orderSchema.index({ 'items.product': 1, createdAt: -1 });
 
 export const Order = mongoose.model<IOrder>('Order', orderSchema);
