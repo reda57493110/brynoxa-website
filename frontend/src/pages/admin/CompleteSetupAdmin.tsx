@@ -135,6 +135,22 @@ function SectionCard({ letter, title, aside, children }: { letter: string; title
   )
 }
 
+/** Remove a product from Complete your setup: its list is cleared and it goes back to automatic suggestions. */
+function useRemoveSetup(onDone?: (id: string) => void) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => adminApi.setup.save(id, { items: [], fillWithAutomatic: true }),
+    onSuccess: (res, id) => {
+      qc.setQueryData(['admin-setup', id], res.data.data)
+      void qc.invalidateQueries({ queryKey: ['admin-setup-list'] })
+      void qc.invalidateQueries({ queryKey: ['products', 'recommendations', id] })
+      toast.success('Removed — automatic suggestions are back')
+      onDone?.(id)
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+}
+
 /* ---------- A · Main product ---------- */
 
 function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
@@ -146,6 +162,8 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
     queryKey: ['admin-setup-list'],
     queryFn: async () => (await adminApi.setup.list()).data.data,
   })
+  const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null)
+  const remove = useRemoveSetup(() => setConfirmRemove(null))
 
   return (
     <div className="space-y-3">
@@ -192,11 +210,11 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
         ) : configured.data?.length ? (
           <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {configured.data.map((row) => (
-              <li key={row._id}>
+              <li key={row._id} className="relative">
                 <button
                   type="button"
                   onClick={() => onPick(row._id)}
-                  className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border)] p-2 text-start transition hover:border-[var(--brand)]"
+                  className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border)] p-2 pe-10 text-start transition hover:border-[var(--brand)]"
                 >
                   <Thumb src={row.image} size="sm" />
                   <span className="min-w-0 flex-1">
@@ -206,6 +224,15 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
                     </span>
                   </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmRemove({ id: row._id, name: row.name })}
+                  aria-label={`Remove ${row.name} from Complete your setup`}
+                  title="Remove from Complete your setup"
+                  className="absolute end-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--danger)]"
+                >
+                  <SiteIcon name="close" size={14} />
+                </button>
               </li>
             ))}
           </ul>
@@ -213,6 +240,15 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
           <p className="text-xs text-[var(--fg-muted)]">None yet</p>
         )}
       </div>
+      <ConfirmDialog
+        open={Boolean(confirmRemove)}
+        title="Remove from Complete your setup?"
+        description={`${confirmRemove?.name ?? 'This product'} goes back to automatic suggestions. No product is deleted.`}
+        confirmLabel="Remove"
+        loading={remove.isPending}
+        onClose={() => setConfirmRemove(null)}
+        onConfirm={() => confirmRemove && remove.mutate(confirmRemove.id)}
+      />
     </div>
   )
 }
@@ -230,6 +266,8 @@ export function CompleteSetupAdmin() {
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [pendingSwitch, setPendingSwitch] = useState<string | null>(null)
   const addSearch = useProductSearch(addQuery, addCategory)
+  const [confirmReset, setConfirmReset] = useState(false)
+  const removeSetup = useRemoveSetup(() => setConfirmReset(false))
   const addSearching = addQuery.trim().length >= 2 || Boolean(addCategory)
 
   const detail = useQuery({
@@ -318,9 +356,16 @@ export function CompleteSetupAdmin() {
         title="Product"
         aside={
           main ? (
-            <button type="button" onClick={() => selectProduct('')} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
-              Change
-            </button>
+            <div className="flex items-center gap-3">
+              {detail.data?.items.length ? (
+                <button type="button" onClick={() => setConfirmReset(true)} className="text-xs font-medium text-[var(--danger)] hover:underline">
+                  Remove
+                </button>
+              ) : null}
+              <button type="button" onClick={() => selectProduct('')} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
+                Change
+              </button>
+            </div>
           ) : null
         }
       >
@@ -538,6 +583,16 @@ export function CompleteSetupAdmin() {
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmReset}
+        title="Remove from Complete your setup?"
+        description={`${main?.name ?? 'This product'} goes back to automatic suggestions. No product is deleted.`}
+        confirmLabel="Remove"
+        loading={removeSetup.isPending}
+        onClose={() => setConfirmReset(false)}
+        onConfirm={() => removeSetup.mutate(productId)}
+      />
 
       <ConfirmDialog
         open={Boolean(pendingSwitch !== null)}
