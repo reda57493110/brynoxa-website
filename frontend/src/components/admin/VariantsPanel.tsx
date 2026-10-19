@@ -13,8 +13,18 @@ import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { Product } from '@/types'
 import { VariantRows, newVersionRow, type VersionRow } from './VariantRows'
+import { FieldInput } from './SpecsEditor'
 
-export const DEFAULT_VARIANT_OPTIONS = ['ram_gb', 'storage', 'capacity_gb', 'color']
+export const DEFAULT_VARIANT_OPTIONS = ['cpu', 'ram_gb', 'storage', 'capacity_gb']
+
+/** What usually changes between versions of a computer: offered first, the rest under "More". */
+const COMMON_OPTIONS = ['cpu', 'cpu_generation', 'ram_gb', 'storage', 'gpu', 'screen_size', 'capacity_gb', 'color']
+
+/** Default options for a product type: processor / RAM / storage, or colour for accessories. */
+export function defaultVariantOptions(choices: string[]) {
+  const picked = DEFAULT_VARIANT_OPTIONS.filter((k) => choices.includes(k))
+  return picked.length ? picked : choices.includes('color') ? ['color'] : []
+}
 
 function invalidate(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ['admin-product'] })
@@ -33,6 +43,10 @@ export function VariantsPanel({
   mainValues,
   mainPrice,
   mainSku,
+  onMainValue,
+  onMainPrice,
+  mainStock,
+  onMainStock,
   attributes,
   onAttributes,
   rows,
@@ -47,6 +61,12 @@ export function VariantsPanel({
   mainValues: Record<string, string>
   mainPrice: number
   mainSku: string
+  /** Edit this product's own option values / price / opening stock from the versions table */
+  onMainValue: (key: string, value: string) => void
+  onMainPrice: (price: number) => void
+  /** Opening stock (new product only; saved products change stock in Inventory) */
+  mainStock?: number
+  onMainStock?: (stock: number) => void
   attributes: string[]
   onAttributes: (keys: string[]) => void
   rows: VersionRow[]
@@ -61,6 +81,7 @@ export function VariantsPanel({
   const [linking, setLinking] = useState(false)
   const [query, setQuery] = useState('')
   const [confirmLeave, setConfirmLeave] = useState(false)
+  const [moreOptions, setMoreOptions] = useState(false)
   const q = useDeferredValue(query.trim())
 
   const link = useMutation({
@@ -107,9 +128,9 @@ export function VariantsPanel({
       </div>
 
       <div>
-        <p className="mb-1.5 text-xs font-medium">What changes between versions?</p>
+        <p className="mb-1.5 text-xs font-medium">What changes between versions? <span className="font-normal text-[var(--fg-muted)]">(up to 4)</span></p>
         <div className="flex flex-wrap gap-1.5">
-          {choices.map((k) => {
+          {(moreOptions ? choices : choices.filter((k) => COMMON_OPTIONS.includes(k) || attributes.includes(k))).map((k) => {
             const on = attributes.includes(k)
             return (
               <button
@@ -130,6 +151,15 @@ export function VariantsPanel({
               </button>
             )
           })}
+          {choices.some((k) => !COMMON_OPTIONS.includes(k) && !attributes.includes(k)) ? (
+            <button
+              type="button"
+              onClick={() => setMoreOptions((v) => !v)}
+              className="h-8 rounded-full px-2.5 text-xs font-medium text-[var(--brand-text)] hover:underline"
+            >
+              {moreOptions ? 'Fewer options' : 'More options…'}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -172,17 +202,52 @@ export function VariantsPanel({
           })}
         </ul>
       ) : rows.length ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm">
-          <span className="text-xs font-semibold">Version 1 (this product): </span>
-          {mainLabel || <span className="text-[var(--fg-muted)]">set its options in the specifications above</span>}
-          <span className="text-[var(--fg-muted)]"> · {formatCurrency(mainPrice)}</span>
+        <div className={cn('space-y-2 rounded-xl border bg-[var(--bg-elevated)] p-3', missingMain.length ? 'border-[var(--warning)]' : 'border-[var(--border)]')}>
+          <p className="text-xs font-semibold">
+            Version 1 <span className="font-normal text-[var(--fg-muted)]">· this product{mainLabel ? ` · ${mainLabel}` : ''}</span>
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {attributes.map((k) => (
+              <div key={k} className="min-w-0 space-y-1">
+                <label htmlFor={`main-${k}`} className="text-xs font-medium">
+                  {SPEC_FIELDS[k].label.en}
+                </label>
+                <FieldInput field={SPEC_FIELDS[k]} idPrefix="main" value={mainValues[k] ?? ''} onChange={(v) => onMainValue(k, v)} />
+              </div>
+            ))}
+            <label className="min-w-0 space-y-1 text-xs font-medium">
+              <span>Price (DH)</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                value={mainPrice || ''}
+                onChange={(e) => onMainPrice(Number(e.target.value))}
+                className="h-10 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm text-[var(--fg)] outline-none ring-brand"
+              />
+            </label>
+            {onMainStock ? (
+              <label className="min-w-0 space-y-1 text-xs font-medium">
+                <span>Opening stock</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={mainStock ?? 0}
+                  onChange={(e) => onMainStock(Number(e.target.value))}
+                  className="h-10 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm text-[var(--fg)] outline-none ring-brand"
+                />
+              </label>
+            ) : null}
+          </div>
+          {missingMain.length ? (
+            <p className="text-xs text-[var(--warning)]">Fill {missingMain.map((k) => SPEC_FIELDS[k].label.en).join(', ')} for this version too.</p>
+          ) : (
+            <p className="text-[11px] text-[var(--fg-muted)]">Same values as in Specifications and Pricing above — change them in either place.</p>
+          )}
         </div>
-      ) : null}
-
-      {rows.length && missingMain.length ? (
-        <p className="text-xs text-[var(--warning)]">
-          Fill {missingMain.map((k) => SPEC_FIELDS[k].label.en).join(', ')} in the specifications above for this product too.
-        </p>
       ) : null}
 
       <VariantRows

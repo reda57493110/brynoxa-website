@@ -22,7 +22,7 @@ import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
 import { SpecsEditor } from '@/components/admin/SpecsEditor'
-import { DEFAULT_VARIANT_OPTIONS, VariantsPanel } from '@/components/admin/VariantsPanel'
+import { VariantsPanel, defaultVariantOptions } from '@/components/admin/VariantsPanel'
 import { createVersions, validateVersionRows, type VersionRow } from '@/components/admin/VariantRows'
 import { variantLabel, variantableFields } from '@/lib/variants'
 import { SPEC_FIELDS } from '@/lib/specs'
@@ -281,7 +281,9 @@ export function ProductForm() {
     variantAttrsChoice ??
     (savedVariantAttrs.length
       ? savedVariantAttrs
-      : DEFAULT_VARIANT_OPTIONS.filter((k) => specs && variantableFields(specs.template).includes(k)))
+      : specs
+        ? defaultVariantOptions(variantableFields(specs.template))
+        : [])
   const versionErrors = useMemo(
     () => (showVersionErrors ? validateVersionRows(versionRows, variantAttrs, specs?.values ?? {}) : {}),
     [showVersionErrors, versionRows, variantAttrs, specs]
@@ -886,6 +888,10 @@ export function ProductForm() {
             mainValues={specs.values}
             mainPrice={Number(form.price) || 0}
             mainSku={form.sku}
+            onMainValue={(k, v) => setSpecs((d) => (d ? { ...d, values: { ...d.values, [k]: v } } : d))}
+            onMainPrice={(price) => setForm((f) => ({ ...f, price }))}
+            mainStock={isEdit ? undefined : form.stock}
+            onMainStock={isEdit ? undefined : (stock) => setForm((f) => ({ ...f, stock }))}
             attributes={variantAttrs}
             onAttributes={setVariantAttrs}
             rows={versionRows}
