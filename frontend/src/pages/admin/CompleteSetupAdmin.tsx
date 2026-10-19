@@ -155,7 +155,7 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name, SKU or product ID"
+          placeholder="Search by name, SKU or ID"
           className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm outline-none ring-brand"
         />
       </div>
@@ -186,7 +186,7 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
       ) : null}
 
       <div>
-        <p className="mb-1.5 text-xs font-medium text-[var(--fg-muted)]">Products with your own recommendations</p>
+        <p className="mb-1.5 text-xs font-medium text-[var(--fg-muted)]">Already set up</p>
         {configured.isLoading ? (
           <div className="flex justify-center py-4"><Spinner /></div>
         ) : configured.data?.length ? (
@@ -202,7 +202,7 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{row.name}</span>
                     <span className="block truncate text-[11px] text-[var(--fg-muted)]">
-                      {row.enabled}/{row.total} on{row.fillWithAutomatic ? ' · + automatic' : ''}
+                      {row.enabled} product{row.enabled === 1 ? '' : 's'}{row.fillWithAutomatic ? ' + automatic' : ''}
                     </span>
                   </span>
                 </button>
@@ -210,9 +210,7 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
             ))}
           </ul>
         ) : (
-          <p className="rounded-xl border border-dashed border-[var(--border)] px-3 py-3 text-xs text-[var(--fg-muted)]">
-            None yet — every product uses the automatic suggestions.
-          </p>
+          <p className="text-xs text-[var(--fg-muted)]">None yet</p>
         )}
       </div>
     </div>
@@ -274,7 +272,7 @@ export function CompleteSetupAdmin() {
       qc.setQueryData(['admin-setup', productId], res.data.data)
       void qc.invalidateQueries({ queryKey: ['admin-setup-list'] })
       void qc.invalidateQueries({ queryKey: ['products', 'recommendations', productId] })
-      toast.success('Recommendations saved — live on the product page')
+      toast.success('Saved')
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -311,13 +309,13 @@ export function CompleteSetupAdmin() {
     <div className={cn('min-w-0 space-y-3 sm:space-y-4', dirty && 'pb-20')}>
       <AdminHeader
         title="Complete your setup"
-        description="Choose the products shown under a product's page. Products you don't set up keep the automatic suggestions."
+        description="Pick the products shown with each product."
       />
 
       {/* A · Main product */}
       <SectionCard
         letter="A"
-        title="Main product"
+        title="Product"
         aside={
           main ? (
             <button type="button" onClick={() => selectProduct('')} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
@@ -337,17 +335,18 @@ export function CompleteSetupAdmin() {
             <Thumb src={main.image} size="lg" />
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{main.name}</p>
-              <p className="truncate text-xs text-[var(--fg-muted)]">
-                {main.sku} · {main.category || '—'} · {formatCurrency(main.price)}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--fg-muted)]">
+                <span>{main.category || '—'}</span>
+                {automatic && !main.category.toLowerCase().startsWith(kindLabel(automatic.kind).toLowerCase()) ? (
+                  <span>· {kindLabel(automatic.kind)}</span>
+                ) : null}
+                <span className="tabular-nums">· {formatCurrency(main.price)}</span>
                 <Availability p={main} />
-                {automatic ? <span className="text-[11px] text-[var(--fg-muted)]">Detected as {kindLabel(automatic.kind)}</span> : null}
               </div>
             </div>
             <div className="flex w-full shrink-0 gap-2 sm:w-auto">
               <Link to={`/product/${main.slug}`} target="_blank" className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
-                <SiteIcon name="external" size={12} /> Product page
+                <SiteIcon name="external" size={12} /> View
               </Link>
               <Link to={`/admin/products/${main._id}/edit`} className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
                 <SiteIcon name="pencil" size={12} /> Edit
@@ -360,7 +359,7 @@ export function CompleteSetupAdmin() {
       {main && detail.data ? (
         <div className="grid min-w-0 gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           {/* B · Selected recommendations */}
-          <SectionCard letter="B" title="Shown on the product page" aside={<span className="text-xs tabular-nums text-[var(--fg-muted)]">{rows.length}/{MAX_ITEMS}</span>}>
+          <SectionCard letter="B" title="Recommendations" aside={<span className="text-xs tabular-nums text-[var(--fg-muted)]">{rows.length}/{MAX_ITEMS}</span>}>
             {rows.length ? (
               <>
                 <ol className="space-y-1.5">
@@ -381,7 +380,7 @@ export function CompleteSetupAdmin() {
                         !r.enabled && 'opacity-55'
                       )}
                     >
-                      <span className="hidden cursor-grab text-[var(--fg-muted)] sm:block" aria-hidden="true">⋮⋮</span>
+                      <span className="hidden cursor-grab select-none text-[var(--border)] sm:block" aria-hidden="true">⋮⋮</span>
                       <span className="w-5 shrink-0 text-center text-xs font-bold tabular-nums text-[var(--fg-muted)]">{i + 1}</span>
                       <Thumb src={r.product.image} />
                       <span className="min-w-0 flex-1">
@@ -417,29 +416,23 @@ export function CompleteSetupAdmin() {
                     </li>
                   ))}
                 </ol>
-                <label className="mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl bg-[var(--bg-muted)] px-3 py-2.5">
-                  <input type="checkbox" className="mt-0.5 accent-[var(--brand)]" checked={fill} onChange={(e) => setFill(e.target.checked)} />
-                  <span className="text-xs">
-                    <span className="block font-medium">Fill remaining spots with automatic suggestions</span>
-                    <span className="text-[var(--fg-muted)]">Off: customers see only these products, in this order (8 max on the page).</span>
-                  </span>
+                <label className="mt-3 flex cursor-pointer items-center gap-2 px-1 text-xs text-[var(--fg-muted)]" title="Off: only these products, in this order">
+                  <input type="checkbox" className="accent-[var(--brand)]" checked={fill} onChange={(e) => setFill(e.target.checked)} />
+                  Also show automatic suggestions
                 </label>
               </>
             ) : (
               <div className="space-y-3">
-                <p className="rounded-xl border border-dashed border-[var(--border)] px-3 py-3 text-xs text-[var(--fg-muted)]">
-                  No products chosen — customers see the automatic suggestions below. Add products to replace them.
-                </p>
                 {automatic?.items.length ? (
                   <div>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-[var(--fg-muted)]">Automatic suggestions now</p>
+                      <p className="text-xs font-medium text-[var(--fg-muted)]">Automatic for now</p>
                       <button
                         type="button"
                         onClick={() => automatic.items.slice(0, MAX_ITEMS).forEach((p) => add(toRef(p)))}
                         className="text-xs font-medium text-[var(--brand-text)] hover:underline"
                       >
-                        Start from these
+                        Use all
                       </button>
                     </div>
                     <ul className="space-y-1.5">
@@ -457,7 +450,9 @@ export function CompleteSetupAdmin() {
                       ))}
                     </ul>
                   </div>
-                ) : null}
+                ) : (
+                  <p className="text-xs text-[var(--fg-muted)]">Nothing yet — add products from the list.</p>
+                )}
               </div>
             )}
           </SectionCard>
@@ -469,14 +464,13 @@ export function CompleteSetupAdmin() {
               <input
                 value={addQuery}
                 onChange={(e) => setAddQuery(e.target.value)}
-                placeholder="Search name, SKU or product ID"
+                placeholder="Search by name, SKU or ID"
                 className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm outline-none ring-brand"
               />
             </div>
             <div className="mt-2">
               <CategoryChips value={addCategory} onChange={setAddCategory} />
             </div>
-            {full ? <p className="mt-2 text-xs text-[var(--warning)]">Maximum {MAX_ITEMS} products reached.</p> : null}
             {addSearching ? (
               <ul className="mt-2 max-h-[30rem] divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)]">
                 {addSearch.isLoading ? (
@@ -515,9 +509,7 @@ export function CompleteSetupAdmin() {
                   <li className="px-3 py-3 text-sm text-[var(--fg-muted)]">No product found.</li>
                 )}
               </ul>
-            ) : (
-              <p className="mt-2 text-xs text-[var(--fg-muted)]">Pick a category or type at least 2 characters.</p>
-            )}
+            ) : null}
           </SectionCard>
         </div>
       ) : null}
@@ -549,8 +541,8 @@ export function CompleteSetupAdmin() {
 
       <ConfirmDialog
         open={Boolean(pendingSwitch !== null)}
-        title="Discard unsaved changes?"
-        description="Your changes to this product's recommendations are not saved yet."
+        title="Discard changes?"
+        description="They are not saved yet."
         confirmLabel="Discard"
         onClose={() => setPendingSwitch(null)}
         onConfirm={() => {
