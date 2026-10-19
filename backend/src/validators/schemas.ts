@@ -91,7 +91,7 @@ export const brandSchema = z.object({
 export const productSchema = z.object({
   name: z.string().min(2),
   sku: z.string().min(2),
-  description: z.string().min(10),
+  description: z.string().max(10000).optional().default(''),
   shortDescription: z.string().optional(),
   category: z.string().min(1),
   brand: z.string().min(1),

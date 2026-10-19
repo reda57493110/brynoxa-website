@@ -427,6 +427,7 @@ export function ProductDetail() {
           </motion.div>
         </div>
 
+        {p.description?.trim() ? (
         <motion.div
           {...fade(0.12)}
           className="mt-5 sm:mt-8"
@@ -450,6 +451,7 @@ export function ProductDetail() {
             </p>
           </section>
         </motion.div>
+        ) : null}
 
         <CompleteSetup productId={p._id} />
       </Container>

@@ -53,14 +53,26 @@ async function resolveBrandId(name: string) {
 
 const FORM_SECTIONS = [
   { id: 'pf-basics', label: 'Basics' },
-  { id: 'pf-pricing', label: 'Pricing' },
-  { id: 'pf-stock', label: 'Stock' },
+  { id: 'pf-pricing', label: 'Price & stock' },
+  { id: 'pf-photos', label: 'Photos' },
   { id: 'pf-specs', label: 'Specs' },
   { id: 'pf-versions', label: 'Versions' },
   { id: 'pf-description', label: 'Description' },
-  { id: 'pf-photos', label: 'Photos' },
+  { id: 'pf-more', label: 'More settings' },
   { id: 'pf-visibility', label: 'Visibility' },
 ]
+
+/** SKU made from the name when left empty, e.g. "HP-ELITEBOOK-830-K3F9". */
+function autoSku(name: string) {
+  const base = name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 28)
+  return `${base || 'PRODUCT'}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+}
 
 /** Section title inside the form grid (jump target). */
 function FormSection({ id, title }: { id: string; title: string }) {
@@ -329,7 +341,7 @@ export function ProductForm() {
       const brandId = await resolveBrandId(form.brand)
       const payload = {
         name: form.name,
-        sku: form.sku,
+        sku: form.sku.trim() || autoSku(form.name),
         description: form.description,
         shortDescription: form.shortDescription || undefined,
         category: form.category,
@@ -535,8 +547,8 @@ export function ProductForm() {
             toast('Enter a product name (at least 2 characters)', 'error')
             return
           }
-          if (!form.sku.trim() || form.sku.trim().length < 2) {
-            toast('Enter a SKU (at least 2 characters)', 'error')
+          if (form.sku.trim() && form.sku.trim().length < 2) {
+            toast('SKU must be at least 2 characters, or leave it empty to create one', 'error')
             return
           }
           if (!form.category) {
@@ -545,10 +557,6 @@ export function ProductForm() {
           }
           if (!form.brand.trim()) {
             toast('Enter a brand name', 'error')
-            return
-          }
-          if (!form.description.trim() || form.description.trim().length < 10) {
-            toast('Description must be at least 10 characters', 'error')
             return
           }
           if (Number.isNaN(form.price) || form.price < 0) {
@@ -620,20 +628,61 @@ export function ProductForm() {
           </div>
         </div>
         <FormSection id="pf-basics" title="Basics" />
-        <Input
-          label="Name"
-          className="sm:col-span-2"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+        <div className="sm:col-span-2">
+          <Input
+            label="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g. HP EliteBook 830 G8"
+            required
+          />
+        </div>
+        <Select
+          label="Category"
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
           required
+          placeholder="Choose a category"
+          options={categoryList.map((c) => {
+            const parentId = typeof c.parent === 'string' ? c.parent : c.parent?._id
+            const parent = parentId ? categoryList.find((x) => x._id === parentId) : null
+            return { value: c._id, label: parent ? `${parent.name} › ${c.name}` : c.name }
+          })}
         />
         <Input
-          label="SKU"
-          value={form.sku}
-          onChange={(e) => setForm({ ...form, sku: e.target.value })}
+          label="Brand"
+          value={form.brand}
+          onChange={(e) => setForm({ ...form, brand: e.target.value })}
+          placeholder="e.g. ASUS, Brynoxa"
           required
         />
-        <FormSection id="pf-pricing" title="Pricing & deposit" />
+        <Select
+          label="Condition"
+          value={form.condition}
+          onChange={(e) => setForm({ ...form, condition: e.target.value as ProductCondition })}
+          options={[
+            { value: 'new', label: 'New' },
+            { value: 'refurbished', label: 'Refurbished' },
+            { value: 'used', label: 'Used' },
+          ]}
+        />
+        {form.condition !== 'new' ? (
+          <div className="sm:col-span-2 space-y-1.5">
+            <Textarea
+              label="Condition note"
+              rows={3}
+              maxLength={500}
+              value={form.conditionNote}
+              onChange={(e) => setForm({ ...form, conditionNote: e.target.value })}
+              placeholder="e.g. Light scratches on the lid, battery at 88%, original charger included"
+            />
+            <p className="flex justify-between gap-3 text-xs text-[var(--fg-muted)]">
+              <span>Shown to customers on this listing. Describe the actual condition honestly.</span>
+              <span className="shrink-0 tabular-nums">{form.conditionNote.length}/500</span>
+            </p>
+          </div>
+        ) : null}
+        <FormSection id="pf-pricing" title="Price & stock" />
         <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
           <Input
             label="Sale price (DH)"
@@ -677,74 +726,7 @@ export function ProductForm() {
               </span>
             </div>
           ) : null}
-          <div className="sm:col-span-2 space-y-1.5">
-            <div className="sm:max-w-[calc(50%-0.5rem)]">
-              <Input
-                label="Cost price (DH) — private"
-                type="number"
-                inputMode="decimal"
-                min={0}
-                step="0.01"
-                value={form.costPrice}
-                onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
-                placeholder="What you paid for it"
-              />
-            </div>
-            <p className="text-xs text-[var(--fg-muted)]">
-              Never shown to customers. Used for profit reports, and recorded on each new order so
-              later cost changes don't rewrite past profit.
-            </p>
-            {costNumber !== null && salePrice > 0 ? (
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                <span className="text-[var(--fg-muted)]">
-                  Margin:{' '}
-                  <span className="font-semibold tabular-nums text-[var(--fg)]">
-                    {(((salePrice - costNumber) / salePrice) * 100).toFixed(1)}%
-                  </span>{' '}
-                  ({(salePrice - costNumber).toLocaleString('fr-MA')} DH per unit)
-                </span>
-                {costNumber >= salePrice ? (
-                  <span className="font-medium text-[var(--warning)]">
-                    Cost is higher than the sale price
-                  </span>
-                ) : null}
-              </p>
-            ) : null}
-          </div>
         </div>
-        <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
-          <Select
-            label="Deposit before confirmation"
-            value={form.depositType}
-            onChange={(e) =>
-              setForm({ ...form, depositType: e.target.value as typeof form.depositType })
-            }
-            options={[
-              { value: 'none', label: 'No deposit (standard cash on delivery)' },
-              { value: 'fixed', label: 'Fixed amount per unit (DH)' },
-              { value: 'percent', label: 'Percentage of the price (%)' },
-            ]}
-          />
-          {form.depositType !== 'none' ? (
-            <Input
-              label={form.depositType === 'percent' ? 'Deposit (%)' : 'Deposit per unit (DH)'}
-              type="number"
-              min={0}
-              max={form.depositType === 'percent' ? 100 : undefined}
-              step="0.01"
-              value={form.depositValue || ''}
-              onChange={(e) =>
-                setForm({ ...form, depositValue: e.target.value === '' ? 0 : Number(e.target.value) })
-              }
-              required
-            />
-          ) : null}
-          <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
-            Customers see the deposit on the product page and at checkout, and pay the rest on delivery.
-            The order can only be confirmed once you mark the deposit as received.
-          </p>
-        </div>
-        <FormSection id="pf-stock" title="Stock & catalog" />
         {isEdit ? (
           <div className="flex min-w-0 flex-col gap-1.5 text-sm">
             <span className="font-medium text-[var(--fg)]">Stock</span>
@@ -775,152 +757,6 @@ export function ProductForm() {
             </p>
           </div>
         )}
-        <Select
-          label="Category"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
-          required
-          options={categoryList.map((c) => {
-            const parentId = typeof c.parent === 'string' ? c.parent : c.parent?._id
-            const parent = parentId ? categoryList.find((x) => x._id === parentId) : null
-            return { value: c._id, label: parent ? `${parent.name} › ${c.name}` : c.name }
-          })}
-        />
-        <Input
-          label="Brand"
-          value={form.brand}
-          onChange={(e) => setForm({ ...form, brand: e.target.value })}
-          placeholder="e.g. ASUS, Brynoxa"
-          required
-        />
-        <div className="sm:col-span-2 grid min-w-0 gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4 sm:grid-cols-2">
-          <p className="sm:col-span-2 text-sm font-semibold">Condition &amp; inventory</p>
-          <Select
-            label="Condition"
-            value={form.condition}
-            onChange={(e) => setForm({ ...form, condition: e.target.value as ProductCondition })}
-            options={[
-              { value: 'new', label: 'New' },
-              { value: 'refurbished', label: 'Refurbished' },
-              { value: 'used', label: 'Used' },
-            ]}
-          />
-          <div className="min-w-0">
-            <Input
-              label="Storage location"
-              list="product-inventory-locations"
-              maxLength={80}
-              value={form.inventoryLocation}
-              onChange={(e) => setForm({ ...form, inventoryLocation: e.target.value })}
-              placeholder={locationOptions.length ? 'Pick a location or type one' : 'e.g. Shelf A3'}
-            />
-            <datalist id="product-inventory-locations">
-              {locationOptions.map((loc) => (
-                <option key={loc} value={loc} />
-              ))}
-            </datalist>
-          </div>
-          <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
-            Refurbished and used listings only sell units of that condition. Create them from{' '}
-            <Link to="/admin/inventory" className="text-[var(--brand-text)] hover:underline">
-              Admin → Inventory
-            </Link>{' '}
-            → product → “Create refurbished/used listing”, so they stay linked to the new model.
-            Storage locations are managed in{' '}
-            <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
-              Settings
-            </Link>
-            .
-          </p>
-          {form.condition !== 'new' ? (
-            <div className="sm:col-span-2 space-y-1.5">
-              <Textarea
-                label="Condition note"
-                rows={3}
-                maxLength={500}
-                value={form.conditionNote}
-                onChange={(e) => setForm({ ...form, conditionNote: e.target.value })}
-                placeholder="e.g. Light scratches on the lid, battery at 88%, original charger included"
-              />
-              <p className="flex justify-between gap-3 text-xs text-[var(--fg-muted)]">
-                <span>Shown to customers on this listing. Describe the actual condition honestly.</span>
-                <span className="shrink-0 tabular-nums">{form.conditionNote.length}/500</span>
-              </p>
-            </div>
-          ) : null}
-          <label className="sm:col-span-2 flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={form.serialTracking}
-              onChange={(e) => setForm({ ...form, serialTracking: e.target.checked })}
-            />
-            <span>
-              <span className="block text-sm font-medium">Serial number tracking</span>
-              <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                Each unit is tracked by its serial number. Deliveries require serials.
-              </span>
-            </span>
-          </label>
-        </div>
-        <FormAnchor id="pf-specs" />
-        {specs || !specTemplate ? (
-          <SpecsEditor
-            draft={specs ?? { template: autoTemplate, values: {}, custom: [] }}
-            onChange={setSpecs}
-            override={specOverride}
-            onOverride={setSpecOverride}
-            autoTemplate={autoTemplate}
-            hasCategory={Boolean(form.category)}
-            context={{ condition: form.condition }}
-            errors={specErrors}
-          />
-        ) : (
-          <div className="flex justify-center py-6 sm:col-span-2">
-            <Spinner />
-          </div>
-        )}
-        {specs ? <FormAnchor id="pf-versions" /> : null}
-        {specs && (!isEdit || existing.data) ? (
-          <VariantsPanel
-            product={isEdit ? (existing.data ?? null) : null}
-            templateId={specs.template}
-            mainValues={specs.values}
-            mainPrice={Number(form.price) || 0}
-            mainSku={form.sku}
-            onMainValue={(k, v) => setSpecs((d) => (d ? { ...d, values: { ...d.values, [k]: v } } : d))}
-            onMainPrice={(price) => setForm((f) => ({ ...f, price }))}
-            mainStock={isEdit ? undefined : form.stock}
-            onMainStock={isEdit ? undefined : (stock) => setForm((f) => ({ ...f, stock }))}
-            attributes={variantAttrs}
-            onAttributes={setVariantAttrs}
-            rows={versionRows}
-            onRows={setVersionRows}
-            errors={versionErrors}
-            dirty={isDirty}
-          />
-        ) : null}
-        <FormSection id="pf-description" title="Description" />
-        <Textarea
-          label="Short description"
-          className="sm:col-span-2"
-          value={form.shortDescription}
-          onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
-        />
-        <Textarea
-          label="Description"
-          className="sm:col-span-2"
-          rows={5}
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          required
-        />
-        <Input
-          label="Tags (comma separated)"
-          className="sm:col-span-2"
-          value={form.tags}
-          onChange={(e) => setForm({ ...form, tags: e.target.value })}
-        />
         <FormSection id="pf-photos" title="Photos" />
         <div className="sm:col-span-2 space-y-3">
           <div>
@@ -1094,6 +930,194 @@ export function ProductForm() {
             </div>
           )}
         </div>
+        <FormAnchor id="pf-specs" />
+        {specs || !specTemplate ? (
+          <SpecsEditor
+            draft={specs ?? { template: autoTemplate, values: {}, custom: [] }}
+            onChange={setSpecs}
+            override={specOverride}
+            onOverride={setSpecOverride}
+            autoTemplate={autoTemplate}
+            hasCategory={Boolean(form.category)}
+            context={{ condition: form.condition }}
+            errors={specErrors}
+          />
+        ) : (
+          <div className="flex justify-center py-6 sm:col-span-2">
+            <Spinner />
+          </div>
+        )}
+        {specs ? <FormAnchor id="pf-versions" /> : null}
+        {specs && (!isEdit || existing.data) ? (
+          <VariantsPanel
+            product={isEdit ? (existing.data ?? null) : null}
+            templateId={specs.template}
+            mainValues={specs.values}
+            mainPrice={Number(form.price) || 0}
+            mainSku={form.sku}
+            onMainValue={(k, v) => setSpecs((d) => (d ? { ...d, values: { ...d.values, [k]: v } } : d))}
+            onMainPrice={(price) => setForm((f) => ({ ...f, price }))}
+            mainStock={isEdit ? undefined : form.stock}
+            onMainStock={isEdit ? undefined : (stock) => setForm((f) => ({ ...f, stock }))}
+            attributes={variantAttrs}
+            onAttributes={setVariantAttrs}
+            rows={versionRows}
+            onRows={setVersionRows}
+            errors={versionErrors}
+            dirty={isDirty}
+          />
+        ) : null}
+        <FormSection id="pf-description" title="Description (optional)" />
+        <div className="sm:col-span-2">
+          <Textarea
+            label="Short description"
+            rows={2}
+            placeholder="One line shown under the name, e.g. i7 13th gen · 16 GB · 512 GB SSD · 14&quot; FHD"
+            value={form.shortDescription}
+            onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <Textarea
+            label="Full description"
+            rows={5}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+        </div>
+        <FormAnchor id="pf-more" />
+        <details className="group sm:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 open:bg-transparent">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span>
+              <span className="block text-sm font-semibold">More settings (optional)</span>
+              <span className="block text-xs text-[var(--fg-muted)]">SKU, cost price, deposit, storage location, serial numbers, tags</span>
+            </span>
+            <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)] transition group-open:rotate-180" />
+          </summary>
+          <div className="grid min-w-0 gap-4 border-t border-[var(--border)] p-4 sm:grid-cols-2">
+            <div className="min-w-0 space-y-1.5">
+            <Input
+              label="SKU"
+              value={form.sku}
+              onChange={(e) => setForm({ ...form, sku: e.target.value })}
+              placeholder="Leave empty to create one"
+            />
+              <p className="text-xs text-[var(--fg-muted)]">Your internal reference. Created from the name if empty.</p>
+            </div>
+            <div className="min-w-0">
+              <Input
+                label="Storage location"
+                list="product-inventory-locations"
+                maxLength={80}
+                value={form.inventoryLocation}
+                onChange={(e) => setForm({ ...form, inventoryLocation: e.target.value })}
+                placeholder={locationOptions.length ? 'Pick a location or type one' : 'e.g. Shelf A3'}
+              />
+              <datalist id="product-inventory-locations">
+                {locationOptions.map((loc) => (
+                  <option key={loc} value={loc} />
+                ))}
+              </datalist>
+            </div>
+              <div className="sm:col-span-2 space-y-1.5">
+              <div className="sm:max-w-[calc(50%-0.5rem)]">
+                <Input
+                  label="Cost price (DH) — private"
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="0.01"
+                  value={form.costPrice}
+                  onChange={(e) => setForm({ ...form, costPrice: e.target.value })}
+                  placeholder="What you paid for it"
+                />
+              </div>
+              <p className="text-xs text-[var(--fg-muted)]">
+                Never shown to customers. Used for profit reports, and recorded on each new order so
+                later cost changes don't rewrite past profit.
+              </p>
+              {costNumber !== null && salePrice > 0 ? (
+                <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                  <span className="text-[var(--fg-muted)]">
+                    Margin:{' '}
+                    <span className="font-semibold tabular-nums text-[var(--fg)]">
+                      {(((salePrice - costNumber) / salePrice) * 100).toFixed(1)}%
+                    </span>{' '}
+                    ({(salePrice - costNumber).toLocaleString('fr-MA')} DH per unit)
+                  </span>
+                  {costNumber >= salePrice ? (
+                    <span className="font-medium text-[var(--warning)]">
+                      Cost is higher than the sale price
+                    </span>
+                  ) : null}
+                </p>
+              ) : null}
+            </div>
+            <div className="sm:col-span-2 grid gap-4 sm:grid-cols-2">
+            <Select
+              label="Deposit before confirmation"
+              value={form.depositType}
+              onChange={(e) =>
+                setForm({ ...form, depositType: e.target.value as typeof form.depositType })
+              }
+              options={[
+                { value: 'none', label: 'No deposit (standard cash on delivery)' },
+                { value: 'fixed', label: 'Fixed amount per unit (DH)' },
+                { value: 'percent', label: 'Percentage of the price (%)' },
+              ]}
+            />
+            {form.depositType !== 'none' ? (
+              <Input
+                label={form.depositType === 'percent' ? 'Deposit (%)' : 'Deposit per unit (DH)'}
+                type="number"
+                min={0}
+                max={form.depositType === 'percent' ? 100 : undefined}
+                step="0.01"
+                value={form.depositValue || ''}
+                onChange={(e) =>
+                  setForm({ ...form, depositValue: e.target.value === '' ? 0 : Number(e.target.value) })
+                }
+                required
+              />
+            ) : null}
+            <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
+              Customers see the deposit on the product page and at checkout, and pay the rest on delivery.
+              The order can only be confirmed once you mark the deposit as received.
+            </p>
+          </div>
+              <label className="sm:col-span-2 flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.serialTracking}
+                onChange={(e) => setForm({ ...form, serialTracking: e.target.checked })}
+              />
+              <span>
+                <span className="block text-sm font-medium">Serial number tracking</span>
+                <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
+                  Each unit is tracked by its serial number. Deliveries require serials.
+                </span>
+              </span>
+            </label>
+              <Input
+              label="Tags (comma separated)"
+              value={form.tags}
+              onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            />
+                <p className="sm:col-span-2 text-xs text-[var(--fg-muted)]">
+              Refurbished and used listings only sell units of that condition. Create them from{' '}
+              <Link to="/admin/inventory" className="text-[var(--brand-text)] hover:underline">
+                Admin → Inventory
+              </Link>{' '}
+              → product → “Create refurbished/used listing”, so they stay linked to the new model.
+              Storage locations are managed in{' '}
+              <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
+                Settings
+              </Link>
+              .
+            </p>
+            </div>
+        </details>
         <FormSection id="pf-visibility" title="Recommendations & visibility" />
         <RecommendedPicker
           value={form.recommended}

@@ -15,14 +15,14 @@ import type { Product } from '@/types'
 import { VariantRows, newVersionRow, type VersionRow } from './VariantRows'
 import { FieldInput } from './SpecsEditor'
 
-export const DEFAULT_VARIANT_OPTIONS = ['cpu', 'ram_gb', 'storage', 'capacity_gb']
+export const DEFAULT_VARIANT_OPTIONS = ['cpu', 'cpu_generation', 'ram_gb', 'storage', 'capacity_gb']
 
 /** What usually changes between versions of a computer: offered first, the rest under "More". */
 const COMMON_OPTIONS = ['cpu', 'cpu_generation', 'ram_gb', 'storage', 'gpu', 'screen_size', 'capacity_gb', 'color']
 
 /** Default options for a product type: processor / RAM / storage, or colour for accessories. */
 export function defaultVariantOptions(choices: string[]) {
-  const picked = DEFAULT_VARIANT_OPTIONS.filter((k) => choices.includes(k))
+  const picked = DEFAULT_VARIANT_OPTIONS.filter((k) => choices.includes(k)).slice(0, 4)
   return picked.length ? picked : choices.includes('color') ? ['color'] : []
 }
 
