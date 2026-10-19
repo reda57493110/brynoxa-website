@@ -51,7 +51,10 @@ export const adminApi = {
   setup: {
     list: () => api.get<ApiResponse<SetupListRow[]>>('/admin/setup'),
     get: (productId: string) => api.get<ApiResponse<SetupDetail>>(`/admin/setup/${productId}`),
-    save: (productId: string, payload: { items: { productId: string; enabled: boolean }[]; fillWithAutomatic: boolean }) =>
+    save: (
+      productId: string,
+      payload: { items: { productId: string; enabled: boolean }[]; fillWithAutomatic: boolean; hidden?: string[]; off?: boolean }
+    ) =>
       api.put<ApiResponse<SetupDetail>>(`/admin/setup/${productId}`, payload),
   },
 

@@ -139,7 +139,7 @@ function SectionCard({ letter, title, aside, children }: { letter: string; title
 function useRemoveSetup(onDone?: (id: string) => void) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => adminApi.setup.save(id, { items: [], fillWithAutomatic: true }),
+    mutationFn: (id: string) => adminApi.setup.save(id, { items: [], fillWithAutomatic: true, hidden: [], off: false }),
     onSuccess: (res, id) => {
       qc.setQueryData(['admin-setup', id], res.data.data)
       void qc.invalidateQueries({ queryKey: ['admin-setup-list'] })
@@ -220,7 +220,12 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{row.name}</span>
                     <span className="block truncate text-[11px] text-[var(--fg-muted)]">
-                      {row.enabled} product{row.enabled === 1 ? '' : 's'}{row.fillWithAutomatic ? ' + automatic' : ''}
+                      {row.off
+                        ? 'Shows nothing'
+                        : row.total
+                          ? `${row.enabled} product${row.enabled === 1 ? '' : 's'}${row.fillWithAutomatic ? ' + automatic' : ''}`
+                          : 'Automatic'}
+                      {row.hidden ? ` · ${row.hidden} hidden` : ''}
                     </span>
                   </span>
                 </button>
@@ -261,6 +266,8 @@ export function CompleteSetupAdmin() {
   const productId = params.get('product') || ''
   const [rows, setRows] = useState<Row[]>([])
   const [fill, setFill] = useState(false)
+  const [hiddenList, setHiddenList] = useState<SetupProductRef[]>([])
+  const [off, setOff] = useState(false)
   const [addQuery, setAddQuery] = useState('')
   const [addCategory, setAddCategory] = useState('')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
@@ -277,17 +284,30 @@ export function CompleteSetupAdmin() {
   })
 
   // Load the saved list into the editor
-  const savedKey = detail.data ? JSON.stringify({ i: detail.data.items.map((r) => [r.product._id, r.enabled]), f: detail.data.fillWithAutomatic }) : ''
-  useEffect(() => {
+  // One comparable value for "what customers get": picks (+ auto-fill), hidden ones, or nothing
+  const keyOf = (items: Row[], f: boolean, hidden: SetupProductRef[], o: boolean) =>
+    JSON.stringify({
+      i: items.map((r) => [r.product._id, r.enabled]),
+      f: items.length ? f : null,
+      h: hidden.map((h) => h._id).sort(),
+      o: items.length ? false : o,
+    })
+  const savedKey = detail.data ? keyOf(detail.data.items, detail.data.fillWithAutomatic, detail.data.hidden ?? [], Boolean(detail.data.off)) : ''
+  const resetEditor = () => {
     if (!detail.data) return
     setRows(detail.data.items)
     // No picks yet: start with "only my products"; the switch only matters once there are some
     setFill(detail.data.items.length ? detail.data.fillWithAutomatic : false)
+    setHiddenList(detail.data.hidden ?? [])
+    setOff(Boolean(detail.data.off))
+  }
+  useEffect(() => {
+    resetEditor()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedKey])
 
-  const currentKey = JSON.stringify({ i: rows.map((r) => [r.product._id, r.enabled]), f: rows.length ? fill : detail.data?.fillWithAutomatic })
-  const dirty = Boolean(detail.data) && currentKey !== savedKey && !(rows.length === 0 && detail.data!.items.length === 0)
+  const currentKey = keyOf(rows, fill, hiddenList, off)
+  const dirty = Boolean(detail.data) && currentKey !== savedKey
 
   // Don't lose unsaved changes when leaving the page
   useEffect(() => {
@@ -305,6 +325,8 @@ export function CompleteSetupAdmin() {
       adminApi.setup.save(productId, {
         items: rows.map((r) => ({ productId: r.product._id, enabled: r.enabled })),
         fillWithAutomatic: fill,
+        hidden: hiddenList.map((h) => h._id),
+        off: !rows.length && off,
       }),
     onSuccess: (res) => {
       qc.setQueryData(['admin-setup', productId], res.data.data)
@@ -330,7 +352,14 @@ export function CompleteSetupAdmin() {
   const add = (p: SetupProductRef) => {
     if (p._id === productId || ids.has(p._id) || full) return
     setRows((list) => [...list, { product: p, enabled: true }])
+    setHiddenList((list) => list.filter((x) => x._id !== p._id))
+    setOff(false)
   }
+  // Hide an automatic suggestion for this product (adding it as a pick later un-hides it)
+  const hide = (p: SetupProductRef) => setHiddenList((list) => (list.some((x) => x._id === p._id) ? list : [...list, p]))
+  const hiddenIds = new Set(hiddenList.map((h) => h._id))
+  const visibleAutomatic = (detail.data?.automatic.items ?? []).filter((p) => !hiddenIds.has(p._id) && !ids.has(p._id))
+
   const move = (from: number, to: number) =>
     setRows((list) => {
       if (to < 0 || to >= list.length) return list
@@ -357,7 +386,7 @@ export function CompleteSetupAdmin() {
         aside={
           main ? (
             <div className="flex items-center gap-3">
-              {detail.data?.items.length ? (
+              {detail.data && (detail.data.items.length || detail.data.hidden?.length || detail.data.off) ? (
                 <button type="button" onClick={() => setConfirmReset(true)} className="text-xs font-medium text-[var(--danger)] hover:underline">
                   Remove
                 </button>
@@ -468,20 +497,28 @@ export function CompleteSetupAdmin() {
               </>
             ) : (
               <div className="space-y-3">
-                {automatic?.items.length ? (
+                <label className="flex cursor-pointer items-center gap-2 px-1 text-xs text-[var(--fg-muted)]">
+                  <input type="checkbox" className="accent-[var(--brand)]" checked={off} onChange={(e) => setOff(e.target.checked)} />
+                  Show nothing for this product
+                </label>
+                {off ? (
+                  <p className="rounded-xl bg-[var(--bg-muted)] px-3 py-2.5 text-xs text-[var(--fg-muted)]">
+                    Customers see no recommendations on this product.
+                  </p>
+                ) : visibleAutomatic.length ? (
                   <div>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
                       <p className="text-xs font-medium text-[var(--fg-muted)]">Automatic for now</p>
                       <button
                         type="button"
-                        onClick={() => automatic.items.slice(0, MAX_ITEMS).forEach((p) => add(toRef(p)))}
+                        onClick={() => visibleAutomatic.slice(0, MAX_ITEMS).forEach((p) => add(toRef(p)))}
                         className="text-xs font-medium text-[var(--brand-text)] hover:underline"
                       >
                         Use all
                       </button>
                     </div>
                     <ul className="space-y-1.5">
-                      {automatic.items.map((p) => (
+                      {visibleAutomatic.map((p) => (
                         <li key={p._id} className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-2">
                           <Thumb src={toRef(p).image} size="sm" />
                           <span className="min-w-0 flex-1">
@@ -491,15 +528,43 @@ export function CompleteSetupAdmin() {
                           <Button size="sm" variant="outline" className="h-8" onClick={() => add(toRef(p))}>
                             <SiteIcon name="plus" size={13} /> Add
                           </Button>
+                          <button
+                            type="button"
+                            onClick={() => hide(toRef(p))}
+                            aria-label={`Hide ${p.name}`}
+                            title="Don't suggest it for this product"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]"
+                          >
+                            <SiteIcon name="close" size={14} />
+                          </button>
                         </li>
                       ))}
                     </ul>
                   </div>
                 ) : (
-                  <p className="text-xs text-[var(--fg-muted)]">Nothing yet — add products from the list.</p>
+                  <p className="text-xs text-[var(--fg-muted)]">No automatic suggestions — add products from the list.</p>
                 )}
               </div>
             )}
+            {hiddenList.length && !(off && !rows.length) ? (
+              <div className="mt-3">
+                <p className="mb-1.5 text-xs font-medium text-[var(--fg-muted)]">Hidden</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {hiddenList.map((h) => (
+                    <button
+                      key={h._id}
+                      type="button"
+                      onClick={() => setHiddenList((list) => list.filter((x) => x._id !== h._id))}
+                      title="Show it again"
+                      className="inline-flex h-7 max-w-full items-center gap-1 rounded-full border border-[var(--border)] px-2.5 text-[11px] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]"
+                    >
+                      <span className="truncate">{h.name}</span>
+                      <SiteIcon name="refresh" size={11} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </SectionCard>
 
           {/* C · Add products */}
@@ -567,11 +632,7 @@ export function CompleteSetupAdmin() {
             <div className="flex gap-2">
               <Button
                 variant="ghost"
-                onClick={() => {
-                  if (!detail.data) return
-                  setRows(detail.data.items)
-                  setFill(detail.data.fillWithAutomatic)
-                }}
+                onClick={resetEditor}
                 disabled={save.isPending}
               >
                 Cancel
@@ -603,7 +664,7 @@ export function CompleteSetupAdmin() {
         onConfirm={() => {
           const next = pendingSwitch ?? ''
           setPendingSwitch(null)
-          if (detail.data) setRows(detail.data.items)
+          resetEditor()
           setParams(next ? { product: next } : {})
           setAddQuery('')
           setAddCategory('')

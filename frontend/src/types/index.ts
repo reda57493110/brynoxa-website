@@ -1205,12 +1205,16 @@ export interface SetupListRow {
   total: number
   enabled: number
   fillWithAutomatic: boolean
+  hidden: number
+  off: boolean
   updatedAt: string
 }
 
 export interface SetupDetail {
   product: SetupProductRef
   items: { product: SetupProductRef; enabled: boolean }[]
+  hidden: SetupProductRef[]
   fillWithAutomatic: boolean
+  off: boolean
   automatic: { kind: string; wanted: { kind: string; available: number }[]; items: Product[] }
 }

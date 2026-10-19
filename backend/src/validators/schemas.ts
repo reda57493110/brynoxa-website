@@ -621,4 +621,8 @@ export const setupSaveSchema = z.object({
     .array(z.object({ productId: z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid product reference'), enabled: z.boolean() }))
     .max(12),
   fillWithAutomatic: z.boolean(),
+  /** Automatic suggestions hidden for this product */
+  hidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid product reference')).max(50).optional(),
+  /** Show no recommendations at all for this product */
+  off: z.boolean().optional(),
 });
