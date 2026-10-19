@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
+import { categoriesApi } from '@/api/categoriesApi'
 import { getErrorMessage } from '@/api/client'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Badge } from '@/components/ui/Badge'
@@ -15,7 +16,7 @@ import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
 import { en } from '@/i18n/en'
-import type { Product, SetupProductRef } from '@/types'
+import type { Category, Product, SetupProductRef } from '@/types'
 
 const MAX_ITEMS = 12
 const OBJECT_ID = /^[a-f0-9]{24}$/i
@@ -63,11 +64,11 @@ function Availability({ p }: { p: SetupProductRef }) {
   return <span className="text-[11px] tabular-nums text-[var(--fg-muted)]">{p.stock} in stock</span>
 }
 
-/** Search the catalog by name, SKU or product ID. */
-function useProductSearch(query: string) {
+/** Search the catalog by name, SKU or product ID, and/or list a whole category. */
+function useProductSearch(query: string, category: string) {
   const q = useDeferredValue(query.trim())
   return useQuery({
-    queryKey: ['admin-setup-search', q],
+    queryKey: ['admin-setup-search', q, category],
     queryFn: async () => {
       if (OBJECT_ID.test(q)) {
         try {
@@ -76,10 +77,47 @@ function useProductSearch(query: string) {
           return []
         }
       }
-      return (await adminApi.products.list({ q, limit: 8 })).data.data
+      return (
+        await adminApi.products.list({
+          q: q.length >= 2 ? q : undefined,
+          category: category || undefined,
+          limit: category ? 60 : 12,
+          sort: 'name',
+        })
+      ).data.data
     },
-    enabled: q.length >= 2,
+    enabled: q.length >= 2 || Boolean(category),
   })
+}
+
+/** "All · Laptops · Monitors…" — pick a category to list all its products. */
+function CategoryChips({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const cats = useQuery({
+    queryKey: ['categories', 'all'],
+    queryFn: async () => (await categoriesApi.list(true)).data.data,
+    staleTime: 5 * 60_000,
+  })
+  const list = (cats.data as Category[] | undefined) ?? []
+  if (!list.length) return null
+  const chip = (active: boolean) =>
+    cn(
+      'h-8 shrink-0 rounded-full border px-3 text-xs font-medium transition',
+      active
+        ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)]'
+        : 'border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
+    )
+  return (
+    <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <button type="button" className={chip(!value)} onClick={() => onChange('')}>
+        All
+      </button>
+      {list.map((c) => (
+        <button key={c._id} type="button" className={chip(value === c._id)} onClick={() => onChange(value === c._id ? '' : c._id)}>
+          {c.name}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 function SectionCard({ letter, title, aside, children }: { letter: string; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
@@ -101,7 +139,9 @@ function SectionCard({ letter, title, aside, children }: { letter: string; title
 
 function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
   const [query, setQuery] = useState('')
-  const search = useProductSearch(query)
+  const [category, setCategory] = useState('')
+  const search = useProductSearch(query, category)
+  const searching = query.trim().length >= 2 || Boolean(category)
   const configured = useQuery({
     queryKey: ['admin-setup-list'],
     queryFn: async () => (await adminApi.setup.list()).data.data,
@@ -119,8 +159,9 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
           className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm outline-none ring-brand"
         />
       </div>
-      {query.trim().length >= 2 ? (
-        <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
+      <CategoryChips value={category} onChange={setCategory} />
+      {searching ? (
+        <ul className="max-h-[26rem] divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)]">
           {search.isLoading ? (
             <li className="flex justify-center py-4"><Spinner /></li>
           ) : search.data?.length ? (
@@ -187,9 +228,11 @@ export function CompleteSetupAdmin() {
   const [rows, setRows] = useState<Row[]>([])
   const [fill, setFill] = useState(false)
   const [addQuery, setAddQuery] = useState('')
+  const [addCategory, setAddCategory] = useState('')
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [pendingSwitch, setPendingSwitch] = useState<string | null>(null)
-  const addSearch = useProductSearch(addQuery)
+  const addSearch = useProductSearch(addQuery, addCategory)
+  const addSearching = addQuery.trim().length >= 2 || Boolean(addCategory)
 
   const detail = useQuery({
     queryKey: ['admin-setup', productId],
@@ -243,6 +286,7 @@ export function CompleteSetupAdmin() {
     }
     setParams(id ? { product: id } : {})
     setAddQuery('')
+    setAddCategory('')
   }
 
   const ids = useMemo(() => new Set(rows.map((r) => r.product._id)), [rows])
@@ -429,9 +473,12 @@ export function CompleteSetupAdmin() {
                 className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm outline-none ring-brand"
               />
             </div>
+            <div className="mt-2">
+              <CategoryChips value={addCategory} onChange={setAddCategory} />
+            </div>
             {full ? <p className="mt-2 text-xs text-[var(--warning)]">Maximum {MAX_ITEMS} products reached.</p> : null}
-            {addQuery.trim().length >= 2 ? (
-              <ul className="mt-2 divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
+            {addSearching ? (
+              <ul className="mt-2 max-h-[30rem] divide-y divide-[var(--border)] overflow-y-auto rounded-xl border border-[var(--border)]">
                 {addSearch.isLoading ? (
                   <li className="flex justify-center py-4"><Spinner /></li>
                 ) : addSearch.data?.length ? (
@@ -469,7 +516,7 @@ export function CompleteSetupAdmin() {
                 )}
               </ul>
             ) : (
-              <p className="mt-2 text-xs text-[var(--fg-muted)]">Type at least 2 characters.</p>
+              <p className="mt-2 text-xs text-[var(--fg-muted)]">Pick a category or type at least 2 characters.</p>
             )}
           </SectionCard>
         </div>
@@ -512,6 +559,8 @@ export function CompleteSetupAdmin() {
           if (detail.data) setRows(detail.data.items)
           setParams(next ? { product: next } : {})
           setAddQuery('')
+          setAddCategory('')
+    setAddCategory('')
         }}
       />
     </div>
