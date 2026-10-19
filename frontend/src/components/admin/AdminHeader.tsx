@@ -12,11 +12,11 @@ export function AdminHeader({
   return (
     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0 flex-1">
-        <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-2xl">
+        <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-xl">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm leading-snug break-words text-[var(--fg-muted)]">
+          <p className="mt-0.5 text-xs leading-snug break-words text-[var(--fg-muted)] sm:text-sm">
             {description}
           </p>
         ) : null}

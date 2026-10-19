@@ -283,6 +283,13 @@ html[lang="ar"] {
  * Admin on phones: 14px root instead of 16px, so text, padding and card heights (all rem-based)
  * shrink evenly by 12.5%. Form fields stay at 16px so iOS Safari does not zoom in on focus.
  */
+/* Admin on tablets / computers: slightly smaller base, so every rem size (text, fields, cards) tightens evenly */
+@media (min-width: 640px) {
+  html.admin-compact {
+    font-size: 15px;
+  }
+}
+
 @media (max-width: 639px) {
   html.admin-compact {
     font-size: 14px;

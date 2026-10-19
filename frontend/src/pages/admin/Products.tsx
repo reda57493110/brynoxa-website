@@ -263,7 +263,7 @@ export function Products() {
       ) : products.isError ? (
         <QueryErrorState onRetry={() => products.refetch()} />
       ) : !items.length ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] px-4 py-10 text-center">
+        <div className="rounded-xl border border-dashed border-[var(--border)] px-4 py-6 text-center">
           <p className="text-sm text-[var(--fg-muted)]">{filtered ? 'No products match these filters.' : 'No products yet.'}</p>
           {!filtered ? (
             <Link to="/admin/products/new" className="mt-3 inline-block text-sm font-medium text-[var(--brand-text)] hover:underline">

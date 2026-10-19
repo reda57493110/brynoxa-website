@@ -127,7 +127,7 @@ export function Settings() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="font-display text-xl font-semibold sm:text-2xl">Settings</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Settings</h1>
         <p className="text-sm text-[var(--fg-muted)]">Store configuration, grouped by topic.</p>
       </div>
 

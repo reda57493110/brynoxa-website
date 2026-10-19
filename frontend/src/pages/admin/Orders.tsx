@@ -425,7 +425,7 @@ export function Orders() {
                   </Link>
                 </li>
               ))}
-              {!items.length ? <li className="px-4 py-8 text-center text-sm text-[var(--fg-muted)]">No orders found.</li> : null}
+              {!items.length ? <li className="px-4 py-6 text-center text-sm text-[var(--fg-muted)]">No orders found.</li> : null}
             </ul>
           </div>
 
@@ -509,7 +509,7 @@ export function Orders() {
                 ))}
                 {!items.length ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-sm text-[var(--fg-muted)]">
+                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-[var(--fg-muted)]">
                       No orders found.
                     </td>
                   </tr>

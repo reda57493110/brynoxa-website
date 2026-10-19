@@ -174,7 +174,7 @@ export function InventoryProduct() {
             <dt className="text-[11px] text-[var(--fg-muted)]">Sellable</dt>
             <dd
               className={cn(
-                'font-display text-xl font-semibold tabular-nums',
+                'font-display text-lg font-semibold tabular-nums',
                 d.sellable <= 0 ? 'text-[var(--danger)]' : low && 'text-[var(--warning)]'
               )}
             >
@@ -183,7 +183,7 @@ export function InventoryProduct() {
           </div>
           <div>
             <dt className="text-[11px] text-[var(--fg-muted)]">Total in stock</dt>
-            <dd className="font-display text-xl font-semibold tabular-nums">{d.physical}</dd>
+            <dd className="font-display text-lg font-semibold tabular-nums">{d.physical}</dd>
           </div>
           <div>
             <dt className="text-[11px] text-[var(--fg-muted)]">Stock value</dt>

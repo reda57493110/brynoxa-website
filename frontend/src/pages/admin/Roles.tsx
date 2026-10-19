@@ -386,7 +386,7 @@ export function Roles() {
                 )
               })}
               {!items.length ? (
-                <li className="px-4 py-8 text-center text-sm text-[var(--fg-muted)]">
+                <li className="px-4 py-6 text-center text-sm text-[var(--fg-muted)]">
                   {allStaff.length ? 'No staff match.' : 'No staff accounts yet.'}
                 </li>
               ) : null}
@@ -436,7 +436,7 @@ export function Roles() {
                   })}
                   {!items.length ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-10 text-center text-sm text-[var(--fg-muted)]">
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-[var(--fg-muted)]">
                         {allStaff.length ? 'No staff match.' : 'No staff accounts yet.'}
                       </td>
                     </tr>
