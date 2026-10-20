@@ -231,8 +231,13 @@ export interface DepositPaymentReport {
   /** Name on the transfer / slip */
   payerName?: string
   senderPhone?: string
-  /** Day of the transfer (YYYY-MM-DD) */
+  /** When it was paid (YYYY-MM-DD or YYYY-MM-DDTHH:mm) */
   paidOn?: string
+  /** What the customer says they sent, and the transfer fees */
+  amountSent?: number
+  fee?: number
+  /** Agency / city / ATM where they paid */
+  place?: string
   /** ATM cardless withdrawal codes */
   codes?: { label: string; value: string }[]
   reference?: string
@@ -259,6 +264,8 @@ export interface DepositMethod {
   visible?: boolean
   /** ATM cardless withdrawal: labels of the codes the customer sends (max 4) */
   codeLabels?: string[]
+  /** Transfer fees, shown to the customer */
+  fees?: string
 }
 
 export interface OrderItem {

@@ -708,6 +708,13 @@ export const en = {
     accessory: "Accessory",
   },
   deposit: {
+    amountSent: "Amount sent (DH)",
+    feePaid: "Fees paid (DH)",
+    feeHint: "e.g. 35",
+    paidWhen: "When did you pay?",
+    place: "Where (agency, city)",
+    placeAtm: "Where (bank, ATM, city)",
+    placeHint: "e.g. Cash Plus Maarif, Casablanca",
     typeAtm: "ATM — cardless withdrawal",
     holderName: "Account holder name",
     transferDate: "Transfer date",

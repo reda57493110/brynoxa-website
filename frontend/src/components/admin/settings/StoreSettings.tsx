@@ -77,6 +77,7 @@ const newMethod = (type: DepositMethodType = 'bank'): DepositMethod => ({
   account: '',
   note: '',
   steps: '',
+  fees: '',
 })
 
 /** ATM cardless withdrawal: the codes the customer must send (your labels, up to 4). */
@@ -283,6 +284,15 @@ export function OrdersSettings() {
                 <Input label="Receiver name" value={m.holder} maxLength={80} placeholder="Full name on the account" onChange={(e) => patch(m.id, { holder: e.target.value })} />
                 <div className="sm:col-span-2">
                   <Input label={m.type === 'bank' ? 'RIB' : 'Number'} value={m.account} maxLength={80} dir="ltr" placeholder={type.placeholder} onChange={(e) => patch(m.id, { account: e.target.value })} />
+                </div>
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Transfer fees (shown to the customer)"
+                    value={m.fees ?? ''}
+                    maxLength={160}
+                    placeholder={m.type === 'bank' ? 'e.g. No fees between accounts' : 'e.g. Fees ≈35–45 DH, paid by the sender'}
+                    onChange={(e) => patch(m.id, { fees: e.target.value })}
+                  />
                 </div>
                 <div className="sm:col-span-2">
                   <Input label="Note (optional)" value={m.note} maxLength={300} placeholder="e.g. Open 9:00–19:00" onChange={(e) => patch(m.id, { note: e.target.value })} />

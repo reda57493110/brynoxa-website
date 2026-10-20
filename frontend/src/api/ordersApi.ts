@@ -27,6 +27,9 @@ export const ordersApi = {
       payerName?: string
       senderPhone?: string
       paidOn?: string
+      amountSent?: number
+      fee?: number
+      place?: string
       codes?: { label: string; value: string }[]
       reference?: string
       note?: string

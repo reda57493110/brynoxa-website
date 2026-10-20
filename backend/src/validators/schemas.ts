@@ -259,6 +259,7 @@ export const settingsSchema = z.object({
         steps: z.string().max(1500).optional(),
         visible: z.boolean().optional(),
         codeLabels: z.array(z.string().max(40)).max(4).optional(),
+        fees: z.string().max(160).optional(),
       })
     )
     .max(8)
@@ -612,6 +613,9 @@ export const depositPaymentSchema = z.object({
   payerName: z.string().trim().max(120).optional(),
   senderPhone: z.string().trim().max(30).optional(),
   paidOn: z.string().trim().max(20).optional(),
+  amountSent: z.number().min(0).max(10_000_000).optional(),
+  fee: z.number().min(0).max(100_000).optional(),
+  place: z.string().trim().max(120).optional(),
   codes: z.array(z.object({ label: z.string().max(40), value: z.string().trim().max(40) })).max(4).optional(),
   reference: z.string().trim().max(80).optional(),
   note: z.string().trim().max(300).optional(),
@@ -659,6 +663,7 @@ export const depositMethodsSchema = z.object({
         steps: z.string().max(1500).optional(),
         visible: z.boolean().optional(),
         codeLabels: z.array(z.string().max(40)).max(4).optional(),
+        fees: z.string().max(160).optional(),
       })
     )
     .max(8),

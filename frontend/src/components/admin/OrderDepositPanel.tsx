@@ -372,10 +372,38 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                     <dd className="text-end font-mono text-xs" dir="ltr">{payment.senderPhone}</dd>
                   </div>
                 ) : null}
+                {typeof payment.amountSent === 'number' ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Amount sent</dt>
+                    <dd
+                      className={cn(
+                        'text-end font-semibold tabular-nums',
+                        deposit && payment.amountSent < deposit.amount ? 'text-[var(--danger)]' : 'text-[var(--success)]'
+                      )}
+                    >
+                      {formatCurrency(payment.amountSent)}
+                      {deposit && payment.amountSent < deposit.amount ? (
+                        <span className="block text-[10px] font-medium">{formatCurrency(deposit.amount - payment.amountSent)} missing</span>
+                      ) : null}
+                    </dd>
+                  </div>
+                ) : null}
+                {typeof payment.fee === 'number' ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Fees paid</dt>
+                    <dd className="tabular-nums">{formatCurrency(payment.fee)}</dd>
+                  </div>
+                ) : null}
                 {payment.paidOn ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Transfer date</dt>
-                    <dd className="text-xs">{formatDate(payment.paidOn)}</dd>
+                    <dt className="text-[var(--fg-muted)]">Paid on</dt>
+                    <dd className="text-xs">{payment.paidOn.includes('T') ? formatDateTime(payment.paidOn) : formatDate(payment.paidOn)}</dd>
+                  </div>
+                ) : null}
+                {payment.place ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Where</dt>
+                    <dd className="text-end text-xs">{payment.place}</dd>
                   </div>
                 ) : null}
                 {payment.codes?.length ? (

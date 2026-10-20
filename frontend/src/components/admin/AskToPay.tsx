@@ -77,6 +77,7 @@ export function AskToPay({ order }: { order: Order }) {
         '',
         `${method.name || method.type}:`,
         ...steps.map((s, i) => `${i + 1}. ${s}`),
+        ...(method.fees ? [`⚠ ${method.fees}`] : []),
         '',
         tx.rest(formatCurrency(rest)),
         tx.thanks,

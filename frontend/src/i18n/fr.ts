@@ -714,6 +714,13 @@ export const fr: Messages = {
     accessory: "Accessoire",
   },
   deposit: {
+    amountSent: "Montant envoyé (DH)",
+    feePaid: "Frais payés (DH)",
+    feeHint: "ex. 35",
+    paidWhen: "Quand avez-vous payé ?",
+    place: "Où (agence, ville)",
+    placeAtm: "Où (banque, GAB, ville)",
+    placeHint: "ex. Cash Plus Maarif, Casablanca",
     typeAtm: "GAB — retrait sans carte",
     holderName: "Titulaire du compte",
     transferDate: "Date du virement",

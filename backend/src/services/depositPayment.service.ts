@@ -41,6 +41,9 @@ export async function reportDepositPayment(
     payerName?: string;
     senderPhone?: string;
     paidOn?: string;
+    amountSent?: number;
+    fee?: number;
+    place?: string;
     codes?: { label: string; value: string }[];
     reference?: string;
     note?: string;
@@ -94,6 +97,9 @@ export async function reportDepositPayment(
     payerName,
     senderPhone: input.senderPhone?.trim() || undefined,
     paidOn: input.paidOn?.trim() || undefined,
+    amountSent: typeof input.amountSent === 'number' ? Math.round(input.amountSent * 100) / 100 : undefined,
+    fee: typeof input.fee === 'number' ? Math.round(input.fee * 100) / 100 : undefined,
+    place: input.place?.trim() || undefined,
     codes,
     reference,
     note: input.note?.trim() || undefined,

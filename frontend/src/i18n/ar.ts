@@ -710,6 +710,13 @@ export const ar: Messages = {
     accessory: "إكسسوار",
   },
   deposit: {
+    amountSent: "المبلغ المرسل (درهم)",
+    feePaid: "الرسوم المدفوعة (درهم)",
+    feeHint: "مثال 35",
+    paidWhen: "متى دفعت؟",
+    place: "أين (الوكالة، المدينة)",
+    placeAtm: "أين (البنك، الشباك، المدينة)",
+    placeHint: "مثال: كاش بلوس المعاريف، الدار البيضاء",
     typeAtm: "الشباك الأوتوماتيكي — سحب بدون بطاقة",
     holderName: "صاحب الحساب",
     transferDate: "تاريخ التحويل",

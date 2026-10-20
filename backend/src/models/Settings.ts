@@ -75,6 +75,8 @@ export interface DepositMethod {
   visible: boolean;
   /** ATM cardless withdrawal: labels of the codes the customer must send (max 4) */
   codeLabels: string[];
+  /** Transfer fees, shown to the customer (e.g. "Cash Plus fees ≈35–45 DH, paid by the sender") */
+  fees: string;
 }
 export const MAX_DEPOSIT_METHODS = 8;
 
@@ -143,6 +145,7 @@ const settingsSchema = new Schema<ISettings>(
             steps: { type: String, default: '', maxlength: 1500 },
             visible: { type: Boolean, default: true },
             codeLabels: { type: [String], default: [] },
+            fees: { type: String, default: '', maxlength: 160 },
           },
           { _id: false }
         ),
@@ -230,6 +233,7 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
       note: text(r.note, 300),
       steps: String(r.steps ?? '').replace(/\r\n/g, '\n').trim().slice(0, 1500),
       visible: r.visible !== false,
+      fees: text(r.fees, 160),
       codeLabels: Array.isArray(r.codeLabels)
         ? r.codeLabels.map((l: unknown) => text(l, 40)).filter(Boolean).slice(0, 4)
         : [],

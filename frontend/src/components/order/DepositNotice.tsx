@@ -93,6 +93,12 @@ function MethodCard({ method, order, compact = false }: { method: DepositMethod;
           ))}
         </ol>
       ) : null}
+      {method.fees ? (
+        <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] px-2 py-1.5 text-xs text-[var(--fg)]">
+          <SiteIcon name="alert" size={12} className="mt-0.5 shrink-0 text-[var(--warning)]" />
+          {method.fees}
+        </p>
+      ) : null}
       {method.note ? <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)]">{method.note}</p> : null}
     </div>
   )
@@ -115,7 +121,15 @@ function ReportPaymentForm({
   const fileInput = useRef<HTMLInputElement>(null)
   const [methodId, setMethodId] = useState(initialMethodId || methods[0]?.id || 'other')
   const [senderPhone, setSenderPhone] = useState('')
-  const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
+  // Now, in local time, for the "When" field
+  const [paidOn, setPaidOn] = useState(() => {
+    const d = new Date()
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+    return d.toISOString().slice(0, 16)
+  })
+  const [amountSent, setAmountSent] = useState(order.deposit?.amount ? String(order.deposit.amount) : '')
+  const [fee, setFee] = useState('')
+  const [place, setPlace] = useState('')
   const [codes, setCodes] = useState<Record<string, string>>({})
   const method = methods.find((m) => m.id === methodId)
   const kind: 'bank' | 'agency' | 'atm' | 'other' = !method
@@ -147,7 +161,10 @@ function ReportPaymentForm({
         reference: reference.trim() || undefined,
         payerName: payerName.trim() || undefined,
         senderPhone: senderPhone.trim() || undefined,
-        paidOn: kind === 'bank' ? paidOn : undefined,
+        paidOn: paidOn || undefined,
+        amountSent: amountSent.trim() && Number.isFinite(Number(amountSent)) ? Number(amountSent) : undefined,
+        fee: fee.trim() && Number.isFinite(Number(fee)) ? Number(fee) : undefined,
+        place: place.trim() || undefined,
         codes: kind === 'atm' ? codeLabels.map((label) => ({ label, value: (codes[label] ?? '').trim() })) : undefined,
         note: note.trim() || undefined,
         receipt: receipt || undefined,
@@ -200,9 +217,7 @@ function ReportPaymentForm({
     send.mutate()
   }
 
-  const options = methods.length
-    ? methods.map((m) => ({ id: m.id, label: m.name || t(TYPE_KEY[m.type]) }))
-    : [{ id: 'other', label: t('deposit.typeOther') }]
+  const options = [...methods.map((m) => ({ id: m.id, label: m.name || t(TYPE_KEY[m.type]) })), { id: 'other', label: t('deposit.typeOther') }]
 
   return (
     <form onSubmit={submit} className="mt-3 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
@@ -256,9 +271,7 @@ function ReportPaymentForm({
           maxLength={120}
           placeholder={t('deposit.payerNameHint')}
         />
-        {kind === 'bank' ? (
-          <Input label={t('deposit.transferDate')} type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
-        ) : (
+        {kind !== 'bank' ? (
           <Input
             label={t('deposit.senderPhone')}
             type="tel"
@@ -268,8 +281,49 @@ function ReportPaymentForm({
             onChange={(e) => setSenderPhone(e.target.value)}
             maxLength={30}
           />
-        )}
+        ) : null}
       </div>
+
+      {/* How much, the transfer fees, when and where */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label={t('deposit.amountSent')}
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="any"
+          dir="ltr"
+          value={amountSent}
+          onChange={(e) => setAmountSent(e.target.value)}
+        />
+        <Input
+          label={t('deposit.feePaid')}
+          type="number"
+          inputMode="decimal"
+          min={0}
+          step="any"
+          dir="ltr"
+          value={fee}
+          placeholder={t('deposit.feeHint')}
+          onChange={(e) => setFee(e.target.value)}
+        />
+        <Input label={t('deposit.paidWhen')} type="datetime-local" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
+        {kind !== 'bank' ? (
+          <Input
+            label={kind === 'atm' ? t('deposit.placeAtm') : t('deposit.place')}
+            value={place}
+            maxLength={120}
+            placeholder={t('deposit.placeHint')}
+            onChange={(e) => setPlace(e.target.value)}
+          />
+        ) : null}
+      </div>
+      {method?.fees ? (
+        <p className="flex items-start gap-1.5 text-[11px] text-[var(--fg-muted)]">
+          <SiteIcon name="alert" size={12} className="mt-0.5 shrink-0" />
+          {method.fees}
+        </p>
+      ) : null}
 
       {kind !== 'atm' ? (
         <Input
