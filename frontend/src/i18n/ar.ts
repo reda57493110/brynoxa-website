@@ -710,6 +710,7 @@ export const ar: Messages = {
     accessory: "إكسسوار",
   },
   deposit: {
+    chooseMethod: "اختر طريقة الدفع",
     showDetails: "عرض معلومات الدفع",
     payerName: "دفع من طرف (الاسم في التحويل)",
     payerNameHint: "إذا دفع شخص آخر عنك",

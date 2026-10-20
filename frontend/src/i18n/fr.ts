@@ -714,6 +714,7 @@ export const fr: Messages = {
     accessory: "Accessoire",
   },
   deposit: {
+    chooseMethod: "Choisissez comment payer",
     showDetails: "Voir les informations de paiement",
     payerName: "Payé par (nom sur le virement)",
     payerNameHint: "Si quelqu’un d’autre a payé pour vous",

@@ -708,6 +708,7 @@ export const en = {
     accessory: "Accessory",
   },
   deposit: {
+    chooseMethod: "Choose how you want to pay",
     showDetails: "Show payment details",
     payerName: "Paid by (name on the transfer)",
     payerNameHint: "If someone else paid for you",

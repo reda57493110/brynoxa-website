@@ -47,14 +47,14 @@ function CopyButton({ value }: { value: string }) {
   )
 }
 
-function MethodCard({ method, order }: { method: DepositMethod; order: Order }) {
+function MethodCard({ method, order, compact = false }: { method: DepositMethod; order: Order; compact?: boolean }) {
   const t = useT()
   const locale = useLocaleStore((st) => st.locale)
   const amount = formatCurrency(order.deposit?.amount ?? 0)
   const steps = depositSteps(method, { customer: order.shippingAddress?.fullName || '', amount, order: order.orderNumber }, locale)
   return (
-    <li className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
-      <div className="flex items-center gap-2">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+      <div className={cn('flex items-center gap-2', compact && 'hidden')}>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
           <SiteIcon name={method.type === 'bank' ? 'banknote' : 'send'} size={15} />
         </span>
@@ -63,7 +63,7 @@ function MethodCard({ method, order }: { method: DepositMethod; order: Order }) 
           {method.name ? <span className="block text-[11px] text-[var(--fg-muted)]">{t(TYPE_KEY[method.type])}</span> : null}
         </span>
       </div>
-      <dl className="mt-2 space-y-1.5 text-sm">
+      <dl className={cn('space-y-1.5 text-sm', !compact && 'mt-2')}>
         {method.holder ? (
           <div className="flex items-center justify-between gap-2">
             <dt className="text-xs text-[var(--fg-muted)]">{t('deposit.holder')}</dt>
@@ -93,7 +93,7 @@ function MethodCard({ method, order }: { method: DepositMethod; order: Order }) 
         </ol>
       ) : null}
       {method.note ? <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)]">{method.note}</p> : null}
-    </li>
+    </div>
   )
 }
 
@@ -256,7 +256,8 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
   const [viewing, setViewing] = useState<string | null>(null)
   const deposit = order.deposit
   const awaiting = deposit?.status === 'pending' && (order.orderStatus === 'pending' || order.orderStatus === 'no_answer')
-  const [revealed, setRevealed] = useState(false)
+  // One payment option open at a time: names first, details of the chosen one only
+  const [openId, setOpenId] = useState<string | null>(null)
 
   // Links like /account/orders/123#deposit land here once the order has loaded
   const shown = Boolean(deposit && deposit.amount > 0)
@@ -353,39 +354,46 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
 
       {awaiting && (!report || reporting) ? (
         <>
-          {methods.length && !revealed && !reporting ? (
-            <button
-              type="button"
-              onClick={() => setRevealed(true)}
-              className="mt-4 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-3 text-start transition hover:border-[var(--brand)]"
-            >
-              <span className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
-                  <SiteIcon name="banknote" size={15} />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-[var(--fg)]">{t('deposit.showDetails')}</span>
-                  <span className="block text-[11px] text-[var(--fg-muted)]">{methods.map((m) => m.name || t(TYPE_KEY[m.type])).join(' · ')}</span>
-                </span>
-              </span>
-              <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)]" />
-            </button>
-          ) : null}
-          {methods.length && (revealed || reporting) ? (
           <h3 className="mt-4 text-sm font-semibold text-[var(--fg)]">
-            {t('deposit.payWithOne')}
+            {methods.length ? t('deposit.chooseMethod') : t('deposit.howToPay')}
           </h3>
-          ) : !methods.length ? (
-          <h3 className="mt-4 text-sm font-semibold text-[var(--fg)]">{t('deposit.howToPay')}</h3>
-          ) : null}
-          {methods.length && (revealed || reporting) ? (
-            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
-              {methods.map((m) => (
-                <MethodCard key={m.id} method={m} order={order} />
-              ))}
+          {methods.length ? (
+            <ul className="mt-2 space-y-2">
+              {methods.map((m) => {
+                const open = openId === m.id
+                return (
+                  <li key={m.id}>
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() => setOpenId(open ? null : m.id)}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-xl border bg-[var(--bg-elevated)] px-3 py-2.5 text-start transition',
+                        open ? 'border-[var(--brand)]' : 'border-[var(--border)] hover:border-[var(--brand)]'
+                      )}
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
+                        <SiteIcon name={m.type === 'bank' ? 'banknote' : 'send'} size={15} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-[var(--fg)]">{m.name || t(TYPE_KEY[m.type])}</span>
+                        {m.name && m.name.trim().toLowerCase() !== t(TYPE_KEY[m.type]).toLowerCase() ? (
+                          <span className="block text-[11px] text-[var(--fg-muted)]">{t(TYPE_KEY[m.type])}</span>
+                        ) : null}
+                      </span>
+                      <SiteIcon name="chevron-down" size={16} className={cn('shrink-0 text-[var(--fg-muted)] transition', open && 'rotate-180')} />
+                    </button>
+                    {open ? (
+                      <div className="mt-1.5">
+                        <MethodCard method={m} order={order} compact />
+                      </div>
+                    ) : null}
+                  </li>
+                )
+              })}
             </ul>
           ) : null}
-          {instructions || !methods.length ? (
+          {(openId && instructions) || !methods.length ? (
             <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-[var(--fg)]/85">
               {instructions || t('deposit.noInstructions')}
             </p>
