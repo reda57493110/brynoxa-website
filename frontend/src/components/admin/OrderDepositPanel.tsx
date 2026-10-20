@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
+import { settingsApi } from '@/api/settingsApi'
 import { getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -15,6 +16,107 @@ import { toast } from '@/store/toastStore'
 import type { Order } from '@/types'
 
 const MAX_PROOFS = 6
+
+const METHOD_TYPE_LABEL: Record<string, string> = {
+  bank: 'Bank transfer',
+  cashplus: 'Cash Plus',
+  wafacash: 'Wafacash',
+  barid: 'Barid Cash',
+  other: 'Other',
+}
+
+/** Staff: record how the deposit was paid — method, the name on the transfer, reference. */
+function PaymentRecorder({
+  order,
+  onDone,
+  onCancel,
+}: {
+  order: Order
+  onDone: () => void
+  onCancel?: () => void
+}) {
+  const qc = useQueryClient()
+  const current = order.deposit?.payment
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => (await settingsApi.get()).data.data,
+    staleTime: 60_000,
+  })
+  const methods = settings.data?.depositMethods ?? []
+  const customerName = order.shippingAddress?.fullName || (typeof order.user === 'object' && order.user ? order.user.name : '') || ''
+  const [methodId, setMethodId] = useState(current?.methodId || methods[0]?.id || 'other')
+  const [payerName, setPayerName] = useState(current?.payerName || customerName)
+  const [reference, setReference] = useState(current?.reference || '')
+  const [markReceived, setMarkReceived] = useState(order.deposit?.status !== 'received')
+  const editable = order.orderStatus === 'pending' || order.orderStatus === 'no_answer'
+
+  useEffect(() => {
+    if (!current?.methodId && methods[0] && methodId === 'other') setMethodId(methods[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [methods.length])
+
+  const save = useMutation({
+    mutationFn: () =>
+      adminApi.orders.setDeposit(order._id, {
+        payment: { methodId, payerName: payerName.trim() || undefined, reference: reference.trim() || undefined },
+        ...(markReceived && editable && order.deposit?.status !== 'received' ? { received: true } : {}),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
+      void qc.invalidateQueries({ queryKey: ['admin-orders'] })
+      toast.success(markReceived && editable ? 'Payment recorded and deposit marked as received' : 'Payment recorded')
+      onDone()
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+
+  const options = [
+    ...methods.map((m) => ({ id: m.id, label: m.name || METHOD_TYPE_LABEL[m.type] || 'Other' })),
+    { id: 'other', label: 'Other' },
+  ]
+
+  return (
+    <div className="space-y-2.5">
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => setMethodId(o.id)}
+            className={cn(
+              'h-8 rounded-full border px-3 text-xs font-medium transition',
+              methodId === o.id
+                ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)]'
+                : 'border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--brand)]'
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input label="Paid by (name on the transfer)" value={payerName} maxLength={120} onChange={(e) => setPayerName(e.target.value)} />
+        <Input label="Reference (optional)" value={reference} maxLength={80} dir="ltr" onChange={(e) => setReference(e.target.value)} />
+      </div>
+      {editable && order.deposit?.status !== 'received' ? (
+        <label className="flex cursor-pointer items-center gap-2 text-xs">
+          <input type="checkbox" className="accent-[var(--brand)]" checked={markReceived} onChange={(e) => setMarkReceived(e.target.checked)} />
+          Money received — mark the deposit as received
+        </label>
+      ) : null}
+      <div className="flex gap-2">
+        <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
+          <SiteIcon name="check" size={13} /> Save payment
+        </Button>
+        {onCancel ? (
+          <Button size="sm" variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
 
 function Block({ icon, title, aside, children }: { icon: SiteIconName; title: string; aside?: ReactNode; children: ReactNode }) {
   return (
@@ -42,6 +144,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
   const [amount, setAmount] = useState('')
   const [viewing, setViewing] = useState<{ url: string; title: string } | null>(null)
   const [dragging, setDragging] = useState(false)
+  const [recording, setRecording] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -179,13 +282,40 @@ export function OrderDepositPanel({ order }: { order: Order }) {
 
         {/* 2 · What the customer reported */}
         {deposit ? (
-          <Block icon="user" title="Customer's payment">
-            {payment ? (
+          <Block
+            icon="user"
+            title="Payment"
+            aside={
+              payment && !recording ? (
+                <button type="button" onClick={() => setRecording(true)} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
+                  Edit
+                </button>
+              ) : null
+            }
+          >
+            {recording || !payment ? (
+              recording ? (
+                <PaymentRecorder order={order} onDone={() => setRecording(false)} onCancel={() => setRecording(false)} />
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-[var(--fg-muted)]">No payment details yet.</p>
+                  <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
+                    <SiteIcon name="plus" size={13} /> Record payment
+                  </Button>
+                </div>
+              )
+            ) : (
               <dl className="space-y-1 text-sm">
                 <div className="flex justify-between gap-3">
                   <dt className="text-[var(--fg-muted)]">Paid with</dt>
                   <dd className="font-medium">{payment.methodName}</dd>
                 </div>
+                {payment.payerName ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Paid by</dt>
+                    <dd className="text-end font-medium">{payment.payerName}</dd>
+                  </div>
+                ) : null}
                 {payment.reference ? (
                   <div className="flex justify-between gap-3">
                     <dt className="text-[var(--fg-muted)]">Reference</dt>
@@ -199,14 +329,10 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                   </div>
                 ) : null}
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">Sent</dt>
+                  <dt className="text-[var(--fg-muted)]">{payment.source === 'staff' ? 'Recorded' : 'Sent by customer'}</dt>
                   <dd className="text-xs">{formatDateTime(payment.reportedAt)}</dd>
                 </div>
               </dl>
-            ) : (
-              <p className="text-xs text-[var(--fg-muted)]">
-                The customer hasn't sent payment details yet. If they paid another way (WhatsApp, in shop), add the photo below.
-              </p>
             )}
           </Block>
         ) : null}

@@ -13,7 +13,7 @@ import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSetting
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
 import { InventorySettings } from '@/components/admin/InventorySettings'
 import { CategoriesSettings } from '@/components/admin/settings/CategoriesSettings'
-import { GeneralSettings, OrdersSettings } from '@/components/admin/settings/StoreSettings'
+import { GeneralSettings } from '@/components/admin/settings/StoreSettings'
 import { SettingsCard } from '@/components/admin/settings/SettingsUi'
 import { DirtyContext } from '@/components/admin/settings/dirty'
 import { cn } from '@/lib/cn'
@@ -37,7 +37,19 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
     case 'general':
       return <GeneralSettings settings={settings} />
     case 'orders':
-      return <OrdersSettings settings={settings} />
+      return (
+        <SettingsCard
+          title="Deposits & payment options"
+          description="Your bank / Cash Plus / Wafacash details, deposit requests and payments are managed in Orders."
+        >
+          <Link
+            to="/admin/orders?view=deposits"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] hover:brightness-110"
+          >
+            <SiteIcon name="banknote" size={14} /> Open Orders → Deposits & payments
+          </Link>
+        </SettingsCard>
+      )
     case 'storefront':
       return (
         <>

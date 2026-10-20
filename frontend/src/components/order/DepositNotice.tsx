@@ -88,6 +88,7 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
   const fileInput = useRef<HTMLInputElement>(null)
   const [methodId, setMethodId] = useState(methods[0]?.id ?? 'other')
   const [reference, setReference] = useState('')
+  const [payerName, setPayerName] = useState('')
   const [note, setNote] = useState('')
   const [receipt, setReceipt] = useState('')
   const [preparing, setPreparing] = useState(false)
@@ -98,6 +99,7 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
       ordersApi.reportDeposit(order.orderNumber, {
         methodId,
         reference: reference.trim() || undefined,
+        payerName: payerName.trim() || undefined,
         note: note.trim() || undefined,
         receipt: receipt || undefined,
       }),
@@ -157,6 +159,14 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
           ))}
         </div>
       </fieldset>
+
+      <Input
+        label={t('deposit.payerName')}
+        value={payerName}
+        onChange={(e) => setPayerName(e.target.value)}
+        maxLength={120}
+        placeholder={t('deposit.payerNameHint')}
+      />
 
       <Input
         label={t('deposit.reference')}

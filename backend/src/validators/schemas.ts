@@ -198,8 +198,17 @@ export const orderDepositSchema = z
   .object({
     amount: z.number().min(0).max(10_000_000).optional(),
     received: z.boolean().optional(),
+    /** Staff records how the deposit was paid (method, payer name, reference) */
+    payment: z
+      .object({
+        methodId: z.string().max(24),
+        payerName: z.string().trim().max(120).optional(),
+        reference: z.string().trim().max(80).optional(),
+        note: z.string().trim().max(300).optional(),
+      })
+      .optional(),
   })
-  .refine((v) => v.amount !== undefined || v.received !== undefined, {
+  .refine((v) => v.amount !== undefined || v.received !== undefined || v.payment !== undefined, {
     message: 'Nothing to update',
   });
 
@@ -595,6 +604,7 @@ export const repairCompleteSchema = z.object({
 /** Customer: "I've paid the deposit" — method, reference and/or a receipt photo (data URL). */
 export const depositPaymentSchema = z.object({
   methodId: z.string().max(24),
+  payerName: z.string().trim().max(120).optional(),
   reference: z.string().trim().max(80).optional(),
   note: z.string().trim().max(300).optional(),
   receipt: z.string().max(2_000_000).optional(),

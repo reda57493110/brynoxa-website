@@ -49,7 +49,7 @@ function CustomerPicker({ onPick }: { onPick: (c: Picked) => void }) {
   })
   return (
     <div>
-      <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, phone or customer ID" aria-label="Search customers" />
+      <Input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Customer name, phone, email or ID" aria-label="Search customers" />
       <div className="mt-2 max-h-72 overflow-y-auto rounded-xl border border-[var(--border)]">
         {list.isLoading ? (
           <div className="flex justify-center py-6"><Spinner /></div>
@@ -145,15 +145,18 @@ export function RecordDepositDialog({
   /** Start with this customer already chosen (from their profile) */
   customer?: Picked
 }) {
-  const [picked, setPicked] = useState<Picked | null>(customer ?? null)
-  const [orderId, setOrderId] = useState<string | null>(null)
+  return (
+    <Modal open={open} onClose={onClose} title="Record a deposit" size="lg">
+      {/* A fresh flow each time it opens */}
+      {open ? <RecordDepositFlow initialCustomer={customer} onLeave={onClose} /> : null}
+    </Modal>
+  )
+}
 
-  useEffect(() => {
-    if (open) {
-      setPicked(customer ?? null)
-      setOrderId(null)
-    }
-  }, [open, customer])
+/** The steps themselves: customer (search by name, phone or email) → order → deposit panel. */
+export function RecordDepositFlow({ initialCustomer, onLeave }: { initialCustomer?: Picked; onLeave?: () => void }) {
+  const [picked, setPicked] = useState<Picked | null>(initialCustomer ?? null)
+  const [orderId, setOrderId] = useState<string | null>(null)
 
   const order = useQuery({
     queryKey: ['admin-order', orderId],
@@ -162,7 +165,6 @@ export function RecordDepositDialog({
   })
 
   return (
-    <Modal open={open} onClose={onClose} title="Record a deposit" size="lg">
       <div className="space-y-5">
         <Step n={1} title="Customer" done={Boolean(picked)}>
           {picked ? (
@@ -197,7 +199,7 @@ export function RecordDepositDialog({
                     {orderStatusLabel(order.data.orderStatus)} · {formatCurrency(order.data.pricing.total)}
                   </span>
                 </span>
-                <Link to={`/admin/orders/${order.data._id}`} onClick={onClose} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
+                <Link to={`/admin/orders/${order.data._id}`} onClick={onLeave} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
                   Open order
                 </Link>
                 <button type="button" onClick={() => setOrderId(null)} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
@@ -223,6 +225,5 @@ export function RecordDepositDialog({
           </Step>
         ) : null}
       </div>
-    </Modal>
   )
 }

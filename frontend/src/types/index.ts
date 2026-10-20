@@ -224,10 +224,14 @@ export interface DepositProofRef {
 export interface DepositPaymentReport {
   methodId: string
   methodName: string
+  /** Name on the transfer / slip */
+  payerName?: string
   reference?: string
   note?: string
   hasReceipt: boolean
   reportedAt: string
+  /** customer = sent from their order page; staff = recorded in admin */
+  source?: 'customer' | 'staff'
 }
 
 export type DepositMethodType = 'bank' | 'cashplus' | 'wafacash' | 'barid' | 'other'

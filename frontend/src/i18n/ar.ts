@@ -710,6 +710,8 @@ export const ar: Messages = {
     accessory: "إكسسوار",
   },
   deposit: {
+    payerName: "دفع من طرف (الاسم في التحويل)",
+    payerNameHint: "إذا دفع شخص آخر عنك",
     openPhoto: "فتح بالحجم الكامل",
     proofTitle: 'إثبات الدفع',
     typeBank: "تحويل بنكي",

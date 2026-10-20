@@ -714,6 +714,8 @@ export const fr: Messages = {
     accessory: "Accessoire",
   },
   deposit: {
+    payerName: "Payé par (nom sur le virement)",
+    payerNameHint: "Si quelqu’un d’autre a payé pour vous",
     openPhoto: "Ouvrir en grand",
     proofTitle: 'Preuve de paiement',
     typeBank: "Virement bancaire",

@@ -120,7 +120,17 @@ export const adminApi = {
   },
 
   orders: {
-    list: (params?: { page?: number; limit?: number; status?: string; q?: string; from?: string; to?: string; sort?: string }) =>
+    list: (params?: {
+      page?: number
+      limit?: number
+      status?: string
+      q?: string
+      from?: string
+      to?: string
+      sort?: string
+      /** Orders with a deposit: due, reported (sent, to check), paid or any */
+      deposit?: 'due' | 'reported' | 'paid' | 'any'
+    }) =>
       api.get<ApiResponse<Order[]>>('/admin/orders', { params }),
     get: (id: string) => api.get<ApiResponse<Order>>(`/admin/orders/${id}`),
     updateStatus: (
@@ -146,7 +156,14 @@ export const adminApi = {
       api.get<Blob>(`/admin/orders/${id}/deposit-proofs/${proofId}`, { responseType: 'blob' }),
     depositReceipt: (id: string) =>
       api.get<Blob>(`/admin/orders/${id}/deposit-receipt`, { responseType: 'blob' }),
-    setDeposit: (id: string, payload: { amount?: number; received?: boolean }) =>
+    setDeposit: (
+      id: string,
+      payload: {
+        amount?: number
+        received?: boolean
+        payment?: { methodId: string; payerName?: string; reference?: string; note?: string }
+      }
+    ) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
     recordRefund: (id: string, payload: { amount: number; reason: string; itemsReturned?: boolean }) =>
       api.post<ApiResponse<Order>>(`/admin/orders/${id}/refunds`, payload),

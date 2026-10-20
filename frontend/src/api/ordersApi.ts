@@ -22,7 +22,7 @@ export const ordersApi = {
 
   reportDeposit: (
     orderNumber: string,
-    payload: { methodId: string; reference?: string; note?: string; receipt?: string }
+    payload: { methodId: string; payerName?: string; reference?: string; note?: string; receipt?: string }
   ) => api.post<ApiResponse<Order>>(`/orders/${orderNumber}/deposit-payment`, payload),
 
   depositProofImage: (orderNumber: string, proofId: string) =>

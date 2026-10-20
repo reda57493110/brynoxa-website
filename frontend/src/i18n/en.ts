@@ -708,6 +708,8 @@ export const en = {
     accessory: "Accessory",
   },
   deposit: {
+    payerName: "Paid by (name on the transfer)",
+    payerNameHint: "If someone else paid for you",
     openPhoto: "Open full size",
     proofTitle: 'Payment proof',
     typeBank: "Bank transfer",

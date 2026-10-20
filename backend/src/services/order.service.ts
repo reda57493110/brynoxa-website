@@ -639,15 +639,40 @@ export function customerOrderView<T>(order: T): T {
  */
 export async function setOrderDeposit(
   orderId: string,
-  input: { amount?: number; received?: boolean }
+  input: {
+    amount?: number;
+    received?: boolean;
+    payment?: { methodId: string; payerName?: string; reference?: string; note?: string };
+  }
 ) {
   const order = await Order.findById(orderId);
   if (!order) throw new ApiError(404, 'Order not found');
-  if (order.orderStatus !== 'pending' && order.orderStatus !== 'no_answer') {
+  const changesDeposit = input.amount !== undefined || input.received !== undefined;
+  if (changesDeposit && order.orderStatus !== 'pending' && order.orderStatus !== 'no_answer') {
     throw new ApiError(400, 'The deposit can only be changed while the order is pending');
   }
 
   const notes: string[] = [];
+
+  // How it was paid (staff record): kept with the deposit, receipt photo from the customer kept too
+  if (input.payment) {
+    if (!order.deposit || !(order.deposit.amount > 0)) throw new ApiError(400, 'Set a deposit amount first');
+    const methods = (await getSettings()).depositMethods ?? [];
+    const method = methods.find((m) => m.id === input.payment!.methodId);
+    if (!method && input.payment.methodId !== 'other') throw new ApiError(400, 'Choose how it was paid');
+    const methodName = method?.name || (method ? method.type : 'Other');
+    order.deposit.payment = {
+      methodId: method?.id ?? 'other',
+      methodName,
+      payerName: input.payment.payerName?.trim() || undefined,
+      reference: input.payment.reference?.trim() || undefined,
+      note: input.payment.note?.trim() || undefined,
+      hasReceipt: Boolean(order.deposit.payment?.hasReceipt),
+      reportedAt: new Date(),
+      source: 'staff',
+    };
+    notes.push(`Deposit payment recorded: ${methodName}${input.payment.payerName ? ` · paid by ${input.payment.payerName.trim()}` : ''}`);
+  }
   let customerMessage = '';
   let email: 'requested' | 'received' | null = null;
 
@@ -687,7 +712,7 @@ export async function setOrderDeposit(
   if (!notes.length) return order;
 
   for (const note of notes) {
-    order.timeline.push({ status: 'pending', note, at: new Date() });
+    order.timeline.push({ status: order.orderStatus, note, at: new Date() });
   }
   order.markModified('deposit');
   await order.save();
@@ -844,7 +869,8 @@ export async function listAllOrders(
   status?: string,
   q?: string,
   range: { from?: string; to?: string } = {},
-  sort?: string
+  sort?: string,
+  deposit?: string
 ) {
   const filter: Record<string, unknown> = {};
   const and: Record<string, unknown>[] = [];
@@ -864,7 +890,26 @@ export async function listAllOrders(
   if (q?.trim()) {
     const rx = new RegExp(q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
     // Order number, or the customer's name / phone on the delivery address
-    and.push({ $or: [{ orderNumber: rx }, { 'shippingAddress.fullName': rx }, { 'shippingAddress.phone': rx }] });
+    and.push({
+      $or: [
+        { orderNumber: rx },
+        { 'shippingAddress.fullName': rx },
+        { 'shippingAddress.phone': rx },
+        { 'deposit.payment.payerName': rx },
+        { 'deposit.payment.reference': rx },
+      ],
+    });
+  }
+  // Deposits: due (nothing sent), reported (sent, to check), paid, or any order with a deposit
+  if (deposit === 'any') and.push({ 'deposit.amount': { $gt: 0 } });
+  else if (deposit === 'paid') and.push({ 'deposit.amount': { $gt: 0 }, 'deposit.status': 'received' });
+  else if (deposit === 'reported' || deposit === 'due') {
+    and.push({
+      'deposit.amount': { $gt: 0 },
+      'deposit.status': 'pending',
+      orderStatus: { $in: ['pending', 'no_answer'] },
+      'deposit.payment': { $exists: deposit === 'reported' },
+    });
   }
   if (and.length) filter.$and = and;
   // Placed between two calendar days (inclusive), Morocco time

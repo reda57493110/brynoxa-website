@@ -36,7 +36,7 @@ function decodeReceipt(dataUrl: string) {
 export async function reportDepositPayment(
   userId: string,
   orderNumber: string,
-  input: { methodId: string; reference?: string; note?: string; receipt?: string }
+  input: { methodId: string; payerName?: string; reference?: string; note?: string; receipt?: string }
 ) {
   const order = await Order.findOne({ orderNumber, user: userId });
   if (!order) throw new ApiError(404, 'Order not found');
@@ -68,10 +68,12 @@ export async function reportDepositPayment(
   order.deposit.payment = {
     methodId: method?.id ?? 'other',
     methodName,
+    payerName: input.payerName?.trim() || undefined,
     reference,
     note: input.note?.trim() || undefined,
     hasReceipt: Boolean(receipt) || hadReceipt,
     reportedAt: new Date(),
+    source: 'customer',
   };
   order.timeline.push({
     status: order.orderStatus,

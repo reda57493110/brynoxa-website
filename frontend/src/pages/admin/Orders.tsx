@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
+import { DepositsView, OrdersTabs } from '@/components/admin/DepositsView'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -111,7 +112,13 @@ function PaymentBadge({ o }: { o: Order }) {
   )
 }
 
+/** Admin → Orders: the order list, or Deposits & payments (?view=deposits). */
 export function Orders() {
+  const [params] = useSearchParams()
+  return params.get('view') === 'deposits' ? <DepositsView /> : <OrdersList />
+}
+
+function OrdersList() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   const stats = useAdminStats()
@@ -271,6 +278,7 @@ export function Orders() {
         ) : null}
         </div>
       </div>
+      <OrdersTabs />
       <RecordDepositDialog open={recording} onClose={() => setRecording(false)} />
 
       {/* Toolbar */}

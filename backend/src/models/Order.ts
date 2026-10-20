@@ -60,10 +60,14 @@ export interface IDepositPayment {
   methodId: string;
   /** Method name at the time, e.g. "Cash Plus" */
   methodName: string;
+  /** Name on the transfer / slip (often not the account holder) */
+  payerName?: string;
   reference?: string;
   note?: string;
   hasReceipt: boolean;
   reportedAt: Date;
+  /** customer = sent from their order page; staff = recorded in admin */
+  source?: 'customer' | 'staff';
 }
 
 export interface IOrderTimeline {
@@ -191,10 +195,12 @@ const depositPaymentSchema = new Schema<IDepositPayment>(
   {
     methodId: { type: String, required: true },
     methodName: { type: String, required: true },
+    payerName: { type: String, maxlength: 120 },
     reference: { type: String, maxlength: 80 },
     note: { type: String, maxlength: 300 },
     hasReceipt: { type: Boolean, default: false },
     reportedAt: { type: Date, required: true },
+    source: { type: String, enum: ['customer', 'staff'], default: 'customer' },
   },
   { _id: false }
 );
