@@ -69,6 +69,8 @@ export interface DepositMethod {
   note: string;
   /** Customer steps, one per line, with {customer} {amount} {receiver} {account} {method} {order}; empty = default steps */
   steps: string;
+  /** Shown to customers asked for a deposit; off = kept for later */
+  visible: boolean;
 }
 export const MAX_DEPOSIT_METHODS = 8;
 
@@ -135,6 +137,7 @@ const settingsSchema = new Schema<ISettings>(
             account: { type: String, default: '', maxlength: 80 },
             note: { type: String, default: '', maxlength: 300 },
             steps: { type: String, default: '', maxlength: 1500 },
+            visible: { type: Boolean, default: true },
           },
           { _id: false }
         ),
@@ -221,6 +224,7 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
       account: text(r.account, 80),
       note: text(r.note, 300),
       steps: String(r.steps ?? '').replace(/\r\n/g, '\n').trim().slice(0, 1500),
+      visible: r.visible !== false,
     };
     if (!method.name && !method.account) continue;
     if (ids.has(method.id)) method.id = Math.random().toString(36).slice(2, 10);
@@ -350,7 +354,7 @@ export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, 
 }
 
 /** Fields only staff may read (pricing tiers, segment rules, email configuration). */
-const PRIVATE_SETTINGS = ['wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+const PRIVATE_SETTINGS = ['depositMethods', 'depositInstructions', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
 
 /** Settings safe for the public storefront. */
 export function publicSettings(settings: ISettings) {

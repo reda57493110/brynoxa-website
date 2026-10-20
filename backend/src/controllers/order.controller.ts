@@ -1,3 +1,4 @@
+import { getSettings, sanitizeDepositMethods } from '../models/Settings';
 import { Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
@@ -53,18 +54,18 @@ export const myOrders = asyncHandler(async (req: AuthRequest, res: Response) => 
 
 export const myOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.getUserOrder(req.user!.userId, param(req, 'orderNumber'));
-  sendSuccess(res, orderService.customerOrderView(order));
+  sendSuccess(res, await orderService.customerOrderViewWithPayment(order));
 });
 
 export const guestOrderReceipt = asyncHandler(async (req: AuthRequest, res: Response) => {
   const receiptToken = String(req.body.token || '');
   const order = await orderService.getGuestOrderReceipt(param(req, 'orderNumber'), receiptToken);
-  sendSuccess(res, orderService.customerOrderView(order));
+  sendSuccess(res, await orderService.customerOrderViewWithPayment(order));
 });
 
 export const trackGuestOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.trackGuestOrder(req.body.orderNumber, req.body.phone);
-  sendSuccess(res, orderService.customerOrderView(order));
+  sendSuccess(res, await orderService.customerOrderViewWithPayment(order));
 });
 
 export const cancelMyOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -141,7 +142,7 @@ export const deleteOrder = asyncHandler(async (req: AuthRequest, res: Response) 
 
 export const reportMyDepositPayment = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await depositPayment.reportDepositPayment(req.user!.userId, param(req, 'orderNumber'), req.body);
-  sendSuccess(res, orderService.customerOrderView(order), 'Payment details sent');
+  sendSuccess(res, await orderService.customerOrderViewWithPayment(order), 'Payment details sent');
 });
 
 export const depositReceipt = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -173,4 +174,18 @@ export const depositProofImage = asyncHandler(async (req: AuthRequest, res: Resp
 
 export const myDepositProofImage = asyncHandler(async (req: AuthRequest, res: Response) => {
   sendImage(res, await depositPayment.getMyDepositProofImage(req.user!.userId, param(req, 'orderNumber'), param(req, 'proofId')));
+});
+
+/** Admin → Orders → Deposits & payments: your payment details (orders staff, not only Settings). */
+export const getDepositMethods = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const settings = await getSettings();
+  sendSuccess(res, { depositMethods: settings.depositMethods ?? [], depositInstructions: settings.depositInstructions ?? '' });
+});
+
+export const saveDepositMethods = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const settings = await getSettings();
+  settings.depositMethods = sanitizeDepositMethods(req.body.depositMethods);
+  if (req.body.depositInstructions !== undefined) settings.depositInstructions = String(req.body.depositInstructions).slice(0, 2000);
+  await settings.save();
+  sendSuccess(res, { depositMethods: settings.depositMethods, depositInstructions: settings.depositInstructions }, 'Payment options saved');
 });

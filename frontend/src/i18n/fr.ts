@@ -714,6 +714,7 @@ export const fr: Messages = {
     accessory: "Accessoire",
   },
   deposit: {
+    showDetails: "Voir les informations de paiement",
     payerName: "Payé par (nom sur le virement)",
     payerNameHint: "Si quelqu’un d’autre a payé pour vous",
     openPhoto: "Ouvrir en grand",
@@ -741,7 +742,7 @@ export const fr: Messages = {
     submit: "Envoyer les détails du paiement",
     close: "Annuler",
     reportSent: "Merci ! Nous vérifions votre paiement et confirmons votre commande.",
-    iPaid: "J’ai payé",
+    iPaid: "Envoyer la preuve de paiement",
     askWhatsApp: "Demander sur WhatsApp",
     reportedTitle: "Détails envoyés — vérification en cours",
     reportedBody: "Envoyé le {date} via {method}. Nous confirmons votre commande dès que l’acompte est vérifié.",

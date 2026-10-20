@@ -199,6 +199,8 @@ export const orderDepositSchema = z
     amount: z.number().min(0).max(10_000_000).optional(),
     received: z.boolean().optional(),
     /** Staff records how the deposit was paid (method, payer name, reference) */
+    /** Payment options this customer sees (empty = all visible ones) */
+    methodIds: z.array(z.string().max(24)).max(8).optional(),
     payment: z
       .object({
         methodId: z.string().max(24),
@@ -208,7 +210,7 @@ export const orderDepositSchema = z
       })
       .optional(),
   })
-  .refine((v) => v.amount !== undefined || v.received !== undefined || v.payment !== undefined, {
+  .refine((v) => v.amount !== undefined || v.received !== undefined || v.payment !== undefined || v.methodIds !== undefined, {
     message: 'Nothing to update',
   });
 
@@ -255,6 +257,7 @@ export const settingsSchema = z.object({
         account: z.string().max(80).optional(),
         note: z.string().max(300).optional(),
         steps: z.string().max(1500).optional(),
+        visible: z.boolean().optional(),
       })
     )
     .max(8)
@@ -636,4 +639,23 @@ export const setupSaveSchema = z.object({
   hidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i, 'Invalid product reference')).max(50).optional(),
   /** Show no recommendations at all for this product */
   off: z.boolean().optional(),
+});
+
+/** Admin → Orders → Deposits & payments: your payment details (RIB, Cash Plus…) */
+export const depositMethodsSchema = z.object({
+  depositMethods: z
+    .array(
+      z.object({
+        id: z.string().max(24).optional(),
+        type: z.string().max(20),
+        name: z.string().max(60).optional(),
+        holder: z.string().max(80).optional(),
+        account: z.string().max(80).optional(),
+        note: z.string().max(300).optional(),
+        steps: z.string().max(1500).optional(),
+        visible: z.boolean().optional(),
+      })
+    )
+    .max(8),
+  depositInstructions: z.string().max(2000).optional(),
 });

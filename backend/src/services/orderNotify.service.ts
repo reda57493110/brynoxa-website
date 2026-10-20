@@ -181,7 +181,8 @@ function depositInstructionsHtml(settings: ISettings, order: OrderDoc) {
   const amount = order.deposit?.amount ?? 0;
   const instructions = settings.depositInstructions?.trim();
   const values = { customer: order.shippingAddress?.fullName || '', amount: formatMad(amount), order: order.orderNumber };
-  const methods = (settings.depositMethods ?? []).map((m) => {
+  const chosen = new Set(order.deposit?.methodIds ?? []);
+  const methods = (settings.depositMethods ?? []).filter((m) => m.visible !== false && (!chosen.size || chosen.has(m.id))).map((m) => {
     const steps = depositSteps(m, values)
       .map((s) => `<li style="margin:0 0 4px;">${escapeHtml(s)}</li>`)
       .join('');

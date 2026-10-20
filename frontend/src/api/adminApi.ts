@@ -31,6 +31,7 @@ import type {
   User,
   SetupDetail,
   SetupListRow,
+  DepositMethod,
 } from '@/types'
 
 /** Drops empty filter values so they are not sent as "?type=". */
@@ -46,6 +47,13 @@ export const adminApi = {
   /** Revenue / orders per day, totals vs the previous period, best sellers (owner view). */
   dashboardSales: (days: SalesRange) =>
     api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),
+
+  /** Admin → Orders → Deposits & payments: your payment details (RIB, Cash Plus…) */
+  depositMethods: {
+    get: () => api.get<ApiResponse<{ depositMethods: DepositMethod[]; depositInstructions: string }>>('/admin/deposit-methods'),
+    save: (payload: { depositMethods: DepositMethod[]; depositInstructions: string }) =>
+      api.put<ApiResponse<{ depositMethods: DepositMethod[]; depositInstructions: string }>>('/admin/deposit-methods', payload),
+  },
 
   /** Admin → Complete your setup: hand-picked recommendations per main product */
   setup: {
@@ -162,6 +170,7 @@ export const adminApi = {
         amount?: number
         received?: boolean
         payment?: { methodId: string; payerName?: string; reference?: string; note?: string }
+        methodIds?: string[]
       }
     ) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),

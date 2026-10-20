@@ -11,6 +11,7 @@ import {
   orderDepositSchema,
   depositPaymentSchema,
   depositProofSchema,
+  depositMethodsSchema,
   orderContactSchema,
   validateCouponSchema,
   guestOrderReceiptSchema,
@@ -84,6 +85,14 @@ router.post(
   requirePermission('orders:write'),
   validate(orderContactSchema),
   order.logOrderContact
+);
+router.get('/admin/deposit-methods', requireAuth, requirePermission('orders:read'), order.getDepositMethods);
+router.put(
+  '/admin/deposit-methods',
+  requireAuth,
+  requirePermission('orders:write'),
+  validate(depositMethodsSchema),
+  order.saveDepositMethods
 );
 router.patch(
   '/admin/orders/:id/deposit',

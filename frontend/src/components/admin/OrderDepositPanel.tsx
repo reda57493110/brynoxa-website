@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
-import { settingsApi } from '@/api/settingsApi'
+import { useDepositMethods } from '@/hooks/useDepositMethods'
 import { getErrorMessage } from '@/api/client'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -26,6 +26,58 @@ const METHOD_TYPE_LABEL: Record<string, string> = {
   other: 'Other',
 }
 
+/** Which of your payment options this customer sees on their order (saved right away). */
+function SharedOptions({ order }: { order: Order }) {
+  const qc = useQueryClient()
+  const all = useDepositMethods()
+  const visible = (all.data?.depositMethods ?? []).filter((m) => m.visible !== false)
+  const chosen = order.deposit?.methodIds ?? []
+  const isOn = (id: string) => !chosen.length || chosen.includes(id)
+  const save = useMutation({
+    mutationFn: (methodIds: string[]) => adminApi.orders.setDeposit(order._id, { methodIds }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
+      toast.success('Saved — the customer sees these options')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+  if (!visible.length) return null
+
+  const toggle = (id: string) => {
+    const on = visible.filter((m) => isOn(m.id)).map((m) => m.id)
+    const next = on.includes(id) ? on.filter((x) => x !== id) : [...on, id]
+    if (!next.length) {
+      toast.error('Keep at least one option')
+      return
+    }
+    // All of them = the default (empty), so new options also show
+    save.mutate(next.length === visible.length ? [] : next)
+  }
+
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-[var(--border)] pb-3">
+      <span className="me-1 text-xs text-[var(--fg-muted)]">Shown to this customer:</span>
+      {visible.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          disabled={save.isPending}
+          onClick={() => toggle(m.id)}
+          className={cn(
+            'inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium transition disabled:opacity-60',
+            isOn(m.id)
+              ? 'border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_12%,transparent)] text-[var(--success)]'
+              : 'border-[var(--border)] text-[var(--fg-muted)] line-through'
+          )}
+        >
+          <SiteIcon name={isOn(m.id) ? 'check' : 'close'} size={11} />
+          {m.name || m.type}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** Staff: record how the deposit was paid — method, the name on the transfer, reference. */
 function PaymentRecorder({
   order,
@@ -38,12 +90,8 @@ function PaymentRecorder({
 }) {
   const qc = useQueryClient()
   const current = order.deposit?.payment
-  const settings = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => (await settingsApi.get()).data.data,
-    staleTime: 60_000,
-  })
-  const methods = settings.data?.depositMethods ?? []
+  const allMethods = useDepositMethods()
+  const methods = allMethods.data?.depositMethods ?? []
   const customerName = order.shippingAddress?.fullName || (typeof order.user === 'object' && order.user ? order.user.name : '') || ''
   const [methodId, setMethodId] = useState(current?.methodId || methods[0]?.id || 'other')
   const [payerName, setPayerName] = useState(current?.payerName || customerName)
@@ -342,6 +390,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
         {deposit && deposit.status === 'pending' && editable ? (
           <div className="lg:col-span-2">
             <Block icon="send" title="Ask to pay">
+              <SharedOptions order={order} />
               <AskToPay order={order} />
             </Block>
           </div>

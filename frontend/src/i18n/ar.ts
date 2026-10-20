@@ -710,6 +710,7 @@ export const ar: Messages = {
     accessory: "إكسسوار",
   },
   deposit: {
+    showDetails: "عرض معلومات الدفع",
     payerName: "دفع من طرف (الاسم في التحويل)",
     payerNameHint: "إذا دفع شخص آخر عنك",
     openPhoto: "فتح بالحجم الكامل",
@@ -737,7 +738,7 @@ export const ar: Messages = {
     submit: "إرسال تفاصيل الدفع",
     close: "إلغاء",
     reportSent: "شكرًا! سنتحقق من دفعتك ونؤكد طلبك.",
-    iPaid: "لقد دفعت",
+    iPaid: "إرسال إثبات الدفع",
     askWhatsApp: "اسأل عبر واتساب",
     reportedTitle: "تم إرسال التفاصيل — جارٍ التحقق",
     reportedBody: "أُرسلت في {date} عبر {method}. نؤكد طلبك فور التحقق من العربون.",

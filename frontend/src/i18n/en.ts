@@ -708,6 +708,7 @@ export const en = {
     accessory: "Accessory",
   },
   deposit: {
+    showDetails: "Show payment details",
     payerName: "Paid by (name on the transfer)",
     payerNameHint: "If someone else paid for you",
     openPhoto: "Open full size",
@@ -735,7 +736,7 @@ export const en = {
     submit: "Send payment details",
     close: "Cancel",
     reportSent: "Thanks! We will check your payment and confirm your order.",
-    iPaid: "I have paid",
+    iPaid: "Send proof of payment",
     askWhatsApp: "Ask on WhatsApp",
     reportedTitle: "Payment details sent — we are checking",
     reportedBody: "Sent on {date} via {method}. We confirm your order as soon as the deposit is checked.",

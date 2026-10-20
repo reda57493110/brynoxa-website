@@ -48,6 +48,8 @@ export interface IOrderDeposit {
   payment?: IDepositPayment;
   /** Proof photos added by staff (images in DepositProof), oldest first */
   proofs?: IDepositProofRef[];
+  /** Payment options shown to this customer; empty = all visible ones */
+  methodIds?: string[];
 }
 
 export interface IDepositProofRef {
@@ -217,6 +219,7 @@ const depositProofRefSchema = new Schema<IDepositProofRef>(
 const depositSchema = new Schema<IOrderDeposit>(
   {
     proofs: { type: [depositProofRefSchema], default: undefined },
+    methodIds: { type: [String], default: undefined },
     payment: { type: depositPaymentSchema, default: undefined },
     amount: { type: Number, required: true, min: 0 },
     source: { type: String, enum: ['products', 'admin'], required: true },

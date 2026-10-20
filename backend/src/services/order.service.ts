@@ -3,7 +3,7 @@ import { Product } from '../models/Product';
 import { IOrderDeposit, Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
-import { getSettings } from '../models/Settings';
+import { getSettings, type DepositMethod } from '../models/Settings';
 import { resolveShippingFee } from '../utils/shipping';
 import { lineDeposit, roundMoney } from '../utils/deposit';
 import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
@@ -361,6 +361,7 @@ export async function updateUserOrderItems(
   if (deposit && order.deposit) {
     deposit.payment = order.deposit.payment;
     deposit.proofs = order.deposit.proofs;
+    deposit.methodIds = order.deposit.methodIds;
   }
   if (deposit) order.deposit = deposit;
   else order.set('deposit', undefined);
@@ -643,6 +644,7 @@ export async function setOrderDeposit(
     amount?: number;
     received?: boolean;
     payment?: { methodId: string; payerName?: string; reference?: string; note?: string };
+    methodIds?: string[];
   }
 ) {
   const order = await Order.findById(orderId);
@@ -653,6 +655,14 @@ export async function setOrderDeposit(
   }
 
   const notes: string[] = [];
+
+  // Which of your payment options this customer sees
+  if (input.methodIds !== undefined) {
+    if (!order.deposit) throw new ApiError(400, 'Set a deposit amount first');
+    const known = new Set(((await getSettings()).depositMethods ?? []).map((m) => m.id));
+    order.deposit.methodIds = [...new Set(input.methodIds)].filter((id) => known.has(id));
+    notes.push('Payment options shown to the customer updated');
+  }
 
   // How it was paid (staff record): kept with the deposit, receipt photo from the customer kept too
   if (input.payment) {
@@ -688,7 +698,7 @@ export async function setOrderDeposit(
         customerMessage = 'No deposit is needed for this order anymore';
       }
     } else if (amount !== order.deposit?.amount) {
-      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs };
+      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs, methodIds: order.deposit?.methodIds };
       notes.push(`Deposit of ${formatDh(amount)} requested`);
       customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
       email = 'requested';
@@ -968,4 +978,31 @@ export async function deleteOrder(id: string) {
   });
 
   invalidateDashboardCache();
+}
+
+/**
+ * The payment options a customer may see for an order: only while its deposit is awaited, only
+ * the visible ones, and only those staff chose for this order (none chosen = all visible).
+ */
+export function paymentOptionsFor(
+  order: { orderStatus: string; deposit?: { amount: number; status: string; methodIds?: string[] } | null },
+  settings: { depositMethods?: DepositMethod[]; depositInstructions?: string }
+) {
+  const d = order.deposit;
+  if (!d || !(d.amount > 0) || d.status !== 'pending' || !['pending', 'no_answer'].includes(order.orderStatus)) return null;
+  const chosen = new Set(d.methodIds ?? []);
+  const methods = (settings.depositMethods ?? []).filter((m) => m.visible !== false && (!chosen.size || chosen.has(m.id)));
+  return { methods, instructions: settings.depositInstructions?.trim() || '' };
+}
+
+/** Customer view of an order plus, when a deposit is awaited, the payment details to use. */
+export async function customerOrderViewWithPayment<T>(order: T): Promise<T> {
+  const view = customerOrderView(order) as unknown as Record<string, unknown> & {
+    orderStatus: string;
+    deposit?: { amount: number; status: string; methodIds?: string[] } & Record<string, unknown>;
+  };
+  if (!view?.deposit) return view as unknown as T;
+  const options = paymentOptionsFor(view, await getSettings());
+  const { methodIds: _ids, ...deposit } = view.deposit;
+  return { ...view, deposit: options ? { ...deposit, paymentOptions: options } : deposit } as unknown as T;
 }

@@ -213,6 +213,10 @@ export interface OrderDeposit {
   payment?: DepositPaymentReport
   /** Proof photos added by staff */
   proofs?: DepositProofRef[]
+  /** Admin: payment options shown to this customer (empty = all visible) */
+  methodIds?: string[]
+  /** Customer: your payment details, sent only while this deposit is awaited */
+  paymentOptions?: { methods: DepositMethod[]; instructions: string }
 }
 
 export interface DepositProofRef {
@@ -246,6 +250,8 @@ export interface DepositMethod {
   note: string
   /** Customer steps, one per line, with {customer} {amount} {receiver} {account} {method} {order}; empty = default steps */
   steps?: string
+  /** Shown to customers asked for a deposit (default on) */
+  visible?: boolean
 }
 
 export interface OrderItem {

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { settingsApi } from '@/api/settingsApi'
+import { useDepositMethods } from '@/hooks/useDepositMethods'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { depositSteps } from '@/lib/depositSteps'
 import { formatCurrency } from '@/lib/format'
@@ -49,12 +48,13 @@ function whatsappNumber(phone?: string) {
  * the steps of the chosen payment option — sent on WhatsApp or copied.
  */
 export function AskToPay({ order }: { order: Order }) {
-  const settings = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => (await settingsApi.get()).data.data,
-    staleTime: 60_000,
-  })
-  const methods = useMemo(() => settings.data?.depositMethods ?? [], [settings.data?.depositMethods])
+  const all = useDepositMethods()
+  const shared = order.deposit?.methodIds ?? []
+  const methods = useMemo(
+    () => (all.data?.depositMethods ?? []).filter((m) => m.visible !== false && (!shared.length || shared.includes(m.id))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [all.data?.depositMethods, shared.join()]
+  )
   const [methodId, setMethodId] = useState('')
   const [lang, setLang] = useState<Locale>('fr')
   const [text, setText] = useState('')

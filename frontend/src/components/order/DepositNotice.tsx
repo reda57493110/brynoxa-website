@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { settingsApi } from '@/api/settingsApi'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ordersApi } from '@/api/ordersApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
@@ -257,11 +256,7 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
   const [viewing, setViewing] = useState<string | null>(null)
   const deposit = order.deposit
   const awaiting = deposit?.status === 'pending' && (order.orderStatus === 'pending' || order.orderStatus === 'no_answer')
-  const settings = useQuery({
-    queryKey: ['settings'],
-    queryFn: async () => (await settingsApi.get()).data.data,
-    enabled: awaiting,
-  })
+  const [revealed, setRevealed] = useState(false)
 
   // Links like /account/orders/123#deposit land here once the order has loaded
   const shown = Boolean(deposit && deposit.amount > 0)
@@ -275,8 +270,8 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
 
   const received = deposit.status === 'received'
   const report = deposit.payment
-  const instructions = settings.data?.depositInstructions?.trim()
-  const methods = settings.data?.depositMethods ?? []
+  const instructions = deposit.paymentOptions?.instructions?.trim()
+  const methods = deposit.paymentOptions?.methods ?? []
 
   return (
     <section
@@ -358,10 +353,32 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
 
       {awaiting && (!report || reporting) ? (
         <>
+          {methods.length && !revealed && !reporting ? (
+            <button
+              type="button"
+              onClick={() => setRevealed(true)}
+              className="mt-4 flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-3 text-start transition hover:border-[var(--brand)]"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
+                  <SiteIcon name="banknote" size={15} />
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-[var(--fg)]">{t('deposit.showDetails')}</span>
+                  <span className="block text-[11px] text-[var(--fg-muted)]">{methods.map((m) => m.name || t(TYPE_KEY[m.type])).join(' · ')}</span>
+                </span>
+              </span>
+              <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)]" />
+            </button>
+          ) : null}
+          {methods.length && (revealed || reporting) ? (
           <h3 className="mt-4 text-sm font-semibold text-[var(--fg)]">
-            {methods.length ? t('deposit.payWithOne') : t('deposit.howToPay')}
+            {t('deposit.payWithOne')}
           </h3>
-          {methods.length ? (
+          ) : !methods.length ? (
+          <h3 className="mt-4 text-sm font-semibold text-[var(--fg)]">{t('deposit.howToPay')}</h3>
+          ) : null}
+          {methods.length && (revealed || reporting) ? (
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {methods.map((m) => (
                 <MethodCard key={m.id} method={m} order={order} />

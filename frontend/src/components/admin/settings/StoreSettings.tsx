@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useDepositMethods } from '@/hooks/useDepositMethods'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
@@ -145,14 +146,23 @@ function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (s
 }
 
 /** Deposit payment options (bank, Cash Plus, Wafacash…) and extra instructions, shown on the customer's order. */
-export function OrdersSettings({ settings }: { settings?: StoreSettings }) {
-  const savedText = settings?.depositInstructions ?? ''
-  const savedMethods = useMemo(() => settings?.depositMethods ?? [], [settings?.depositMethods])
+export function OrdersSettings() {
+  const qc = useQueryClient()
+  const current = useDepositMethods()
+  const savedText = current.data?.depositInstructions ?? ''
+  const savedMethods = useMemo(() => current.data?.depositMethods ?? [], [current.data?.depositMethods])
   const [text, setText] = useState(savedText)
   const [methods, setMethods] = useState<DepositMethod[]>(savedMethods)
   useEffect(() => setText(savedText), [savedText])
   useEffect(() => setMethods(savedMethods), [savedMethods])
-  const save = useSaveSettings('Payment settings saved')
+  const save = useMutation({
+    mutationFn: (payload: { depositMethods: DepositMethod[]; depositInstructions: string }) => adminApi.depositMethods.save(payload),
+    onSuccess: (res) => {
+      qc.setQueryData(['admin-deposit-methods'], res.data.data)
+      toast.success('Payment options saved')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
 
   const dirty = text !== savedText || JSON.stringify(methods) !== JSON.stringify(savedMethods)
   useReportDirty('orders', dirty)
@@ -169,8 +179,8 @@ export function OrdersSettings({ settings }: { settings?: StoreSettings }) {
 
   return (
     <SettingsCard
-      title="Deposit payment options"
-      description="Shown to customers whose order needs a deposit. They pick one, pay, then send you the reference or a receipt photo from their order page."
+      title="Your payment details"
+      description="Private: only customers you ask for a deposit see them, on their order page. Switch an option off to keep it without showing it."
       footer={
         <SaveBar
           dirty={dirty}
@@ -205,6 +215,16 @@ export function OrdersSettings({ settings }: { settings?: StoreSettings }) {
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
+                <label className="flex cursor-pointer items-center gap-2 text-xs" title="Shown to customers asked for a deposit">
+                  <input
+                    type="checkbox"
+                    className="peer sr-only"
+                    checked={m.visible !== false}
+                    onChange={(e) => patch(m.id, { visible: e.target.checked })}
+                  />
+                  <span className="relative h-5 w-9 rounded-full bg-[var(--border)] transition peer-checked:bg-[var(--success)] after:absolute after:start-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4 rtl:peer-checked:after:-translate-x-4" />
+                  <span className="text-[var(--fg-muted)]">{m.visible !== false ? 'Visible' : 'Hidden'}</span>
+                </label>
                 <div className="ms-auto flex items-center gap-1">
                   <Button size="sm" variant="ghost" className="h-8 w-8 !px-0" aria-label="Move up" disabled={i === 0} onClick={() => move(i, -1)}>↑</Button>
                   <Button size="sm" variant="ghost" className="h-8 w-8 !px-0" aria-label="Move down" disabled={i === methods.length - 1} onClick={() => move(i, 1)}>↓</Button>

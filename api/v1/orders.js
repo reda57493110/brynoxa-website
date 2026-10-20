@@ -97,7 +97,7 @@ module.exports = async (req, res) => {
     if (route === 'track' && req.method === 'POST') {
       const body = parseBody(schemas.trackOrderSchema, await readJsonBody(req));
       const order = await orderService.trackGuestOrder(body.orderNumber, body.phone);
-      sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
+      sendJson(res, 200, { success: true, message: 'Success', data: await orderService.customerOrderViewWithPayment(order) });
       return;
     }
 
@@ -163,7 +163,7 @@ module.exports = async (req, res) => {
       if (action === 'receipt' && req.method === 'POST') {
         const body = parseBody(schemas.guestOrderReceiptSchema, await readJsonBody(req));
         const order = await orderService.getGuestOrderReceipt(orderNumber, body.token);
-        sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
+        sendJson(res, 200, { success: true, message: 'Success', data: await orderService.customerOrderViewWithPayment(order) });
         return;
       }
 
@@ -185,7 +185,7 @@ module.exports = async (req, res) => {
         const body = parseBody(schemas.depositPaymentSchema, await readJsonBody(req));
         const { reportDepositPayment } = require('../../backend/dist/services/depositPayment.service');
         const order = await reportDepositPayment(user._id.toString(), orderNumber, body);
-        sendJson(res, 200, { success: true, message: 'Payment details sent', data: orderService.customerOrderView(order) });
+        sendJson(res, 200, { success: true, message: 'Payment details sent', data: await orderService.customerOrderViewWithPayment(order) });
         return;
       }
 
@@ -214,7 +214,7 @@ module.exports = async (req, res) => {
         const user = await requireUser(req, res);
         if (!user) return;
         const order = await orderService.getUserOrder(user._id.toString(), orderNumber);
-        sendJson(res, 200, { success: true, message: 'Success', data: orderService.customerOrderView(order) });
+        sendJson(res, 200, { success: true, message: 'Success', data: await orderService.customerOrderViewWithPayment(order) });
         return;
       }
     }

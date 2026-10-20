@@ -150,11 +150,6 @@ function DepositsList() {
 
 /** Admin → Orders → Deposits & payments */
 export function DepositsView() {
-  const settings = useQuery({
-    queryKey: ['admin-settings'],
-    queryFn: async () => (await adminApi.settings.get()).data.data,
-  })
-
   return (
     <div className="min-w-0 space-y-3 sm:space-y-4">
       <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
@@ -168,7 +163,7 @@ export function DepositsView() {
       </div>
 
       <div id="payment-options">
-        <OrdersSettings settings={settings.data} />
+        <OrdersSettings />
       </div>
     </div>
   )
