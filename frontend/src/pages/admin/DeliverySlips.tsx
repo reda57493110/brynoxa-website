@@ -17,7 +17,6 @@ type Lang = 'fr' | 'ar' | 'en'
 const T: Record<Lang, Record<string, string>> = {
   fr: {
     copy: 'Exemplaire client',
-    shopCopy: "Exemplaire boutique",
     slip: 'Bon de livraison',
     order: 'Commande',
     deliverTo: 'Livré à',
@@ -42,7 +41,6 @@ const T: Record<Lang, Record<string, string>> = {
   },
   ar: {
     copy: 'نسخة الزبون',
-    shopCopy: "نسخة المتجر",
     slip: 'وصل التسليم',
     order: 'الطلب',
     deliverTo: 'التسليم إلى',
@@ -67,7 +65,6 @@ const T: Record<Lang, Record<string, string>> = {
   },
   en: {
     copy: 'Customer copy',
-    shopCopy: "Shop copy",
     slip: 'Delivery slip',
     order: 'Order',
     deliverTo: 'Deliver to',
@@ -182,7 +179,7 @@ function Address({ order: o, title }: { order: Order; title: string }) {
 }
 
 /** Top half: what the customer keeps (proof of purchase, what to pay, warranty, help). */
-function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang: Lang; forShop?: boolean }) {
+function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
   const t = T[lang]
   const count = o.items.reduce((n, i) => n + i.qty, 0)
   const trackUrl = `${window.location.origin}/track-order`
@@ -191,7 +188,7 @@ function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang:
       <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
         <Brand />
         <div className="text-end">
-          <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{forShop ? t.shopCopy : t.copy}</p>
+          <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{t.copy}</p>
           <p className="mt-1 text-[10px] uppercase tracking-wide text-black/60">{t.slip}</p>
           <p className="text-sm font-extrabold" dir="ltr">
             #{o.orderNumber}
@@ -236,35 +233,20 @@ function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang:
   )
 }
 
-/** One order: one copy on its own A5 page, or the same slip twice on an A4 sheet (cut line between). */
-function Sheet({ order, lang, copies }: { order: Order; lang: Lang; copies: 1 | 2 }) {
-  if (copies === 1) {
-    return (
-      <article className="sheet mx-auto w-full max-w-[148mm] bg-white text-black shadow-sm print:shadow-none">
-        <div className="p-[7mm] print:p-[6mm]">
-          <CustomerCopy order={order} lang={lang} />
-        </div>
-      </article>
-    )
-  }
+/** One slip per order, on its own A5 page. */
+function Sheet({ order, lang }: { order: Order; lang: Lang }) {
   return (
-    <article className="sheet mx-auto flex w-full max-w-[210mm] flex-col bg-white text-black shadow-sm print:shadow-none">
+    <article className="sheet mx-auto w-full max-w-[148mm] bg-white text-black shadow-sm print:shadow-none">
       <div className="p-[7mm] print:p-[6mm]">
         <CustomerCopy order={order} lang={lang} />
-      </div>
-      <div className="relative border-t-2 border-dashed border-black/50">
-        <span className="absolute -top-2.5 start-3 bg-white px-1 text-[10px] text-black/60">✂</span>
-      </div>
-      <div className="p-[7mm] print:p-[6mm]">
-        <CustomerCopy order={order} lang={lang} forShop />
       </div>
     </article>
   )
 }
 
 /**
- * Printable delivery slips for the orders in `?ids=`: one copy per order (A5), or two identical
- * copies on an A4 sheet — one for the customer, one for the shop. Opened from Orders (bulk) or an order's page; prints automatically once loaded.
+ * Printable delivery slips for the orders in `?ids=`: one A5 slip per order.
+ * Opened from Orders (bulk) or an order's page; prints automatically once loaded.
  */
 export function DeliverySlips() {
   const [params] = useSearchParams()
@@ -277,22 +259,6 @@ export function DeliverySlips() {
       return 'fr'
     }
   })
-
-  const [copies, setCopies] = useState<1 | 2>(() => {
-    try {
-      return localStorage.getItem('brynoxa-slip-copies') === '2' ? 2 : 1
-    } catch {
-      return 1
-    }
-  })
-  const pickCopies = (n: 1 | 2) => {
-    setCopies(n)
-    try {
-      localStorage.setItem('brynoxa-slip-copies', String(n))
-    } catch {
-      /* private mode */
-    }
-  }
 
   const orders = useQuery({
     queryKey: ['admin-order-slips', ids],
@@ -317,29 +283,13 @@ export function DeliverySlips() {
 
   return (
     <div className="min-h-dvh bg-[var(--bg-muted)] p-4 print:bg-white print:p-0">
-      <style>{copies === 1
-        ? '@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'
-        : '@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'}</style>
-      <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 print:hidden">
+      <style>{'@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'}</style>
+      <div className="mx-auto mb-4 flex max-w-[148mm] flex-wrap items-center justify-between gap-2 print:hidden">
         <Link to="/admin/orders" className="text-sm text-[var(--brand-text)] hover:underline">
           ← Back to orders
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[var(--fg-muted)]">Copies</span>
-          {([1, 2] as const).map((n) => (
-            <button
-              key={n}
-              type="button"
-              onClick={() => pickCopies(n)}
-              className={cn(
-                'h-8 w-9 rounded-full border text-xs font-medium',
-                copies === n ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)]' : 'border-[var(--border)] text-[var(--fg-muted)]'
-              )}
-            >
-              {n}
-            </button>
-          ))}
-          <span className="ms-2 text-xs text-[var(--fg-muted)]">Language</span>
+          <span className="text-xs text-[var(--fg-muted)]">Language</span>
           {(['fr', 'ar', 'en'] as Lang[]).map((l) => (
             <button
               key={l}
@@ -354,7 +304,7 @@ export function DeliverySlips() {
             </button>
           ))}
           <Button size="sm" onClick={() => window.print()} disabled={!orders.data?.length}>
-            Print {ids.length > 1 ? `${ids.length} sheets` : 'sheet'}
+            Print {ids.length > 1 ? `${ids.length} slips` : 'slip'}
           </Button>
         </div>
       </div>
@@ -369,7 +319,7 @@ export function DeliverySlips() {
       ) : (
         <div className="space-y-4 print:space-y-0">
           {orders.data.map((o) => (
-            <Sheet key={o._id} order={o} lang={lang} copies={copies} />
+            <Sheet key={o._id} order={o} lang={lang} />
           ))}
         </div>
       )}
