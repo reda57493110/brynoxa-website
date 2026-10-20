@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -7,132 +7,335 @@ import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { CONTACT } from '@/lib/site'
 import { formatCurrency, formatDateTime } from '@/lib/format'
-import type { Order } from '@/types'
 import { feesCovered, toCollect } from '@/lib/deposit'
+import { orderStatusLabel } from '@/lib/orderStatus'
+import { cn } from '@/lib/cn'
+import type { Order } from '@/types'
 
+type Lang = 'fr' | 'ar' | 'en'
 
-function Slip({ order: o }: { order: Order }) {
-  const a = o.shippingAddress
-  const depositPaid = o.deposit?.status === 'received' ? o.deposit.amount : 0
+/** Customer copy texts (the shop copy stays in English like the rest of admin). */
+const T: Record<Lang, Record<string, string>> = {
+  fr: {
+    copy: 'Exemplaire client',
+    slip: 'Bon de livraison',
+    order: 'Commande',
+    deliverTo: 'Livré à',
+    item: 'Article',
+    qty: 'Qté',
+    price: 'Prix',
+    subtotal: 'Sous-total',
+    shipping: 'Livraison',
+    free: 'Offerte',
+    discount: 'Remise',
+    total: 'Total',
+    deposit: 'Acompte payé',
+    fees: 'Frais de transfert pris en charge',
+    toPay: 'À payer au livreur',
+    paid: 'Déjà payé',
+    warrantyTitle: 'Garantie 6 mois',
+    warranty: 'Gardez ce bon : il sert de preuve d’achat pour la garantie et les retours (14 jours).',
+    track: 'Suivre votre commande',
+    help: 'Une question ? WhatsApp',
+    thanks: 'Merci pour votre confiance !',
+    items: 'articles',
+  },
+  ar: {
+    copy: 'نسخة الزبون',
+    slip: 'وصل التسليم',
+    order: 'الطلب',
+    deliverTo: 'التسليم إلى',
+    item: 'المنتج',
+    qty: 'الكمية',
+    price: 'الثمن',
+    subtotal: 'المجموع الفرعي',
+    shipping: 'التوصيل',
+    free: 'مجاني',
+    discount: 'تخفيض',
+    total: 'المجموع',
+    deposit: 'العربون المدفوع',
+    fees: 'رسوم التحويل على حسابنا',
+    toPay: 'المبلغ للدفع لموظف التوصيل',
+    paid: 'تم الدفع',
+    warrantyTitle: 'ضمان 6 أشهر',
+    warranty: 'احتفظ بهذا الوصل: هو إثبات الشراء للضمان والإرجاع (14 يوما).',
+    track: 'تتبع طلبك',
+    help: 'سؤال؟ واتساب',
+    thanks: 'شكرا لثقتكم!',
+    items: 'منتجات',
+  },
+  en: {
+    copy: 'Customer copy',
+    slip: 'Delivery slip',
+    order: 'Order',
+    deliverTo: 'Deliver to',
+    item: 'Item',
+    qty: 'Qty',
+    price: 'Price',
+    subtotal: 'Subtotal',
+    shipping: 'Shipping',
+    free: 'Free',
+    discount: 'Discount',
+    total: 'Total',
+    deposit: 'Deposit paid',
+    fees: 'Transfer fees covered',
+    toPay: 'To pay the courier',
+    paid: 'Already paid',
+    warrantyTitle: '6-month warranty',
+    warranty: 'Keep this slip: it is your proof of purchase for the warranty and returns (14 days).',
+    track: 'Track your order',
+    help: 'Questions? WhatsApp',
+    thanks: 'Thank you for your trust!',
+    items: 'items',
+  },
+}
+
+function Brand() {
   return (
-    <article className="slip mx-auto flex w-full max-w-[148mm] flex-col gap-3 rounded-xl border border-black/20 bg-white p-5 text-[12px] leading-snug text-black print:rounded-none print:border-0 print:p-0">
-      <header className="flex items-start justify-between gap-4 border-b border-black/20 pb-3">
-        <div>
-          <p className="text-lg font-bold tracking-tight">Brynoxa</p>
-          <p>
-            {CONTACT.phone.value} · {CONTACT.email.value}
+    <div className="flex items-center gap-2">
+      <img src="/brand/brynoxa-mark.png" alt="" className="h-8 w-8 rounded-md bg-[#080B0E]" />
+      <div className="leading-tight">
+        <p className="text-base font-bold tracking-tight">Brynoxa</p>
+        <p className="text-[9px] text-black/60" dir="ltr">
+          {CONTACT.phone.value} · {CONTACT.email.value}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function Money({ order: o, labels, strongLabel }: { order: Order; labels: Record<string, string>; strongLabel: string }) {
+  const depositPaid = o.deposit?.status === 'received' ? o.deposit.amount : 0
+  const fees = depositPaid ? feesCovered(o) : 0
+  const row = (label: string, value: string, cls = '') => (
+    <div className={cn('flex justify-between gap-3', cls)}>
+      <dt>{label}</dt>
+      <dd className="shrink-0 whitespace-nowrap tabular-nums" dir="ltr">
+        {value}
+      </dd>
+    </div>
+  )
+  return (
+    <dl className="space-y-0.5 text-[11px]">
+      {row(labels.subtotal, formatCurrency(o.pricing.subtotal))}
+      {o.pricing.discount ? row(labels.discount, `−${formatCurrency(o.pricing.discount)}`) : null}
+      {row(labels.shipping, o.pricing.shipping ? formatCurrency(o.pricing.shipping) : labels.free)}
+      {row(labels.total, formatCurrency(o.pricing.total), 'font-semibold')}
+      {depositPaid ? row(labels.deposit, `−${formatCurrency(depositPaid)}`) : null}
+      {fees ? row(labels.fees, `−${formatCurrency(fees)}`) : null}
+      <div className="mt-1 flex items-center justify-between gap-3 rounded-md bg-black px-2 py-1.5 text-white">
+        <dt className="text-[11px] font-bold">{strongLabel}</dt>
+        <dd className="text-base font-extrabold tabular-nums" dir="ltr">
+          {formatCurrency(toCollect(o))}
+        </dd>
+      </div>
+    </dl>
+  )
+}
+
+function Items({ order: o, labels, sku = false }: { order: Order; labels: Record<string, string>; sku?: boolean }) {
+  return (
+    <table className="w-full border-collapse text-[11px]">
+      <thead>
+        <tr className="border-b border-black/40 text-start text-[9px] uppercase tracking-wide text-black/60">
+          <th className="py-1 text-start font-semibold">{labels.item}</th>
+          <th className="w-10 py-1 text-center font-semibold">{labels.qty}</th>
+          <th className="w-24 py-1 text-end font-semibold">{labels.price}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {o.items.map((i, idx) => (
+          <tr key={idx} className="border-b border-black/10 align-top">
+            <td className="py-1 pe-2">
+              <span className="font-medium">{i.name}</span>
+              {sku ? <span className="block text-[9px] text-black/60">{i.sku}</span> : null}
+            </td>
+            <td className="py-1 text-center font-bold">{i.qty}</td>
+            <td className="py-1 text-end tabular-nums" dir="ltr">
+              {formatCurrency(i.price * i.qty)}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+function Address({ order: o, title }: { order: Order; title: string }) {
+  const a = o.shippingAddress
+  return (
+    <div>
+      <p className="text-[9px] font-semibold uppercase tracking-wide text-black/60">{title}</p>
+      <p className="text-[13px] font-bold">{a?.fullName}</p>
+      <p className="text-[12px] font-semibold" dir="ltr">
+        {a?.phone}
+      </p>
+      <p className="text-[11px]">
+        {a?.line1}
+        {a?.line2 ? `, ${a.line2}` : ''}
+      </p>
+      <p className="text-[11px] font-semibold uppercase">{a?.city}</p>
+    </div>
+  )
+}
+
+/** Top half: what the customer keeps (proof of purchase, what to pay, warranty, help). */
+function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
+  const t = T[lang]
+  const count = o.items.reduce((n, i) => n + i.qty, 0)
+  const trackUrl = `${window.location.origin}/track-order`
+  return (
+    <section dir={lang === 'ar' ? 'rtl' : 'ltr'} className="flex h-full flex-col gap-2.5">
+      <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
+        <Brand />
+        <div className="text-end">
+          <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{t.copy}</p>
+          <p className="mt-1 text-[10px] uppercase tracking-wide text-black/60">{t.slip}</p>
+          <p className="text-sm font-extrabold" dir="ltr">
+            #{o.orderNumber}
           </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wide text-black/60">Delivery slip</p>
-          <p className="text-base font-bold">#{o.orderNumber}</p>
-          <p className="text-black/70">{formatDateTime(o.createdAt)}</p>
+          <p className="text-[10px] text-black/70" dir="ltr">
+            {formatDateTime(o.createdAt)}
+          </p>
         </div>
       </header>
 
-      <section>
-        <p className="text-[10px] uppercase tracking-wide text-black/60">Deliver to</p>
-        <p className="text-sm font-bold">{a?.fullName}</p>
-        <p className="text-sm font-semibold">{a?.phone}</p>
-        <p>
-          {a?.line1}
-          {a?.line2 ? `, ${a.line2}` : ''}
-        </p>
-        <p className="font-semibold uppercase">
-          {a?.city}
-          {a?.postalCode ? ` ${a.postalCode}` : ''}
-        </p>
-      </section>
-
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="border-b border-black/30 text-left text-[10px] uppercase tracking-wide text-black/60">
-            <th className="py-1 font-medium">Item</th>
-            <th className="w-10 py-1 text-center font-medium">Qty</th>
-            <th className="w-24 py-1 text-right font-medium">Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          {o.items.map((i, idx) => (
-            <tr key={idx} className="border-b border-black/10 align-top">
-              <td className="py-1 pr-2">
-                {i.name}
-                <span className="block text-[10px] text-black/60">{i.sku}</span>
-              </td>
-              <td className="py-1 text-center font-semibold">{i.qty}</td>
-              <td className="py-1 text-right">{formatCurrency(i.price * i.qty)}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr className="text-[11px] font-semibold">
-            <td className="pt-1">Items in the parcel</td>
-            <td className="pt-1 text-center">{o.items.reduce((n, i) => n + i.qty, 0)}</td>
-            <td />
-          </tr>
-        </tfoot>
-      </table>
-
-      <dl className="ml-auto w-56 space-y-0.5">
-        {o.pricing.shipping ? (
-          <div className="flex justify-between">
-            <dt>Shipping</dt>
-            <dd>{formatCurrency(o.pricing.shipping)}</dd>
-          </div>
-        ) : null}
-        {o.pricing.discount ? (
-          <div className="flex justify-between">
-            <dt>Discount</dt>
-            <dd>−{formatCurrency(o.pricing.discount)}</dd>
-          </div>
-        ) : null}
-        <div className="flex justify-between">
-          <dt>Total</dt>
-          <dd>{formatCurrency(o.pricing.total)}</dd>
+      <div className="grid grid-cols-[1fr_auto] gap-4">
+        <Address order={o} title={t.deliverTo} />
+        <div className="w-60">
+          <Money order={o} labels={t} strongLabel={t.toPay} />
         </div>
-        {depositPaid ? (
-          <div className="flex justify-between">
-            <dt>Deposit paid</dt>
-            <dd>−{formatCurrency(depositPaid)}</dd>
-          </div>
-        ) : null}
-        {depositPaid && feesCovered(o) ? (
-          <div className="flex justify-between">
-            <dt>Transfer fees covered</dt>
-            <dd>−{formatCurrency(feesCovered(o))}</dd>
-          </div>
-        ) : null}
-        {o.deposit && o.deposit.amount > 0 && !depositPaid ? (
-          <p className="text-[10px] font-semibold text-black">Deposit of {formatCurrency(o.deposit.amount)} NOT received yet</p>
-        ) : null}
-        <div className="mt-1 flex justify-between border-t-2 border-black pt-1 text-sm font-bold">
-          <dt>To collect (cash)</dt>
-          <dd>{formatCurrency(toCollect(o))}</dd>
+      </div>
+
+      <div>
+        <Items order={o} labels={t} />
+        <p className="mt-1 text-[10px] text-black/60">
+          {count} {t.items}
+        </p>
+      </div>
+
+      <div className="mt-auto grid grid-cols-2 gap-3 border-t border-black/20 pt-2 text-[10px] leading-snug">
+        <div>
+          <p className="font-bold">✓ {t.warrantyTitle}</p>
+          <p className="text-black/70">{t.warranty}</p>
         </div>
-      </dl>
+        <div className="text-end">
+          <p className="font-bold">{t.track}</p>
+          <p className="text-black/70" dir="ltr">
+            {trackUrl.replace(/^https?:\/\//, '')} · #{o.orderNumber}
+          </p>
+          <p className="mt-0.5 text-black/70">
+            {t.help} <span dir="ltr">{CONTACT.whatsapp.value}</span>
+          </p>
+        </div>
+      </div>
+      <p className="text-center text-[11px] font-semibold">{t.thanks}</p>
+    </section>
+  )
+}
+
+/** Bottom half: what the shop keeps (payment details, cash to collect, checks and signatures). */
+function ShopCopy({ order: o }: { order: Order }) {
+  const t = T.en
+  const d = o.deposit
+  const p = d?.payment
+  const box = (label: string) => (
+    <span className="inline-flex items-center gap-1">
+      <span className="inline-block h-3 w-3 rounded-sm border border-black" /> {label}
+    </span>
+  )
+  return (
+    <section className="flex h-full flex-col gap-2.5">
+      <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
+        <Brand />
+        <div className="text-end">
+          <p className="inline-block rounded border border-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide">Shop copy</p>
+          <p className="mt-1 text-sm font-extrabold">#{o.orderNumber}</p>
+          <p className="text-[10px] text-black/70">
+            {formatDateTime(o.createdAt)} · {orderStatusLabel(o.orderStatus)}
+          </p>
+        </div>
+      </header>
+
+      <div className="grid grid-cols-[1fr_auto] gap-4">
+        <div className="space-y-2">
+          <Address order={o} title="Customer" />
+          <div className="text-[10px] leading-snug">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-black/60">Payment</p>
+            <p>Cash on delivery{d && d.amount > 0 ? ` · deposit ${formatCurrency(d.amount)} ${d.status === 'received' ? '✓ received' : '— NOT received'}` : ''}</p>
+            {p ? (
+              <p>
+                {p.methodName}
+                {p.payerName ? ` · paid by ${p.payerName}` : ''}
+                {p.reference ? ` · ref ${p.reference}` : ''}
+                {typeof p.fee === 'number' ? ` · fees ${formatCurrency(p.fee)}` : ''}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        <div className="w-60">
+          <Money order={o} labels={t} strongLabel="Courier collects (cash)" />
+        </div>
+      </div>
+
+      <Items order={o} labels={t} sku />
 
       {o.customerNote ? (
-        <p className="rounded border border-black/20 p-2">
+        <p className="rounded border border-black/30 p-1.5 text-[10px]">
           <span className="font-semibold">Customer note: </span>
           {o.customerNote}
         </p>
       ) : null}
 
-      <footer className="mt-auto grid grid-cols-2 gap-6 pt-6 text-[10px] text-black/60">
-        <p className="border-t border-black/40 pt-1">Received by (name & signature)</p>
-        <p className="border-t border-black/40 pt-1">Date</p>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
+        {box('Checked')}
+        {box('Packed')}
+        {box('Serial noted')}
+        {box('Handed to courier')}
+        {box('Cash received')}
+      </div>
+
+      <footer className="mt-auto grid grid-cols-3 gap-4 pt-4 text-[9px] text-black/60">
+        <p className="border-t border-black/50 pt-1">Customer name & signature</p>
+        <p className="border-t border-black/50 pt-1">Courier</p>
+        <p className="border-t border-black/50 pt-1">Date</p>
       </footer>
+    </section>
+  )
+}
+
+/** One A4 sheet per order: customer copy on top, shop copy below, cut along the dashed line. */
+function Sheet({ order, lang }: { order: Order; lang: Lang }) {
+  return (
+    <article className="sheet mx-auto flex w-full max-w-[210mm] flex-col bg-white text-black shadow-sm print:shadow-none">
+      <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
+        <CustomerCopy order={order} lang={lang} />
+      </div>
+      <div className="relative border-t-2 border-dashed border-black/50">
+        <span className="absolute -top-2.5 start-3 bg-white px-1 text-[10px] text-black/60">✂ cut here</span>
+      </div>
+      <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
+        <ShopCopy order={order} />
+      </div>
     </article>
   )
 }
 
 /**
- * Printable delivery slips (one per page, A5) for the orders in `?ids=`.
- * Opened from Orders (bulk) or an order's page; prints automatically once loaded.
+ * Printable delivery slips for the orders in `?ids=`: one A4 sheet per order with a customer copy
+ * and a shop copy. Opened from Orders (bulk) or an order's page; prints automatically once loaded.
  */
 export function DeliverySlips() {
   const [params] = useSearchParams()
   const ids = (params.get('ids') || '').split(',').filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 50)
+  const [lang, setLang] = useState<Lang>(() => {
+    try {
+      const saved = localStorage.getItem('brynoxa-slip-lang')
+      return saved === 'ar' || saved === 'en' ? saved : 'fr'
+    } catch {
+      return 'fr'
+    }
+  })
 
   const orders = useQuery({
     queryKey: ['admin-order-slips', ids],
@@ -142,20 +345,45 @@ export function DeliverySlips() {
 
   useEffect(() => {
     if (!orders.data?.length) return
-    const id = window.setTimeout(() => window.print(), 400)
+    const id = window.setTimeout(() => window.print(), 500)
     return () => window.clearTimeout(id)
   }, [orders.data])
 
+  const pickLang = (l: Lang) => {
+    setLang(l)
+    try {
+      localStorage.setItem('brynoxa-slip-lang', l)
+    } catch {
+      /* private mode */
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-[var(--bg-muted)] p-4 print:bg-white print:p-0">
-      <style>{'@page { size: A5; margin: 10mm } @media print { .slip { break-after: page } .slip:last-child { break-after: auto } }'}</style>
-      <div className="mx-auto mb-4 flex max-w-[148mm] items-center justify-between gap-2 print:hidden">
+      <style>{'@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; height: 297mm } .sheet:last-child { break-after: auto } }'}</style>
+      <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 print:hidden">
         <Link to="/admin/orders" className="text-sm text-[var(--brand-text)] hover:underline">
           ← Back to orders
         </Link>
-        <Button size="sm" onClick={() => window.print()} disabled={!orders.data?.length}>
-          Print {ids.length > 1 ? `${ids.length} slips` : 'slip'}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-[var(--fg-muted)]">Customer copy in</span>
+          {(['fr', 'ar', 'en'] as Lang[]).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => pickLang(l)}
+              className={cn(
+                'h-8 rounded-full border px-3 text-xs font-medium',
+                lang === l ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)]' : 'border-[var(--border)] text-[var(--fg-muted)]'
+              )}
+            >
+              {l === 'fr' ? 'Français' : l === 'ar' ? 'العربية' : 'English'}
+            </button>
+          ))}
+          <Button size="sm" onClick={() => window.print()} disabled={!orders.data?.length}>
+            Print {ids.length > 1 ? `${ids.length} sheets` : 'sheet'}
+          </Button>
+        </div>
       </div>
       {!ids.length ? (
         <p className="text-center text-sm text-[var(--fg-muted)]">No orders selected.</p>
@@ -168,7 +396,7 @@ export function DeliverySlips() {
       ) : (
         <div className="space-y-4 print:space-y-0">
           {orders.data.map((o) => (
-            <Slip key={o._id} order={o} />
+            <Sheet key={o._id} order={o} lang={lang} />
           ))}
         </div>
       )}
