@@ -254,6 +254,7 @@ export const settingsSchema = z.object({
         holder: z.string().max(80).optional(),
         account: z.string().max(80).optional(),
         note: z.string().max(300).optional(),
+        steps: z.string().max(1500).optional(),
       })
     )
     .max(8)

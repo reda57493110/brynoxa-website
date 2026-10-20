@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from '@/store/toastStore'
 import type { DepositMethod, DepositMethodType, StoreSettings } from '@/types'
+import { STEP_PLACEHOLDERS, defaultSteps, depositSteps } from '@/lib/depositSteps'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SaveBar, SettingsCard } from './SettingsUi'
@@ -72,7 +73,76 @@ const newMethod = (type: DepositMethodType = 'bank'): DepositMethod => ({
   holder: '',
   account: '',
   note: '',
+  steps: '',
 })
+
+/** The customer's step-by-step for one payment option: default or written by staff, with a live example. */
+function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (steps: string) => void }) {
+  const custom = Boolean(method.steps?.trim())
+  const [open, setOpen] = useState(custom)
+  const example = depositSteps(method, { customer: 'Ahmed', amount: '500 DH', order: 'BRX-20261020-1234' })
+  const insert = (token: string) => onChange(`${method.steps || defaultSteps(method.type)}${(method.steps || '').endsWith('\n') || !method.steps ? '' : ' '}${token}`)
+
+  return (
+    <div className="space-y-2 sm:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium">Steps for the customer</p>
+        <div className="flex gap-3 text-xs">
+          {custom ? (
+            <button type="button" className="font-medium text-[var(--fg-muted)] hover:underline" onClick={() => onChange('')}>
+              Use default steps
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="font-medium text-[var(--brand-text)] hover:underline"
+            onClick={() => {
+              if (!open && !custom) onChange(defaultSteps(method.type))
+              setOpen((v) => !v)
+            }}
+          >
+            {open ? 'Hide editor' : 'Edit steps'}
+          </button>
+        </div>
+      </div>
+      {open ? (
+        <>
+          <Textarea
+            aria-label="Steps for the customer"
+            rows={4}
+            maxLength={1500}
+            value={method.steps || ''}
+            placeholder={defaultSteps(method.type)}
+            onChange={(e) => onChange(e.target.value)}
+          />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-[var(--fg-muted)]">One step per line. Insert:</span>
+            {STEP_PLACEHOLDERS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => insert(p)}
+                className="h-6 rounded-full border border-[var(--border)] px-2 font-mono text-[10px] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        </>
+      ) : null}
+      <div className="rounded-xl bg-[var(--bg-muted)] px-3 py-2">
+        <p className="mb-1 text-[11px] font-medium text-[var(--fg-muted)]">
+          Example — customer Ahmed, deposit 500 DH{custom ? '' : ' (default steps)'}
+        </p>
+        <ol className="list-decimal space-y-0.5 ps-4 text-xs">
+          {example.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  )
+}
 
 /** Deposit payment options (bank, Cash Plus, Wafacash…) and extra instructions, shown on the customer's order. */
 export function OrdersSettings({ settings }: { settings?: StoreSettings }) {
@@ -150,8 +220,9 @@ export function OrdersSettings({ settings }: { settings?: StoreSettings }) {
                   <Input label={m.type === 'bank' ? 'RIB' : 'Number'} value={m.account} maxLength={80} dir="ltr" placeholder={type.placeholder} onChange={(e) => patch(m.id, { account: e.target.value })} />
                 </div>
                 <div className="sm:col-span-2">
-                  <Input label="Note (optional)" value={m.note} maxLength={300} placeholder="e.g. Write your order number as the reason" onChange={(e) => patch(m.id, { note: e.target.value })} />
+                  <Input label="Note (optional)" value={m.note} maxLength={300} placeholder="e.g. Open 9:00–19:00" onChange={(e) => patch(m.id, { note: e.target.value })} />
                 </div>
+                <StepsEditor method={m} onChange={(steps) => patch(m.id, { steps })} />
               </div>
             </div>
           )

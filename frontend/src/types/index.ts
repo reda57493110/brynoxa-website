@@ -244,6 +244,8 @@ export interface DepositMethod {
   holder: string
   account: string
   note: string
+  /** Customer steps, one per line, with {customer} {amount} {receiver} {account} {method} {order}; empty = default steps */
+  steps?: string
 }
 
 export interface OrderItem {

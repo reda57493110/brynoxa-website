@@ -1,3 +1,4 @@
+import { depositSteps } from '../utils/depositSteps';
 import { env } from '../config/env';
 import { User } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
@@ -175,12 +176,26 @@ function deliveryHtml(order: OrderDoc) {
   );
 }
 
-function depositInstructionsHtml(settings: ISettings, amount: number) {
+/** How to pay the deposit: each payment option with its steps (customer, amount, receiver filled in). */
+function depositInstructionsHtml(settings: ISettings, order: OrderDoc) {
+  const amount = order.deposit?.amount ?? 0;
   const instructions = settings.depositInstructions?.trim();
+  const values = { customer: order.shippingAddress?.fullName || '', amount: formatMad(amount), order: order.orderNumber };
+  const methods = (settings.depositMethods ?? []).map((m) => {
+    const steps = depositSteps(m, values)
+      .map((s) => `<li style="margin:0 0 4px;">${escapeHtml(s)}</li>`)
+      .join('');
+    const title = escapeHtml(m.name || m.type);
+    return `<div style="margin:0 0 12px;padding:10px 12px;border:1px solid #dfe5ec;border-radius:10px;">
+      <p style="margin:0 0 6px;font-size:14px;font-weight:700;">${title}</p>
+      <ol style="margin:0;padding-left:18px;font-size:14px;line-height:1.6;">${steps}</ol>
+    </div>`;
+  });
   return panel(
     `Deposit to pay: ${formatMad(amount)}`,
-    `${instructions ? paragraphs(instructions) : paragraphs('We will contact you with the payment details.')}
-     <p style="margin:0;font-size:14px;line-height:1.6;color:#5a6a7a;">After paying, send your receipt on WhatsApp with your order number. We confirm your order as soon as the deposit is received.</p>`,
+    `${methods.length ? methods.join('') : ''}
+     ${instructions ? paragraphs(instructions) : methods.length ? '' : paragraphs('We will contact you with the payment details.')}
+     <p style="margin:0;font-size:14px;line-height:1.6;color:#5a6a7a;">We confirm your order as soon as the deposit is received.</p>`,
     'highlight'
   );
 }
@@ -246,7 +261,7 @@ export async function sendOrderPlacedCustomerEmail(
     body: [
       greeting(order, customer),
       paragraphs(intro),
-      deposit ? depositInstructionsHtml(settings, deposit.amount) : '',
+      deposit ? depositInstructionsHtml(settings, order) : '',
       orderSummaryHtml(order),
       deliveryHtml(order),
       customMessage(settings, 'orderPlaced'),
@@ -397,7 +412,7 @@ export async function notifyDepositRequested(order: OrderDoc): Promise<boolean> 
       paragraphs(
         `To confirm order ${order.orderNumber}, we need a deposit of ${formatMad(deposit.amount)}. You pay the remaining ${formatMad(order.pricing.total - deposit.amount)} in cash on delivery.`
       ),
-      depositInstructionsHtml(settings, deposit.amount),
+      depositInstructionsHtml(settings, order),
       orderSummaryHtml(order),
       customMessage(settings, 'depositRequested'),
       button(customer.isGuest ? 'Track your order' : 'View your order', orderLink(order, customer)),

@@ -14,6 +14,7 @@ import { receiptToDataUrl } from '@/lib/receiptImage'
 import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
 import type { Order } from '@/types'
+import { AskToPay } from '@/components/admin/AskToPay'
 
 const MAX_PROOFS = 6
 
@@ -335,6 +336,15 @@ export function OrderDepositPanel({ order }: { order: Order }) {
               </dl>
             )}
           </Block>
+        ) : null}
+
+        {/* Ask the customer to pay: ready message with their name, the amount and the steps */}
+        {deposit && deposit.status === 'pending' && editable ? (
+          <div className="lg:col-span-2">
+            <Block icon="send" title="Ask to pay">
+              <AskToPay order={order} />
+            </Block>
+          </div>
         ) : null}
 
         {/* 3 · Proof photos */}

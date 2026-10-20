@@ -12,6 +12,8 @@ import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { useLocaleStore } from '@/store/localeStore'
+import { depositSteps } from '@/lib/depositSteps'
 import type { DepositMethod, DepositMethodType, Order } from '@/types'
 import { PhotoLightbox, PhotoTile } from '@/components/order/PrivatePhoto'
 
@@ -46,8 +48,11 @@ function CopyButton({ value }: { value: string }) {
   )
 }
 
-function MethodCard({ method }: { method: DepositMethod }) {
+function MethodCard({ method, order }: { method: DepositMethod; order: Order }) {
   const t = useT()
+  const locale = useLocaleStore((st) => st.locale)
+  const amount = formatCurrency(order.deposit?.amount ?? 0)
+  const steps = depositSteps(method, { customer: order.shippingAddress?.fullName || '', amount, order: order.orderNumber }, locale)
   return (
     <li className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
       <div className="flex items-center gap-2">
@@ -76,6 +81,18 @@ function MethodCard({ method }: { method: DepositMethod }) {
           </div>
         ) : null}
       </dl>
+      {steps.length ? (
+        <ol className="mt-2.5 space-y-1.5 border-t border-[var(--border)] pt-2.5">
+          {steps.map((step, i) => (
+            <li key={i} className="flex gap-2 text-xs leading-relaxed text-[var(--fg)]">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[10px] font-bold text-[var(--brand-text)]">
+                {i + 1}
+              </span>
+              <span className="min-w-0 pt-0.5">{step}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
       {method.note ? <p className="mt-2 text-xs leading-relaxed text-[var(--fg-muted)]">{method.note}</p> : null}
     </li>
   )
@@ -347,7 +364,7 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
           {methods.length ? (
             <ul className="mt-2 grid gap-2 sm:grid-cols-2">
               {methods.map((m) => (
-                <MethodCard key={m.id} method={m} />
+                <MethodCard key={m.id} method={m} order={order} />
               ))}
             </ul>
           ) : null}

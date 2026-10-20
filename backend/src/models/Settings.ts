@@ -67,6 +67,8 @@ export interface DepositMethod {
   /** RIB, account or phone number to send to */
   account: string;
   note: string;
+  /** Customer steps, one per line, with {customer} {amount} {receiver} {account} {method} {order}; empty = default steps */
+  steps: string;
 }
 export const MAX_DEPOSIT_METHODS = 8;
 
@@ -132,6 +134,7 @@ const settingsSchema = new Schema<ISettings>(
             holder: { type: String, default: '', maxlength: 80 },
             account: { type: String, default: '', maxlength: 80 },
             note: { type: String, default: '', maxlength: 300 },
+            steps: { type: String, default: '', maxlength: 1500 },
           },
           { _id: false }
         ),
@@ -217,6 +220,7 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
       holder: text(r.holder, 80),
       account: text(r.account, 80),
       note: text(r.note, 300),
+      steps: String(r.steps ?? '').replace(/\r\n/g, '\n').trim().slice(0, 1500),
     };
     if (!method.name && !method.account) continue;
     if (ids.has(method.id)) method.id = Math.random().toString(36).slice(2, 10);
