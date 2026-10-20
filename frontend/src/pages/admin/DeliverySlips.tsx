@@ -187,7 +187,7 @@ function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang:
   const count = o.items.reduce((n, i) => n + i.qty, 0)
   const trackUrl = `${window.location.origin}/track-order`
   return (
-    <section dir={lang === 'ar' ? 'rtl' : 'ltr'} className="flex h-full flex-col gap-2.5">
+    <section dir={lang === 'ar' ? 'rtl' : 'ltr'} className="flex flex-col gap-2">
       <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
         <Brand />
         <div className="text-end">
@@ -216,7 +216,7 @@ function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang:
         </p>
       </div>
 
-      <div className="mt-auto grid grid-cols-2 gap-3 border-t border-black/20 pt-2 text-[10px] leading-snug">
+      <div className="grid grid-cols-2 gap-3 border-t border-black/20 pt-2 text-[10px] leading-snug">
         <div>
           <p className="font-bold">✓ {t.warrantyTitle}</p>
           <p className="text-black/70">{t.warranty}</p>
@@ -241,7 +241,7 @@ function Sheet({ order, lang, copies }: { order: Order; lang: Lang; copies: 1 | 
   if (copies === 1) {
     return (
       <article className="sheet mx-auto w-full max-w-[148mm] bg-white text-black shadow-sm print:shadow-none">
-        <div className="h-[210mm] overflow-hidden p-[8mm] print:p-[7mm]">
+        <div className="p-[7mm] print:p-[6mm]">
           <CustomerCopy order={order} lang={lang} />
         </div>
       </article>
@@ -249,13 +249,13 @@ function Sheet({ order, lang, copies }: { order: Order; lang: Lang; copies: 1 | 
   }
   return (
     <article className="sheet mx-auto flex w-full max-w-[210mm] flex-col bg-white text-black shadow-sm print:shadow-none">
-      <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
+      <div className="p-[7mm] print:p-[6mm]">
         <CustomerCopy order={order} lang={lang} />
       </div>
       <div className="relative border-t-2 border-dashed border-black/50">
         <span className="absolute -top-2.5 start-3 bg-white px-1 text-[10px] text-black/60">✂</span>
       </div>
-      <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
+      <div className="p-[7mm] print:p-[6mm]">
         <CustomerCopy order={order} lang={lang} forShop />
       </div>
     </article>
@@ -318,8 +318,8 @@ export function DeliverySlips() {
   return (
     <div className="min-h-dvh bg-[var(--bg-muted)] p-4 print:bg-white print:p-0">
       <style>{copies === 1
-        ? '@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; height: 210mm } .sheet:last-child { break-after: auto } }'
-        : '@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; height: 297mm } .sheet:last-child { break-after: auto } }'}</style>
+        ? '@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'
+        : '@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'}</style>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 print:hidden">
         <Link to="/admin/orders" className="text-sm text-[var(--brand-text)] hover:underline">
           ← Back to orders
