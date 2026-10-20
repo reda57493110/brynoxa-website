@@ -8,7 +8,6 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { CONTACT } from '@/lib/site'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { feesCovered, toCollect } from '@/lib/deposit'
-import { orderStatusLabel } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
 
@@ -18,6 +17,7 @@ type Lang = 'fr' | 'ar' | 'en'
 const T: Record<Lang, Record<string, string>> = {
   fr: {
     copy: 'Exemplaire client',
+    shopCopy: "Exemplaire boutique",
     slip: 'Bon de livraison',
     order: 'Commande',
     deliverTo: 'Livré à',
@@ -42,6 +42,7 @@ const T: Record<Lang, Record<string, string>> = {
   },
   ar: {
     copy: 'نسخة الزبون',
+    shopCopy: "نسخة المتجر",
     slip: 'وصل التسليم',
     order: 'الطلب',
     deliverTo: 'التسليم إلى',
@@ -66,6 +67,7 @@ const T: Record<Lang, Record<string, string>> = {
   },
   en: {
     copy: 'Customer copy',
+    shopCopy: "Shop copy",
     slip: 'Delivery slip',
     order: 'Order',
     deliverTo: 'Deliver to',
@@ -180,7 +182,7 @@ function Address({ order: o, title }: { order: Order; title: string }) {
 }
 
 /** Top half: what the customer keeps (proof of purchase, what to pay, warranty, help). */
-function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
+function CustomerCopy({ order: o, lang, forShop = false }: { order: Order; lang: Lang; forShop?: boolean }) {
   const t = T[lang]
   const count = o.items.reduce((n, i) => n + i.qty, 0)
   const trackUrl = `${window.location.origin}/track-order`
@@ -189,7 +191,7 @@ function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
       <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
         <Brand />
         <div className="text-end">
-          <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{t.copy}</p>
+          <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{forShop ? t.shopCopy : t.copy}</p>
           <p className="mt-1 text-[10px] uppercase tracking-wide text-black/60">{t.slip}</p>
           <p className="text-sm font-extrabold" dir="ltr">
             #{o.orderNumber}
@@ -234,96 +236,35 @@ function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
   )
 }
 
-/** Bottom half: what the shop keeps (payment details, cash to collect, checks and signatures). */
-function ShopCopy({ order: o }: { order: Order }) {
-  const t = T.en
-  const d = o.deposit
-  const p = d?.payment
-  const box = (label: string) => (
-    <span className="inline-flex items-center gap-1">
-      <span className="inline-block h-3 w-3 rounded-sm border border-black" /> {label}
-    </span>
-  )
-  return (
-    <section className="flex h-full flex-col gap-2.5">
-      <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
-        <Brand />
-        <div className="text-end">
-          <p className="inline-block rounded border border-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide">Shop copy</p>
-          <p className="mt-1 text-sm font-extrabold">#{o.orderNumber}</p>
-          <p className="text-[10px] text-black/70">
-            {formatDateTime(o.createdAt)} · {orderStatusLabel(o.orderStatus)}
-          </p>
+/** One order: one copy on its own A5 page, or the same slip twice on an A4 sheet (cut line between). */
+function Sheet({ order, lang, copies }: { order: Order; lang: Lang; copies: 1 | 2 }) {
+  if (copies === 1) {
+    return (
+      <article className="sheet mx-auto w-full max-w-[148mm] bg-white text-black shadow-sm print:shadow-none">
+        <div className="h-[210mm] overflow-hidden p-[8mm] print:p-[7mm]">
+          <CustomerCopy order={order} lang={lang} />
         </div>
-      </header>
-
-      <div className="grid grid-cols-[1fr_auto] gap-4">
-        <div className="space-y-2">
-          <Address order={o} title="Customer" />
-          <div className="text-[10px] leading-snug">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-black/60">Payment</p>
-            <p>Cash on delivery{d && d.amount > 0 ? ` · deposit ${formatCurrency(d.amount)} ${d.status === 'received' ? '✓ received' : '— NOT received'}` : ''}</p>
-            {p ? (
-              <p>
-                {p.methodName}
-                {p.payerName ? ` · paid by ${p.payerName}` : ''}
-                {p.reference ? ` · ref ${p.reference}` : ''}
-                {typeof p.fee === 'number' ? ` · fees ${formatCurrency(p.fee)}` : ''}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <div className="w-60">
-          <Money order={o} labels={t} strongLabel="Courier collects (cash)" />
-        </div>
-      </div>
-
-      <Items order={o} labels={t} sku />
-
-      {o.customerNote ? (
-        <p className="rounded border border-black/30 p-1.5 text-[10px]">
-          <span className="font-semibold">Customer note: </span>
-          {o.customerNote}
-        </p>
-      ) : null}
-
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px]">
-        {box('Checked')}
-        {box('Packed')}
-        {box('Serial noted')}
-        {box('Handed to courier')}
-        {box('Cash received')}
-      </div>
-
-      <footer className="mt-auto grid grid-cols-3 gap-4 pt-4 text-[9px] text-black/60">
-        <p className="border-t border-black/50 pt-1">Customer name & signature</p>
-        <p className="border-t border-black/50 pt-1">Courier</p>
-        <p className="border-t border-black/50 pt-1">Date</p>
-      </footer>
-    </section>
-  )
-}
-
-/** One A4 sheet per order: customer copy on top, shop copy below, cut along the dashed line. */
-function Sheet({ order, lang }: { order: Order; lang: Lang }) {
+      </article>
+    )
+  }
   return (
     <article className="sheet mx-auto flex w-full max-w-[210mm] flex-col bg-white text-black shadow-sm print:shadow-none">
       <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
         <CustomerCopy order={order} lang={lang} />
       </div>
       <div className="relative border-t-2 border-dashed border-black/50">
-        <span className="absolute -top-2.5 start-3 bg-white px-1 text-[10px] text-black/60">✂ cut here</span>
+        <span className="absolute -top-2.5 start-3 bg-white px-1 text-[10px] text-black/60">✂</span>
       </div>
       <div className="h-[143mm] overflow-hidden p-[8mm] print:p-[7mm]">
-        <ShopCopy order={order} />
+        <CustomerCopy order={order} lang={lang} forShop />
       </div>
     </article>
   )
 }
 
 /**
- * Printable delivery slips for the orders in `?ids=`: one A4 sheet per order with a customer copy
- * and a shop copy. Opened from Orders (bulk) or an order's page; prints automatically once loaded.
+ * Printable delivery slips for the orders in `?ids=`: one copy per order (A5), or two identical
+ * copies on an A4 sheet — one for the customer, one for the shop. Opened from Orders (bulk) or an order's page; prints automatically once loaded.
  */
 export function DeliverySlips() {
   const [params] = useSearchParams()
@@ -336,6 +277,22 @@ export function DeliverySlips() {
       return 'fr'
     }
   })
+
+  const [copies, setCopies] = useState<1 | 2>(() => {
+    try {
+      return localStorage.getItem('brynoxa-slip-copies') === '2' ? 2 : 1
+    } catch {
+      return 1
+    }
+  })
+  const pickCopies = (n: 1 | 2) => {
+    setCopies(n)
+    try {
+      localStorage.setItem('brynoxa-slip-copies', String(n))
+    } catch {
+      /* private mode */
+    }
+  }
 
   const orders = useQuery({
     queryKey: ['admin-order-slips', ids],
@@ -360,13 +317,29 @@ export function DeliverySlips() {
 
   return (
     <div className="min-h-dvh bg-[var(--bg-muted)] p-4 print:bg-white print:p-0">
-      <style>{'@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; height: 297mm } .sheet:last-child { break-after: auto } }'}</style>
+      <style>{copies === 1
+        ? '@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; height: 210mm } .sheet:last-child { break-after: auto } }'
+        : '@page { size: A4; margin: 0 } @media print { .sheet { break-after: page; height: 297mm } .sheet:last-child { break-after: auto } }'}</style>
       <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 print:hidden">
         <Link to="/admin/orders" className="text-sm text-[var(--brand-text)] hover:underline">
           ← Back to orders
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-[var(--fg-muted)]">Customer copy in</span>
+          <span className="text-xs text-[var(--fg-muted)]">Copies</span>
+          {([1, 2] as const).map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => pickCopies(n)}
+              className={cn(
+                'h-8 w-9 rounded-full border text-xs font-medium',
+                copies === n ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)]' : 'border-[var(--border)] text-[var(--fg-muted)]'
+              )}
+            >
+              {n}
+            </button>
+          ))}
+          <span className="ms-2 text-xs text-[var(--fg-muted)]">Language</span>
           {(['fr', 'ar', 'en'] as Lang[]).map((l) => (
             <button
               key={l}
@@ -396,7 +369,7 @@ export function DeliverySlips() {
       ) : (
         <div className="space-y-4 print:space-y-0">
           {orders.data.map((o) => (
-            <Sheet key={o._id} order={o} lang={lang} />
+            <Sheet key={o._id} order={o} lang={lang} copies={copies} />
           ))}
         </div>
       )}
