@@ -8,12 +8,8 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { CONTACT } from '@/lib/site'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import type { Order } from '@/types'
+import { feesCovered, toCollect } from '@/lib/deposit'
 
-/** What the courier collects: order total minus a deposit already received. */
-function toCollect(o: Order) {
-  const deposit = o.deposit?.status === 'received' ? o.deposit.amount : 0
-  return Math.max(0, o.pricing.total - deposit)
-}
 
 function Slip({ order: o }: { order: Order }) {
   const a = o.shippingAddress
@@ -91,6 +87,12 @@ function Slip({ order: o }: { order: Order }) {
           <div className="flex justify-between">
             <dt>Deposit paid</dt>
             <dd>−{formatCurrency(depositPaid)}</dd>
+          </div>
+        ) : null}
+        {depositPaid && feesCovered(o) ? (
+          <div className="flex justify-between">
+            <dt>Transfer fees covered</dt>
+            <dd>−{formatCurrency(feesCovered(o))}</dd>
           </div>
         ) : null}
         <div className="mt-1 flex justify-between border-t-2 border-black pt-1 text-sm font-bold">

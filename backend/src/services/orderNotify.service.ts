@@ -1,4 +1,5 @@
 import { depositSteps } from '../utils/depositSteps';
+import { dueOnDelivery } from '../utils/deposit';
 import { env } from '../config/env';
 import { User } from '../models/User';
 import { Order, OrderStatus } from '../models/Order';
@@ -123,7 +124,7 @@ function greeting(order: OrderDoc, customer: Customer) {
 function depositAmounts(order: OrderDoc) {
   const deposit = order.deposit?.amount && order.deposit.amount > 0 ? order.deposit : null;
   const paid = deposit?.status === 'received' ? deposit.amount : 0;
-  return { deposit, paid, dueOnDelivery: Math.max(0, order.pricing.total - paid) };
+  return { deposit, paid, dueOnDelivery: paid ? dueOnDelivery(order) : Math.max(0, order.pricing.total - paid) };
 }
 
 /** Items, totals, payment method and deposit — the same block in every order email. */
@@ -151,11 +152,11 @@ export function orderSummaryHtml(order: OrderDoc, opts: { paid?: boolean } = {})
       ? deposit.status === 'received'
         ? [
             { label: 'Deposit paid', value: formatMad(deposit.amount) },
-            { label: 'Left to pay on delivery', value: formatMad(order.pricing.total - deposit.amount), strong: true },
+            { label: 'Left to pay on delivery', value: formatMad(dueOnDelivery(order)), strong: true },
           ]
         : [
             { label: 'Deposit to pay before confirmation', value: formatMad(deposit.amount), strong: true },
-            { label: 'Then on delivery', value: formatMad(order.pricing.total - deposit.amount) },
+            { label: 'Then on delivery', value: formatMad(dueOnDelivery(order)) },
           ]
       : []),
   ];
@@ -411,7 +412,7 @@ export async function notifyDepositRequested(order: OrderDoc): Promise<boolean> 
     body: [
       greeting(order, customer),
       paragraphs(
-        `To confirm order ${order.orderNumber}, we need a deposit of ${formatMad(deposit.amount)}. You pay the remaining ${formatMad(order.pricing.total - deposit.amount)} in cash on delivery.`
+        `To confirm order ${order.orderNumber}, we need a deposit of ${formatMad(deposit.amount)}. You pay the remaining ${formatMad(dueOnDelivery(order))} in cash on delivery.`
       ),
       depositInstructionsHtml(settings, order),
       orderSummaryHtml(order),
@@ -433,7 +434,7 @@ export async function notifyDepositReceived(order: OrderDoc): Promise<boolean> {
     to: customer.email,
     subject: `Deposit received for order ${order.orderNumber} — Brynoxa`,
     heading: 'We received your deposit',
-    preheader: `${formatMad(deposit.amount)} received · ${formatMad(order.pricing.total - deposit.amount)} left on delivery`,
+    preheader: `${formatMad(deposit.amount)} received · ${formatMad(dueOnDelivery(order))} left on delivery`,
     body: [
       greeting(order, customer),
       paragraphs('Thank you — we received your deposit. We will now confirm and prepare your order.'),
@@ -441,7 +442,7 @@ export async function notifyDepositReceived(order: OrderDoc): Promise<boolean> {
         'Payment received',
         detailRows([
           { label: 'Deposit received', value: formatMad(deposit.amount), strong: true },
-          { label: 'Left to pay on delivery', value: formatMad(order.pricing.total - deposit.amount) },
+          { label: 'Left to pay on delivery', value: formatMad(dueOnDelivery(order)) },
           { label: 'Order total', value: formatMad(order.pricing.total) },
         ]),
         'highlight'

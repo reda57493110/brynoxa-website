@@ -711,6 +711,7 @@ export const en = {
     accessory: "Accessory",
   },
   deposit: {
+    feesCovered: "Transfer fees covered by us",
     amountSent: "Amount sent (DH)",
     feePaid: "Fees paid (DH)",
     feeHint: "e.g. 35",

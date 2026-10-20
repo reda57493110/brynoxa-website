@@ -13,6 +13,7 @@ import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { AGENCY_TYPES, DEFAULT_ATM_CODES, depositSteps } from '@/lib/depositSteps'
+import { dueOnDelivery, feesCovered } from '@/lib/deposit'
 import type { DepositMethod, DepositMethodType, Order } from '@/types'
 import { PhotoLightbox, PhotoTile } from '@/components/order/PrivatePhoto'
 
@@ -451,8 +452,14 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
         </div>
         <div className="flex justify-between gap-4">
           <dt className="text-[var(--fg-muted)]">{t('deposit.payOnDelivery')}</dt>
-          <dd className="font-semibold text-[var(--fg)]">{formatCurrency(Math.max(0, order.pricing.total - deposit.amount))}</dd>
+          <dd className="font-semibold text-[var(--fg)]">{formatCurrency(dueOnDelivery(order))}</dd>
         </div>
+        {feesCovered(order) > 0 ? (
+          <div className="flex justify-between gap-4 text-xs">
+            <dt className="text-[var(--fg-muted)]">{t('deposit.feesCovered')}</dt>
+            <dd className="font-medium text-[var(--success)]">-{formatCurrency(feesCovered(order))}</dd>
+          </div>
+        ) : null}
       </dl>
 
       {deposit.proofs?.length ? (

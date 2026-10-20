@@ -717,6 +717,7 @@ export const fr: Messages = {
     accessory: "Accessoire",
   },
   deposit: {
+    feesCovered: "Frais de transfert pris en charge",
     amountSent: "Montant envoyé (DH)",
     feePaid: "Frais payés (DH)",
     feeHint: "ex. 35",

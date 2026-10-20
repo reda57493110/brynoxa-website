@@ -35,7 +35,7 @@ type LeanOrder = {
   deliveredAt?: Date;
   paymentStatus: string;
   paymentMethod?: string;
-  deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date } | null;
+  deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date; feeCredit?: number } | null;
   refunds?: { amount: number; reason: string; itemsReturned?: boolean; at: Date }[];
   channel?: 'retail' | 'wholesale';
   wholesaleTier?: { id: string; name: string; discountPercent: number };
@@ -158,7 +158,8 @@ export function computeMetrics(orders: LeanOrder[]): CustomerMetrics {
       pay.depositsReceived += depositReceived;
       pay.usedDeposit = true;
     }
-    const paidOnOrder = st.delivered ? o.pricing.total : depositReceived;
+    const feesCovered = o.deposit?.status === 'received' ? Math.max(0, o.deposit.feeCredit ?? 0) : 0;
+    const paidOnOrder = st.delivered ? o.pricing.total - feesCovered : depositReceived;
     pay.paid += paidOnOrder - st.refunded;
     pay.refunds += st.refunded;
 
@@ -167,7 +168,7 @@ export function computeMetrics(orders: LeanOrder[]): CustomerMetrics {
 
     if (st.open) {
       counts.open += 1;
-      pay.toCollect += o.pricing.total - depositReceived;
+      pay.toCollect += Math.max(0, o.pricing.total - depositReceived - feesCovered);
       if (o.deposit?.status === 'pending') pay.depositsAwaiting += o.deposit.amount;
     }
     if (st.fullyRefunded) counts.refunded += 1;

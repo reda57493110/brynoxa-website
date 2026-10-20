@@ -171,6 +171,7 @@ export const adminApi = {
         received?: boolean
         payment?: { methodId: string; payerName?: string; reference?: string; note?: string }
         methodIds?: string[]
+        feeCredit?: number
       }
     ) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),

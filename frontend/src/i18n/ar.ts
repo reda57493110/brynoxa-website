@@ -713,6 +713,7 @@ export const ar: Messages = {
     accessory: "إكسسوار",
   },
   deposit: {
+    feesCovered: "رسوم التحويل على حسابنا",
     amountSent: "المبلغ المرسل (درهم)",
     feePaid: "الرسوم المدفوعة (درهم)",
     feeHint: "مثال 35",

@@ -50,6 +50,8 @@ export interface IOrderDeposit {
   proofs?: IDepositProofRef[];
   /** Payment options shown to this customer; empty = all visible ones */
   methodIds?: string[];
+  /** Transfer fees the shop covers (taken off what the courier collects) */
+  feeCredit?: number;
 }
 
 export interface IDepositProofRef {
@@ -236,6 +238,7 @@ const depositSchema = new Schema<IOrderDeposit>(
   {
     proofs: { type: [depositProofRefSchema], default: undefined },
     methodIds: { type: [String], default: undefined },
+    feeCredit: { type: Number, min: 0 },
     payment: { type: depositPaymentSchema, default: undefined },
     amount: { type: Number, required: true, min: 0 },
     source: { type: String, enum: ['products', 'admin'], required: true },

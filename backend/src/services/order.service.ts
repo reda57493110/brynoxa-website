@@ -5,7 +5,7 @@ import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { getSettings, type DepositMethod } from '../models/Settings';
 import { resolveShippingFee } from '../utils/shipping';
-import { lineDeposit, roundMoney } from '../utils/deposit';
+import { dueOnDelivery, feeCreditOf, lineDeposit, roundMoney } from '../utils/deposit';
 import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
 import { getWholesaleTerms } from './wholesale.service';
 import { dispatchOrderStock, releaseOrderStock, reserveOrderStock } from './orderStock.service';
@@ -362,6 +362,7 @@ export async function updateUserOrderItems(
     deposit.payment = order.deposit.payment;
     deposit.proofs = order.deposit.proofs;
     deposit.methodIds = order.deposit.methodIds;
+    deposit.feeCredit = order.deposit.feeCredit;
   }
   if (deposit) order.deposit = deposit;
   else order.set('deposit', undefined);
@@ -645,6 +646,7 @@ export async function setOrderDeposit(
     received?: boolean;
     payment?: { methodId: string; payerName?: string; reference?: string; note?: string };
     methodIds?: string[];
+    feeCredit?: number;
   }
 ) {
   const order = await Order.findById(orderId);
@@ -655,6 +657,17 @@ export async function setOrderDeposit(
   }
 
   const notes: string[] = [];
+
+  // Transfer fees the shop covers: never more than what is left after the deposit
+  if (input.feeCredit !== undefined) {
+    if (!order.deposit || !(order.deposit.amount > 0)) throw new ApiError(400, 'Set a deposit amount first');
+    const max = Math.max(0, order.pricing.total - order.deposit.amount);
+    const fee = roundMoney(Math.min(Math.max(0, input.feeCredit), max));
+    if (fee !== (order.deposit.feeCredit ?? 0)) {
+      order.deposit.feeCredit = fee || undefined;
+      notes.push(fee ? `Transfer fees covered: ${formatDh(fee)} (collect ${formatDh(dueOnDelivery(order))} on delivery)` : 'Transfer fees no longer covered');
+    }
+  }
 
   // Which of your payment options this customer sees
   if (input.methodIds !== undefined) {
@@ -698,7 +711,7 @@ export async function setOrderDeposit(
         customerMessage = 'No deposit is needed for this order anymore';
       }
     } else if (amount !== order.deposit?.amount) {
-      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs, methodIds: order.deposit?.methodIds };
+      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs, methodIds: order.deposit?.methodIds, feeCredit: order.deposit?.feeCredit };
       notes.push(`Deposit of ${formatDh(amount)} requested`);
       customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
       email = 'requested';
@@ -759,9 +772,10 @@ export function amountPaidOnOrder(order: {
   orderStatus: OrderStatus;
   deliveredAt?: Date | null;
   pricing: { total: number };
-  deposit?: { amount: number; status: string } | null;
+  deposit?: { amount: number; status: string; feeCredit?: number } | null;
 }) {
-  if (wasDelivered(order)) return order.pricing.total;
+  // Delivered: the deposit plus what the courier collected (fees the shop covered are not paid)
+  if (wasDelivered(order)) return roundMoney(order.pricing.total - feeCreditOf(order.deposit));
   return order.deposit?.status === 'received' ? order.deposit.amount : 0;
 }
 

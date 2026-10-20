@@ -39,3 +39,22 @@ export function sanitizeDepositRule(input: unknown): ProductDepositRule | null {
   }
   return { type, value: roundMoney(amount) };
 }
+
+type DepositLike = { amount: number; status?: string; feeCredit?: number } | null | undefined;
+
+/** Transfer fees the shop covers for the customer (only once the deposit is received). */
+export function feeCreditOf(deposit: DepositLike) {
+  return deposit && deposit.status === 'received' ? Math.max(0, deposit.feeCredit ?? 0) : 0;
+}
+
+/**
+ * What the courier collects: the order total minus the deposit and the transfer fees the shop
+ * covers, never below 0 — so the customer never pays more than the order in total.
+ * Before the deposit arrives this is what will be left once it is paid.
+ */
+export function dueOnDelivery(order: { pricing: { total: number }; deposit?: DepositLike }) {
+  const d = order.deposit;
+  const deposit = d && d.amount > 0 ? d.amount : 0;
+  const fees = d ? Math.max(0, d.feeCredit ?? 0) : 0;
+  return roundMoney(Math.max(0, order.pricing.total - deposit - fees));
+}

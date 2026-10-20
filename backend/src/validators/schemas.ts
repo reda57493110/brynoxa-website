@@ -201,6 +201,8 @@ export const orderDepositSchema = z
     /** Staff records how the deposit was paid (method, payer name, reference) */
     /** Payment options this customer sees (empty = all visible ones) */
     methodIds: z.array(z.string().max(24)).max(8).optional(),
+    /** Transfer fees the shop covers, taken off the amount collected on delivery */
+    feeCredit: z.number().min(0).max(100_000).optional(),
     payment: z
       .object({
         methodId: z.string().max(24),
@@ -210,7 +212,7 @@ export const orderDepositSchema = z
       })
       .optional(),
   })
-  .refine((v) => v.amount !== undefined || v.received !== undefined || v.payment !== undefined || v.methodIds !== undefined, {
+  .refine((v) => v.amount !== undefined || v.received !== undefined || v.payment !== undefined || v.methodIds !== undefined || v.feeCredit !== undefined, {
     message: 'Nothing to update',
   });
 

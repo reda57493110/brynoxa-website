@@ -215,6 +215,8 @@ export interface OrderDeposit {
   proofs?: DepositProofRef[]
   /** Admin: payment options shown to this customer (empty = all visible) */
   methodIds?: string[]
+  /** Transfer fees the shop covers, taken off what the courier collects */
+  feeCredit?: number
   /** Customer: your payment details, sent only while this deposit is awaited */
   paymentOptions?: { methods: DepositMethod[]; instructions: string }
 }

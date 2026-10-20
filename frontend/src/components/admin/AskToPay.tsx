@@ -3,6 +3,7 @@ import { useDepositMethods } from '@/hooks/useDepositMethods'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { depositSteps } from '@/lib/depositSteps'
 import { formatCurrency } from '@/lib/format'
+import { dueOnDelivery } from '@/lib/deposit'
 import { cn } from '@/lib/cn'
 import type { Locale } from '@/i18n'
 import type { Order } from '@/types'
@@ -63,7 +64,7 @@ export function AskToPay({ order }: { order: Order }) {
   const method = methods.find((m) => m.id === methodId) ?? methods[0]
   const customer = order.shippingAddress?.fullName || ''
   const amount = order.deposit?.amount ?? 0
-  const rest = Math.max(0, order.pricing.total - amount)
+  const rest = dueOnDelivery(order)
 
   // Rebuild the message when the option or the language changes (staff can still edit it)
   useEffect(() => {

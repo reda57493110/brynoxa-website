@@ -15,6 +15,7 @@ import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
 import type { Order } from '@/types'
 import { AskToPay } from '@/components/admin/AskToPay'
+import { dueOnDelivery, feesCovered } from '@/lib/deposit'
 
 const MAX_PROOFS = 6
 
@@ -195,6 +196,22 @@ export function OrderDepositPanel({ order }: { order: Order }) {
   const [viewing, setViewing] = useState<{ url: string; title: string } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [recording, setRecording] = useState(false)
+  const [feeInput, setFeeInput] = useState('')
+  useEffect(() => {
+    // Start from what is saved, else the fees the customer reported
+    const saved = deposit?.feeCredit
+    setFeeInput(saved ? String(saved) : deposit?.payment?.fee ? String(deposit.payment.fee) : '')
+  }, [deposit?.feeCredit, deposit?.payment?.fee])
+  const feeParsed = feeInput.trim() === '' ? 0 : Number(feeInput)
+  const feeInvalid = !Number.isFinite(feeParsed) || feeParsed < 0
+  const saveFee = useMutation({
+    mutationFn: (feeCredit: number) => adminApi.orders.setDeposit(order._id, { feeCredit }),
+    onSuccess: () => {
+      refresh()
+      toast.success('Collect on delivery updated')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
   const fileInput = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -289,10 +306,27 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 <dt className="text-[var(--fg-muted)]">Deposit</dt>
                 <dd className="font-semibold tabular-nums">{formatCurrency(deposit.amount)}</dd>
               </div>
-              <div className="flex justify-between gap-3">
-                <dt className="text-[var(--fg-muted)]">Collect on delivery</dt>
-                <dd className="tabular-nums">{formatCurrency(Math.max(0, order.pricing.total - deposit.amount))}</dd>
+              {feesCovered(order) > 0 ? (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[var(--fg-muted)]">Transfer fees we cover</dt>
+                  <dd className="tabular-nums text-[var(--success)]">-{formatCurrency(feesCovered(order))}</dd>
+                </div>
+              ) : null}
+              <div className="flex justify-between gap-3 border-t border-[var(--border)] pt-1">
+                <dt className="font-medium">Collect on delivery</dt>
+                <dd className="font-semibold tabular-nums">{formatCurrency(dueOnDelivery(order))}</dd>
               </div>
+              <p
+                className={cn(
+                  'text-[10px]',
+                  deposit.amount + (payment?.fee ?? 0) + dueOnDelivery(order) > order.pricing.total + 0.005
+                    ? 'font-medium text-[var(--warning)]'
+                    : 'text-[var(--fg-muted)]'
+                )}
+              >
+                Customer pays {formatCurrency(deposit.amount + (payment?.fee ?? 0) + dueOnDelivery(order))} in total
+                {payment?.fee ? ` (incl. ${formatCurrency(payment.fee)} transfer fees)` : ''} · order {formatCurrency(order.pricing.total)}
+              </p>
               {deposit.receivedAt ? (
                 <div className="flex justify-between gap-3">
                   <dt className="text-[var(--fg-muted)]">Received</dt>
@@ -303,6 +337,30 @@ export function OrderDepositPanel({ order }: { order: Order }) {
           ) : (
             <p className="text-xs text-[var(--fg-muted)]">No deposit on this order.</p>
           )}
+          {deposit ? (
+            <div className="mt-3 flex items-end gap-2">
+              <Input
+                label="Transfer fees we cover (DH)"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                placeholder={payment?.fee ? `Customer paid ${payment.fee}` : '0'}
+                value={feeInput}
+                onChange={(e) => setFeeInput(e.target.value)}
+                error={feeInvalid ? 'Enter 0 or more' : undefined}
+              />
+              <Button
+                variant="outline"
+                className="h-11 shrink-0"
+                disabled={feeInvalid || feeParsed === (deposit.feeCredit ?? 0)}
+                loading={saveFee.isPending}
+                onClick={() => saveFee.mutate(feeParsed)}
+              >
+                Save
+              </Button>
+            </div>
+          ) : null}
           {editable ? (
             <div className="mt-3 flex items-end gap-2">
               <Input

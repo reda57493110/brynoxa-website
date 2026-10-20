@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { DepositNotice } from '@/components/order/DepositNotice'
+import { dueOnDelivery } from '@/lib/deposit'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -95,7 +96,7 @@ export function TrackOrder() {
                   <div>
                     <p className="font-display text-lg font-semibold">#{order.orderNumber}</p>
                     <p className="text-sm text-[var(--fg-muted)]">
-                      {formatCurrency(order.pricing.total)} · {t('orders.dueOnDelivery')}
+                      {formatCurrency(dueOnDelivery(order))} · {t('orders.dueOnDelivery')}
                     </p>
                   </div>
                   <Badge variant={orderStatusVariant(order.orderStatus)}>
