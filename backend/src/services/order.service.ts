@@ -663,8 +663,8 @@ export async function setOrderDeposit(
     if (!order.deposit || !(order.deposit.amount > 0)) throw new ApiError(400, 'Set a deposit amount first');
     const max = Math.max(0, order.pricing.total - order.deposit.amount);
     const fee = roundMoney(Math.min(Math.max(0, input.feeCredit), max));
-    if (fee !== (order.deposit.feeCredit ?? 0)) {
-      order.deposit.feeCredit = fee || undefined;
+    if (fee !== order.deposit.feeCredit) {
+      order.deposit.feeCredit = fee;
       notes.push(fee ? `Transfer fees covered: ${formatDh(fee)} (collect ${formatDh(dueOnDelivery(order))} on delivery)` : 'Transfer fees no longer covered');
     }
   }

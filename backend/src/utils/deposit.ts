@@ -40,11 +40,24 @@ export function sanitizeDepositRule(input: unknown): ProductDepositRule | null {
   return { type, value: roundMoney(amount) };
 }
 
-type DepositLike = { amount: number; status?: string; feeCredit?: number } | null | undefined;
+type DepositLike =
+  | { amount: number; status?: string; feeCredit?: number | null; payment?: { fee?: number | null } | null }
+  | null
+  | undefined;
+
+/**
+ * Transfer fees the shop covers: what staff set (0 = none), else the fees the customer reported
+ * with their proof of payment.
+ */
+function coveredFees(deposit: DepositLike) {
+  if (!deposit) return 0;
+  const fees = typeof deposit.feeCredit === 'number' ? deposit.feeCredit : (deposit.payment?.fee ?? 0);
+  return Math.max(0, fees || 0);
+}
 
 /** Transfer fees the shop covers for the customer (only once the deposit is received). */
 export function feeCreditOf(deposit: DepositLike) {
-  return deposit && deposit.status === 'received' ? Math.max(0, deposit.feeCredit ?? 0) : 0;
+  return deposit && deposit.status === 'received' ? coveredFees(deposit) : 0;
 }
 
 /**
@@ -55,6 +68,5 @@ export function feeCreditOf(deposit: DepositLike) {
 export function dueOnDelivery(order: { pricing: { total: number }; deposit?: DepositLike }) {
   const d = order.deposit;
   const deposit = d && d.amount > 0 ? d.amount : 0;
-  const fees = d ? Math.max(0, d.feeCredit ?? 0) : 0;
-  return roundMoney(Math.max(0, order.pricing.total - deposit - fees));
+  return roundMoney(Math.max(0, order.pricing.total - deposit - coveredFees(d)));
 }

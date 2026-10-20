@@ -5,7 +5,7 @@ import { Product } from '../models/Product';
 import { DEFAULT_SEGMENT_SETTINGS, getSettings, type ICustomerSegmentSettings } from '../models/Settings';
 import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
-import { roundMoney } from '../utils/deposit';
+import { feeCreditOf, roundMoney } from '../utils/deposit';
 
 /**
  * Customer reporting. Every figure is derived from order records (never stored totals):
@@ -35,7 +35,7 @@ type LeanOrder = {
   deliveredAt?: Date;
   paymentStatus: string;
   paymentMethod?: string;
-  deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date; feeCredit?: number } | null;
+  deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date; feeCredit?: number; payment?: { fee?: number } } | null;
   refunds?: { amount: number; reason: string; itemsReturned?: boolean; at: Date }[];
   channel?: 'retail' | 'wholesale';
   wholesaleTier?: { id: string; name: string; discountPercent: number };
@@ -158,7 +158,7 @@ export function computeMetrics(orders: LeanOrder[]): CustomerMetrics {
       pay.depositsReceived += depositReceived;
       pay.usedDeposit = true;
     }
-    const feesCovered = o.deposit?.status === 'received' ? Math.max(0, o.deposit.feeCredit ?? 0) : 0;
+    const feesCovered = feeCreditOf(o.deposit);
     const paidOnOrder = st.delivered ? o.pricing.total - feesCovered : depositReceived;
     pay.paid += paidOnOrder - st.refunded;
     pay.refunds += st.refunded;

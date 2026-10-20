@@ -19,11 +19,17 @@ export function orderDeposit(
   return roundMoney(Math.min(sum, total))
 }
 
-type WithDeposit = { pricing: { total: number }; deposit?: { amount: number; status?: string; feeCredit?: number } | null }
+type WithDeposit = {
+  pricing: { total: number }
+  deposit?: { amount: number; status?: string; feeCredit?: number; payment?: { fee?: number } } | null
+}
 
-/** Transfer fees the shop covers for this order (0 when none). */
+/** Transfer fees the shop covers: what staff set (0 = none), else the fees the customer reported. */
 export function feesCovered(order: WithDeposit) {
-  return Math.max(0, order.deposit?.feeCredit ?? 0)
+  const d = order.deposit
+  if (!d) return 0
+  const fees = typeof d.feeCredit === 'number' ? d.feeCredit : (d.payment?.fee ?? 0)
+  return Math.max(0, Math.min(fees || 0, Math.max(0, order.pricing.total - (d.amount || 0))))
 }
 
 /**

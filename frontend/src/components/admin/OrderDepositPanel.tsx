@@ -200,7 +200,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
   useEffect(() => {
     // Start from what is saved, else the fees the customer reported
     const saved = deposit?.feeCredit
-    setFeeInput(saved ? String(saved) : deposit?.payment?.fee ? String(deposit.payment.fee) : '')
+    setFeeInput(typeof saved === 'number' ? String(saved) : deposit?.payment?.fee ? String(deposit.payment.fee) : '')
   }, [deposit?.feeCredit, deposit?.payment?.fee])
   const feeParsed = feeInput.trim() === '' ? 0 : Number(feeInput)
   const feeInvalid = !Number.isFinite(feeParsed) || feeParsed < 0
@@ -353,7 +353,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
               <Button
                 variant="outline"
                 className="h-11 shrink-0"
-                disabled={feeInvalid || feeParsed === (deposit.feeCredit ?? 0)}
+                disabled={feeInvalid || feeParsed === deposit.feeCredit}
                 loading={saveFee.isPending}
                 onClick={() => saveFee.mutate(feeParsed)}
               >

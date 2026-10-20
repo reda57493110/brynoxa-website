@@ -64,6 +64,13 @@ function Slip({ order: o }: { order: Order }) {
             </tr>
           ))}
         </tbody>
+        <tfoot>
+          <tr className="text-[11px] font-semibold">
+            <td className="pt-1">Items in the parcel</td>
+            <td className="pt-1 text-center">{o.items.reduce((n, i) => n + i.qty, 0)}</td>
+            <td />
+          </tr>
+        </tfoot>
       </table>
 
       <dl className="ml-auto w-56 space-y-0.5">
@@ -94,6 +101,9 @@ function Slip({ order: o }: { order: Order }) {
             <dt>Transfer fees covered</dt>
             <dd>−{formatCurrency(feesCovered(o))}</dd>
           </div>
+        ) : null}
+        {o.deposit && o.deposit.amount > 0 && !depositPaid ? (
+          <p className="text-[10px] font-semibold text-black">Deposit of {formatCurrency(o.deposit.amount)} NOT received yet</p>
         ) : null}
         <div className="mt-1 flex justify-between border-t-2 border-black pt-1 text-sm font-bold">
           <dt>To collect (cash)</dt>
