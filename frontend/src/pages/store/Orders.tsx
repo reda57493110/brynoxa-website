@@ -36,6 +36,9 @@ export function Orders() {
 
   const orders = useQuery({
     queryKey: ['orders'],
+    // Always fresh when opened (new orders, deposit updates)
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => (await ordersApi.list({ limit: 50 })).data.data,
   })
 

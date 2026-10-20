@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { imageFit, sizedImageUrl } from '@/lib/image'
@@ -41,6 +41,7 @@ export function Checkout() {
   const locale = useLocaleStore((s) => s.locale)
   usePageTitle(t('checkout.title'), { noIndex: true })
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const items = useCartStore((s) => s.items)
   const clear = useCartStore((s) => s.clear)
   const cartSubtotal = useCartStore((s) => s.subtotal())
@@ -271,6 +272,7 @@ export function Checkout() {
           : undefined
       ).catch(() => undefined)
       clear()
+      void queryClient.invalidateQueries({ queryKey: ['orders'] })
       toast.success(t('checkout.orderPlaced'))
       navigate(`/order-confirmation/${order.orderNumber}`)
     },

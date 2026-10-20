@@ -345,6 +345,9 @@ export const en = {
     passwordMismatch: 'Passwords do not match',
   },
   orders: {
+    editItems: "Edit items",
+    cancelEdit: "Cancel changes",
+    history: "History",
     title: 'Orders — Brynoxa',
     titleOne: 'Order {number} — Brynoxa',
     titleGeneric: 'Order — Brynoxa',

@@ -12,6 +12,9 @@ export function DepositDueBanner({ className }: { className?: string }) {
   const t = useT()
   const orders = useQuery({
     queryKey: ['orders'],
+    // Always fresh when opened (new orders, deposit updates)
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => (await ordersApi.list({ limit: 50 })).data.data,
   })
   const waiting = (orders.data ?? []).filter((o) => {

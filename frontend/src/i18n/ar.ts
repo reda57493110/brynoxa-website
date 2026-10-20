@@ -347,6 +347,9 @@ export const ar: Messages = {
     passwordMismatch: 'كلمتا المرور غير متطابقتين',
   },
   orders: {
+    editItems: "تعديل المنتجات",
+    cancelEdit: "إلغاء التعديلات",
+    history: "السجل",
     title: 'الطلبات — برينوكسا',
     titleOne: 'طلب {number} — برينوكسا',
     titleGeneric: 'طلب — برينوكسا',

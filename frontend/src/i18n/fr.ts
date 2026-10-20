@@ -348,6 +348,9 @@ export const fr: Messages = {
     passwordMismatch: 'Les mots de passe ne correspondent pas',
   },
   orders: {
+    editItems: "Modifier les articles",
+    cancelEdit: "Annuler les modifications",
+    history: "Historique",
     title: 'Commandes — Brynoxa',
     titleOne: 'Commande {number} — Brynoxa',
     titleGeneric: 'Commande — Brynoxa',

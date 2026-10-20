@@ -26,6 +26,10 @@ import { orderStatusKey } from '@/i18n'
 import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import type { OrderItem, Product, ProductCondition } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
+import { cn } from '@/lib/cn'
+
+/** The simple progress shown to customers (detailed statuses map onto these). */
+const STEPS = ['pending', 'confirmed', 'shipped', 'delivered'] as const
 
 
 function productIdOf(item: OrderItem) {
@@ -63,10 +67,14 @@ export function OrderDetail() {
   const [addOpen, setAddOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [draft, setDraft] = useState<DraftItem[]>([])
+  const [editing, setEditing] = useState(false)
   usePageTitle(orderNumber ? t('orders.titleOne', { number: orderNumber }) : t('orders.titleGeneric'))
 
   const order = useQuery({
     queryKey: ['order', orderNumber],
+    // Always fresh when opened (new orders, deposit updates)
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => (await ordersApi.getByNumber(orderNumber)).data.data,
     enabled: Boolean(orderNumber),
   })
@@ -115,6 +123,7 @@ export function OrderDetail() {
       queryClient.setQueryData(['order', orderNumber], res.data.data)
       void queryClient.invalidateQueries({ queryKey: ['orders'] })
       setDraft(toDraft(res.data.data.items))
+      setEditing(false)
       toast.success(t('orders.updated'))
     },
     onError: (err) => toast.error(getErrorMessage(err)),
@@ -198,6 +207,8 @@ export function OrderDetail() {
 
   const o = order.data
   const previewTotal = draft.reduce((sum, item) => sum + item.price * item.qty, 0)
+  const stepIndex = Math.max(0, STEPS.indexOf((o.orderStatus === 'no_answer' ? 'pending' : o.orderStatus) as (typeof STEPS)[number]))
+  const latest = o.timeline[o.timeline.length - 1]
 
   return (
     <>
@@ -207,160 +218,226 @@ export function OrderDetail() {
         meta={
           <>
             <Badge variant={orderStatusVariant(o.orderStatus)}>{t(orderStatusKey(o.orderStatus))}</Badge>
-            <span className="text-sm text-[var(--fg-muted)]">{formatDateTime(o.createdAt)}</span>
+            <span className="text-xs text-[var(--fg-muted)] sm:text-sm">{formatDateTime(o.createdAt)}</span>
             {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
               <span className="text-sm font-medium">{t('orders.rescheduledFor', { date: formatDeliveryDay(o.rescheduledFor) })}</span>
             ) : null}
           </>
         }
-        actions={
-          canEdit ? (
-            <Button variant="danger" size="sm" type="button" onClick={() => setConfirmOpen(true)}>
-              {t('orders.cancel')}
-            </Button>
-          ) : null
-        }
       />
-      <Container className="pt-5 pb-8 sm:pb-10">
+      <Container className="pt-4 pb-8 sm:pt-5 sm:pb-10">
         <DepositNotice order={o} className="mb-4" canReport />
-        {canEdit ? (
-          <p className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-sm text-[var(--fg)]">
-            {t('orders.editHint')}
-          </p>
-        ) : null}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-3 lg:col-span-2">
-            {draft.map((item) => (
-              <div key={item.productId} className={`${surfaceCard} flex gap-4 p-4`}>
-                {item.image ? (
-                  <SafeImage src={optimizedImageUrl(item.image, 320)} alt="" className="h-20 w-20 rounded-2xl object-cover" />
-                ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[var(--bg-muted)]">
-                    <SiteIcon name="package" size={22} className="text-[var(--fg-muted)]" />
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="font-display font-semibold">{item.name}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm text-[var(--fg-muted)]">{formatCurrency(item.price)}</p>
-                    <ConditionBadge condition={item.condition} size="sm" />
-                  </div>
-                  {canEdit ? (
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <div className="inline-flex items-center rounded-full border border-[var(--border)]">
-                        <button
-                          type="button"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
-                          onClick={() => setQty(item.productId, Math.max(1, item.qty - 1))}
-                          aria-label={t('orders.decreaseQty')}
-                        >
-                          <SiteIcon name="minus" size={14} />
-                        </button>
-                        <span className="min-w-8 text-center text-sm font-semibold tabular-nums">{item.qty}</span>
-                        <button
-                          type="button"
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
-                          onClick={() => setQty(item.productId, Math.min(99, item.qty + 1))}
-                          aria-label={t('orders.increaseQty')}
-                        >
-                          <SiteIcon name="plus" size={14} />
-                        </button>
-                      </div>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-[var(--danger)] hover:bg-[color-mix(in_srgb,var(--danger)_10%,transparent)]"
-                        onClick={() => removeItem(item.productId)}
-                      >
-                        <SiteIcon name="trash" size={14} />
-                        {t('orders.removeProduct')}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('orders.qty', { qty: item.qty })}</p>
-                  )}
-                </div>
-                <p className="font-semibold">{formatCurrency(item.price * item.qty)}</p>
+        <div className="grid gap-4 lg:grid-cols-3 lg:gap-6">
+          <div className="space-y-4 lg:col-span-2">
+            {/* Products: compact list; changes only while the order is pending */}
+            <section className={`${surfaceCard} p-3 sm:p-4`}>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <h2 className="font-display text-sm font-semibold sm:text-base">
+                  {t('orders.itemCount', { count: draft.reduce((n, i) => n + i.qty, 0) })}
+                </h2>
+                {canEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editing) setDraft(toDraft(o.items))
+                      setEditing((v) => !v)
+                    }}
+                    className="text-xs font-medium text-[var(--brand-text)] hover:underline"
+                  >
+                    {editing ? t('orders.cancelEdit') : t('orders.editItems')}
+                  </button>
+                ) : null}
               </div>
-            ))}
-
-            {canEdit ? (
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="outline" className="rounded-full" onClick={() => setAddOpen(true)}>
-                  <SiteIcon name="plus" size={16} />
-                  {t('orders.addProduct')}
-                </Button>
-                <Button
-                  type="button"
-                  className="rounded-full"
-                  disabled={!dirty}
-                  loading={saveItems.isPending}
-                  onClick={() => saveItems.mutate()}
-                >
-                  {t('orders.saveChanges')}
-                </Button>
-              </div>
-            ) : null}
-
-            <div className={`${surfaceCard} p-6`}>
-              <h2 className="font-display text-lg font-semibold">{t('orders.tracking')}</h2>
-              <ol className="mt-4 space-y-4">
-                {o.timeline.map((entry, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--brand)]" />
-                    <div>
-                      <p className="font-medium capitalize">{t(orderStatusKey(entry.status))}</p>
-                      {entry.note ? <p className="text-sm text-[var(--fg-muted)]">{entry.note}</p> : null}
-                      <p className="text-xs text-[var(--fg-muted)]">{formatDateTime(entry.at)}</p>
+              <ul className="divide-y divide-[var(--border)]">
+                {draft.map((item) => (
+                  <li key={item.productId} className="flex items-center gap-3 py-2.5">
+                    {item.image ? (
+                      <SafeImage src={optimizedImageUrl(item.image, 160)} alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover" />
+                    ) : (
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-muted)]">
+                        <SiteIcon name="package" size={16} className="text-[var(--fg-muted)]" />
+                      </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-2 text-sm font-medium leading-snug">{item.name}</p>
+                      {editing ? (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="inline-flex items-center rounded-full border border-[var(--border)]">
+                            <button
+                              type="button"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
+                              onClick={() => setQty(item.productId, Math.max(1, item.qty - 1))}
+                              aria-label={t('orders.decreaseQty')}
+                            >
+                              <SiteIcon name="minus" size={12} />
+                            </button>
+                            <span className="min-w-6 text-center text-xs font-semibold tabular-nums">{item.qty}</span>
+                            <button
+                              type="button"
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
+                              onClick={() => setQty(item.productId, Math.min(99, item.qty + 1))}
+                              aria-label={t('orders.increaseQty')}
+                            >
+                              <SiteIcon name="plus" size={12} />
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[var(--fg-muted)] hover:text-[var(--danger)]"
+                            onClick={() => removeItem(item.productId)}
+                            aria-label={t('orders.removeProduct')}
+                          >
+                            <SiteIcon name="trash" size={13} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="flex flex-wrap items-center gap-1.5 text-xs text-[var(--fg-muted)]">
+                          <span className="tabular-nums">
+                            {item.qty} × {formatCurrency(item.price)}
+                          </span>
+                          <ConditionBadge condition={item.condition} size="sm" />
+                        </p>
+                      )}
                     </div>
+                    <p className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(item.price * item.qty)}</p>
                   </li>
                 ))}
-              </ol>
-            </div>
+              </ul>
+              {editing ? (
+                <div className="mt-2 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+                  <Button type="button" size="sm" variant="outline" className="rounded-full" onClick={() => setAddOpen(true)}>
+                    <SiteIcon name="plus" size={14} />
+                    {t('orders.addProduct')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-full"
+                    disabled={!dirty}
+                    loading={saveItems.isPending}
+                    onClick={() => saveItems.mutate()}
+                  >
+                    {t('orders.saveChanges')}
+                  </Button>
+                </div>
+              ) : null}
+            </section>
+
+            {/* Progress: 4 steps + latest update; full history folded */}
+            <section className={`${surfaceCard} p-3 sm:p-4`}>
+              <h2 className="font-display text-sm font-semibold sm:text-base">{t('orders.tracking')}</h2>
+              {o.orderStatus === 'cancelled' ? (
+                <p className="mt-2 text-sm text-[var(--danger)]">{t(orderStatusKey('cancelled'))}</p>
+              ) : (
+                <ol className="mt-3 flex items-start">
+                  {STEPS.map((step, i) => {
+                    const done = i <= stepIndex
+                    return (
+                      <li key={step} className="flex flex-1 flex-col items-center text-center">
+                        <div className="flex w-full items-center">
+                          <span className={cn('h-0.5 flex-1', i === 0 ? 'invisible' : done ? 'bg-[var(--brand)]' : 'bg-[var(--border)]')} />
+                          <span
+                            className={cn(
+                              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
+                              done ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'border border-[var(--border)] text-[var(--fg-muted)]'
+                            )}
+                          >
+                            {done ? <SiteIcon name="check" size={11} /> : i + 1}
+                          </span>
+                          <span
+                            className={cn(
+                              'h-0.5 flex-1',
+                              i === STEPS.length - 1 ? 'invisible' : i < stepIndex ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'
+                            )}
+                          />
+                        </div>
+                        <span className={cn('mt-1 text-[10px] capitalize sm:text-xs', done ? 'font-medium text-[var(--fg)]' : 'text-[var(--fg-muted)]')}>
+                          {t(orderStatusKey(step))}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ol>
+              )}
+              {latest ? (
+                <p className="mt-3 text-xs text-[var(--fg-muted)]">
+                  {latest.note || t(orderStatusKey(latest.status))} · {formatDateTime(latest.at)}
+                </p>
+              ) : null}
+              {o.timeline.length > 1 ? (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs font-medium text-[var(--brand-text)]">{t('orders.history')}</summary>
+                  <ol className="mt-2 space-y-2">
+                    {[...o.timeline].reverse().map((entry, i) => (
+                      <li key={i} className="flex gap-2 text-xs">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]" />
+                        <span>
+                          <span className="font-medium capitalize">{t(orderStatusKey(entry.status))}</span>
+                          {entry.note ? <span className="text-[var(--fg-muted)]"> — {entry.note}</span> : null}
+                          <span className="block text-[var(--fg-muted)]">{formatDateTime(entry.at)}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              ) : null}
+            </section>
           </div>
 
-          <div className="space-y-4">
-            <div className={`${surfaceCard} p-6`}>
-              <h2 className="font-display font-semibold">{t('orders.summary')}</h2>
-              <dl className="mt-3 space-y-2 text-sm">
+          {/* Summary + delivery in one card */}
+          <aside className={`${surfaceCard} h-fit p-3 text-sm sm:p-4`}>
+            <h2 className="font-display text-sm font-semibold sm:text-base">{t('orders.summary')}</h2>
+            <dl className="mt-2 space-y-1.5">
+              <div className="flex justify-between">
+                <dt className="text-[var(--fg-muted)]">{t('orders.subtotal')}</dt>
+                <dd className="tabular-nums">{formatCurrency(dirty ? previewTotal : o.pricing.subtotal)}</dd>
+              </div>
+              {!dirty && o.pricing.discount > 0 ? (
                 <div className="flex justify-between">
-                  <dt className="text-[var(--fg-muted)]">{t('orders.subtotal')}</dt>
-                  <dd>{formatCurrency(dirty ? previewTotal : o.pricing.subtotal)}</dd>
+                  <dt className="text-[var(--fg-muted)]">{t('orders.discount')}</dt>
+                  <dd className="tabular-nums text-[var(--success)]">-{formatCurrency(o.pricing.discount)}</dd>
                 </div>
-                {!dirty && o.pricing.discount > 0 ? (
-                  <div className="flex justify-between">
-                    <dt className="text-[var(--fg-muted)]">{t('orders.discount')}</dt>
-                    <dd>-{formatCurrency(o.pricing.discount)}</dd>
-                  </div>
-                ) : null}
-                {!dirty && o.pricing.tax > 0 ? (
-                  <div className="flex justify-between">
-                    <dt className="text-[var(--fg-muted)]">{t('orders.tax')}</dt>
-                    <dd>{formatCurrency(o.pricing.tax)}</dd>
-                  </div>
-                ) : null}
-                <div className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
-                  <dt>{t('orders.totalCod')}</dt>
-                  <dd>{formatCurrency(dirty ? previewTotal : o.pricing.total)}</dd>
-                </div>
-              </dl>
-              {dirty ? (
-                <p className="mt-3 text-xs text-[var(--fg-muted)]">{t('orders.saveToConfirm')}</p>
               ) : null}
-            </div>
+              {!dirty ? (
+                <div className="flex justify-between">
+                  <dt className="text-[var(--fg-muted)]">{t('checkout.shipping')}</dt>
+                  <dd className="tabular-nums">{o.pricing.shipping > 0 ? formatCurrency(o.pricing.shipping) : t('checkout.free')}</dd>
+                </div>
+              ) : null}
+              {!dirty && o.pricing.tax > 0 ? (
+                <div className="flex justify-between">
+                  <dt className="text-[var(--fg-muted)]">{t('orders.tax')}</dt>
+                  <dd className="tabular-nums">{formatCurrency(o.pricing.tax)}</dd>
+                </div>
+              ) : null}
+              <div className="flex justify-between border-t border-[var(--border)] pt-2 font-semibold">
+                <dt>{t('orders.totalCod')}</dt>
+                <dd className="tabular-nums">{formatCurrency(dirty ? previewTotal : o.pricing.total)}</dd>
+              </div>
+            </dl>
+            {dirty ? <p className="mt-2 text-xs text-[var(--fg-muted)]">{t('orders.saveToConfirm')}</p> : null}
 
-            <div className={`${surfaceCard} p-6 text-sm`}>
-              <h2 className="font-display font-semibold">{t('orders.shippingHeading')}</h2>
-              <p className="mt-2 font-medium">{o.shippingAddress.fullName}</p>
-              <p className="mt-1 text-[var(--fg-muted)]">
-                {o.shippingAddress.line1}
+            <div className="mt-3 border-t border-[var(--border)] pt-3">
+              <p className="text-xs font-medium text-[var(--fg-muted)]">{t('orders.shippingHeading')}</p>
+              <p className="mt-1 font-medium">{o.shippingAddress.fullName}</p>
+              <p className="text-xs leading-relaxed text-[var(--fg-muted)]">
+                {o.shippingAddress.line1}, {o.shippingAddress.city}
                 <br />
-                {o.shippingAddress.city}, {t('ui.morocco')}
-                <br />
-                {o.shippingAddress.phone}
+                <span dir="ltr">{o.shippingAddress.phone}</span>
               </p>
             </div>
-          </div>
+
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                className="mt-3 text-xs font-medium text-[var(--danger)] hover:underline"
+              >
+                {t('orders.cancel')}
+              </button>
+            ) : null}
+          </aside>
         </div>
       </Container>
 

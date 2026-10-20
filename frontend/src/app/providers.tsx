@@ -21,6 +21,15 @@ const queryClient = new QueryClient({
   },
 })
 
+// Signing out or into another account: drop everything cached for the previous one
+// (orders, order pages, wishlist, notifications…) so nothing stale or someone else's shows.
+let lastUserId: string | null | undefined
+useAuthStore.subscribe((state) => {
+  const id = state.user?._id ?? null
+  if (lastUserId !== undefined && id !== lastUserId) queryClient.clear()
+  lastUserId = id
+})
+
 function BootstrapAuth({ children }: { children: ReactNode }) {
   const hydrateTheme = useThemeStore((s) => s.hydrateTheme)
   const setBootstrapped = useAuthStore((s) => s.setBootstrapped)
