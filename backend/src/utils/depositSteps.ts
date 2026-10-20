@@ -12,28 +12,36 @@ const BANK = [
   'Make a bank transfer of {amount} to {receiver}.',
   'RIB: {account}',
   'Write your order number {order} as the transfer reason.',
-  'Send us the receipt with “I have paid” on your order page.',
+  'Send us the receipt with “Send proof of payment” on your order page.',
 ].join('\n');
 
 const AGENCY = [
   'Go to a {method} agency (or use the {method} app).',
   'Send {amount} to {receiver} — phone {account}.',
   'Sender name: {customer}.',
-  'Keep the receipt and the transfer code, then send them with “I have paid” on your order page.',
+  'Keep the receipt and the transfer code, then send them with “Send proof of payment” on your order page.',
 ].join('\n');
 
-const OTHER = ['Send {amount} to {receiver} ({account}).', 'Reason: order {order}.', 'Send us the receipt with “I have paid”.'].join('\n');
+const ATM = [
+  'In your bank app or at your bank\'s ATM, choose “Send money / Cardless withdrawal”.',
+  'Send {amount} to {receiver} — phone {account}.',
+  'You receive the withdrawal codes by SMS.',
+  'Send us the codes with “Send proof of payment” on your order page.',
+].join('\n');
+
+const OTHER = ['Send {amount} to {receiver} ({account}).', 'Reason: order {order}.', 'Send us the receipt with “Send proof of payment”.'].join('\n');
 
 const TYPE_NAMES: Record<string, string> = {
   bank: 'Bank',
   cashplus: 'Cash Plus',
   wafacash: 'Wafacash',
   barid: 'Barid Cash',
+  atm: 'ATM',
   other: 'Other',
 };
 
 export function defaultSteps(type: string) {
-  return type === 'bank' ? BANK : ['cashplus', 'wafacash', 'barid'].includes(type) ? AGENCY : OTHER;
+  return type === 'bank' ? BANK : type === 'atm' ? ATM : ['cashplus', 'wafacash', 'barid'].includes(type) ? AGENCY : OTHER;
 }
 
 export function depositSteps(

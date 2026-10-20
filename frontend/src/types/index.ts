@@ -230,6 +230,11 @@ export interface DepositPaymentReport {
   methodName: string
   /** Name on the transfer / slip */
   payerName?: string
+  senderPhone?: string
+  /** Day of the transfer (YYYY-MM-DD) */
+  paidOn?: string
+  /** ATM cardless withdrawal codes */
+  codes?: { label: string; value: string }[]
   reference?: string
   note?: string
   hasReceipt: boolean
@@ -238,7 +243,7 @@ export interface DepositPaymentReport {
   source?: 'customer' | 'staff'
 }
 
-export type DepositMethodType = 'bank' | 'cashplus' | 'wafacash' | 'barid' | 'other'
+export type DepositMethodType = 'bank' | 'cashplus' | 'wafacash' | 'barid' | 'atm' | 'other'
 
 /** A way to pay a deposit, set in Admin → Settings */
 export interface DepositMethod {
@@ -252,6 +257,8 @@ export interface DepositMethod {
   steps?: string
   /** Shown to customers asked for a deposit (default on) */
   visible?: boolean
+  /** ATM cardless withdrawal: labels of the codes the customer sends (max 4) */
+  codeLabels?: string[]
 }
 
 export interface OrderItem {

@@ -258,6 +258,7 @@ export const settingsSchema = z.object({
         note: z.string().max(300).optional(),
         steps: z.string().max(1500).optional(),
         visible: z.boolean().optional(),
+        codeLabels: z.array(z.string().max(40)).max(4).optional(),
       })
     )
     .max(8)
@@ -609,6 +610,9 @@ export const repairCompleteSchema = z.object({
 export const depositPaymentSchema = z.object({
   methodId: z.string().max(24),
   payerName: z.string().trim().max(120).optional(),
+  senderPhone: z.string().trim().max(30).optional(),
+  paidOn: z.string().trim().max(20).optional(),
+  codes: z.array(z.object({ label: z.string().max(40), value: z.string().trim().max(40) })).max(4).optional(),
   reference: z.string().trim().max(80).optional(),
   note: z.string().trim().max(300).optional(),
   receipt: z.string().max(2_000_000).optional(),
@@ -654,6 +658,7 @@ export const depositMethodsSchema = z.object({
         note: z.string().max(300).optional(),
         steps: z.string().max(1500).optional(),
         visible: z.boolean().optional(),
+        codeLabels: z.array(z.string().max(40)).max(4).optional(),
       })
     )
     .max(8),

@@ -64,6 +64,11 @@ export interface IDepositPayment {
   methodName: string;
   /** Name on the transfer / slip (often not the account holder) */
   payerName?: string;
+  senderPhone?: string;
+  /** Day of the transfer (YYYY-MM-DD) */
+  paidOn?: string;
+  /** ATM cardless withdrawal codes sent by the customer */
+  codes?: { label: string; value: string }[];
   reference?: string;
   note?: string;
   hasReceipt: boolean;
@@ -198,6 +203,9 @@ const depositPaymentSchema = new Schema<IDepositPayment>(
     methodId: { type: String, required: true },
     methodName: { type: String, required: true },
     payerName: { type: String, maxlength: 120 },
+    senderPhone: { type: String, maxlength: 30 },
+    paidOn: { type: String, maxlength: 20 },
+    codes: { type: [{ label: { type: String, maxlength: 40 }, value: { type: String, maxlength: 40 }, _id: false }], default: undefined },
     reference: { type: String, maxlength: 80 },
     note: { type: String, maxlength: 300 },
     hasReceipt: { type: Boolean, default: false },

@@ -12,7 +12,7 @@ import { useT } from '@/hooks/useT'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { useLocaleStore } from '@/store/localeStore'
-import { depositSteps } from '@/lib/depositSteps'
+import { AGENCY_TYPES, DEFAULT_ATM_CODES, depositSteps } from '@/lib/depositSteps'
 import type { DepositMethod, DepositMethodType, Order } from '@/types'
 import { PhotoLightbox, PhotoTile } from '@/components/order/PrivatePhoto'
 
@@ -21,6 +21,7 @@ const TYPE_KEY = {
   cashplus: 'deposit.typeCashplus',
   wafacash: 'deposit.typeWafacash',
   barid: 'deposit.typeBarid',
+  atm: 'deposit.typeAtm',
   other: 'deposit.typeOther',
 } as const satisfies Record<DepositMethodType, string>
 
@@ -98,11 +99,40 @@ function MethodCard({ method, order, compact = false }: { method: DepositMethod;
 }
 
 /** "I've paid": how, the transaction reference and/or a photo of the receipt. */
-function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: DepositMethod[]; onDone: () => void }) {
+function ReportPaymentForm({
+  order,
+  methods,
+  initialMethodId,
+  onDone,
+}: {
+  order: Order
+  methods: DepositMethod[]
+  initialMethodId?: string | null
+  onDone: () => void
+}) {
   const t = useT()
   const qc = useQueryClient()
   const fileInput = useRef<HTMLInputElement>(null)
-  const [methodId, setMethodId] = useState(methods[0]?.id ?? 'other')
+  const [methodId, setMethodId] = useState(initialMethodId || methods[0]?.id || 'other')
+  const [senderPhone, setSenderPhone] = useState('')
+  const [paidOn, setPaidOn] = useState(() => new Date().toISOString().slice(0, 10))
+  const [codes, setCodes] = useState<Record<string, string>>({})
+  const method = methods.find((m) => m.id === methodId)
+  const kind: 'bank' | 'agency' | 'atm' | 'other' = !method
+    ? 'other'
+    : method.type === 'bank'
+      ? 'bank'
+      : method.type === 'atm'
+        ? 'atm'
+        : AGENCY_TYPES.includes(method.type)
+          ? 'agency'
+          : 'other'
+  const codeLabels = kind === 'atm' ? (method?.codeLabels?.length ? method.codeLabels : DEFAULT_ATM_CODES) : []
+  // Default ATM labels are translated; your own labels are shown as written
+  const codeLabel = (label: string) => {
+    const i = DEFAULT_ATM_CODES.indexOf(label)
+    return i === 0 ? t('deposit.atmCode1') : i === 1 ? t('deposit.atmCode2') : i === 2 ? t('deposit.atmCode3') : label
+  }
   const [reference, setReference] = useState('')
   const [payerName, setPayerName] = useState('')
   const [note, setNote] = useState('')
@@ -116,6 +146,9 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
         methodId,
         reference: reference.trim() || undefined,
         payerName: payerName.trim() || undefined,
+        senderPhone: senderPhone.trim() || undefined,
+        paidOn: kind === 'bank' ? paidOn : undefined,
+        codes: kind === 'atm' ? codeLabels.map((label) => ({ label, value: (codes[label] ?? '').trim() })) : undefined,
         note: note.trim() || undefined,
         receipt: receipt || undefined,
       }),
@@ -144,7 +177,22 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    if (!reference.trim() && !receipt) {
+    if (kind === 'atm') {
+      const missing = codeLabels.find((l) => !(codes[l] ?? '').trim())
+      if (missing) {
+        setError(t('deposit.needCode', { code: codeLabel(missing) }))
+        return
+      }
+    } else if (kind === 'agency') {
+      if (!payerName.trim()) {
+        setError(t('deposit.needSender'))
+        return
+      }
+      if (!reference.trim() && !receipt) {
+        setError(t('deposit.needTransferCode'))
+        return
+      }
+    } else if (!reference.trim() && !receipt) {
       setError(t('deposit.needProof'))
       return
     }
@@ -152,7 +200,9 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
     send.mutate()
   }
 
-  const options = [...methods.map((m) => ({ id: m.id, label: m.name || t(TYPE_KEY[m.type]) })), { id: 'other', label: t('deposit.typeOther') }]
+  const options = methods.length
+    ? methods.map((m) => ({ id: m.id, label: m.name || t(TYPE_KEY[m.type]) }))
+    : [{ id: 'other', label: t('deposit.typeOther') }]
 
   return (
     <form onSubmit={submit} className="mt-3 space-y-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:p-4">
@@ -176,25 +226,67 @@ function ReportPaymentForm({ order, methods, onDone }: { order: Order; methods: 
         </div>
       </fieldset>
 
-      <Input
-        label={t('deposit.payerName')}
-        value={payerName}
-        onChange={(e) => setPayerName(e.target.value)}
-        maxLength={120}
-        placeholder={t('deposit.payerNameHint')}
-      />
+      {kind === 'atm' ? (
+        <div className="space-y-2 rounded-xl bg-[var(--bg-muted)] p-3">
+          <p className="text-sm font-medium text-[var(--fg)]">{t('deposit.atmCodes')}</p>
+          <p className="text-[11px] text-[var(--fg-muted)]">{t('deposit.atmHint')}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {codeLabels.map((label) => (
+              <Input
+                key={label}
+                label={codeLabel(label)}
+                value={codes[label] ?? ''}
+                onChange={(e) => setCodes((c) => ({ ...c, [label]: e.target.value }))}
+                maxLength={40}
+                dir="ltr"
+                inputMode={/pin|4/i.test(label) ? 'numeric' : 'text'}
+                autoComplete="off"
+                className="font-mono tracking-widest"
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
-      <Input
-        label={t('deposit.reference')}
-        value={reference}
-        onChange={(e) => setReference(e.target.value)}
-        maxLength={80}
-        dir="ltr"
-        placeholder={t('deposit.referenceHint')}
-      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label={kind === 'bank' ? t('deposit.holderName') : kind === 'agency' ? t('deposit.senderName') : t('deposit.payerName')}
+          value={payerName}
+          onChange={(e) => setPayerName(e.target.value)}
+          maxLength={120}
+          placeholder={t('deposit.payerNameHint')}
+        />
+        {kind === 'bank' ? (
+          <Input label={t('deposit.transferDate')} type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
+        ) : (
+          <Input
+            label={t('deposit.senderPhone')}
+            type="tel"
+            inputMode="tel"
+            dir="ltr"
+            value={senderPhone}
+            onChange={(e) => setSenderPhone(e.target.value)}
+            maxLength={30}
+          />
+        )}
+      </div>
+
+      {kind !== 'atm' ? (
+        <Input
+          label={kind === 'agency' ? t('deposit.transferCode') : t('deposit.reference')}
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+          maxLength={80}
+          dir="ltr"
+          placeholder={kind === 'agency' ? t('deposit.transferCodeHint') : t('deposit.referenceHint')}
+          className={kind === 'agency' ? 'font-mono tracking-wider' : undefined}
+        />
+      ) : null}
 
       <div>
-        <p className="text-sm font-medium text-[var(--fg)]">{t('deposit.receipt')}</p>
+        <p className="text-sm font-medium text-[var(--fg)]">
+          {kind === 'bank' ? t('deposit.screenshot') : kind === 'agency' ? t('deposit.slipPhoto') : t('deposit.receipt')}
+        </p>
         <input
           ref={fileInput}
           type="file"
@@ -402,7 +494,7 @@ export function DepositNotice({ order, className, canReport = false }: { order: 
           {canReport ? (
             reporting || !report ? (
               reporting ? (
-                <ReportPaymentForm order={order} methods={methods} onDone={() => setReporting(false)} />
+                <ReportPaymentForm order={order} methods={methods} initialMethodId={openId} onDone={() => setReporting(false)} />
               ) : (
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button type="button" onClick={() => setReporting(true)} className="h-10 rounded-full px-4">

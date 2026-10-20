@@ -23,6 +23,7 @@ const METHOD_TYPE_LABEL: Record<string, string> = {
   cashplus: 'Cash Plus',
   wafacash: 'Wafacash',
   barid: 'Barid Cash',
+  atm: 'ATM',
   other: 'Other',
 }
 
@@ -363,6 +364,39 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                   <div className="flex justify-between gap-3">
                     <dt className="text-[var(--fg-muted)]">Paid by</dt>
                     <dd className="text-end font-medium">{payment.payerName}</dd>
+                  </div>
+                ) : null}
+                {payment.senderPhone ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Sender phone</dt>
+                    <dd className="text-end font-mono text-xs" dir="ltr">{payment.senderPhone}</dd>
+                  </div>
+                ) : null}
+                {payment.paidOn ? (
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-[var(--fg-muted)]">Transfer date</dt>
+                    <dd className="text-xs">{formatDate(payment.paidOn)}</dd>
+                  </div>
+                ) : null}
+                {payment.codes?.length ? (
+                  <div className="space-y-1 rounded-lg bg-[var(--bg-muted)] p-2">
+                    <p className="text-[11px] font-medium text-[var(--fg-muted)]">ATM codes</p>
+                    {payment.codes.map((c) => (
+                      <div key={c.label} className="flex items-center justify-between gap-3">
+                        <dt className="text-xs text-[var(--fg-muted)]">{c.label}</dt>
+                        <dd className="flex items-center gap-1.5">
+                          <span className="font-mono text-sm font-bold tracking-widest" dir="ltr">{c.value}</span>
+                          <button
+                            type="button"
+                            onClick={() => void navigator.clipboard?.writeText(c.value).then(() => toast.success('Copied'))}
+                            aria-label={`Copy ${c.label}`}
+                            className="flex h-6 w-6 items-center justify-center rounded text-[var(--fg-muted)] hover:text-[var(--brand-text)]"
+                          >
+                            <SiteIcon name="layers" size={12} />
+                          </button>
+                        </dd>
+                      </div>
+                    ))}
                   </div>
                 ) : null}
                 {payment.reference ? (

@@ -55,7 +55,9 @@ export const HERO_PAGES = ['home', 'shop', 'services', 'contact'] as const;
 export type HeroPage = (typeof HERO_PAGES)[number];
 
 /** Ways customers can pay a deposit (shown on their order). */
-export const DEPOSIT_METHOD_TYPES = ['bank', 'cashplus', 'wafacash', 'barid', 'other'] as const;
+export const DEPOSIT_METHOD_TYPES = ['bank', 'cashplus', 'wafacash', 'barid', 'atm', 'other'] as const;
+/** ATM cardless withdrawal: the codes the customer sends, unless staff set their own labels */
+export const DEFAULT_ATM_CODES = ['Withdrawal code (red)', 'Second code (green)', 'PIN (4 digits)'];
 export type DepositMethodType = (typeof DEPOSIT_METHOD_TYPES)[number];
 export interface DepositMethod {
   id: string;
@@ -71,6 +73,8 @@ export interface DepositMethod {
   steps: string;
   /** Shown to customers asked for a deposit; off = kept for later */
   visible: boolean;
+  /** ATM cardless withdrawal: labels of the codes the customer must send (max 4) */
+  codeLabels: string[];
 }
 export const MAX_DEPOSIT_METHODS = 8;
 
@@ -138,6 +142,7 @@ const settingsSchema = new Schema<ISettings>(
             note: { type: String, default: '', maxlength: 300 },
             steps: { type: String, default: '', maxlength: 1500 },
             visible: { type: Boolean, default: true },
+            codeLabels: { type: [String], default: [] },
           },
           { _id: false }
         ),
@@ -225,6 +230,9 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
       note: text(r.note, 300),
       steps: String(r.steps ?? '').replace(/\r\n/g, '\n').trim().slice(0, 1500),
       visible: r.visible !== false,
+      codeLabels: Array.isArray(r.codeLabels)
+        ? r.codeLabels.map((l: unknown) => text(l, 40)).filter(Boolean).slice(0, 4)
+        : [],
     };
     if (!method.name && !method.account) continue;
     if (ids.has(method.id)) method.id = Math.random().toString(36).slice(2, 10);

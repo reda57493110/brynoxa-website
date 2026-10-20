@@ -2,7 +2,7 @@ import { Order } from '../models/Order';
 import { DepositReceipt } from '../models/DepositReceipt';
 import { DepositProof } from '../models/DepositProof';
 import { User } from '../models/User';
-import { getSettings } from '../models/Settings';
+import { DEFAULT_ATM_CODES, getSettings } from '../models/Settings';
 import { ApiError } from '../utils/ApiError';
 import { notifyStaffDepositReported } from './push.service';
 import { invalidateDashboardCache } from './admin.service';
@@ -36,7 +36,16 @@ function decodeReceipt(dataUrl: string) {
 export async function reportDepositPayment(
   userId: string,
   orderNumber: string,
-  input: { methodId: string; payerName?: string; reference?: string; note?: string; receipt?: string }
+  input: {
+    methodId: string;
+    payerName?: string;
+    senderPhone?: string;
+    paidOn?: string;
+    codes?: { label: string; value: string }[];
+    reference?: string;
+    note?: string;
+    receipt?: string;
+  }
 ) {
   const order = await Order.findOne({ orderNumber, user: userId });
   if (!order) throw new ApiError(404, 'Order not found');
@@ -52,7 +61,21 @@ export async function reportDepositPayment(
 
   const reference = input.reference?.trim() || undefined;
   const receipt = input.receipt ? decodeReceipt(input.receipt) : null;
-  if (!reference && !receipt) {
+  const payerName = input.payerName?.trim() || undefined;
+  const type = method?.type ?? 'other';
+
+  // What each kind of payment needs
+  let codes: { label: string; value: string }[] | undefined;
+  if (type === 'atm') {
+    const labels = method?.codeLabels?.length ? method.codeLabels : DEFAULT_ATM_CODES;
+    const sent = new Map((input.codes ?? []).map((c) => [c.label, c.value.trim()]));
+    codes = labels.map((label) => ({ label, value: sent.get(label) ?? '' }));
+    const missing = codes.find((c) => !c.value);
+    if (missing) throw new ApiError(400, `Enter the ${missing.label}`);
+  } else if (['cashplus', 'wafacash', 'barid'].includes(type)) {
+    if (!payerName) throw new ApiError(400, 'Enter the sender name written on the slip');
+    if (!reference && !receipt) throw new ApiError(400, 'Enter the transfer code or add a photo of the slip');
+  } else if (!reference && !receipt) {
     throw new ApiError(400, 'Add the transaction reference or a photo of the receipt');
   }
 
@@ -68,7 +91,10 @@ export async function reportDepositPayment(
   order.deposit.payment = {
     methodId: method?.id ?? 'other',
     methodName,
-    payerName: input.payerName?.trim() || undefined,
+    payerName,
+    senderPhone: input.senderPhone?.trim() || undefined,
+    paidOn: input.paidOn?.trim() || undefined,
+    codes,
     reference,
     note: input.note?.trim() || undefined,
     hasReceipt: Boolean(receipt) || hadReceipt,

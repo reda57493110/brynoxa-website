@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from '@/store/toastStore'
 import type { DepositMethod, DepositMethodType, StoreSettings } from '@/types'
-import { STEP_PLACEHOLDERS, defaultSteps, depositSteps } from '@/lib/depositSteps'
+import { DEFAULT_ATM_CODES, STEP_PLACEHOLDERS, defaultSteps, depositSteps } from '@/lib/depositSteps'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SaveBar, SettingsCard } from './SettingsUi'
@@ -64,8 +64,10 @@ const METHOD_TYPES: { value: DepositMethodType; label: string; placeholder: stri
   { value: 'cashplus', label: 'Cash Plus', placeholder: 'Phone number or name to send to' },
   { value: 'wafacash', label: 'Wafacash', placeholder: 'Phone number or name to send to' },
   { value: 'barid', label: 'Barid Cash', placeholder: 'Phone number or name to send to' },
+  { value: 'atm', label: 'ATM — cardless withdrawal', placeholder: 'Phone number the money is sent to' },
   { value: 'other', label: 'Other', placeholder: 'Account, phone or number' },
 ]
+const OTHER_TYPE = METHOD_TYPES[METHOD_TYPES.length - 1]
 const MAX_METHODS = 8
 const newMethod = (type: DepositMethodType = 'bank'): DepositMethod => ({
   id: Math.random().toString(36).slice(2, 10),
@@ -76,6 +78,49 @@ const newMethod = (type: DepositMethodType = 'bank'): DepositMethod => ({
   note: '',
   steps: '',
 })
+
+/** ATM cardless withdrawal: the codes the customer must send (your labels, up to 4). */
+function AtmCodesEditor({ method, onChange }: { method: DepositMethod; onChange: (labels: string[]) => void }) {
+  const labels = method.codeLabels?.length ? method.codeLabels : DEFAULT_ATM_CODES
+  const set = (i: number, value: string) => onChange(labels.map((l, j) => (j === i ? value : l)))
+  return (
+    <div className="space-y-2 rounded-xl border border-[var(--border)] p-3 sm:col-span-2">
+      <p className="text-sm font-medium">Codes the customer sends</p>
+      <p className="text-[11px] text-[var(--fg-muted)]">
+        Name them as your bank / ATM shows them (e.g. red code, green code, 4-digit PIN). The customer must fill each one.
+      </p>
+      <div className="space-y-1.5">
+        {labels.map((label, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="w-5 text-center text-xs font-bold text-[var(--fg-muted)]">{i + 1}</span>
+            <input
+              value={label}
+              maxLength={40}
+              onChange={(e) => set(i, e.target.value)}
+              aria-label={`Code ${i + 1} name`}
+              className="h-9 min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm outline-none ring-brand"
+            />
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 !px-0 text-[var(--danger)]"
+              aria-label="Remove code"
+              disabled={labels.length <= 1}
+              onClick={() => onChange(labels.filter((_, j) => j !== i))}
+            >
+              <SiteIcon name="trash" size={13} />
+            </Button>
+          </div>
+        ))}
+      </div>
+      {labels.length < 4 ? (
+        <Button size="sm" variant="outline" onClick={() => onChange([...labels, 'Code'])}>
+          <SiteIcon name="plus" size={13} /> Add a code
+        </Button>
+      ) : null}
+    </div>
+  )
+}
 
 /** The customer's step-by-step for one payment option: default or written by staff, with a live example. */
 function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (steps: string) => void }) {
@@ -200,7 +245,7 @@ export function OrdersSettings() {
     >
       <div className="space-y-3">
         {methods.map((m, i) => {
-          const type = METHOD_TYPES.find((t) => t.value === m.type) ?? METHOD_TYPES[4]
+          const type = METHOD_TYPES.find((t) => t.value === m.type) ?? OTHER_TYPE
           return (
             <div key={m.id} className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -242,6 +287,7 @@ export function OrdersSettings() {
                 <div className="sm:col-span-2">
                   <Input label="Note (optional)" value={m.note} maxLength={300} placeholder="e.g. Open 9:00–19:00" onChange={(e) => patch(m.id, { note: e.target.value })} />
                 </div>
+                {m.type === 'atm' ? <AtmCodesEditor method={m} onChange={(codeLabels) => patch(m.id, { codeLabels })} /> : null}
                 <StepsEditor method={m} onChange={(steps) => patch(m.id, { steps })} />
               </div>
             </div>
