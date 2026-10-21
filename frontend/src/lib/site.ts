@@ -79,8 +79,8 @@ export const CUSTOMER_SERVICES = [
   { id: 'returns', slug: 'returns', photo: pexels(7843933), terms: 'returns' },
   // customer paying the courier in cash at the door
   { id: 'cod', slug: 'cash-on-delivery', photo: pexels(6818151), terms: 'payment' },
-  // courier carrying parcels to the door
-  { id: 'delivery', slug: 'home-delivery', photo: unsplash('1615897370727-d091b76d47a5'), terms: 'delivery' },
+  // courier loading plain parcels into the van
+  { id: 'delivery', slug: 'home-delivery', photo: pexels(6169052), terms: 'delivery' },
   // support team on headsets
   { id: 'support', slug: 'live-support', photo: unsplash('1626863905121-3b0c0ed7b94c'), terms: null },
   // technician fitting a graphics card
