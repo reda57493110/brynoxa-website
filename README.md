@@ -41,6 +41,6 @@ App: `http://localhost:5173`
 
 ## Features
 
-**Store:** Home, shop filters/search, product detail, cart, COD checkout, wishlist, compare, auth, account orders/tracking/reviews/settings, notifications
+**Store:** Home, shop filters/search, product detail, cart, COD checkout, wishlist, compare, auth, account orders/tracking/settings, notifications
 
-**Admin:** Dashboard analytics, products, categories, brands, inventory, orders pipeline, customers, reviews, coupons, settings
+**Admin:** Dashboard, analytics, profit, products, categories, brands, inventory, orders pipeline, deposits, customers, coupons, push, settings

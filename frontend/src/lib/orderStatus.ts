@@ -111,7 +111,6 @@ export const DELIVERY_ISSUES = [
   { value: 'other', label: 'Other' },
 ] as const
 
-export type DeliveryIssue = (typeof DELIVERY_ISSUES)[number]['value']
 
 export function deliveryIssueLabel(reason?: string) {
   return DELIVERY_ISSUES.find((d) => d.value === reason)?.label ?? reason ?? ''

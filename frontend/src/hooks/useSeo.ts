@@ -111,8 +111,3 @@ export function useSeo({
     }
   }, [title, description, image, type, path, noIndex, jsonLdKey])
 }
-
-/** Title-only helper used across account/auth pages. */
-export function usePageTitle(title: string, options?: Omit<SeoInput, 'title'>) {
-  useSeo({ title, ...options })
-}

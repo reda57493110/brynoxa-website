@@ -14,7 +14,6 @@ import {
 } from '../services/customerAnalytics.service';
 import { updateCustomer } from '../services/customerAdmin.service';
 import { getMyWholesale, getWholesaleTerms, reviewWholesale } from '../services/wholesale.service';
-import { ApiError } from '../utils/ApiError';
 import { recordRefund } from '../services/order.service';
 
 /** Cost and profit figures need the "reports" permission (owner/admin by default). */
@@ -104,10 +103,6 @@ export const myWholesale = asyncHandler(async (req: AuthRequest, res: Response) 
 });
 
 /** Wholesale and business accounts are set up by staff (Admin → Customers), not requested by customers. */
-export const applyWholesale = asyncHandler(async () => {
-  throw new ApiError(403, 'Wholesale and business accounts are set up by our team. Contact us if you are interested.');
-});
-
 export const myPricing = asyncHandler(async (req: AuthRequest, res: Response) => {
   sendSuccess(res, { terms: await getWholesaleTerms(req.user?.userId) });
 });

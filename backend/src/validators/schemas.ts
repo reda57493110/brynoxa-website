@@ -496,14 +496,6 @@ export const wholesaleReviewSchema = z.object({
 });
 
 /** Customer applying for a wholesale / business account from their account page. */
-export const wholesaleApplicationSchema = z.object({
-  requestedType: z.enum(['wholesale', 'business']),
-  business: businessInfoSchema.extend({
-    companyName: z.string().trim().min(2).max(120),
-    phone: z.string().trim().min(6).max(40),
-  }),
-  message: z.string().trim().max(1000).optional(),
-});
 
 export const refundSchema = z.object({
   amount: z.number().positive().max(10_000_000),

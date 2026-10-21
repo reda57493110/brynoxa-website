@@ -32,26 +32,3 @@ export function OrderItemThumb({ item, size = 'md', className }: { item: Pick<Or
     </span>
   )
 }
-
-/** Thumbnails of an order's products side by side, "+N" when there are more. */
-export function OrderThumbs({ items, max = 3, size = 'md' }: { items: OrderItem[]; max?: number; size?: 'sm' | 'md' }) {
-  const shown = items.slice(0, max)
-  const more = items.length - shown.length
-  return (
-    <span className="inline-flex items-center gap-1" aria-label={items.map((i) => `${i.qty} × ${i.name}`).join(', ')}>
-      {shown.map((item, i) => (
-        <OrderItemThumb key={i} item={item} size={size} />
-      ))}
-      {more > 0 ? (
-        <span
-          className={cn(
-            'inline-flex shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] text-[11px] font-semibold',
-            size === 'sm' ? 'h-10 w-8' : 'h-10 w-9'
-          )}
-        >
-          +{more}
-        </span>
-      ) : null}
-    </span>
-  )
-}

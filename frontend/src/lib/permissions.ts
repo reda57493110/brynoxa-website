@@ -1,7 +1,6 @@
 /** Staff roles that can open /admin (customers cannot). */
 export const STAFF_ROLES = ['admin', 'orders', 'catalog', 'support', 'marketing'] as const
 export type StaffRole = (typeof STAFF_ROLES)[number]
-export type AppRole = StaffRole | 'customer'
 
 export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
   admin: 'Owner',

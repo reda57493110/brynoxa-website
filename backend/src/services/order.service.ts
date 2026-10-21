@@ -196,8 +196,6 @@ export async function createCodOrder(input: {
   couponCode?: string;
   customerNote?: string;
 }) {
-  const settings = await getSettings();
-
   // Wholesale prices only for approved accounts; the channel is fixed on the order from now on
   const terms = await getWholesaleTerms(input.userId);
   const { orderItems, subtotal, wholesaleDiscount, depositTotal } = await buildOrderLines(input.items, terms);

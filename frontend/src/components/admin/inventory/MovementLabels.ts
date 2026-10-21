@@ -100,11 +100,6 @@ export function byName(by: ByRef): string {
   return by.name || 'Staff'
 }
 
-export function refId(ref: { _id: string } | string | undefined | null): string | undefined {
-  if (!ref) return undefined
-  return typeof ref === 'string' ? ref : ref._id
-}
-
 /** One value per line or comma; trimmed, de-duplicated. */
 export function parseList(text: string): string[] {
   return Array.from(

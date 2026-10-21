@@ -42,10 +42,6 @@ export const CONDITION_META: Record<ProductCondition, { label: string; variant: 
   used: { label: 'Used', variant: 'warning' },
 }
 
-export function conditionLabel(c?: ProductCondition) {
-  return CONDITION_META[c || 'new']?.label ?? c
-}
-
 export function pctText(v: number | null | undefined) {
   return v === null || v === undefined ? '—' : `${Math.round(v * 10) / 10}%`
 }

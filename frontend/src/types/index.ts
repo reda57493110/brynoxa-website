@@ -369,18 +369,6 @@ export interface CreateOrderResult {
   accessToken?: string
 }
 
-export interface Review {
-  _id: string
-  product: Product | string
-  user: User | string
-  rating: number
-  title: string
-  comment: string
-  isApproved: boolean
-  createdAt: string
-  updatedAt?: string
-}
-
 export interface Coupon {
   _id: string
   code: string
@@ -986,12 +974,6 @@ export interface WholesaleTerms {
   tierId: string
   tierName: string
   discountPercent: number
-}
-
-export interface WholesaleApplicationPayload {
-  requestedType: 'wholesale' | 'business'
-  business: BusinessInfo & { companyName: string; phone: string }
-  message?: string
 }
 
 /* ---------- Inventory (admin) ---------- */

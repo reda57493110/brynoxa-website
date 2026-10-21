@@ -1,7 +1,6 @@
 import { waitUntil } from '@vercel/functions';
-import { env } from '../config/env';
 import { getSettings } from '../models/Settings';
-import { User, type IBusinessInfo } from '../models/User';
+import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
 import type { WholesaleTerms } from '../utils/wholesale';
 import { sendEmail } from './email.service';
@@ -39,52 +38,6 @@ export async function getMyWholesale(userId: string) {
     business: user.business,
     terms,
   };
-}
-
-/** Customer asks for a wholesale/business account. Stays retail until staff approve. */
-export async function applyForWholesale(
-  userId: string,
-  input: { requestedType: 'wholesale' | 'business'; business: IBusinessInfo; message?: string }
-) {
-  const user = await User.findById(userId).select('+activity');
-  if (!user || user.role !== 'customer' || user.isGuest) throw new ApiError(403, 'Sign in with a customer account to apply');
-  if (user.wholesale?.status === 'approved') throw new ApiError(409, 'Your wholesale account is already approved');
-  if (user.wholesale?.status === 'pending') throw new ApiError(409, 'Your application is already being reviewed');
-
-  user.business = { ...(user.business ?? {}), ...input.business };
-  user.wholesale = {
-    ...(user.wholesale ?? { status: 'none' }),
-    status: 'pending',
-    requestedType: input.requestedType,
-    applicationMessage: input.message,
-    requestedAt: new Date(),
-    rejectionReason: undefined,
-  };
-  user.activity.push({
-    type: 'wholesale-requested',
-    note: `Applied for a ${input.requestedType} account (${input.business.companyName})`,
-    at: new Date(),
-  });
-  await user.save();
-
-  if (env.ADMIN_EMAIL) {
-    const html = renderEmail({
-      heading: 'New wholesale application',
-      preheader: `${input.business.companyName} applied for a ${input.requestedType} account`,
-      body: [
-        paragraphs(
-          `${user.name} (${user.email}) applied for a ${input.requestedType} account for ${input.business.companyName}. Review it before granting wholesale prices.`
-        ),
-        button('Review application', siteUrl(`/admin/customers/${user._id}`)),
-      ].join(''),
-    });
-    waitUntil(
-      sendEmail({ to: env.ADMIN_EMAIL, subject: `Wholesale application — ${input.business.companyName}`, html, text: toPlainText(html) })
-        .catch((e) => console.error('Wholesale staff email failed', e))
-        .then(() => undefined)
-    );
-  }
-  return getMyWholesale(userId);
 }
 
 /** Staff decision on a wholesale account. Logged on the customer's activity timeline. */

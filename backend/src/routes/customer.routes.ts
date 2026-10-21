@@ -5,7 +5,6 @@ import { validate } from '../middleware/validate';
 import {
   refundSchema,
   updateCustomerSchema,
-  wholesaleApplicationSchema,
   wholesaleReviewSchema,
 } from '../validators/schemas';
 
@@ -41,6 +40,5 @@ router.post(
 // Customer wholesale account
 router.get('/wholesale/me', requireAuth, customer.myWholesale);
 router.get('/wholesale/pricing', requireAuth, customer.myPricing);
-router.post('/wholesale/application', requireAuth, validate(wholesaleApplicationSchema), customer.applyWholesale);
 
 export default router;

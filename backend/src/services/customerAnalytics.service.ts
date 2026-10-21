@@ -79,7 +79,6 @@ export interface CustomerMetrics {
   profitVisible: boolean;
 }
 
-const sum = (values: number[]) => roundMoney(values.reduce((a, b) => a + b, 0));
 const refundTotal = (o: LeanOrder) => (o.refunds || []).reduce((a, r) => a + r.amount, 0);
 
 function emptySales(): SalesBlock {
