@@ -9,7 +9,7 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 | `frontend/` | React 19 + Vite 8 + TS + Tailwind 4, React Query, Zustand, React Router 7, Framer Motion |
 | `backend/` | Express 5 + Mongoose 8 + Zod, JWT auth (+ TOTP MFA), Resend email, web-push, Cloudinary/Mongo image storage |
 | `api/` | Vercel serverless functions (CommonJS) that wrap the **compiled** backend (`backend/dist`) |
-| `vercel.json` | Rewrites that fold many URL paths into a few functions, plus CSP/security headers |
+| `vercel.json` | Rewrites that fold many URL paths into a few functions, plus CSP/security headers. Functions run in `cdg1` (Paris), next to the MongoDB Atlas cluster (AWS Paris eu-west-3) — keep them in the same region |
 
 ## Commands
 

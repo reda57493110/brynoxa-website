@@ -129,3 +129,8 @@ test('signed-in staff skip the shared copy (frontend adds a fresh parameter)', (
   for (const p of ['/products', '/products?featured=true', '/products/hp-elitebook', '/categories', '/brands', '/settings']) assert.ok(re.test(p), p);
   for (const p of ['/admin/settings', '/orders', '/auth/me', '/wishlist']) assert.equal(re.test(p), false, p);
 });
+
+test('server runs in Paris (cdg1), next to the MongoDB Atlas cluster (AWS Paris eu-west-3)', () => {
+  const vercel = JSON.parse(fs.readFileSync(ROOT + '/vercel.json', 'utf8'));
+  assert.deepEqual(vercel.regions, ['cdg1']);
+});
