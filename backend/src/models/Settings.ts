@@ -111,6 +111,8 @@ export interface ISettings extends Document {
   pageHeroProducts: Record<HeroPage, string>;
   /** Products shown as deals at the top of the home page (max 4, in order). Empty: automatic. */
   homeDeals: string[];
+  /** What the courier charges the shop per parcel: delivered, and sent back (refused / failed). */
+  courierCosts: { delivered: number; returned: number };
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -196,6 +198,10 @@ const settingsSchema = new Schema<ISettings>(
     },
     notifyStaffLoginEmail: { type: Boolean, default: true },
     homeDeals: { type: [String], default: [] },
+    courierCosts: {
+      delivered: { type: Number, default: 0, min: 0 },
+      returned: { type: Number, default: 0, min: 0 },
+    },
     pageHeroProducts: {
       home: { type: String, default: '' },
       shop: { type: String, default: '' },
@@ -366,7 +372,7 @@ export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, 
 }
 
 /** Fields only staff may read (pricing tiers, segment rules, email configuration). */
-const PRIVATE_SETTINGS = ['depositMethods', 'depositInstructions', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+const PRIVATE_SETTINGS = ['courierCosts', 'depositMethods', 'depositInstructions', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
 
 /** Settings safe for the public storefront. */
 export function publicSettings(settings: ISettings) {

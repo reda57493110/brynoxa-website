@@ -22,12 +22,12 @@ export type SalesRange = (typeof SALES_RANGES)[number];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** "YYYY-MM-DD" of an instant in the store timezone. */
-function localDay(at: Date) {
+export function localDay(at: Date) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: STORE_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(at);
 }
 
 /** The `count` calendar days ending today (store timezone), oldest first. */
-function dayKeys(count: number, endOffset = 0): string[] {
+export function dayKeys(count: number, endOffset = 0): string[] {
   const today = localDay(new Date());
   const [y, m, d] = today.split('-').map(Number);
   // Noon UTC keeps the date arithmetic clear of DST/offset edges

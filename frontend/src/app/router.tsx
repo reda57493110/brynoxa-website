@@ -68,6 +68,9 @@ const AdminDeliverySlips = lazy(() =>
 const AdminAnalytics = lazy(() =>
   import('@/pages/admin/Analytics').then((m) => ({ default: m.Analytics }))
 )
+const AdminProfit = lazy(() =>
+  import('@/pages/admin/Profit').then((m) => ({ default: m.Profit }))
+)
 const AdminDashboard = lazy(() =>
   import('@/pages/admin/Dashboard').then((m) => ({ default: m.Dashboard }))
 )
@@ -254,6 +257,7 @@ export function AppRouter() {
       >
         <Route index element={<S><AdminDashboard /></S>} />
         <Route path="analytics" element={<S><AdminAnalytics /></S>} />
+        <Route path="profit" element={<S><AdminProfit /></S>} />
         <Route path="products" element={<S><AdminProducts /></S>} />
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />

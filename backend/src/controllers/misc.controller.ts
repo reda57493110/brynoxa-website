@@ -245,6 +245,8 @@ export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response
 export const updateStoreSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSettings();
   const body = { ...req.body } as Record<string, unknown>;
+  // Courier prices are saved from Admin → Profit only
+  delete body.courierCosts;
   if (Array.isArray(body.shippingByCity)) {
     body.shippingByCity = sanitizeShippingByCity(body.shippingByCity);
   }

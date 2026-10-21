@@ -133,6 +133,8 @@ export interface IOrder extends Document {
   paymentMethod: 'cod';
   paymentStatus: PaymentStatus;
   deposit?: IOrderDeposit;
+  /** Staff-only costs the shop paid on this order (Admin → Profit). Empty = the defaults. */
+  costs?: { delivery?: number; other?: number; note?: string };
   orderStatus: OrderStatus;
   timeline: IOrderTimeline[];
   contactAttempts: IOrderContactAttempt[];
@@ -305,6 +307,11 @@ const orderSchema = new Schema<IOrder>(
       default: 'pending',
     },
     deposit: { type: depositSchema, default: undefined },
+    costs: {
+      type: new Schema({ delivery: { type: Number, min: 0 }, other: { type: Number, min: 0 }, note: { type: String, maxlength: 200 } }, { _id: false }),
+      default: undefined,
+      select: false,
+    },
     orderStatus: {
       type: String,
       enum: ORDER_STATUSES,

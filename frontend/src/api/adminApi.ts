@@ -1,6 +1,9 @@
 import api from './client'
 import type {
   AnalyticsReport,
+  ExpenseCategory,
+  ProfitReport,
+  ProfitSummary,
   ProductVariant,
   SalesAnalytics,
   SalesRange,
@@ -44,6 +47,19 @@ export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
   /** Admin → Analytics report for the last `days` days. */
   analytics: (days: SalesRange) => api.get<ApiResponse<AnalyticsReport>>('/admin/analytics', { params: { days } }),
+  /** Admin → Profit: costs and what the shop really earned */
+  profit: {
+    report: (days: SalesRange) => api.get<ApiResponse<ProfitReport>>('/admin/profit', { params: { days } }),
+    summary: (days: SalesRange) => api.get<ApiResponse<ProfitSummary>>('/admin/profit/summary', { params: { days } }),
+    setOrderCosts: (id: string, body: { delivery?: number | null; other?: number | null; note?: string }) =>
+      api.patch<ApiResponse<unknown>>(`/admin/profit/orders/${id}`, body),
+    setCourier: (body: { delivered: number; returned: number }) => api.put<ApiResponse<unknown>>('/admin/profit/courier', body),
+    setProductCost: (id: string, costPrice: number, applyToPastOrders = true) =>
+      api.patch<ApiResponse<{ ordersUpdated: number }>>(`/admin/profit/products/${id}`, { costPrice, applyToPastOrders }),
+    addExpense: (body: { label: string; category: ExpenseCategory; amount: number; day: string; note?: string }) =>
+      api.post<ApiResponse<unknown>>('/admin/profit/expenses', body),
+    deleteExpense: (id: string) => api.delete<ApiResponse<unknown>>(`/admin/profit/expenses/${id}`),
+  },
   /** Revenue / orders per day, totals vs the previous period, best sellers (owner view). */
   dashboardSales: (days: SalesRange) =>
     api.get<ApiResponse<SalesAnalytics>>('/admin/dashboard/sales', { params: { days } }),

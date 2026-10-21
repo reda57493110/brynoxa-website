@@ -74,6 +74,7 @@ export function hasPermission(role: string | undefined | null, permission: Permi
 export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin': 'dashboard',
   '/admin/analytics': 'dashboard',
+  '/admin/profit': 'reports',
   '/admin/orders': 'orders:read',
   '/admin/products': 'products:read',
   '/admin/inventory': 'inventory:write',

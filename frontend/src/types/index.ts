@@ -532,6 +532,87 @@ export interface AnalyticsReport extends SalesAnalytics {
   customers: { buyers: number; returning: number; firstTime: number; guests: number; newAccounts: number; newAccountsPrev: number }
 }
 
+export type ProfitOrderKind = 'sale' | 'failed' | 'open' | 'cancelled'
+export type ExpenseCategory = 'ads' | 'packaging' | 'delivery' | 'rent' | 'salaries' | 'tools' | 'other'
+
+export interface ProfitTotals {
+  moneyIn: number
+  sales: number
+  salesValue: number
+  productCost: number
+  delivery: number
+  fees: number
+  other: number
+  shippingCharged: number
+  refunds: number
+  failed: number
+  failedLoss: number
+  orderProfit: number
+  expenses: number
+  netProfit: number
+  margin: number | null
+  salesMissingCost: number
+  open: number
+  openValue: number
+}
+
+export interface ProfitOrderRow {
+  id: string
+  orderNumber: string
+  day: string
+  createdAt: string
+  status: OrderStatus
+  kind: ProfitOrderKind
+  customer: string
+  city: string
+  total: number
+  shippingCharged: number
+  refunded: number
+  moneyIn: number
+  productCost: number
+  missingCost: boolean
+  delivery: number
+  deliveryIsDefault: boolean
+  fees: number
+  other: number
+  note: string
+  profit: number
+}
+
+/** Admin → Profit */
+export interface ProfitReport {
+  range: SalesRange
+  timezone: string
+  from: string
+  to: string
+  courierCosts: { delivered: number; returned: number }
+  totals: ProfitTotals
+  orders: ProfitOrderRow[]
+  products: {
+    productId: string
+    name: string
+    slug?: string
+    image?: string
+    exists: boolean
+    units: number
+    revenue: number
+    cost: number
+    profit: number
+    margin: number | null
+    missingCost: boolean
+    costPrice: number | null
+  }[]
+  expenses: { id: string; label: string; category: ExpenseCategory; amount: number; day: string; note: string }[]
+  expensesByCategory: { category: ExpenseCategory; amount: number }[]
+  productsWithoutCost: { productId: string; name: string; slug: string; sku?: string; price: number; image?: string }[]
+}
+
+export interface ProfitSummary {
+  range: SalesRange
+  current: ProfitTotals
+  previous: ProfitTotals
+}
+
 export interface ContactInboxMessage {
   _id: string
   name: string

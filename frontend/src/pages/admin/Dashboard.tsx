@@ -45,6 +45,16 @@ export function Dashboard() {
     placeholderData: (prev) => prev,
   })
 
+  // What the shop really earned (product cost, courier, fees, expenses taken off)
+  const canSeeProfit = hasPermission(role, 'reports')
+  const net = useQuery({
+    queryKey: ['admin-dashboard', 'net-profit', range],
+    queryFn: async () => (await adminApi.profit.summary(range)).data.data,
+    enabled: canDashboard && canSeeProfit,
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  })
+
   // Full dashboard is Owner-only; other roles go straight to their workspace
   if (!canDashboard) {
     return <Navigate to={staffHomePath(role)} replace />
@@ -124,21 +134,23 @@ export function Dashboard() {
                 }
                 icon="tag"
               />
-              {a?.profitVisible ? (
+              {canSeeProfit ? (
                 <Kpi
-                  label={`Gross profit · ${range} days`}
-                  value={t.profit !== null ? formatCurrencyRounded(t.profit) : '—'}
+                  label={`Net profit · ${range} days`}
+                  value={net.data ? formatCurrencyRounded(net.data.current.netProfit) : '—'}
                   hint={
-                    t.profit !== null ? (
-                      <Change now={t.profit} before={p.profit} days={range} money />
-                    ) : (
+                    !net.data ? (
+                      <span className="text-[var(--fg-muted)]">After costs, delivery and expenses</span>
+                    ) : net.data.current.salesMissingCost > 0 ? (
                       <span className="text-[var(--warning)]">
-                        {t.salesMissingCost} sale{t.salesMissingCost === 1 ? '' : 's'} without a cost price
+                        {net.data.current.salesMissingCost} sale{net.data.current.salesMissingCost === 1 ? '' : 's'} without a cost price
                       </span>
+                    ) : (
+                      <Change now={net.data.current.netProfit} before={net.data.previous.netProfit} days={range} money />
                     )
                   }
                   icon="layers"
-                  to="/admin/customers"
+                  to="/admin/profit"
                 />
               ) : (
                 <Kpi
