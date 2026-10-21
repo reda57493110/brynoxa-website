@@ -23,7 +23,7 @@ test('sign-in and turning 2-step off use the code up (same or older code refused
   const src = require('fs').readFileSync(dist('services/auth.service.js'), 'utf8');
   // the stored step must be lower than the new one, set atomically
   assert.match(src, /mfaLastStep: \{ \$lt: step \}/);
-  assert.match(src, /\$set: \{ mfaLastStep: step \}/);
+  assert.match(src, /\$set: \{ mfaLastStep: step, mfaClockSkewSteps: newSkew \}/);
   assert.equal((src.match(/await consumeTotp\(user, code\)/g) || []).length, 2, 'used by sign-in and by turning 2-step off');
 });
 
@@ -54,4 +54,27 @@ test('turning 2-step on: same QR until "New QR code", and a code from a slightly
 
 test('a really old code (3 minutes) is still refused', () => {
   assert.equal(totpStep(secret, codeAt(-180)), null);
+});
+
+test("a phone whose clock is a few minutes off: setup learns the difference; too far is explained", async () => {
+  const { User } = require(dist('models/User'));
+  const auth = require(dist('services/auth.service'));
+  const { totpStep: stepWithSkew } = require(dist('utils/totp'));
+  const user = new User({ name: 'Owner', email: 'owner2@x.com', password: 'x'.repeat(20), role: 'admin' });
+  user.save = async function () {
+    return this;
+  };
+  User.findById = () => ({ select: () => Promise.resolve(user) });
+  const { secret: s } = await auth.setupMfa(String(user._id), { rotate: true });
+  const phone = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(s), digits: 6, period: 30, algorithm: 'SHA1' });
+
+  // 15 minutes off: refused with the clock message
+  await assert.rejects(auth.verifyMfaSetup(String(user._id), phone.generate({ timestamp: Date.now() - 15 * 60000 }), s), /phone's time is about 15 minutes behind/);
+  // 2 minutes slow: accepted, difference remembered (-4 steps)
+  await auth.verifyMfaSetup(String(user._id), phone.generate({ timestamp: Date.now() - 120000 }), s);
+  assert.equal(user.mfaEnabled, true);
+  assert.ok(user.mfaClockSkewSteps <= -3 && user.mfaClockSkewSteps >= -5, String(user.mfaClockSkewSteps));
+  // later codes from the same slow phone are valid around the remembered difference
+  assert.notEqual(stepWithSkew(s, phone.generate({ timestamp: Date.now() - 90000 }), user.mfaClockSkewSteps), null);
+  assert.equal(stepWithSkew(s, phone.generate({ timestamp: Date.now() - 90000 }), 0), null, 'without the difference it would fail');
 });

@@ -30,18 +30,30 @@ export async function createTotpUri(options: {
  */
 const TOTP_WINDOW = 2;
 
+/** Largest phone-clock difference learned at setup: 10 minutes (20 steps of 30 s). */
+export const MAX_CLOCK_SKEW_STEPS = 20;
+
+/** The current 30-second step on the server clock. */
+export function currentTotpStep(now = Date.now()) {
+  return Math.floor(now / 1000 / 30);
+}
+
 /**
  * The 30-second time step a valid 6-digit code belongs to, or null if the code is wrong.
- * Callers store the last used step so the same code cannot be used twice.
+ * `skewSteps`: how far this person's phone clock is known to be off (learned at setup, kept up
+ * to date at each sign-in), so a phone a few minutes slow still works; the window stays ±2 steps
+ * around it. Callers store the last used step so the same code cannot be used twice.
  */
-export function totpStep(secret: string, code: string): number | null {
+export function totpStep(secret: string, code: string, skewSteps = 0): number | null {
   const cleaned = code.replace(/\D/g, '');
   if (!/^\d{6}$/.test(cleaned)) return null;
   try {
     const totp = toTotp(secret);
-    const delta = totp.validate({ token: cleaned, window: TOTP_WINDOW });
+    const skew = Math.max(-MAX_CLOCK_SKEW_STEPS, Math.min(MAX_CLOCK_SKEW_STEPS, Math.round(skewSteps) || 0));
+    const now = Date.now();
+    const delta = totp.validate({ token: cleaned, window: TOTP_WINDOW, timestamp: now + skew * totp.period * 1000 });
     if (delta === null) return null;
-    return Math.floor(Date.now() / 1000 / totp.period) + delta;
+    return currentTotpStep(now) + skew + delta;
   } catch {
     return null;
   }

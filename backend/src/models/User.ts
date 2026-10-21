@@ -78,6 +78,8 @@ export interface IUser extends Document {
   mfaSecretEncrypted?: string;
   /** Time step of the last 2-step code used (a code can only be used once). */
   mfaLastStep?: number;
+  /** How many 30 s steps this person's phone clock is off (learned at setup, updated at sign-in). */
+  mfaClockSkewSteps?: number;
   /** When the password last changed: sign-in tokens issued before it are refused. */
   passwordChangedAt?: Date;
   mfaPendingSecretEncrypted?: string;
@@ -182,6 +184,7 @@ const userSchema = new Schema<IUser>(
     mfaEnabled: { type: Boolean, default: false },
     mfaSecretEncrypted: { type: String, select: false },
     mfaLastStep: { type: Number, select: false },
+    mfaClockSkewSteps: { type: Number, select: false },
     passwordChangedAt: { type: Date },
     mfaPendingSecretEncrypted: { type: String, select: false },
     mfaRecoveryCodeHashes: { type: [String], select: false, default: [] },

@@ -10,7 +10,7 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword, isPublishedDefaultPassword } from '../utils/blockedPasswords';
-import { createTotpSecret, createTotpUri, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
+import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
@@ -192,11 +192,16 @@ async function verifyTotp(secret: string, code: string) {
  */
 async function consumeTotp(user: InstanceType<typeof User>, code: string) {
   if (!user.mfaSecretEncrypted) return false;
-  const step = totpStep(decryptMfaSecret(user.mfaSecretEncrypted), code);
+  const secret = decryptMfaSecret(user.mfaSecretEncrypted);
+  const skew = user.mfaClockSkewSteps || 0;
+  // Around the phone's known clock difference; also the real time, in case the phone was fixed
+  const step = totpStep(secret, code, skew) ?? (skew ? totpStep(secret, code, 0) : null);
   if (step === null) return false;
+  // Keep following the phone's clock as it drifts
+  const newSkew = Math.max(-MAX_CLOCK_SKEW_STEPS, Math.min(MAX_CLOCK_SKEW_STEPS, step - currentTotpStep()));
   const res = await User.updateOne(
     { _id: user._id, $or: [{ mfaLastStep: { $exists: false } }, { mfaLastStep: { $lt: step } }] },
-    { $set: { mfaLastStep: step } }
+    { $set: { mfaLastStep: step, mfaClockSkewSteps: newSkew } }
   );
   return res.modifiedCount === 1;
 }
@@ -321,6 +326,8 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
   if (!user?.mfaPendingSecretEncrypted) throw new ApiError(400, 'Start MFA setup first');
 
   const secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
+  // The phone's clock difference: 0 normally, or learned below (up to 10 minutes)
+  let skewSteps = 0;
   if (!(await verifyTotp(secret, code))) {
     // Tell the person exactly what went wrong (none of these turn 2-step on)
     const shown = (shownSecret || '').replace(/\s/g, '').toUpperCase();
@@ -328,11 +335,15 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
       throw new ApiError(400, 'This QR code was replaced (by another tab or by "New QR code"). Close the other tabs, press "New QR code", delete the old Brynoxa entry in your app and scan the new one.');
     }
     const offset = totpClockOffsetSeconds(secret, code);
-    if (offset !== null) {
+    if (offset !== null && Math.abs(offset) <= MAX_CLOCK_SKEW_STEPS * 30) {
+      // Right code from a phone whose clock is a few minutes off: accept and remember the difference
+      skewSteps = Math.round(offset / 30);
+    } else if (offset !== null) {
       const minutes = Math.max(1, Math.round(Math.abs(offset) / 60));
       throw new ApiError(400, `Your phone's time is about ${minutes} minute${minutes === 1 ? '' : 's'} ${offset < 0 ? 'behind' : 'ahead'}. Turn on automatic date & time on your phone, then type the new code.`);
+    } else {
+      throw new ApiError(400, 'That code does not belong to this QR code. Delete every Brynoxa entry in your app, scan this QR code again, and type the code it shows right now.');
     }
-    throw new ApiError(400, 'That code does not belong to this QR code. Delete every Brynoxa entry in your app, scan this QR code again, and type the code it shows right now.');
   }
 
   const recoveryCodes = Array.from({ length: 10 }, () => randomBytes(5).toString('hex').toUpperCase());
@@ -340,6 +351,10 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
   user.mfaSecretEncrypted = user.mfaPendingSecretEncrypted;
   user.mfaPendingSecretEncrypted = undefined;
   user.mfaRecoveryCodeHashes = recoveryCodes.map(hashRecoveryCode);
+  user.mfaClockSkewSteps = skewSteps;
+  // The setup code itself cannot be used again to sign in (the next codes can)
+  const setupStep = totpStep(secret, code, skewSteps);
+  if (setupStep !== null) user.mfaLastStep = setupStep;
   await user.save({ validateBeforeSave: false });
   notifySecurityEvent(user, 'mfa-enabled');
 
@@ -347,7 +362,7 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
 }
 
 export async function disableMfa(userId: string, code: string) {
-  const user = await User.findById(userId).select('+mfaSecretEncrypted +mfaRecoveryCodeHashes');
+  const user = await User.findById(userId).select('+mfaSecretEncrypted +mfaRecoveryCodeHashes +mfaClockSkewSteps');
   if (!user?.mfaEnabled || !user.mfaSecretEncrypted) {
     throw new ApiError(400, 'MFA is not enabled');
   }
@@ -588,7 +603,7 @@ export async function completeMfaLogin(
   }
 
   const user = await User.findById(payload.userId).select(
-    '+mfaSecretEncrypted +mfaRecoveryCodeHashes +failedLoginAttempts +lockedUntil'
+    '+mfaSecretEncrypted +mfaRecoveryCodeHashes +mfaClockSkewSteps +failedLoginAttempts +lockedUntil'
   );
   if (!user || !user.isActive || !user.mfaEnabled || !isStaffRole(user.role)) {
     throw new ApiError(401, 'MFA challenge is no longer valid');
