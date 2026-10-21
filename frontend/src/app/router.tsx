@@ -68,6 +68,9 @@ const AdminDeliverySlips = lazy(() =>
 const AdminAnalytics = lazy(() =>
   import('@/pages/admin/Analytics').then((m) => ({ default: m.Analytics }))
 )
+const AdminProfitReport = lazy(() =>
+  import('@/pages/admin/ProfitReport').then((m) => ({ default: m.ProfitReport }))
+)
 const AdminProfit = lazy(() =>
   import('@/pages/admin/Profit').then((m) => ({ default: m.Profit }))
 )
@@ -234,6 +237,16 @@ export function AppRouter() {
       </Route>
 
       {/* Print view without the admin chrome */}
+      <Route
+        path="admin-print/profit"
+        element={
+          <AdminRoute>
+            <S>
+              <AdminProfitReport />
+            </S>
+          </AdminRoute>
+        }
+      />
       <Route
         path="admin-print/slips"
         element={
