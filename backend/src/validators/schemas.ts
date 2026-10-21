@@ -1,13 +1,15 @@
 import { z } from 'zod';
 import { DELIVERY_ISSUES, ORDER_STATUSES } from '../utils/orderStatus';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
+import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
 const customerPassword = z
   .string()
   .min(CUSTOMER_PASSWORD_MIN, `Password must be at least ${CUSTOMER_PASSWORD_MIN} characters`)
-  .max(100);
+  .max(100)
+  .refine((p) => !isBlockedPassword(p), BLOCKED_PASSWORD_MESSAGE);
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -397,7 +399,7 @@ export const setUserRoleSchema = z.object({
 export const createStaffUserSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   email: z.string().trim().email(),
-  password: z.string().min(12).max(100),
+  password: z.string().min(12).max(100).refine((p) => !isBlockedPassword(p), BLOCKED_PASSWORD_MESSAGE),
   role: z.enum(['orders', 'catalog', 'support', 'marketing']),
 });
 

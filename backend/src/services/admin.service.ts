@@ -1,3 +1,4 @@
+import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { User } from '../models/User';
@@ -176,6 +177,7 @@ export async function createStaffUser(input: {
 }) {
   const email = input.email.trim().toLowerCase();
   const role = input.role;
+  if (isBlockedPassword(input.password)) throw new ApiError(400, BLOCKED_PASSWORD_MESSAGE);
   if (!isStaffRole(role) || role === 'admin') {
     throw new ApiError(400, 'Owner role cannot be assigned — choose a staff role');
   }

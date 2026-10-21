@@ -9,6 +9,7 @@ import { createCipheriv, createDecipheriv } from 'crypto';
 import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
+import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
@@ -146,6 +147,7 @@ const CUSTOMER_PASSWORD_MIN = 6;
 const STAFF_PASSWORD_MIN = 12;
 
 function assertPasswordLength(role: string | undefined, password: string) {
+  if (isBlockedPassword(password)) throw new ApiError(400, BLOCKED_PASSWORD_MESSAGE);
   const min = isStaffRole(role) ? STAFF_PASSWORD_MIN : CUSTOMER_PASSWORD_MIN;
   if (password.length < min) {
     throw new ApiError(

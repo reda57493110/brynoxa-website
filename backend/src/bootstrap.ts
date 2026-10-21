@@ -1,6 +1,7 @@
 import { env } from './config/env';
 import { User } from './models/User';
 import { migrateRefreshTokens } from './services/auth.service';
+import { isBlockedPassword } from './utils/blockedPasswords';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -14,6 +15,10 @@ async function ensureAdmin() {
     return;
   }
   if (await User.exists({ role: 'admin' })) return;
+  if (isBlockedPassword(env.ADMIN_PASSWORD)) {
+    console.warn('ADMIN_PASSWORD is a published or common password; admin not created. Set a new one.');
+    return;
+  }
 
   await User.create({
     name: 'Brynoxa Admin',
