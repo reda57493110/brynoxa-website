@@ -53,6 +53,24 @@ function paginated(items, page, limit, total) {
   };
 }
 
+/**
+ * Same validation as the Express routes: unknown fields are dropped (no setting soldCount,
+ * ratings, stock counts or coupon usage from a crafted request) and bad values get a clear 400.
+ */
+function validated(schemaName, body, partial = false) {
+  const schemas = require('../../backend/dist/validators/schemas');
+  const schema = partial ? schemas[schemaName].partial() : schemas[schemaName];
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    const issue = parsed.error.issues?.[0];
+    const where = issue?.path?.length ? `${issue.path.join('.')}: ` : '';
+    const err = new Error(`${where}${issue?.message || 'Invalid data'}`);
+    err.statusCode = 400;
+    throw err;
+  }
+  return parsed.data;
+}
+
 async function handleCategoryMutation(req, res, route) {
   const user = await requireStaff(req, res, ['products:write']);
   if (!user) return;
@@ -60,7 +78,7 @@ async function handleCategoryMutation(req, res, route) {
   const catalog = require('../../backend/dist/services/catalog.service');
 
   if (req.method === 'POST' && route === 'categories') {
-    const body = await readJsonBody(req);
+    const body = validated('categorySchema', await readJsonBody(req));
     const item = await catalog.createCategory(body);
     sendJson(res, 201, { success: true, message: 'Category created', data: item });
     return;
@@ -74,7 +92,7 @@ async function handleCategoryMutation(req, res, route) {
 
   const id = match[1];
   if (req.method === 'PATCH') {
-    const body = await readJsonBody(req);
+    const body = validated('categorySchema', await readJsonBody(req), true);
     const item = await catalog.updateCategory(id, body);
     sendJson(res, 200, { success: true, message: 'Category updated', data: item });
     return;
@@ -96,7 +114,7 @@ async function handleBrandMutation(req, res, route) {
   const catalog = require('../../backend/dist/services/catalog.service');
 
   if (req.method === 'POST' && route === 'brands') {
-    const body = await readJsonBody(req);
+    const body = validated('brandSchema', await readJsonBody(req));
     const item = await catalog.createBrand(body);
     sendJson(res, 201, { success: true, message: 'Brand created', data: item });
     return;
@@ -110,7 +128,7 @@ async function handleBrandMutation(req, res, route) {
 
   const id = match[1];
   if (req.method === 'PATCH') {
-    const body = await readJsonBody(req);
+    const body = validated('brandSchema', await readJsonBody(req), true);
     const item = await catalog.updateBrand(id, body);
     sendJson(res, 200, { success: true, message: 'Brand updated', data: item });
     return;
@@ -131,7 +149,7 @@ async function handleProductRoutes(req, res, route) {
   if (req.method === 'POST' && route === 'products') {
     const user = await requireStaff(req, res, ['products:write']);
     if (!user) return;
-    const body = await readJsonBody(req);
+    const body = validated('productSchema', await readJsonBody(req));
     const item = await catalog.createProduct(body);
     dashboardCache = { at: 0, data: null };
     sendJson(res, 201, { success: true, message: 'Product created', data: item });
@@ -157,7 +175,7 @@ async function handleProductRoutes(req, res, route) {
   if (req.method === 'PATCH') {
     const user = await requireStaff(req, res, ['products:write']);
     if (!user) return;
-    const body = await readJsonBody(req);
+    const body = validated('productSchema', await readJsonBody(req), true);
     const item = await catalog.updateProduct(id, body);
     dashboardCache = { at: 0, data: null };
     sendJson(res, 200, { success: true, message: 'Product updated', data: item });
@@ -213,7 +231,7 @@ async function handleCouponRoutes(req, res, route) {
   }
 
   if (route === 'coupons' && req.method === 'POST') {
-    const body = await readJsonBody(req);
+    const body = validated('couponSchema', await readJsonBody(req));
     const item = await couponService.createCoupon(body);
     sendJson(res, 201, { success: true, message: 'Coupon created', data: item });
     return;
@@ -227,7 +245,7 @@ async function handleCouponRoutes(req, res, route) {
 
   const id = match[1];
   if (req.method === 'PATCH') {
-    const body = await readJsonBody(req);
+    const body = validated('couponSchema', await readJsonBody(req), true);
     const item = await couponService.updateCoupon(id, body);
     sendJson(res, 200, { success: true, message: 'Coupon updated', data: item });
     return;

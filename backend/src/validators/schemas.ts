@@ -100,7 +100,11 @@ export const productSchema = z.object({
   images: z
     .array(
       z.object({
-        url: z.union([z.string().url(), z.string().regex(/^\/api\/v1\/images\/[a-f0-9]{24}$/i)]),
+        // Web images (Cloudinary…) or a path on this site; never javascript:/data: addresses
+        url: z.union([
+          z.string().max(2000).url().regex(/^https?:\/\//i, 'Image must be a web address'),
+          z.string().max(500).regex(/^\/(?!\/)[^\s]*$/, 'Image must be a web address'),
+        ]),
         publicId: z.string().optional(),
         alt: z.string().optional(),
         isPrimary: z.boolean().optional(),
@@ -303,6 +307,19 @@ export const settingsSchema = z.object({
     })
     .optional(),
 });
+
+/** Plain store settings saved by the serverless settings handler (the rest is sanitised there). */
+export const settingsScalarsSchema = z
+  .object({
+    storeName: z.string().trim().min(1).max(60),
+    currency: z.string().trim().min(1).max(8),
+    shippingFlatRate: z.number().min(0).max(100_000),
+    freeShippingMin: z.number().min(0).max(10_000_000),
+    taxRate: z.number().min(0).max(100),
+    supportEmail: z.union([z.string().trim().email(), z.literal('')]),
+    notifyStaffLoginEmail: z.boolean(),
+  })
+  .partial();
 
 export const inventorySchema = z.object({
   stock: z.number().int().min(0).optional(),
