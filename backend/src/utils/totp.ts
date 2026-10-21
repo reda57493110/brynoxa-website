@@ -47,6 +47,22 @@ export function totpStep(secret: string, code: string): number | null {
   }
 }
 
+/**
+ * Diagnosis only (never used to accept a code): how many seconds off the phone's clock seems,
+ * if the code belongs to this secret within ±12 hours; null if it does not belong to it at all.
+ */
+export function totpClockOffsetSeconds(secret: string, code: string): number | null {
+  const cleaned = code.replace(/\D/g, '');
+  if (!/^\d{6}$/.test(cleaned)) return null;
+  try {
+    const totp = toTotp(secret);
+    const delta = totp.validate({ token: cleaned, window: 1440 });
+    return delta === null ? null : delta * totp.period;
+  } catch {
+    return null;
+  }
+}
+
 /** Verify a 6-digit TOTP (setup confirmation). */
 export async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
   return totpStep(secret, code) !== null;

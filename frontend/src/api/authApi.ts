@@ -24,8 +24,9 @@ export const authApi = {
   setupMfa: (rotate = false) =>
     api.post<ApiResponse<{ secret: string; qrCodeDataUrl: string }>>('/auth/mfa/setup', { rotate }),
 
-  verifyMfaSetup: (code: string) =>
-    api.post<ApiResponse<{ recoveryCodes: string[] }>>('/auth/mfa/verify', { code }),
+  /** secret: the key shown on screen, so the server can explain a mismatch */
+  verifyMfaSetup: (code: string, secret?: string) =>
+    api.post<ApiResponse<{ recoveryCodes: string[] }>>('/auth/mfa/verify', { code, secret }),
 
   disableMfa: (code: string) =>
     api.post<ApiResponse<null>>('/auth/mfa/disable', { code }),

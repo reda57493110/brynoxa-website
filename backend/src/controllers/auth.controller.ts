@@ -73,7 +73,7 @@ export const setupMfa = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const verifyMfaSetup = asyncHandler(async (req: Request, res: Response) => {
-  sendSuccess(res, await authService.verifyMfaSetup(req.user!.userId, req.body.code), 'MFA enabled');
+  sendSuccess(res, await authService.verifyMfaSetup(req.user!.userId, req.body.code, req.body.secret), 'MFA enabled');
 });
 
 export const disableMfa = asyncHandler(async (req: Request, res: Response) => {

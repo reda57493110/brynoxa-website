@@ -87,7 +87,7 @@ function TwoStepPanel() {
               onSubmit={(event) => {
                 event.preventDefault()
                 void run(async () => {
-                  const result = await authApi.verifyMfaSetup(code.trim())
+                  const result = await authApi.verifyMfaSetup(code.trim(), setup.secret)
                   setRecoveryCodes(result.data.data.recoveryCodes)
                   setSetup(null)
                   setCode('')

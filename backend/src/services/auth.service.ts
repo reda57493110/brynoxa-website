@@ -10,7 +10,7 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword, isPublishedDefaultPassword } from '../utils/blockedPasswords';
-import { createTotpSecret, createTotpUri, totpStep, verifyTotpCode } from '../utils/totp';
+import { createTotpSecret, createTotpUri, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
@@ -316,16 +316,23 @@ export async function setupMfa(userId: string, options?: { rotate?: boolean }) {
   return { secret, qrCodeDataUrl: await QRCode.toDataURL(uri) };
 }
 
-export async function verifyMfaSetup(userId: string, code: string) {
+export async function verifyMfaSetup(userId: string, code: string, shownSecret?: string) {
   const user = await User.findById(userId).select('+mfaPendingSecretEncrypted');
   if (!user?.mfaPendingSecretEncrypted) throw new ApiError(400, 'Start MFA setup first');
 
   const secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
   if (!(await verifyTotp(secret, code))) {
-    throw new ApiError(
-      400,
-      'That code did not match. Type the code your app shows right now. If it still fails: check that your phone sets the time automatically, or press "New QR code", delete the old Brynoxa entry in your app and scan again.'
-    );
+    // Tell the person exactly what went wrong (none of these turn 2-step on)
+    const shown = (shownSecret || '').replace(/\s/g, '').toUpperCase();
+    if (shown && shown !== secret) {
+      throw new ApiError(400, 'This QR code was replaced (by another tab or by "New QR code"). Close the other tabs, press "New QR code", delete the old Brynoxa entry in your app and scan the new one.');
+    }
+    const offset = totpClockOffsetSeconds(secret, code);
+    if (offset !== null) {
+      const minutes = Math.max(1, Math.round(Math.abs(offset) / 60));
+      throw new ApiError(400, `Your phone's time is about ${minutes} minute${minutes === 1 ? '' : 's'} ${offset < 0 ? 'behind' : 'ahead'}. Turn on automatic date & time on your phone, then type the new code.`);
+    }
+    throw new ApiError(400, 'That code does not belong to this QR code. Delete every Brynoxa entry in your app, scan this QR code again, and type the code it shows right now.');
   }
 
   const recoveryCodes = Array.from({ length: 10 }, () => randomBytes(5).toString('hex').toUpperCase());

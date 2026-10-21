@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
     if (action === 'mfa/verify') {
       const body = await readJsonBody(req);
       const data = parseBody(schemas.mfaCodeSchema, body);
-      const result = await authService.verifyMfaSetup(userId, data.code);
+      const result = await authService.verifyMfaSetup(userId, data.code, data.secret);
       sendJson(res, 200, {
         success: true,
         message: 'MFA enabled',

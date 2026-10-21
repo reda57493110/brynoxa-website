@@ -29,6 +29,8 @@ export const loginSchema = z.object({
 
 export const mfaCodeSchema = z.object({
   code: z.string().trim().min(6).max(20),
+  /** Setup only: the key shown on screen, to explain a mismatch */
+  secret: z.string().trim().max(64).optional(),
 });
 
 export const mfaLoginSchema = z.object({
