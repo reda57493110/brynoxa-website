@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../types/express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
-import * as reviewService from '../services/review.service';
 import * as wishlistService from '../services/wishlist.service';
 import * as notificationService from '../services/notification.service';
 import * as couponService from '../services/coupon.service';
@@ -31,54 +30,6 @@ import * as pushService from '../services/push.service';
 import { param } from '../utils/params';
 import { getUserAgent } from '../utils/requestMeta';
 import { stampPaymentDetailsChange, touchesPaymentDetails } from '../utils/paymentDetailsAudit';
-
-export const createReview = asyncHandler(async (req: Request, res: Response) => {
-  const result = await reviewService.createReview({
-    userId: req.user!.userId,
-    productId: req.body.productId,
-    rating: req.body.rating,
-    title: req.body.title,
-    comment: req.body.comment,
-  });
-  sendSuccess(res, result, 'Review submitted', 201);
-});
-
-export const productReviews = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 10;
-  const result = await reviewService.listProductReviews(param(req, 'id'), page, limit);
-  sendPaginated(res, result.items, {
-    page: result.page,
-    limit: result.limit,
-    total: result.total,
-  });
-});
-
-export const myReviews = asyncHandler(async (req: Request, res: Response) => {
-  const items = await reviewService.listUserReviews(req.user!.userId);
-  sendSuccess(res, items);
-});
-
-export const adminReviews = asyncHandler(async (req: Request, res: Response) => {
-  const page = Number(req.query.page) || 1;
-  const limit = Number(req.query.limit) || 20;
-  const result = await reviewService.listAllReviews(page, limit);
-  sendPaginated(res, result.items, {
-    page: result.page,
-    limit: result.limit,
-    total: result.total,
-  });
-});
-
-export const moderateReview = asyncHandler(async (req: Request, res: Response) => {
-  const item = await reviewService.moderateReview(param(req, 'id'), Boolean(req.body.isApproved));
-  sendSuccess(res, item, 'Review updated');
-});
-
-export const deleteReview = asyncHandler(async (req: Request, res: Response) => {
-  await reviewService.deleteReview(param(req, 'id'));
-  sendSuccess(res, null, 'Review deleted');
-});
 
 export const getWishlist = asyncHandler(async (req: Request, res: Response) => {
   const wishlist = await wishlistService.getWishlist(req.user!.userId);

@@ -17,7 +17,6 @@ import {
   validateCouponSchema,
   guestOrderReceiptSchema,
   trackOrderSchema,
-  reviewSchema,
   couponSchema,
   settingsSchema,
   emailTestSchema,
@@ -135,12 +134,7 @@ router.delete(
   order.deleteOrder
 );
 
-router.get('/products/:id/reviews', misc.productReviews);
-router.post('/reviews', requireAuth, validate(reviewSchema), misc.createReview);
-router.get('/reviews/me', requireAuth, misc.myReviews);
-router.get('/admin/reviews', requireAuth, requirePermission('reviews'), misc.adminReviews);
-router.patch('/admin/reviews/:id', requireAuth, requirePermission('reviews'), misc.moderateReview);
-router.delete('/admin/reviews/:id', requireAuth, requirePermission('reviews'), misc.deleteReview);
+// Reviews were removed from the shop: no review routes (old reviews stay in the database)
 
 router.get('/wishlist', requireAuth, misc.getWishlist);
 router.post(

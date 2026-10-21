@@ -136,13 +136,6 @@ export const productSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-export const reviewSchema = z.object({
-  productId: z.string().min(1),
-  rating: z.number().int().min(1).max(5),
-  title: z.string().min(3).max(120),
-  comment: z.string().min(10).max(2000),
-});
-
 export const createOrderSchema = z.object({
   items: z
     .array(

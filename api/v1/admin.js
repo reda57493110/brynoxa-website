@@ -568,15 +568,6 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (route === 'reviews') {
-      const user = await requireStaff(req, res, ['reviews']);
-      if (!user) return;
-      const { listAllReviews } = require('../../backend/dist/services/review.service');
-      const result = await listAllReviews(page, limit);
-      sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
-      return;
-    }
-
     if (route === 'messages') {
       const user = await requireStaff(req, res, ['messages']);
       if (!user) return;

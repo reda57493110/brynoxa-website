@@ -53,24 +53,9 @@ module.exports = async (req, res) => {
     const route = resolveRoute(pathname, raw);
     const catalog = require('../../backend/dist/services/catalog.service');
 
-    // GET /products/:id/reviews
+    // Reviews were removed from the shop
     if (route.includes('/reviews')) {
-      const productId = route.split('/')[0];
-      const page = Number(raw.page || 1);
-      const limit = Number(raw.limit || 20);
-      const { listProductReviews } = require('../../backend/dist/services/review.service');
-      const result = await listProductReviews(productId, page, limit);
-      sendJson(res, 200, {
-        success: true,
-        message: 'Success',
-        data: result.items,
-        meta: {
-          page: result.page,
-          limit: result.limit,
-          total: result.total,
-          pages: Math.ceil(result.total / result.limit) || 1,
-        },
-      });
+      sendJson(res, 404, { success: false, message: 'Not found' });
       return;
     }
 
