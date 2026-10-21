@@ -19,6 +19,7 @@ import { formatCurrency, formatCurrencyRounded } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { orderStatusLabel } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
+import { downloadXlsx, type Cell, type Sheet } from '@/lib/xlsx'
 import { toast } from '@/store/toastStore'
 import type { ExpenseCategory, ProfitOrderKind, ProfitOrderRow, ProfitReport, SalesRange } from '@/types'
 
@@ -74,40 +75,124 @@ function parseAmount(v: string): number | null | undefined {
   return Number.isFinite(n) && n >= 0 ? n : undefined
 }
 
-function downloadCsv(r: ProfitReport) {
-  const rows = [
-    ['Order', 'Placed', 'Status', 'Result', 'Customer', 'Money in (DH)', 'Product cost', 'Delivery', 'Transfer fees', 'Other costs', 'Profit', 'Note'],
-    ...r.orders.map((o) => [
-      o.orderNumber,
-      o.day,
-      orderStatusLabel(o.status),
-      KIND_LABEL[o.kind],
-      o.customer,
-      o.moneyIn,
-      o.productCost,
-      o.delivery,
-      o.fees,
-      o.other,
-      o.kind === 'open' ? '' : o.profit,
-      o.note,
-    ]),
-    [],
-    ['Expenses'],
-    ...r.expenses.map((e) => [e.day, EXPENSE_LABEL[e.category], e.label, e.amount, e.note]),
-    [],
-    ['Net profit', r.totals.netProfit],
+/** Excel report: Summary, Orders, Products sold, Expenses — one sheet each. */
+function downloadReport(r: ProfitReport) {
+  const t = r.totals
+  const m = (value: number) => ({ value, type: 'money' as const })
+  const n = (value: number) => ({ value, type: 'int' as const })
+  const period = `${dayLabel(r.from)} – ${dayLabel(r.to)} (${r.range} days) · orders by the day they were placed`
+  const counted = r.orders.filter((o) => o.kind !== 'open')
+  const sum = (pick: (o: ProfitOrderRow) => number) => counted.reduce((a, o) => a + pick(o), 0)
+
+  const sheets: Sheet[] = [
+    {
+      name: 'Summary',
+      keyValue: true,
+      intro: ['Brynoxa — Profit report', period],
+      columns: [
+        { header: '', width: 34 },
+        { header: '', width: 18 },
+      ],
+      rows: [
+        ['Money', ''],
+        ['Money received', m(t.moneyIn)],
+        ['Product cost', m(-t.productCost)],
+        ['Delivery (courier)', m(-t.delivery)],
+        ['Transfer fees covered', m(-t.fees)],
+        ['Other order costs', m(-t.other)],
+        ['Expenses', m(-t.expenses)],
+        ['Net profit', m(t.netProfit)],
+        ['Margin (of money received)', t.margin !== null ? { value: t.margin, type: 'percent' } : '—'],
+        [null, null],
+        ['Orders', ''],
+        ['Delivered sales', n(t.sales)],
+        ['Not delivered (sent back)', n(t.failed)],
+        ['Cost of parcels not delivered', m(Math.max(0, t.failedLoss))],
+        ['Still in progress (not counted)', n(t.open)],
+        ['Value of orders in progress', m(t.openValue)],
+        ['Shipping paid by customers', m(t.shippingCharged)],
+        ['Refunds', m(t.refunds)],
+        ['Sales without a product cost', n(t.salesMissingCost)],
+        [null, null],
+        ['Courier prices', ''],
+        ['Per delivered parcel', m(r.courierCosts.delivered)],
+        ['Per parcel sent back', m(r.courierCosts.returned)],
+        ...(r.expensesByCategory.length ? [[null, null], ['Expenses by type', ''], ...r.expensesByCategory.map((c) => [EXPENSE_LABEL[c.category], m(c.amount)])] : []),
+      ] as Cell[][],
+    },
+    {
+      name: 'Orders',
+      intro: ['Profit per order', period],
+      columns: [
+        { header: 'Order', width: 22 },
+        { header: 'Placed', type: 'date', width: 12 },
+        { header: 'Status', width: 16 },
+        { header: 'Result', width: 14 },
+        { header: 'Customer', width: 22 },
+        { header: 'City', width: 14 },
+        { header: 'Money received', type: 'money', width: 16 },
+        { header: 'Product cost', type: 'money', width: 15 },
+        { header: 'Delivery', type: 'money', width: 12 },
+        { header: 'Transfer fees', type: 'money', width: 13 },
+        { header: 'Other costs', type: 'money', width: 12 },
+        { header: 'Profit', type: 'money', width: 14 },
+        { header: 'Note', width: 28 },
+      ],
+      rows: r.orders.map((o) => [
+        o.orderNumber,
+        o.day,
+        orderStatusLabel(o.status),
+        KIND_LABEL[o.kind],
+        o.customer,
+        o.city,
+        o.kind === 'open' ? null : o.moneyIn,
+        o.productCost || null,
+        o.delivery || null,
+        o.fees || null,
+        o.other || null,
+        o.kind === 'open' ? 'when delivered' : o.profit,
+        [o.missingCost ? 'Product without cost price' : '', o.note].filter(Boolean).join(' · '),
+      ]),
+      total: ['Total (finished orders)', null, null, null, null, null, sum((o) => o.moneyIn), sum((o) => o.productCost), sum((o) => o.delivery), sum((o) => o.fees), sum((o) => o.other), sum((o) => o.profit), null],
+    },
+    {
+      name: 'Products sold',
+      intro: ['Profit per product (delivered units)', period],
+      columns: [
+        { header: 'Product', width: 40 },
+        { header: 'Units sold', type: 'int', width: 11 },
+        { header: 'Sales', type: 'money', width: 15 },
+        { header: 'Cost', type: 'money', width: 15 },
+        { header: 'Profit', type: 'money', width: 15 },
+        { header: 'Margin', type: 'percent', width: 10 },
+        { header: 'Note', width: 24 },
+      ],
+      rows: r.products.map((p) => [p.name, p.units, p.revenue, p.missingCost ? null : p.cost, p.missingCost ? null : p.profit, p.missingCost ? null : p.margin, p.missingCost ? 'No cost price' : '']),
+      total: [
+        'Total',
+        r.products.reduce((a, p) => a + p.units, 0),
+        r.products.reduce((a, p) => a + p.revenue, 0),
+        r.products.reduce((a, p) => a + p.cost, 0),
+        r.products.reduce((a, p) => a + p.profit, 0),
+        null,
+        null,
+      ],
+    },
+    {
+      name: 'Expenses',
+      intro: ['Expenses', period],
+      columns: [
+        { header: 'Date', type: 'date', width: 12 },
+        { header: 'Type', width: 22 },
+        { header: 'What', width: 36 },
+        { header: 'Amount', type: 'money', width: 15 },
+        { header: 'Note', width: 28 },
+      ],
+      rows: r.expenses.map((e) => [e.day, EXPENSE_LABEL[e.category], e.label, e.amount, e.note]),
+      total: ['Total', null, null, t.expenses, null],
+    },
   ]
-  const cell = (v: unknown) => {
-    const s = String(v ?? '')
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-  }
-  const csv = rows.map((row) => row.map(cell).join(',')).join('\n')
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `brynoxa-profit-${r.from}-to-${r.to}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadXlsx(`brynoxa-profit-${r.from}-to-${r.to}`, sheets)
 }
 
 /** Where the money went: money in, each cost, what is left. */
@@ -661,8 +746,8 @@ export function Profit() {
                 </button>
               ))}
             </div>
-            <Button type="button" size="sm" variant="outline" disabled={!r} onClick={() => r && downloadCsv(r)}>
-              Export CSV
+            <Button type="button" size="sm" variant="outline" disabled={!r} onClick={() => r && downloadReport(r)}>
+              Export Excel
             </Button>
           </>
         }
