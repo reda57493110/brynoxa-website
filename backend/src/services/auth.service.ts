@@ -10,7 +10,7 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword, isPublishedDefaultPassword } from '../utils/blockedPasswords';
-import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
+import { createTotpSecret, createTotpUri, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
@@ -167,6 +167,7 @@ export async function resetPassword(token: string, newPassword: string) {
   if (!user) throw new ApiError(400, 'Reset link is invalid or expired');
   assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
+  user.passwordChangedAt = new Date();
   user.refreshToken = undefined;
   user.passwordResetTokenHash = undefined;
   user.passwordResetExpires = undefined;
@@ -183,6 +184,21 @@ export async function resetPassword(token: string, newPassword: string) {
 
 async function verifyTotp(secret: string, code: string) {
   return verifyTotpCode(secret, code);
+}
+
+/**
+ * Checks a 2-step code for sign-in / turning 2-step off and uses it up: a code (or an older one)
+ * that was already used is refused, so a code seen over someone's shoulder cannot be replayed.
+ */
+async function consumeTotp(user: InstanceType<typeof User>, code: string) {
+  if (!user.mfaSecretEncrypted) return false;
+  const step = totpStep(decryptMfaSecret(user.mfaSecretEncrypted), code);
+  if (step === null) return false;
+  const res = await User.updateOne(
+    { _id: user._id, $or: [{ mfaLastStep: { $exists: false } }, { mfaLastStep: { $lt: step } }] },
+    { $set: { mfaLastStep: step } }
+  );
+  return res.modifiedCount === 1;
 }
 
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -327,7 +343,7 @@ export async function disableMfa(userId: string, code: string) {
     throw new ApiError(400, 'MFA is not enabled');
   }
 
-  let valid = await verifyTotp(decryptMfaSecret(user.mfaSecretEncrypted), code);
+  let valid = await consumeTotp(user, code);
   if (!valid) {
     const recoveryHash = hashRecoveryCode(code);
     const consumed = await User.updateOne(
@@ -572,10 +588,7 @@ export async function completeMfaLogin(
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
 
-  let valid = Boolean(
-    user.mfaSecretEncrypted &&
-      (await verifyTotp(decryptMfaSecret(user.mfaSecretEncrypted), code))
-  );
+  let valid = await consumeTotp(user, code);
   if (!valid) {
     const recoveryHash = hashRecoveryCode(code);
     const consumed = await User.updateOne(
@@ -641,6 +654,7 @@ export async function changePassword(userId: string, currentPassword: string, ne
   }
   assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
+  user.passwordChangedAt = new Date();
   user.refreshToken = undefined;
   await user.save();
   notifySecurityEvent(user, 'password-changed');

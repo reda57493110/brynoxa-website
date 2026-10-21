@@ -5,6 +5,8 @@ import type { AppRole } from '../permissions';
 export type TokenPayload = {
   userId: string;
   role: AppRole;
+  /** Issued at (seconds), set by jsonwebtoken */
+  iat?: number;
 };
 
 export type MfaChallengePayload = {

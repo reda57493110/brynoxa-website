@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../types/express';
 import { verifyAccessToken } from '../utils/tokens';
+import { issuedBeforePasswordChange } from '../utils/tokenFreshness';
 import { ApiError } from '../utils/ApiError';
 import { User } from '../models/User';
 import { hasPermission, isStaffRole, type Permission } from '../permissions';
@@ -16,6 +17,9 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
     const user = await User.findById(payload.userId);
     if (!user || !user.isActive) {
       throw new ApiError(401, 'User not found or inactive');
+    }
+    if (issuedBeforePasswordChange(payload, user)) {
+      throw new ApiError(401, 'Session ended after a password change — please sign in again');
     }
     req.user = { userId: user._id.toString(), role: user.role };
     next();
@@ -52,7 +56,7 @@ export async function optionalAuth(req: AuthRequest, _res: Response, next: NextF
     if (header?.startsWith('Bearer ')) {
       const payload = verifyAccessToken(header.slice(7));
       const user = await User.findById(payload.userId);
-      if (user && user.isActive && !user.isGuest) {
+      if (user && user.isActive && !user.isGuest && !issuedBeforePasswordChange(payload, user)) {
         req.user = { userId: user._id.toString(), role: user.role };
       }
     }

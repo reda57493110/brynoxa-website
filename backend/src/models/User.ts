@@ -76,6 +76,10 @@ export interface IUser extends Document {
   refreshToken?: string;
   mfaEnabled: boolean;
   mfaSecretEncrypted?: string;
+  /** Time step of the last 2-step code used (a code can only be used once). */
+  mfaLastStep?: number;
+  /** When the password last changed: sign-in tokens issued before it are refused. */
+  passwordChangedAt?: Date;
   mfaPendingSecretEncrypted?: string;
   mfaRecoveryCodeHashes: string[];
   failedLoginAttempts: number;
@@ -177,6 +181,8 @@ const userSchema = new Schema<IUser>(
     refreshToken: { type: String, select: false },
     mfaEnabled: { type: Boolean, default: false },
     mfaSecretEncrypted: { type: String, select: false },
+    mfaLastStep: { type: Number, select: false },
+    passwordChangedAt: { type: Date },
     mfaPendingSecretEncrypted: { type: String, select: false },
     mfaRecoveryCodeHashes: { type: [String], select: false, default: [] },
     failedLoginAttempts: { type: Number, default: 0, select: false },

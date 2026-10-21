@@ -24,15 +24,27 @@ export async function createTotpUri(options: {
   return toTotp(options.secret, options).toString();
 }
 
-/** Verify a 6-digit TOTP with ±3 step (30s) window. */
-export async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
-  const cleaned = code.replace(/\D/g, '');
-  if (!/^\d{6}$/.test(cleaned)) return false;
+/** ±1 step (30 s each side): enough for a phone clock that is slightly off. */
+const TOTP_WINDOW = 1;
 
+/**
+ * The 30-second time step a valid 6-digit code belongs to, or null if the code is wrong.
+ * Callers store the last used step so the same code cannot be used twice.
+ */
+export function totpStep(secret: string, code: string): number | null {
+  const cleaned = code.replace(/\D/g, '');
+  if (!/^\d{6}$/.test(cleaned)) return null;
   try {
-    const delta = toTotp(secret).validate({ token: cleaned, window: 3 });
-    return delta !== null;
+    const totp = toTotp(secret);
+    const delta = totp.validate({ token: cleaned, window: TOTP_WINDOW });
+    if (delta === null) return null;
+    return Math.floor(Date.now() / 1000 / totp.period) + delta;
   } catch {
-    return false;
+    return null;
   }
+}
+
+/** Verify a 6-digit TOTP (setup confirmation). */
+export async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
+  return totpStep(secret, code) !== null;
 }

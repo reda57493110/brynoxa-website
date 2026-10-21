@@ -2,6 +2,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const { connectMongo } = require('./mongo');
 const { sendJson } = require('./http');
+const { issuedBeforePasswordChange } = require('../../backend/dist/utils/tokenFreshness');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -33,6 +34,7 @@ async function loadUserFromAuthHeader(req) {
   const { User } = require('../../backend/dist/models/User');
   const user = await User.findById(payload.userId);
   if (!user || !user.isActive) return null;
+  if (issuedBeforePasswordChange(payload, user)) return null;
   return user;
 }
 
@@ -61,6 +63,10 @@ async function requireUser(req, res) {
   const user = await User.findById(payload.userId);
   if (!user || !user.isActive) {
     sendJson(res, 401, { success: false, message: 'User not found or inactive' });
+    return null;
+  }
+  if (issuedBeforePasswordChange(payload, user)) {
+    sendJson(res, 401, { success: false, message: 'Session ended after a password change — please sign in again' });
     return null;
   }
 
