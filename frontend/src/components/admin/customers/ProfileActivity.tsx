@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
@@ -116,106 +117,70 @@ function Bought({ order }: { order: CustomerProfileOrder }) {
   )
 }
 
-function OrderCard({ order, open, onToggle }: { order: CustomerProfileOrder; open: boolean; onToggle: () => void }) {
-  const lines = order.lines ?? []
-  const first = lines[0]
+/** One line per order: number, date, status, total. Click opens the details. */
+function OrderLine({ order, onOpen }: { order: CustomerProfileOrder; onOpen: () => void }) {
   return (
-    <li className="overflow-hidden rounded-xl border border-[var(--border)]">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={onToggle}
-        className={cn('flex w-full items-center gap-3 px-3 py-2.5 text-start transition hover:bg-[var(--bg-muted)] sm:px-4', open && 'bg-[var(--bg-muted)]')}
-      >
-        <span className="relative size-11 shrink-0 overflow-hidden rounded-lg bg-[var(--bg-muted)]">
-          {first?.image ? <SafeImage src={optimizedImageUrl(first.image, 96)} alt="" className="size-full object-cover" /> : null}
-        </span>
+    <li>
+      <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 px-1 py-2.5 text-start transition hover:bg-[var(--bg-muted)] sm:px-2">
         <span className="min-w-0 flex-1">
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-sm font-semibold">#{order.orderNumber}</span>
-            <Badge variant={orderStatusVariant(order.orderStatus)}>{orderStatusLabel(order.orderStatus)}</Badge>
-          </span>
-          <span className="mt-0.5 block truncate text-xs text-[var(--fg-muted)]">
-            {formatDate(order.createdAt)} · {order.items} item{order.items === 1 ? '' : 's'}
-            {first ? ` · ${first.name}${lines.length > 1 ? ` +${lines.length - 1}` : ''}` : ''}
-          </span>
+          <span className="block text-sm font-semibold">#{order.orderNumber}</span>
+          <span className="block text-xs text-[var(--fg-muted)]">{formatDate(order.createdAt)}</span>
         </span>
-        <span className="shrink-0 text-end">
-          <span className="block text-sm font-semibold tabular-nums">{formatCurrency(order.total)}</span>
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-[var(--brand-text)]">
-            {open ? 'Hide' : 'See what happened'}
-            <SiteIcon name="chevron-down" size={12} className={cn('transition', open && 'rotate-180')} />
-          </span>
-        </span>
+        <Badge variant={orderStatusVariant(order.orderStatus)}>{orderStatusLabel(order.orderStatus)}</Badge>
+        <span className="w-24 shrink-0 text-end text-sm font-medium tabular-nums">{formatCurrency(order.total)}</span>
+        <SiteIcon name="chevron-right" size={14} className="shrink-0 text-[var(--fg-muted)] rtl:rotate-180" />
       </button>
-      {open ? (
-        <div className="grid gap-4 border-t border-[var(--border)] p-3 sm:p-4 md:grid-cols-2">
-          <div className="min-w-0">
-            <h3 className="mb-2 text-xs font-semibold tracking-wide text-[var(--fg-muted)] uppercase">What happened</h3>
-            <Steps history={order.history ?? []} />
-          </div>
-          <div className="min-w-0">
-            <h3 className="mb-1 text-xs font-semibold tracking-wide text-[var(--fg-muted)] uppercase">What they bought</h3>
-            <Bought order={order} />
-            <Link to={`/admin/orders/${order._id}`} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
-              Open the order <SiteIcon name="arrow-right" size={13} />
-            </Link>
-          </div>
-        </div>
-      ) : null}
     </li>
+  )
+}
+
+function OrderDetails({ order }: { order: CustomerProfileOrder }) {
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span className="text-[var(--fg-muted)]">Placed {formatDateTime(order.createdAt)}</span>
+        <Badge variant={orderStatusVariant(order.orderStatus)}>{orderStatusLabel(order.orderStatus)}</Badge>
+      </div>
+      <div>
+        <h3 className="mb-1 text-xs font-semibold tracking-wide text-[var(--fg-muted)] uppercase">What they bought</h3>
+        <Bought order={order} />
+      </div>
+      <div>
+        <h3 className="mb-2 text-xs font-semibold tracking-wide text-[var(--fg-muted)] uppercase">What happened</h3>
+        <Steps history={order.history ?? []} />
+      </div>
+      <Link to={`/admin/orders/${order._id}`} className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
+        Open the order <SiteIcon name="arrow-right" size={13} />
+      </Link>
+    </div>
   )
 }
 
 /** Customer → Activity: one card per order (steps + products on click), then account events. */
 export function ProfileActivity({ profile }: { profile: CustomerProfile }) {
   const orders = profile.orders
-  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set(orders[0] ? [orders[0]._id] : []))
+  const [openId, setOpenId] = useState<string | null>(null)
   const [showAccount, setShowAccount] = useState(false)
-  const allOpen = orders.length > 0 && orders.every((o) => openIds.has(o._id))
-  const toggle = (id: string) =>
-    setOpenIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-
+  const open = orders.find((o) => o._id === openId) ?? null
   const account = profile.timeline.filter((e) => !e.orderId)
-  const units = orders.reduce((a, o) => a + (o.orderStatus === 'cancelled' ? 0 : o.items), 0)
 
   return (
     <div className="space-y-4">
-      <Section
-        title={`Orders (${orders.length})`}
-        actions={
-          orders.length > 1 ? (
-            <button
-              type="button"
-              onClick={() => setOpenIds(allOpen ? new Set() : new Set(orders.map((o) => o._id)))}
-              className="text-sm font-medium text-[var(--brand-text)] hover:underline"
-            >
-              {allOpen ? 'Close all' : 'Open all'}
-            </button>
-          ) : null
-        }
-      >
+      <Section title={`Orders (${orders.length})`}>
         {orders.length ? (
-          <>
-            <p className="-mt-1 mb-3 text-xs text-[var(--fg-muted)]">
-              {units} item{units === 1 ? '' : 's'} ordered · first order {formatDate(orders[orders.length - 1].createdAt)} · click an order to see every step
-            </p>
-            <ul className="space-y-2">
-              {orders.map((o) => (
-                <OrderCard key={o._id} order={o} open={openIds.has(o._id)} onToggle={() => toggle(o._id)} />
-              ))}
-            </ul>
-          </>
+          <ul className="-mx-1 divide-y divide-[var(--border)] sm:-mx-2">
+            {orders.map((o) => (
+              <OrderLine key={o._id} order={o} onOpen={() => setOpenId(o._id)} />
+            ))}
+          </ul>
         ) : (
           <p className="text-sm text-[var(--fg-muted)]">No orders yet.</p>
         )}
       </Section>
 
+      <Modal open={Boolean(open)} onClose={() => setOpenId(null)} title={open ? `Order #${open.orderNumber}` : ''} size="lg">
+        {open ? <OrderDetails order={open} /> : null}
+      </Modal>
       <Section
         title="Account"
         actions={
