@@ -1,3 +1,4 @@
+import { hideCostsFor } from '../utils/hideCosts';
 import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -94,7 +95,7 @@ export const review = asyncHandler(async (req: AuthRequest, res: Response) => {
 
 export const refund = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await recordRefund(param(req, 'id'), req.body, req.user!.userId);
-  sendSuccess(res, order, 'Refund recorded');
+  sendSuccess(res, hideCostsFor(req.user?.role, order), 'Refund recorded');
 });
 
 /** Customer side: wholesale status, application, and the pricing checkout should show. */

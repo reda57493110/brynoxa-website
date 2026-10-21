@@ -1,3 +1,4 @@
+import { hideCostsFor } from '../utils/hideCosts';
 import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -74,7 +75,9 @@ export const returnDetail = asyncHandler(async (req: AuthRequest, res: Response)
 });
 
 export const createReturn = asyncHandler(async (req: AuthRequest, res: Response) => {
-  sendSuccess(res, await ops.createReturn({ ...req.body, orderId: param(req, 'id') }, actor(req)), 'Return registered', 201);
+  const created = await ops.createReturn({ ...req.body, orderId: param(req, 'id') }, actor(req));
+  // Order staff can register returns but not see purchase costs
+  sendSuccess(res, hideCostsFor(req.user?.role, created), 'Return registered', 201);
 });
 
 export const assessReturn = asyncHandler(async (req: AuthRequest, res: Response) => {
