@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { cn } from '@/lib/cn'
@@ -21,7 +20,6 @@ function wrapOffset(value: number, half: number) {
 export function ProductCarousel({ products }: { products: Product[] }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
-  const reduceMotion = useReducedMotion()
   const trackRef = useRef<HTMLDivElement>(null)
   const offsetRef = useRef(0)
   const halfRef = useRef(0)
@@ -36,7 +34,8 @@ export function ProductCarousel({ products }: { products: Product[] }) {
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [paused, setPaused] = useState(false)
 
-  const moving = !reduceMotion && products.length > 1
+  // Always moves (the owner wants it); visitors can stop it with the Pause button
+  const moving = products.length > 1
   const loop = products.length > 1 ? [...products, ...products] : products
 
   const paint = (value: number) => {

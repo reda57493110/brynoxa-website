@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
@@ -10,6 +9,8 @@ import { HomeSpotlightCard } from './HomeSpotlight'
 
 /** Time each deal stays in the big card before the next one (desktop). */
 const ROTATE_MS = 6000
+/** After a deal is picked by hand, rotation carries on after this long. */
+const RESUME_AFTER_PICK_MS = 15000
 
 function primaryImage(p: Product) {
   return p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url || undefined
@@ -26,7 +27,6 @@ function percentOff(p: Product) {
  */
 export function HomeDealsShowcase({ products }: { products: Product[] }) {
   const t = useT()
-  const reduceMotion = useReducedMotion()
   const [index, setIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [picked, setPicked] = useState(false)
@@ -37,12 +37,16 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
     if (index >= products.length) setIndex(0)
   }, [products.length, index])
 
-  // Auto-rotate (not after the visitor picked a deal, not for reduced motion)
+  // Auto-rotate for everyone (the owner wants the deals to move). Paused while hovered or
+  // focused; after the visitor picks a deal it waits a little, then carries on by itself.
   useEffect(() => {
-    if (!many || paused || picked || reduceMotion) return
-    const id = window.setTimeout(() => setIndex((i) => (i + 1) % products.length), ROTATE_MS)
+    if (!many || paused) return
+    const id = window.setTimeout(() => {
+      setPicked(false)
+      setIndex((i) => (i + 1) % products.length)
+    }, picked ? RESUME_AFTER_PICK_MS : ROTATE_MS)
     return () => window.clearTimeout(id)
-  }, [index, many, paused, picked, reduceMotion, products.length])
+  }, [index, many, paused, picked, products.length])
 
   const touch = useRef<{ x: number; y: number } | null>(null)
 
@@ -137,7 +141,7 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
                   <span className={cn('truncate text-[10px] font-semibold sm:text-xs', on ? 'text-white' : 'text-white/80')}>{formatCurrency(p.price)}</span>
                 </span>
                 {/* Time left before the next deal */}
-                {on && !picked && !reduceMotion ? (
+                {on && !picked ? (
                   <span
                     key={`${p._id}-${index}`}
                     className="absolute inset-x-0 bottom-0 h-0.5 origin-left bg-[var(--brand)] motion-safe:animate-[deal-progress_6s_linear_forwards] rtl:origin-right"
