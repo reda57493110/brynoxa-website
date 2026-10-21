@@ -272,7 +272,7 @@ export function CustomerProfile() {
         {tab === 'payments' ? (
           <ProfilePayments profile={data} metrics={metrics} lifetime={lifetimeForHints} />
         ) : null}
-        {tab === 'activity' ? <ProfileActivity timeline={data.timeline} /> : null}
+        {tab === 'activity' ? <ProfileActivity profile={data} /> : null}
       </div>
 
       {tab !== 'overview' && tab !== 'activity' ? <CalculationNote /> : null}

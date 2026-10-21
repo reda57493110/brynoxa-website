@@ -29,7 +29,7 @@ type LeanOrder = {
   _id: Types.ObjectId;
   user: Types.ObjectId;
   orderNumber: string;
-  items: { product: Types.ObjectId; name: string; price: number; qty: number; listPrice?: number; unitCost?: number }[];
+  items: { product: Types.ObjectId; name: string; image?: string; price: number; qty: number; listPrice?: number; unitCost?: number; returnedQty?: number }[];
   pricing: { subtotal: number; discount: number; shipping: number; tax: number; total: number; wholesaleDiscount?: number };
   orderStatus: OrderStatus;
   deliveredAt?: Date;
@@ -41,7 +41,7 @@ type LeanOrder = {
   wholesaleTier?: { id: string; name: string; discountPercent: number };
   coupon?: { code?: string };
   createdAt: Date;
-  timeline?: { status: OrderStatus; note?: string; at: Date }[];
+  timeline?: { status: OrderStatus; note?: string; staffNote?: string; internal?: boolean; at: Date; by?: unknown }[];
 };
 
 interface SalesBlock {
@@ -492,7 +492,7 @@ export async function customerProfile(
   const settings = await getSettings();
   const cfg = { ...DEFAULT_SEGMENT_SETTINGS, ...(settings.customerSegments || {}) };
   const tiers = settings.wholesaleTiers || [];
-  const orders = (await Order.find({ user: user._id }).select(ORDER_FIELDS).sort({ createdAt: -1 }).lean<LeanOrder[]>()) || [];
+  const orders = (await Order.find({ user: user._id }).select(ORDER_FIELDS).populate('timeline.by', 'name').sort({ createdAt: -1 }).lean<LeanOrder[]>()) || [];
 
   const lifetimeRaw = computeMetrics(orders);
   const periodRaw = from || to ? computeMetrics(orders.filter((o) => inPeriod(o, from, to))) : null;
@@ -579,6 +579,9 @@ export async function customerProfile(
         refunded: roundMoney(st.refunded),
         fullyRefunded: st.fullyRefunded,
         completed: st.completed,
+        // Activity tab: what was bought and every step of the order
+        lines: o.items.map((i) => ({ productId: String(i.product), name: i.name, image: i.image, qty: i.qty, price: i.price, returnedQty: i.returnedQty || 0 })),
+        history: orderHistory(o),
       };
     }),
     refunds: orders.flatMap((o) =>
@@ -589,6 +592,24 @@ export async function customerProfile(
     timeline: events.slice(0, 200),
     wholesaleTiers: tiers,
   };
+}
+
+/** Steps of one order for the customer Activity tab: status changes, deposit, refunds (oldest first). */
+function orderHistory(o: LeanOrder) {
+  type Step = { kind: 'status' | 'payment' | 'refund'; status?: string; note?: string; staffNote?: string; internal?: boolean; amount?: number; at: Date; by?: string };
+  const steps: Step[] = (o.timeline || []).map((t) => ({
+    kind: 'status',
+    status: t.status,
+    note: t.note,
+    staffNote: t.staffNote,
+    internal: t.internal,
+    at: t.at,
+    by: (t.by as { name?: string } | undefined)?.name,
+  }));
+  if (!steps.length) steps.push({ kind: 'status', status: 'pending', at: o.createdAt });
+  if (o.deposit?.status === 'received' && o.deposit.receivedAt) steps.push({ kind: 'payment', amount: o.deposit.amount, at: o.deposit.receivedAt });
+  for (const r of o.refunds || []) steps.push({ kind: 'refund', amount: r.amount, note: r.reason, at: r.at });
+  return steps.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
 }
 
 /** CSV of the filtered customer list (one row per customer). */

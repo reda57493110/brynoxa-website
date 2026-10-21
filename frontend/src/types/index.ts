@@ -893,6 +893,17 @@ export interface CustomerProfileOrder {
   refunded: number
   fullyRefunded: boolean
   completed: boolean
+  lines?: { productId: string; name: string; image?: string; qty: number; price: number; returnedQty: number }[]
+  history?: {
+    kind: 'status' | 'payment' | 'refund'
+    status?: OrderStatus
+    note?: string
+    staffNote?: string
+    internal?: boolean
+    amount?: number
+    at: string
+    by?: string
+  }[]
 }
 
 export interface CustomerProfile {
