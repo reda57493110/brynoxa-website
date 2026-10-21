@@ -607,6 +607,29 @@ export interface ProfitReport {
   productsWithoutCost: { productId: string; name: string; slug: string; sku?: string; price: number; image?: string }[]
 }
 
+/** Admin → Profit → Product costs */
+export interface ProductCostSheet {
+  courierCosts: { delivered: number; returned: number }
+  missingCount: number
+  page: number
+  limit: number
+  total: number
+  items: {
+    productId: string
+    name: string
+    sku?: string
+    slug: string
+    category: string
+    image?: string
+    isActive: boolean
+    stock: number
+    price: number
+    costPrice: number | null
+    delivery: number | null
+    other: number | null
+  }[]
+}
+
 export interface ProfitSummary {
   range: SalesRange
   current: ProfitTotals

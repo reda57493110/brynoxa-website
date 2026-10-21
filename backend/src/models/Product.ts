@@ -37,6 +37,8 @@ export interface IProduct extends Document {
   compareAtPrice?: number;
   /** What the product costs Brynoxa (staff only — never sent to shoppers). Used for profit reports. */
   costPrice?: number;
+  /** Staff-only costs per unit sold besides the purchase price (Admin → Profit). Empty delivery = default courier price. */
+  unitCosts?: { delivery?: number; other?: number };
   /** Optional upfront deposit for cash-on-delivery orders; absent means none. */
   deposit?: ProductDepositRule;
   /** Hand-picked "Complete your setup" products, shown first in this order. */
@@ -116,6 +118,11 @@ const productSchema = new Schema<IProduct>(
     price: { type: Number, required: true, min: 0 },
     compareAtPrice: { type: Number, min: 0 },
     costPrice: { type: Number, min: 0, select: false },
+    unitCosts: {
+      type: new Schema({ delivery: { type: Number, min: 0 }, other: { type: Number, min: 0 } }, { _id: false }),
+      default: undefined,
+      select: false,
+    },
     deposit: { type: depositRuleSchema, default: undefined },
     recommended: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     recommendedOnly: { type: Boolean, default: false },

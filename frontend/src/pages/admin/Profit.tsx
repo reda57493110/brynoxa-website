@@ -13,6 +13,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Panel } from '@/components/admin/Panel'
 import { Kpi, kpiGridClass } from '@/components/admin/analytics/Kit'
+import { ProductCostSheet } from '@/components/admin/ProductCostSheet'
 import { dayLabel } from '@/lib/salesBuckets'
 import { formatCurrency, formatCurrencyRounded } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
@@ -30,8 +31,9 @@ const RANGES: { value: SalesRange; label: string }[] = [
 ]
 
 const TABS = [
+  { id: 'costs', label: 'Product costs' },
   { id: 'orders', label: 'Orders' },
-  { id: 'products', label: 'Products' },
+  { id: 'products', label: 'Sold products' },
   { id: 'expenses', label: 'Expenses' },
   { id: 'courier', label: 'Courier prices' },
 ] as const
@@ -329,7 +331,7 @@ function CostInput({ productId, initial }: { productId: string; initial?: number
   const [value, setValue] = useState(initial != null ? String(initial) : '')
   const parsed = parseAmount(value)
   const save = useMutation({
-    mutationFn: (cost: number) => adminApi.profit.setProductCost(productId, cost, true),
+    mutationFn: (cost: number) => adminApi.profit.setProductCost(productId, { costPrice: cost }, true),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['admin-profit'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
@@ -622,7 +624,7 @@ function Loading() {
  */
 export function Profit() {
   const [params, setParams] = useSearchParams()
-  const tab = (TABS.some((t) => t.id === params.get('tab')) ? params.get('tab') : 'orders') as Tab
+  const tab = (TABS.some((t) => t.id === params.get('tab')) ? params.get('tab') : 'costs') as Tab
   const [range, setRange] = useState<SalesRange>(30)
 
   const report = useQuery({
@@ -707,7 +709,7 @@ export function Profit() {
                   {t.salesMissingCost} sale{t.salesMissingCost === 1 ? ' has' : 's have'} a product without a cost price
                 </span>
                 , so the profit shows higher than it really is.{' '}
-                <button type="button" className="font-medium text-[var(--brand-text)] hover:underline" onClick={() => setParams({ tab: 'products' })}>
+                <button type="button" className="font-medium text-[var(--brand-text)] hover:underline" onClick={() => setParams({})}>
                   Set the costs
                 </button>
               </p>
@@ -723,14 +725,14 @@ export function Profit() {
                 type="button"
                 role="tab"
                 aria-selected={tab === x.id}
-                onClick={() => setParams(x.id === 'orders' ? {} : { tab: x.id }, { replace: true })}
+                onClick={() => setParams(x.id === 'costs' ? {} : { tab: x.id }, { replace: true })}
                 className={cn(
                   '-mb-px shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition',
                   tab === x.id ? 'border-[var(--brand)] text-[var(--fg)]' : 'border-transparent text-[var(--fg-muted)] hover:text-[var(--fg)]'
                 )}
               >
                 {x.label}
-                {x.id === 'products' && r.productsWithoutCost.length ? (
+                {x.id === 'costs' && r.productsWithoutCost.length ? (
                   <span className="ms-1.5 rounded-full bg-[color-mix(in_srgb,var(--warning)_18%,transparent)] px-1.5 text-[10px] text-[var(--warning)]">
                     {r.productsWithoutCost.length}
                   </span>
@@ -739,6 +741,7 @@ export function Profit() {
             ))}
           </div>
 
+          {tab === 'costs' ? <ProductCostSheet /> : null}
           {tab === 'orders' ? <OrdersTab r={r} /> : null}
           {tab === 'products' ? <ProductsTab r={r} /> : null}
           {tab === 'expenses' ? <ExpensesTab r={r} /> : null}

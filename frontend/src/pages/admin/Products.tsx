@@ -21,6 +21,8 @@ import { optimizedImageUrl } from '@/lib/image'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { hasPermission } from '@/lib/permissions'
 import type { Category, Product, ProductCondition } from '@/types'
 
 type PlacementFilter = '' | 'home' | 'deals' | 'featured' | 'carousel' | 'none'
@@ -91,6 +93,7 @@ function groupOf(placements: Placement[]): Group {
 }
 
 export function Products() {
+  const role = useAuthStore((s) => s.user?.role)
   const qc = useQueryClient()
   const [q, setQ] = useState('')
   const [page, setPage] = useState(1)
@@ -163,6 +166,7 @@ export function Products() {
       <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{GROUP_LABEL[groups[i]]}</span>
     ) : null
 
+  const canSeeCosts = hasPermission(role, 'reports')
   const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
   const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
 
@@ -170,11 +174,20 @@ export function Products() {
     <div className="min-w-0 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Products</h1>
-        <Link to="/admin/products/new">
-          <Button size="sm">
-            <SiteIcon name="plus" size={15} /> Add product
-          </Button>
-        </Link>
+        <div className="flex shrink-0 gap-2">
+          {canSeeCosts ? (
+            <Link to="/admin/profit">
+              <Button size="sm" variant="outline">
+                <SiteIcon name="banknote" size={15} /> Costs & profit
+              </Button>
+            </Link>
+          ) : null}
+          <Link to="/admin/products/new">
+            <Button size="sm">
+              <SiteIcon name="plus" size={15} /> Add product
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* The home page, section by section, exactly as customers see it */}

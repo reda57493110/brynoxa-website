@@ -50,7 +50,9 @@ function kindOf(o: LeanOrder, refunded: number): ProfitOrderKind {
   return 'open';
 }
 
-function orderFigures(o: LeanOrder, courier: CourierCosts) {
+type UnitCosts = Map<string, { delivery?: number; other?: number }>;
+
+function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts) {
   const refunded = roundMoney((o.refunds ?? []).reduce((a, r) => a + r.amount, 0));
   const kind = kindOf(o, refunded);
   const fees = kind === 'sale' ? feeCreditOf(o.deposit) : 0;
@@ -76,15 +78,26 @@ function orderFigures(o: LeanOrder, courier: CourierCosts) {
     missingCost = false;
   }
 
+  // Product-level costs (Product costs sheet): one parcel, so the highest delivery price set on
+  // its products; other costs per unit kept
+  let productDelivery: number | undefined;
+  let productOther = 0;
+  for (const i of o.items) {
+    const u = unitCosts.get(String(i.product));
+    if (!u) continue;
+    if (typeof u.delivery === 'number') productDelivery = Math.max(productDelivery ?? 0, u.delivery);
+    productOther += (u.other ?? 0) * Math.max(0, i.qty - (i.returnedQty ?? 0));
+  }
+
   const customDelivery = typeof o.costs?.delivery === 'number';
   const delivery = customDelivery
     ? o.costs!.delivery!
     : kind === 'sale'
-      ? courier.delivered
+      ? (productDelivery ?? courier.delivered)
       : kind === 'failed'
         ? courier.returned
         : 0;
-  const other = o.costs?.other ?? 0;
+  const other = o.costs?.other ?? (kind === 'sale' ? productOther : 0);
   const counted = kind !== 'open';
   const profit = counted ? roundMoney(moneyIn - productCost - delivery - other) : 0;
 
@@ -164,10 +177,21 @@ async function expensesSince(daysBack: number) {
     .lean<{ _id: unknown; label: string; category: ExpenseCategory; amount: number; date: Date; note?: string }[]>();
 }
 
+/** Per-unit delivery / other costs set on the products of these orders. */
+async function unitCostsFor(orders: LeanOrder[]): Promise<UnitCosts> {
+  const ids = [...new Set(orders.flatMap((o) => o.items.map((i) => String(i.product))))].filter((id) => mongoose.Types.ObjectId.isValid(id));
+  if (!ids.length) return new Map();
+  const docs = await Product.find({ _id: { $in: ids }, unitCosts: { $exists: true } })
+    .select('+unitCosts')
+    .lean<{ _id: unknown; unitCosts?: { delivery?: number; other?: number } }[]>();
+  return new Map(docs.filter((d) => d.unitCosts).map((d) => [String(d._id), d.unitCosts!]));
+}
+
 /** Net profit of the period and the one before (dashboard card). */
 export async function profitSummary(range: SalesRange) {
   const [orders, expenses, courier] = await Promise.all([ordersSince(range * 2), expensesSince(range * 2), courierCosts()]);
-  const rows = orders.map((o) => orderFigures(o, courier));
+  const unitCosts = await unitCostsFor(orders);
+  const rows = orders.map((o) => orderFigures(o, courier, unitCosts));
   const period = (keys: string[]) => {
     const days = new Set(keys);
     const spent = expenses.filter((e) => days.has(localDay(e.date))).reduce((a, e) => a + e.amount, 0);
@@ -191,7 +215,8 @@ export async function profitReport(range: SalesRange) {
       .lean<{ _id: unknown; name: string; slug: string; price: number; sku?: string; images?: { url: string; isPrimary?: boolean }[] }[]>(),
   ]);
 
-  const rows = orders.map((o) => orderFigures(o, courier)).filter((r) => days.has(r.day));
+  const unitCosts = await unitCostsFor(orders);
+  const rows = orders.map((o) => orderFigures(o, courier, unitCosts)).filter((r) => days.has(r.day));
   const expenses = expenseDocs.filter((e) => days.has(localDay(e.date)));
   const spent = expenses.reduce((a, e) => a + e.amount, 0);
 
@@ -318,13 +343,39 @@ export async function setCourierCosts(input: { delivered?: number; returned?: nu
  * Set a product's cost price from the Profit page. Past order lines of this product that had no
  * cost get it too, so their profit can be counted.
  */
-export async function setProductCost(productId: string, costPrice: number, applyToPastOrders: boolean) {
+export async function setProductCost(
+  productId: string,
+  input: { costPrice?: number | null; delivery?: number | null; other?: number | null },
+  applyToPastOrders: boolean
+) {
   if (!mongoose.Types.ObjectId.isValid(productId)) throw new ApiError(404, 'Product not found');
-  const cost = money(costPrice, 'Cost price');
-  const res = await Product.updateOne({ _id: productId }, { $set: { costPrice: cost } });
-  if (!res.matchedCount) throw new ApiError(404, 'Product not found');
+  const product = await Product.findById(productId).select('+unitCosts').lean<{ unitCosts?: { delivery?: number; other?: number } }>();
+  if (!product) throw new ApiError(404, 'Product not found');
+  const $set: Record<string, unknown> = {};
+  const $unset: Record<string, 1> = {};
+  let cost: number | undefined;
+  if (input.costPrice !== undefined) {
+    if (input.costPrice === null) $unset.costPrice = 1;
+    else $set.costPrice = cost = money(input.costPrice, 'Bought for');
+  }
+  if (input.delivery !== undefined || input.other !== undefined) {
+    const u = { ...(product.unitCosts ?? {}) };
+    for (const key of ['delivery', 'other'] as const) {
+      const v = input[key];
+      if (v === undefined) continue;
+      if (v === null) delete u[key];
+      else u[key] = money(v, key === 'delivery' ? 'Delivery' : 'Other costs');
+    }
+    if (Object.keys(u).length) $set.unitCosts = u;
+    else $unset.unitCosts = 1;
+  }
+  const update: Record<string, unknown> = {};
+  if (Object.keys($set).length) update.$set = $set;
+  if (Object.keys($unset).length) update.$unset = $unset;
+  if (Object.keys(update).length) await Product.updateOne({ _id: productId }, update);
+
   let ordersUpdated = 0;
-  if (applyToPastOrders) {
+  if (applyToPastOrders && cost !== undefined) {
     const id = new mongoose.Types.ObjectId(productId);
     const r = await Order.updateMany(
       { items: { $elemMatch: { product: id, unitCost: { $exists: false } } } },
@@ -333,7 +384,70 @@ export async function setProductCost(productId: string, costPrice: number, apply
     );
     ordersUpdated = r.modifiedCount;
   }
-  return { productId, costPrice: cost, ordersUpdated };
+  return { productId, ordersUpdated };
+}
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/**
+ * Product costs sheet: every product with its selling price, what it cost you and the profit
+ * left on one sale (price − bought for − delivery − other), with or without orders.
+ */
+export async function productCostSheet(query: { q?: string; category?: string; missing?: boolean; page?: number; limit?: number }) {
+  const limit = Math.min(100, Math.max(1, query.limit || 50));
+  const page = Math.max(1, query.page || 1);
+  const filter: Record<string, unknown> = {};
+  const q = query.q?.trim();
+  if (q) filter.$or = [{ name: new RegExp(escapeRegex(q), 'i') }, { sku: new RegExp(escapeRegex(q), 'i') }];
+  if (query.category && mongoose.Types.ObjectId.isValid(query.category)) filter.category = query.category;
+  if (query.missing) filter.costPrice = { $exists: false };
+  const [docs, total, missing, courier] = await Promise.all([
+    Product.find(filter)
+      .select('+costPrice +unitCosts name sku slug price stock isActive images category')
+      .populate('category', 'name')
+      .sort({ isActive: -1, updatedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean<
+        {
+          _id: unknown;
+          name: string;
+          sku?: string;
+          slug: string;
+          price: number;
+          stock: number;
+          isActive: boolean;
+          costPrice?: number;
+          unitCosts?: { delivery?: number; other?: number };
+          images?: { url: string; isPrimary?: boolean }[];
+          category?: { name?: string } | null;
+        }[]
+      >(),
+    Product.countDocuments(filter),
+    Product.countDocuments({ costPrice: { $exists: false } }),
+    courierCosts(),
+  ]);
+  return {
+    courierCosts: courier,
+    missingCount: missing,
+    page,
+    limit,
+    total,
+    items: docs.map((p) => ({
+      productId: String(p._id),
+      name: p.name,
+      sku: p.sku,
+      slug: p.slug,
+      category: p.category?.name ?? '',
+      image: (p.images?.find((i) => i.isPrimary) || p.images?.[0])?.url,
+      isActive: p.isActive,
+      stock: p.stock,
+      price: p.price,
+      costPrice: typeof p.costPrice === 'number' ? p.costPrice : null,
+      delivery: typeof p.unitCosts?.delivery === 'number' ? p.unitCosts.delivery : null,
+      other: typeof p.unitCosts?.other === 'number' ? p.unitCosts.other : null,
+    })),
+  };
 }
 
 /** "YYYY-MM-DD" → noon UTC of that day (stays on the same day in Morocco time). */

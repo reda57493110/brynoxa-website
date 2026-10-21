@@ -3,6 +3,7 @@ import type {
   AnalyticsReport,
   ExpenseCategory,
   ProfitReport,
+  ProductCostSheet,
   ProfitSummary,
   ProductVariant,
   SalesAnalytics,
@@ -54,8 +55,14 @@ export const adminApi = {
     setOrderCosts: (id: string, body: { delivery?: number | null; other?: number | null; note?: string }) =>
       api.patch<ApiResponse<unknown>>(`/admin/profit/orders/${id}`, body),
     setCourier: (body: { delivered: number; returned: number }) => api.put<ApiResponse<unknown>>('/admin/profit/courier', body),
-    setProductCost: (id: string, costPrice: number, applyToPastOrders = true) =>
-      api.patch<ApiResponse<{ ordersUpdated: number }>>(`/admin/profit/products/${id}`, { costPrice, applyToPastOrders }),
+    costSheet: (params: { q?: string; category?: string; missing?: boolean; page?: number }) =>
+      api.get<ApiResponse<ProductCostSheet>>('/admin/profit/products', { params: { ...params, missing: params.missing ? 1 : undefined } }),
+    setProductCost: (
+      id: string,
+      body: { costPrice?: number | null; delivery?: number | null; other?: number | null },
+      applyToPastOrders = true
+    ) =>
+      api.patch<ApiResponse<{ ordersUpdated: number }>>(`/admin/profit/products/${id}`, { ...body, applyToPastOrders }),
     addExpense: (body: { label: string; category: ExpenseCategory; amount: number; day: string; note?: string }) =>
       api.post<ApiResponse<unknown>>('/admin/profit/expenses', body),
     deleteExpense: (id: string) => api.delete<ApiResponse<unknown>>(`/admin/profit/expenses/${id}`),

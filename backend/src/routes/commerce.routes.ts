@@ -194,6 +194,7 @@ router.get('/admin/dashboard/sales', requireAuth, requirePermission('dashboard')
 router.get('/admin/analytics', requireAuth, requirePermission('dashboard'), misc.analytics);
 // Admin → Profit: costs and what the shop really earned (owner / admin)
 router.get('/admin/profit', requireAuth, requirePermission('reports'), profit.report);
+router.get('/admin/profit/products', requireAuth, requirePermission('reports'), profit.costSheet);
 router.get('/admin/profit/summary', requireAuth, requirePermission('reports'), profit.summary);
 router.patch('/admin/profit/orders/:id', requireAuth, requirePermission('reports'), profit.orderCosts);
 router.put('/admin/profit/courier', requireAuth, requirePermission('reports'), profit.courierCosts);

@@ -31,7 +31,11 @@ export const courierCosts = asyncHandler(async (req: AuthRequest, res: Response)
 
 export const productCost = asyncHandler(async (req: AuthRequest, res: Response) => {
   const body = req.body ?? {};
-  const r = await profit.setProductCost(param(req, 'id'), body.costPrice, body.applyToPastOrders !== false);
+  const r = await profit.setProductCost(
+    param(req, 'id'),
+    { costPrice: body.costPrice, delivery: body.delivery, other: body.other },
+    body.applyToPastOrders !== false
+  );
   sendSuccess(res, r, 'Cost price saved');
 });
 
@@ -42,4 +46,19 @@ export const addExpense = asyncHandler(async (req: AuthRequest, res: Response) =
 export const deleteExpense = asyncHandler(async (req: AuthRequest, res: Response) => {
   await profit.deleteExpense(param(req, 'id'));
   sendSuccess(res, null, 'Expense deleted');
+});
+
+/** Product costs sheet (every product, with or without sales). */
+export const costSheet = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const q = req.query;
+  sendSuccess(
+    res,
+    await profit.productCostSheet({
+      q: typeof q.q === 'string' ? q.q : undefined,
+      category: typeof q.category === 'string' ? q.category : undefined,
+      missing: q.missing === '1' || q.missing === 'true',
+      page: Number(q.page) || 1,
+      limit: Number(q.limit) || 50,
+    })
+  );
 });
