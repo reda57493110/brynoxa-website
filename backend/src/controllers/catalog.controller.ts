@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
 import * as catalog from '../services/catalog.service';
+import { copyCatalogOutsidePhotos } from '../services/imageImport.service';
 import * as variants from '../services/variants.service';
 import { getRecommendations, previewRecommendations } from '../services/recommendation.service';
 import * as setupService from '../services/setup.service';
@@ -102,6 +103,13 @@ export const setupPreview = asyncHandler(async (req: Request, res: Response) => 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.createProduct(req.body);
   sendSuccess(res, item, 'Product created', 201);
+});
+
+/** Admin → Products: copy photos linked from other websites into our storage (a few per call). */
+export const importOutsidePhotos = asyncHandler(async (req: Request, res: Response) => {
+  const body = (req.body ?? {}) as { dryRun?: unknown; skip?: unknown };
+  const skip = Array.isArray(body.skip) ? body.skip.map(String).filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 500) : [];
+  sendSuccess(res, await copyCatalogOutsidePhotos({ dryRun: body.dryRun === true, skip }));
 });
 
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {

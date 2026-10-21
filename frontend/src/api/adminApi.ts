@@ -94,6 +94,11 @@ export const adminApi = {
   },
 
   products: {
+    /** Copy photos linked from other websites into our storage (dryRun: just count) */
+    importPhotos: (payload: { dryRun?: boolean; skip?: string[] }) =>
+      api.post<
+        ApiResponse<{ remaining: number; photos?: number; processed: { productId: string; name: string; copied: number; failed: number }[] }>
+      >('/admin/products/import-photos', payload),
     /** "Complete your setup" preview for the product form (unsaved values) */
     setupPreview: (payload: {
       productId?: string

@@ -11,6 +11,7 @@ import { moveStock, withTransaction } from './inventoryLedger.service';
 import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteUnusedImages } from './upload.service';
+import { copyOutsidePhotos } from './imageImport.service';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -483,6 +484,8 @@ export async function createProduct(data: Record<string, unknown>) {
   const isCarousel = Boolean(data.isCarousel);
   // Opening stock is recorded in the inventory ledger, not written silently
   const openingStock = Math.max(0, Math.floor(Number(data.stock) || 0));
+  // Photos pasted from other shops are copied into our own storage
+  if (Array.isArray(data.images)) data = { ...data, images: (await copyOutsidePhotos(data.images as never)).images };
   const product = await Product.create({
     ...data,
     stock: 0,
@@ -527,6 +530,8 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   const product = await Product.findById(id);
   if (!product) throw new ApiError(404, 'Product not found');
   const previousImages = product.images.map(({ url, publicId }) => ({ url, publicId }));
+  // Photos pasted from other shops are copied into our own storage
+  if (Array.isArray(data.images)) data = { ...data, images: (await copyOutsidePhotos(data.images as never)).images };
 
   if (data.name && data.name !== product.name) {
     product.name = data.name as string;

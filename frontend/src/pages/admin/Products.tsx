@@ -16,6 +16,7 @@ import { ActiveToggle } from '@/components/admin/ActiveToggle'
 import { ProductPlacementDialog } from '@/components/admin/ProductPlacementDialog'
 import { SectionManager, type ManagedSection } from '@/components/admin/SectionManager'
 import { HomeLayoutBoard } from '@/components/admin/HomeLayoutBoard'
+import { OutsidePhotosBanner } from '@/components/admin/OutsidePhotosBanner'
 import { useStorefrontPlacements, type Placement } from '@/hooks/useStorefrontPlacements'
 import { optimizedImageUrl } from '@/lib/image'
 import { formatCurrency } from '@/lib/format'
@@ -167,6 +168,7 @@ export function Products() {
     ) : null
 
   const canSeeCosts = hasPermission(role, 'reports')
+  const canEditProducts = hasPermission(role, 'products:write')
   const imgOf = (p: Product) => p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
   const catOf = (p: Product) => (typeof p.category === 'object' && p.category ? p.category : null)
 
@@ -189,6 +191,8 @@ export function Products() {
           </Link>
         </div>
       </div>
+
+      {canEditProducts ? <OutsidePhotosBanner /> : null}
 
       {/* The home page, section by section, exactly as customers see it */}
       <HomeLayoutBoard onManage={setManaging} onOpen={setPlacing} />

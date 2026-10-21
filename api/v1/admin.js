@@ -462,6 +462,10 @@ module.exports = async (req, res) => {
     }
 
     // Admin product CRUD — keep off the slow Express lambda.
+    if (route === 'products/import-photos') {
+      await delegateToExpress(req, res, route, query);
+      return;
+    }
     if (route === 'products' || route.startsWith('products/')) {
       await handleProductRoutes(req, res, route);
       return;

@@ -931,8 +931,8 @@ export function ProductForm() {
                 </Button>
               </div>
               <p className="text-xs text-[var(--fg-muted)]">
-                Some shops (like joutech.ma) block pasted links. If the preview breaks, use{' '}
-                <strong className="text-[var(--fg)]">From my gallery</strong> instead.
+                Pasted photos are copied into your own storage when you save. Some shops (like joutech.ma) block
+                this; if the preview breaks, use <strong className="text-[var(--fg)]">From my gallery</strong> instead.
               </p>
             </div>
           )}

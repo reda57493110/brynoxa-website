@@ -91,6 +91,7 @@ router.post(
   validate(productSchema),
   catalog.createProduct
 );
+router.post('/admin/products/import-photos', requireAuth, requirePermission('products:write'), catalog.importOutsidePhotos);
 router.patch(
   '/admin/products/:id',
   requireAuth,
