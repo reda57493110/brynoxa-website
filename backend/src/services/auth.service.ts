@@ -61,10 +61,6 @@ function decryptMfaSecret(value: string) {
   ]).toString('utf8');
 }
 
-function hashRecoveryCode(code: string) {
-  return createHash('sha256').update(code.trim().toUpperCase()).digest('hex');
-}
-
 function hashOneTimeToken(token: string) {
   return createHash('sha256').update(token).digest('hex');
 }
@@ -346,11 +342,11 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
     }
   }
 
-  const recoveryCodes = Array.from({ length: 10 }, () => randomBytes(5).toString('hex').toUpperCase());
+  // Only the authenticator app's code is accepted (no recovery codes, owner's choice)
   user.mfaEnabled = true;
   user.mfaSecretEncrypted = user.mfaPendingSecretEncrypted;
   user.mfaPendingSecretEncrypted = undefined;
-  user.mfaRecoveryCodeHashes = recoveryCodes.map(hashRecoveryCode);
+  user.mfaRecoveryCodeHashes = [];
   user.mfaClockSkewSteps = skewSteps;
   // The setup code itself cannot be used again to sign in (the next codes can)
   const setupStep = totpStep(secret, code, skewSteps);
@@ -358,7 +354,7 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
   await user.save({ validateBeforeSave: false });
   notifySecurityEvent(user, 'mfa-enabled');
 
-  return { recoveryCodes };
+  return { recoveryCodes: [] as string[] };
 }
 
 export async function disableMfa(userId: string, code: string) {
@@ -367,15 +363,7 @@ export async function disableMfa(userId: string, code: string) {
     throw new ApiError(400, 'MFA is not enabled');
   }
 
-  let valid = await consumeTotp(user, code);
-  if (!valid) {
-    const recoveryHash = hashRecoveryCode(code);
-    const consumed = await User.updateOne(
-      { _id: user._id, mfaEnabled: true, mfaRecoveryCodeHashes: recoveryHash },
-      { $pull: { mfaRecoveryCodeHashes: recoveryHash } }
-    );
-    valid = consumed.modifiedCount === 1;
-  }
+  const valid = await consumeTotp(user, code);
   if (!valid) throw new ApiError(400, 'Invalid authentication code');
 
   user.mfaEnabled = false;
@@ -612,21 +600,15 @@ export async function completeMfaLogin(
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
 
-  let valid = await consumeTotp(user, code);
-  if (!valid) {
-    const recoveryHash = hashRecoveryCode(code);
-    const consumed = await User.updateOne(
-      { _id: user._id, mfaRecoveryCodeHashes: recoveryHash },
-      { $pull: { mfaRecoveryCodeHashes: recoveryHash } }
-    );
-    valid = consumed.modifiedCount === 1;
-  }
+  const valid = await consumeTotp(user, code);
   if (!valid) {
     await recordFailedLogin(user);
     throw new ApiError(401, 'Invalid authentication code');
   }
 
   const { accessToken, refreshToken } = issueTokens(user);
+  // Recovery codes are no longer used: clear any left from before
+  user.mfaRecoveryCodeHashes = [];
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
   user.refreshToken = hashRefreshToken(refreshToken);

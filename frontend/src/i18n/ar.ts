@@ -245,7 +245,7 @@ export const ar: Messages = {
     passwordTooShort: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
     mfaKicker: 'فحص أمني',
     mfaTitle: 'تحقق من هويتك',
-    mfaBody: 'أدخل الرمز من تطبيق المصادقة أو استخدم رمز استرداد.',
+    mfaBody: 'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.',
     mfaCode: 'رمز المصادقة',
     mfaCodeRequired: 'أدخل رمز المصادقة',
     mfaVerify: 'تحقق وسجّل الدخول',

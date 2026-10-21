@@ -243,7 +243,7 @@ export const en = {
     passwordTooShort: 'Password must be at least 6 characters',
     mfaKicker: 'Security check',
     mfaTitle: 'Verify your identity',
-    mfaBody: 'Enter the code from your authenticator app, or use a recovery code.',
+    mfaBody: 'Enter the 6-digit code from your authenticator app.',
     mfaCode: 'Authentication code',
     mfaCodeRequired: 'Enter your authentication code',
     mfaVerify: 'Verify and sign in',

@@ -78,7 +78,7 @@ const SECURITY_COPY = {
   'mfa-enabled': {
     subject: 'Two-step sign-in turned on — Brynoxa',
     heading: 'Two-step sign-in is on',
-    line: 'Two-step sign-in (authenticator app) was turned on for your Brynoxa account. Keep your recovery codes somewhere safe.',
+    line: 'Two-step sign-in (authenticator app) was turned on for your Brynoxa account. Keep the authenticator app on your phone: its code is the only way to sign in.',
   },
   'mfa-disabled': {
     subject: 'Two-step sign-in turned off — Brynoxa',

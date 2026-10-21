@@ -245,7 +245,7 @@ export const fr: Messages = {
     passwordTooShort: 'Le mot de passe doit contenir au moins 6 caractères',
     mfaKicker: 'Contrôle de sécurité',
     mfaTitle: 'Vérifiez votre identité',
-    mfaBody: 'Entrez le code de votre application d’authentification ou un code de récupération.',
+    mfaBody: 'Entrez le code à 6 chiffres de votre application d’authentification.',
     mfaCode: 'Code d’authentification',
     mfaCodeRequired: 'Entrez votre code d’authentification',
     mfaVerify: 'Vérifier et se connecter',

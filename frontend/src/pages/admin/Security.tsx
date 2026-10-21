@@ -34,7 +34,6 @@ function TwoStepPanel() {
   const user = useAuthStore((s) => s.user)!
   const setUser = useAuthStore((s) => s.setUser)
   const [setup, setSetup] = useState<{ secret: string; qrCodeDataUrl: string } | null>(null)
-  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([])
   const [code, setCode] = useState('')
   const { busy, error, run } = useAction()
 
@@ -44,14 +43,6 @@ function TwoStepPanel() {
       setSetup((await authApi.setupMfa(rotate)).data.data)
     })
 
-  const copyCodes = async () => {
-    try {
-      await navigator.clipboard.writeText(recoveryCodes.join('\n'))
-      toast.success('Recovery codes copied')
-    } catch {
-      toast.error('Could not copy — select and copy them manually')
-    }
-  }
 
   return (
     <Panel
@@ -87,8 +78,7 @@ function TwoStepPanel() {
               onSubmit={(event) => {
                 event.preventDefault()
                 void run(async () => {
-                  const result = await authApi.verifyMfaSetup(code.trim(), setup.secret)
-                  setRecoveryCodes(result.data.data.recoveryCodes)
+                  await authApi.verifyMfaSetup(code.trim(), setup.secret)
                   setSetup(null)
                   setCode('')
                   setUser({ ...user, mfaEnabled: true })
@@ -124,31 +114,7 @@ function TwoStepPanel() {
         </div>
       ) : null}
 
-      {recoveryCodes.length ? (
-        <div className="space-y-3 rounded-xl border border-[color-mix(in_srgb,var(--brand)_40%,transparent)] bg-[color-mix(in_srgb,var(--brand)_6%,transparent)] p-4">
-          <div>
-            <p className="text-sm font-semibold">Save your recovery codes</p>
-            <p className="text-xs text-[var(--fg-muted)]">Each works once if you lose your phone. They won’t be shown again.</p>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
-            {recoveryCodes.map((recoveryCode) => (
-              <code key={recoveryCode} className="rounded-lg bg-[var(--bg-muted)] px-2 py-1.5 text-center text-xs">
-                {recoveryCode}
-              </code>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => void copyCodes()}>
-              Copy codes
-            </Button>
-            <Button size="sm" onClick={() => setRecoveryCodes([])}>
-              I saved them
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      {user.mfaEnabled && !recoveryCodes.length ? (
+      {user.mfaEnabled ? (
         <form
           className="space-y-3"
           onSubmit={(event) => {
@@ -163,11 +129,11 @@ function TwoStepPanel() {
         >
           <div className="max-w-sm">
             <Input
-              label="Code to turn it off"
+              label="6-digit code to turn it off"
               value={code}
               onChange={(event) => setCode(event.target.value)}
               autoComplete="one-time-code"
-              placeholder="App code or a recovery code"
+              placeholder="6-digit code from your app"
               required
             />
           </div>

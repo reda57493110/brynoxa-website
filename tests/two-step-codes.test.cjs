@@ -48,7 +48,7 @@ test('turning 2-step on: same QR until "New QR code", and a code from a slightly
   // phone clock 50 s behind
   const code = app.generate({ timestamp: Date.now() - 50_000 });
   const result = await auth.verifyMfaSetup(String(user._id), code);
-  assert.equal(result.recoveryCodes.length, 10);
+  assert.equal(result.recoveryCodes.length, 0, "no recovery codes (owner's choice)");
   assert.equal(user.mfaEnabled, true);
 });
 
@@ -77,4 +77,10 @@ test("a phone whose clock is a few minutes off: setup learns the difference; too
   // later codes from the same slow phone are valid around the remembered difference
   assert.notEqual(stepWithSkew(s, phone.generate({ timestamp: Date.now() - 90000 }), user.mfaClockSkewSteps), null);
   assert.equal(stepWithSkew(s, phone.generate({ timestamp: Date.now() - 90000 }), 0), null, 'without the difference it would fail');
+});
+
+test('only the authenticator app code works: no recovery-code fallback anywhere', () => {
+  const src = require('fs').readFileSync(dist('services/auth.service.js'), 'utf8');
+  assert.doesNotMatch(src, /\$pull: \{ mfaRecoveryCodeHashes/);
+  assert.doesNotMatch(src, /hashRecoveryCode/);
 });
