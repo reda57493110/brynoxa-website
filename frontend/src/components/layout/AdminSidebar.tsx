@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import { NavLink } from 'react-router-dom'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
@@ -21,22 +22,24 @@ const items: {
   icon: SiteIconName
   end?: boolean
   badge?: 'pending' | 'stock' | 'inbox'
+  group: string
 }[] = [
-  { to: '/admin', label: 'Dashboard', icon: 'dashboard', end: true },
-  { to: '/admin/analytics', label: 'Analytics', icon: 'sliders' },
-  { to: '/admin/profit', label: 'Profit', icon: 'banknote' },
-  { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending' },
-  { to: '/admin/products', label: 'Products', icon: 'package' },
-  { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock' },
-  { to: '/admin/setup', label: 'Complete your setup', icon: 'layers' },
-  { to: '/admin/customers', label: 'Customers', icon: 'users' },
-  { to: '/admin/roles', label: 'Roles', icon: 'shield' },
-  { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox' },
-  { to: '/admin/emails', label: 'Emails', icon: 'mail' },
-  { to: '/admin/coupons', label: 'Coupons', icon: 'ticket' },
-  { to: '/admin/notifications', label: 'Notifications', icon: 'bell' },
-  { to: '/admin/security', label: 'Security', icon: 'shield' },
-  { to: '/admin/settings', label: 'Settings', icon: 'settings' },
+  // Ordered by importance for running the shop day to day
+  { to: '/admin', label: 'Dashboard', icon: 'dashboard', end: true, group: 'Daily work' },
+  { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending', group: 'Daily work' },
+  { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox', group: 'Daily work' },
+  { to: '/admin/customers', label: 'Customers', icon: 'users', group: 'Daily work' },
+  { to: '/admin/products', label: 'Products', icon: 'package', group: 'Catalog' },
+  { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock', group: 'Catalog' },
+  { to: '/admin/setup', label: 'Complete your setup', icon: 'layers', group: 'Catalog' },
+  { to: '/admin/profit', label: 'Profit', icon: 'banknote', group: 'Money' },
+  { to: '/admin/analytics', label: 'Analytics', icon: 'sliders', group: 'Money' },
+  { to: '/admin/coupons', label: 'Coupons', icon: 'ticket', group: 'Marketing' },
+  { to: '/admin/notifications', label: 'Notifications', icon: 'bell', group: 'Marketing' },
+  { to: '/admin/emails', label: 'Emails', icon: 'mail', group: 'Marketing' },
+  { to: '/admin/settings', label: 'Settings', icon: 'settings', group: 'Store' },
+  { to: '/admin/roles', label: 'Roles', icon: 'shield', group: 'Store' },
+  { to: '/admin/security', label: 'Security', icon: 'shield', group: 'Store' },
 ]
 
 export function AdminSidebar({
@@ -88,9 +91,14 @@ export function AdminSidebar({
         ) : null}
       </div>
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2.5 sm:space-y-1 sm:p-3">
-        {visible.map(({ to, label, icon, end, badge }) => {
+        {visible.map(({ to, label, icon, end, badge, group }, i) => {
           const count = badgeValue(badge)
+          const heading = i === 0 || visible[i - 1].group !== group
           return (
+            <Fragment key={to}>
+            {heading ? (
+              <p className={cn('px-3 pb-1 text-[10px] font-semibold tracking-wide text-[var(--fg-muted)] uppercase opacity-80', i > 0 && 'pt-3')}>{group}</p>
+            ) : null}
             <NavLink
               key={to}
               to={to}
@@ -113,6 +121,7 @@ export function AdminSidebar({
                 </span>
               ) : null}
             </NavLink>
+            </Fragment>
           )
         })}
       </nav>
