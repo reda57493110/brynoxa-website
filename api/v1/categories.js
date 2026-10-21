@@ -1,6 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
-const { sendJson, sendError } = require('../_lib/http');
+const { sendJson, sendError, cachePublic, cachePrivate } = require('../_lib/http');
 const { optionalUser } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -40,6 +40,8 @@ async function handleBrands(req, res, query) {
 
   const catalog = require('../../backend/dist/services/catalog.service');
   const items = await catalog.listBrands(activeOnly);
+  if (query.all === 'true') cachePrivate(res);
+  else cachePublic(res);
   sendJson(res, 200, { success: true, message: 'Success', data: items });
 }
 
@@ -66,6 +68,7 @@ module.exports = async (req, res) => {
     // GET /categories/:slug
     if (route) {
       const category = await catalog.getCategoryBySlug(route);
+      cachePublic(res);
       sendJson(res, 200, { success: true, message: 'Success', data: category });
       return;
     }
@@ -78,6 +81,8 @@ module.exports = async (req, res) => {
       if (user && isStaffRole(user.role)) activeOnly = false;
     }
     const items = await catalog.listCategories(activeOnly);
+    if (query.all === 'true') cachePrivate(res);
+    else cachePublic(res);
     sendJson(res, 200, {
       success: true,
       message: 'Success',

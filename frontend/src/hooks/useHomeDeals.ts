@@ -44,7 +44,9 @@ export function useHomeDeals(): { products: Product[]; pending: boolean; pinned:
       if (!list.length) list = (await productsApi.list({ inStock: true, limit: 12 })).data.data
       return [...list].sort((a, b) => discount(b) - discount(a)).slice(0, MAX_HOME_DEALS)
     },
-    enabled: needAuto,
+    // Start together with the settings instead of after them (one wait instead of two); the
+    // result is only used when no deals were picked by hand
+    enabled: !hidden && (!settings.isSuccess || needAuto),
     staleTime: 5 * 60_000,
   })
 

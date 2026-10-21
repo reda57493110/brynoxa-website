@@ -1,6 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
-const { sendJson, readJsonBody, sendError } = require('../_lib/http');
+const { sendJson, readJsonBody, sendError, cachePublic } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -36,6 +36,7 @@ module.exports = async (req, res) => {
       await connectMongo();
       const { getSettings, publicSettings } = require('../../backend/dist/models/Settings');
       const settings = await getSettings();
+      cachePublic(res);
       sendJson(res, 200, { success: true, message: 'Success', data: publicSettings(settings) });
       return;
     }

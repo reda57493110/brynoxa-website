@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_URL } from '@/lib/constants'
 import { SESSION_HINT_KEY, useAuthStore } from '@/store/authStore'
+import { isStaffRole } from '@/lib/permissions'
 import type { ApiResponse, SessionPayload } from '@/types'
 
 const api = axios.create({
@@ -10,10 +11,18 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+/** Public shop data the edge keeps for 60 s (see api/_lib/http.js cachePublic). */
+const SHARED_CACHE_PATH = /^\/(products|categories|brands|settings)(\/|\?|$)/
+
 api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken
+  const { accessToken: token, user } = useAuthStore.getState()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  // Staff see their own changes at once: skip the shared copy for shop data
+  const method = (config.method || 'get').toLowerCase()
+  if (method === 'get' && isStaffRole(user?.role) && SHARED_CACHE_PATH.test(config.url || '')) {
+    config.params = { ...(config.params || {}), fresh: Date.now() }
   }
   return config
 })

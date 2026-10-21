@@ -40,4 +40,19 @@ function sendError(res, err) {
   sendJson(res, status >= 500 ? status : 500, { success: false, message: 'Something went wrong. Please try again.' });
 }
 
-module.exports = { sendJson, readJsonBody, sendError };
+/**
+ * Public shop data (product lists, categories, brands, settings) is the same for every visitor,
+ * so Vercel's edge (Paris for Morocco) keeps a copy for 60 s and serves it instantly; after that
+ * it refreshes in the background. Browsers do not keep it (max-age=0). Signed-in staff ask with
+ * a `fresh` parameter (frontend api/client.ts), so admin screens always see their changes.
+ */
+function cachePublic(res) {
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=600');
+}
+
+/** Staff-only or per-person answers: never stored by the edge or the browser. */
+function cachePrivate(res) {
+  res.setHeader('Cache-Control', 'private, no-store');
+}
+
+module.exports = { sendJson, readJsonBody, sendError, cachePublic, cachePrivate };

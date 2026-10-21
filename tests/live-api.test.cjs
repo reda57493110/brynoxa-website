@@ -86,3 +86,46 @@ test('browser security rules: connections only to this site and Google Analytics
   assert.doesNotMatch(csp + ' ', / https:(?!\/\/)/);
   assert.match(csp, /'self'/);
 });
+
+test('caching: shop lists are shared for 60 s at the edge; staff-only answers never are', async () => {
+  const catalog = require(dist('services/catalog.service'));
+  catalog.listProducts = async (q) => ({ items: [], page: q.page, limit: q.limit, total: 0 });
+  catalog.listCategories = async () => [];
+  catalog.listBrands = async () => [];
+  const products = require(api('v1/products.js'));
+  const cats = require(api('v1/categories.js'));
+  const shared = /public, max-age=0, s-maxage=60/;
+
+  let r = await callHandler(products, { url: '/api/v1/products?featured=true&limit=4' });
+  assert.match(r.headers['cache-control'], shared, 'shop product list');
+  currentUser = { role: 'catalog' };
+  r = await callHandler(products, { url: '/api/v1/products?admin=true&limit=20' });
+  assert.equal(r.headers['cache-control'], 'private, no-store', 'admin product list (hidden products)');
+  r = await callHandler(cats, { url: '/api/v1/categories?all=true' });
+  assert.equal(r.headers['cache-control'], 'private, no-store', 'categories incl. hidden');
+  r = await callHandler(cats, { url: '/api/v1/categories?__resource=brands&all=true' });
+  assert.equal(r.headers['cache-control'], 'private, no-store', 'brands incl. hidden');
+  currentUser = null;
+  r = await callHandler(cats, { url: '/api/v1/categories' });
+  assert.match(r.headers['cache-control'], shared, 'shop categories');
+  r = await callHandler(cats, { url: '/api/v1/categories?__resource=brands' });
+  assert.match(r.headers['cache-control'], shared, 'shop brands');
+});
+
+test('caching: public settings are shared, private payment details are never in them', async () => {
+  const Settings = require(dist('models/Settings'));
+  Settings.getSettings = async () => ({ toObject: () => ({ storeName: 'Brynoxa', depositMethods: [{ account: 'SECRET-RIB' }], depositInstructions: 'x', courierCosts: { delivered: 35 }, paymentDetailsChangedBy: 'Owner' }) });
+  const settings = require(api('v1/settings.js'));
+  const r = await callHandler(settings, { url: '/api/v1/settings' });
+  assert.match(r.headers['cache-control'], /s-maxage=60/);
+  assert.equal(r.body.data.storeName, 'Brynoxa');
+  assert.doesNotMatch(JSON.stringify(r.body), /SECRET-RIB|depositInstructions|courierCosts|paymentDetailsChangedBy/);
+});
+
+test('signed-in staff skip the shared copy (frontend adds a fresh parameter)', () => {
+  const client = fs.readFileSync(ROOT + '/frontend/src/api/client.ts', 'utf8');
+  assert.match(client, /isStaffRole\(user\?\.role\) && SHARED_CACHE_PATH\.test/);
+  const re = new RegExp(client.match(/SHARED_CACHE_PATH = \/(.+)\/\n/)[1]);
+  for (const p of ['/products', '/products?featured=true', '/products/hp-elitebook', '/categories', '/brands', '/settings']) assert.ok(re.test(p), p);
+  for (const p of ['/admin/settings', '/orders', '/auth/me', '/wishlist']) assert.equal(re.test(p), false, p);
+});

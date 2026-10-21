@@ -1,7 +1,7 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
 const { paging } = require('../_lib/paging');
-const { sendJson, sendError } = require('../_lib/http');
+const { sendJson, sendError, cachePublic, cachePrivate } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -78,6 +78,7 @@ module.exports = async (req, res) => {
         .filter(Boolean)
         .slice(0, 4);
       const items = await catalog.getProductsByIds(ids);
+      cachePublic(res);
       sendJson(res, 200, { success: true, message: 'Success', data: items });
       return;
     }
@@ -85,6 +86,7 @@ module.exports = async (req, res) => {
     // GET /products/:slug
     if (route) {
       const product = await catalog.getProductBySlug(route);
+      cachePublic(res);
       sendJson(res, 200, { success: true, message: 'Success', data: product });
       return;
     }
@@ -116,6 +118,9 @@ module.exports = async (req, res) => {
       placement: raw.placement,
     });
 
+    // Admin list (hidden products too) is never shared; the shop list is
+    if (isAdmin) cachePrivate(res);
+    else cachePublic(res);
     sendJson(res, 200, {
       success: true,
       message: 'Success',
