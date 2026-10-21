@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -83,7 +83,7 @@ function MoneyBar({ r }: { r: Report }) {
             )
           : null}
       </div>
-      <ul className="mt-2.5 grid grid-cols-2 sm:grid-cols-3 print:grid-cols-3 gap-x-4 gap-y-1.5 text-[11px]">
+      <ul className="mt-2.5 grid grid-cols-3 gap-x-4 gap-y-1.5 text-[11px]">
         {parts.map((p) => (
           <li key={p.key} className="flex items-center gap-1.5">
             <span className="size-2.5 shrink-0 rounded-sm" style={{ background: p.color }} />
@@ -140,7 +140,7 @@ function ReportBody({ r }: { r: Report }) {
   const orders = r.orders
 
   return (
-    <article className="report mx-auto w-full max-w-[210mm] bg-white px-4 py-5 sm:px-[14mm] sm:py-[12mm] text-slate-900 shadow-sm print:max-w-none print:px-0 print:py-0 print:shadow-none">
+    <article className="report w-[210mm] bg-white px-[14mm] py-[12mm] text-slate-900 print:px-0 print:py-0">
       {/* Header */}
       <header className="flex items-start justify-between gap-4 border-b-2 border-slate-900 pb-4">
         <div className="flex items-center gap-3">
@@ -161,8 +161,8 @@ function ReportBody({ r }: { r: Report }) {
       </header>
 
       {/* Headline */}
-      <section className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-[1.3fr_1fr_1fr_1fr] print:grid-cols-[1.3fr_1fr_1fr_1fr]">
-        <div className={cn('rounded-xl px-4 py-3 text-white max-sm:col-span-2', t.netProfit < 0 ? 'bg-rose-600' : 'bg-emerald-600')}>
+      <section className="mt-5 grid grid-cols-[1.3fr_1fr_1fr_1fr] gap-2.5">
+        <div className={cn('rounded-xl px-4 py-3 text-white', t.netProfit < 0 ? 'bg-rose-600' : 'bg-emerald-600')}>
           <p className="text-[10px] font-medium tracking-wide uppercase opacity-90">Net profit</p>
           <p className="mt-0.5 text-2xl font-bold tabular-nums">{signed(t.netProfit)}</p>
           <p className="text-[10px] opacity-90">{t.margin !== null ? `${t.margin}% of money received` : 'No sales in this period'}</p>
@@ -307,6 +307,34 @@ function ReportBody({ r }: { r: Report }) {
   )
 }
 
+/** A4 width at 96 dpi */
+const PAGE_PX = 794
+
+/**
+ * Shows the A4 page whole on small screens (like a PDF viewer): the page keeps its print layout
+ * and is scaled down to the screen width instead of reflowing with bigger text.
+ */
+function FitPage({ children }: { children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!el) return
+    const update = () => setScale(Math.min(1, el.clientWidth / PAGE_PX))
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <div ref={box} className="w-full">
+      <div className="fit-page mx-auto shadow-sm print:shadow-none" style={{ width: PAGE_PX, zoom: scale }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
 /**
  * Printable profit report (A4) for the chosen period — opened from Admin → Profit. "Download PDF"
  * uses the browser's print dialog (Save as PDF).
@@ -332,25 +360,38 @@ export function ProfitReport() {
   }, [r])
 
   return (
-    <div className="min-h-dvh bg-slate-200 p-4 print:bg-white print:p-0">
-      <style>{'@page { size: A4; margin: 12mm 14mm } @media print { html, body { background: #fff !important } }'}</style>
-      <div className="mx-auto mb-4 flex max-w-[210mm] flex-wrap items-center justify-between gap-2 print:hidden">
-        <div className="flex flex-wrap gap-1 rounded-full bg-white p-1 shadow-sm">
+    <div className="min-h-dvh bg-slate-200 p-2 sm:p-4 print:bg-white print:p-0">
+      <style>{'@page { size: A4; margin: 12mm 14mm } html { -webkit-text-size-adjust: 100%; text-size-adjust: 100% } @media print { html, body { background: #fff !important } .fit-page { zoom: 1 !important; width: auto !important } .report { width: auto !important } }'}</style>
+      <div className="mx-auto mb-2 flex max-w-[210mm] items-center justify-between gap-2 sm:mb-4 print:hidden">
+        <select
+          aria-label="Period"
+          value={range}
+          onChange={(e) => setParams({ days: e.target.value }, { replace: true })}
+          className="h-8 rounded-full border-0 bg-white px-3 text-[13px] font-medium text-slate-900 shadow-sm sm:hidden"
+        >
+          {RANGES.map((x) => (
+            <option key={x.value} value={x.value}>
+              Last {x.label}
+            </option>
+          ))}
+        </select>
+        <div className="flex gap-0.5 rounded-full bg-white p-0.5 shadow-sm max-sm:hidden">
           {RANGES.map((x) => (
             <button
               key={x.value}
               type="button"
               onClick={() => setParams({ days: String(x.value) }, { replace: true })}
-              className={cn('h-8 rounded-full px-3 text-xs font-medium', range === x.value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900')}
+              className={cn('h-7 shrink-0 rounded-full px-2.5 text-[12px] font-medium whitespace-nowrap sm:h-8 sm:px-3', range === x.value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900')}
             >
               {x.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-600 max-sm:hidden">In the print window choose “Save as PDF”</span>
-          <Button size="sm" onClick={() => window.print()} disabled={!r}>
-            Download PDF
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="text-[11px] text-slate-600 max-md:hidden">In the print window choose “Save as PDF”</span>
+          <Button size="sm" className="h-8 px-3 text-[12px] sm:h-9 sm:text-sm" onClick={() => window.print()} disabled={!r}>
+            <span className="sm:hidden">PDF</span>
+            <span className="max-sm:hidden">Download PDF</span>
           </Button>
         </div>
       </div>
@@ -363,7 +404,9 @@ export function ProfitReport() {
         </div>
       ) : (
         <div className={cn(report.isFetching && 'opacity-60')}>
-          <ReportBody r={r} />
+          <FitPage>
+            <ReportBody r={r} />
+          </FitPage>
         </div>
       )}
     </div>
