@@ -177,8 +177,9 @@ async function priceOrder(subtotal: number, couponCode?: string, city?: string) 
     couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
   }
 
-  const shipping = resolveShippingFee(settings, city, subtotal);
   const taxable = Math.max(subtotal - discount, 0);
+  // Free-shipping minimum is checked on what the customer pays for the items, after the coupon
+  const shipping = resolveShippingFee(settings, city, taxable);
   const tax = (taxable * settings.taxRate) / 100;
   const total = taxable + shipping + tax;
 

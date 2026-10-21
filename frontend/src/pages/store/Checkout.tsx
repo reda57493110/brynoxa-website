@@ -172,13 +172,14 @@ export function Checkout() {
   }, [wholesaleSubtotalKey])
 
   const taxRate = settings.data?.taxRate ?? 0
-  const shipping = resolveShippingFee(settings.data, address.city, subtotal)
   const taxable = Math.max(0, subtotal - discount)
+  // Same as the server: free shipping is checked after the coupon
+  const shipping = resolveShippingFee(settings.data, address.city, taxable)
   const tax = (taxable * taxRate) / 100
   const total = taxable + shipping + tax
   const cityRateOptions = settings.data?.shippingByCity ?? []
   const freeShippingMin = settings.data?.freeShippingMin ?? 0
-  const qualifiesFreeShipping = freeShippingMin > 0 && subtotal >= freeShippingMin
+  const qualifiesFreeShipping = freeShippingMin > 0 && taxable >= freeShippingMin
 
   const depositFor = (products: Product[]) =>
     orderDeposit(

@@ -13,7 +13,7 @@ function normalizeCity(city: string): string {
     .replace(/\s+/g, ' ')
 }
 
-/** Match checkout totals to backend resolveShippingFee. */
+/** Match checkout totals to backend resolveShippingFee. `subtotal` = items after the coupon. */
 export function resolveShippingFee(
   settings: ShippingSettingsLike | undefined,
   city: string | undefined,

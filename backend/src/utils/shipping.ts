@@ -14,7 +14,7 @@ export function normalizeCity(city: string): string {
     .replace(/\s+/g, ' ');
 }
 
-/** Resolve shipping fee from flat rate + optional per-city overrides. */
+/** Resolve shipping fee from flat rate + optional per-city overrides. `subtotal` = items after the coupon. */
 export function resolveShippingFee(
   settings: ShippingSettingsLike,
   city: string | undefined,
