@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { connectMongo } = require('../mongo');
 const { sendJson, readJsonBody } = require('../http');
+const { rateLimit } = require('../rateLimit');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -12,6 +13,12 @@ if (!module.paths.includes(backendNodeModules)) {
 }
 
 const STAFF_ROLES = new Set(['admin', 'orders', 'catalog', 'support', 'marketing']);
+
+// Same as backend auth.service: 5 wrong passwords lock the account for 15 minutes
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+// Compared against when the email is unknown, so the reply takes as long as for a real account
+const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 function hashRefreshToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -50,6 +57,8 @@ module.exports = async (req, res) => {
       return;
     }
 
+    if (!(await rateLimit(req, res, 'login'))) return;
+
     const conn = await connectMongo();
     const user = await conn.db.collection('users').findOne({ email });
 
@@ -58,7 +67,20 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (!user?.password || !(await bcrypt.compare(password, user.password))) {
+    const passwordOk = await bcrypt.compare(password, user?.password || DUMMY_HASH);
+    if (!user?.password || !passwordOk) {
+      if (user) {
+        // Count the failure; lock the account after too many
+        const updated = await conn.db
+          .collection('users')
+          .findOneAndUpdate({ _id: user._id }, { $inc: { failedLoginAttempts: 1 } }, { returnDocument: 'after' });
+        const after = updated && typeof updated.failedLoginAttempts === 'number' ? updated : updated?.value;
+        if ((after?.failedLoginAttempts || 0) >= MAX_LOGIN_ATTEMPTS) {
+          await conn.db
+            .collection('users')
+            .updateOne({ _id: user._id }, { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS), failedLoginAttempts: 0 } });
+        }
+      }
       sendJson(res, 401, { success: false, message: 'Invalid email or password' });
       return;
     }

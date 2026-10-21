@@ -191,6 +191,8 @@ async function recordFailedLogin(user: InstanceType<typeof User>) {
   user.failedLoginAttempts = failedLoginAttempts;
   if (failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
     user.lockedUntil = new Date(Date.now() + LOGIN_LOCKOUT_MS);
+    // After the lock, a fresh set of attempts
+    user.failedLoginAttempts = 0;
   }
   await user.save({ validateBeforeSave: false });
 }
@@ -522,12 +524,12 @@ export async function loginUser(
   if (user.emailVerified === false && isStaffRole(user.role)) {
     throw new ApiError(403, 'Please verify your email before signing in');
   }
-  user.failedLoginAttempts = 0;
-  user.lockedUntil = undefined;
   if (user.mfaEnabled && isStaffRole(user.role)) {
-    await user.save({ validateBeforeSave: false });
+    // Failed-attempt count is only cleared once the code is also right (completeMfaLogin)
     return { mfaRequired: true as const, mfaToken: signMfaChallenge(user._id.toString()) };
   }
+  user.failedLoginAttempts = 0;
+  user.lockedUntil = undefined;
 
   const payload = { userId: user._id.toString(), role: user.role };
   const accessToken = signAccessToken(payload);

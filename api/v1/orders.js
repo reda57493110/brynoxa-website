@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { connectMongo } = require('../_lib/mongo');
 const { sendJson, readJsonBody } = require('../_lib/http');
 const { optionalUser, requireUser } = require('../_lib/auth');
+const { rateLimit } = require('../_lib/rateLimit');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -78,6 +79,7 @@ module.exports = async (req, res) => {
 
     // Checkout helper routed here: POST /coupons/validate
     if (route === 'coupons/validate' && req.method === 'POST') {
+      if (!(await rateLimit(req, res, 'coupon'))) return;
       const body = parseBody(schemas.validateCouponSchema, await readJsonBody(req));
       const { coupon, discount } = await orderService.validateCoupon(body.code, body.subtotal);
       sendJson(res, 200, {
@@ -96,6 +98,8 @@ module.exports = async (req, res) => {
     // POST /orders/track — guest lookup by order number + phone
     if (route === 'track' && req.method === 'POST') {
       const body = parseBody(schemas.trackOrderSchema, await readJsonBody(req));
+      // Per connection and per phone number, so order numbers cannot be swept for one customer
+      if (!(await rateLimit(req, res, 'track', String(body.phone).replace(/\D/g, '').slice(-8)))) return;
       const order = await orderService.trackGuestOrder(body.orderNumber, body.phone);
       sendJson(res, 200, { success: true, message: 'Success', data: await orderService.customerOrderViewWithPayment(order) });
       return;
@@ -104,6 +108,7 @@ module.exports = async (req, res) => {
     // POST /orders — place COD order (guest or logged-in)
     if (!route && req.method === 'POST') {
       const body = parseBody(schemas.createOrderSchema, await readJsonBody(req));
+      if (!(await rateLimit(req, res, 'order'))) return;
       const user = await optionalUser(req);
       const shippingAddress = body.shippingAddress;
 
@@ -182,6 +187,7 @@ module.exports = async (req, res) => {
       if (action === 'deposit-payment' && req.method === 'POST') {
         const user = await requireUser(req, res);
         if (!user) return;
+        if (!(await rateLimit(req, res, 'depositReport', user._id.toString()))) return;
         const body = parseBody(schemas.depositPaymentSchema, await readJsonBody(req));
         const { reportDepositPayment } = require('../../backend/dist/services/depositPayment.service');
         const order = await reportDepositPayment(user._id.toString(), orderNumber, body);

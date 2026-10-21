@@ -1,6 +1,7 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
 const { sendJson, readJsonBody } = require('../_lib/http');
+const { rateLimit } = require('../_lib/rateLimit');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -58,6 +59,7 @@ async function handlePushRoutes(req, res, route) {
   const body = await readJsonBody(req);
 
   if (route === 'push/subscribe') {
+    if (!(await rateLimit(req, res, 'pushSubscribe'))) return;
     const data = parseBody(schemas.pushSubscribeSchema, body);
     const { optionalUser } = require('../_lib/auth');
     const { getUserAgent } = require('../../backend/dist/utils/requestMeta');
@@ -74,6 +76,7 @@ async function handlePushRoutes(req, res, route) {
   }
 
   if (route === 'push/click') {
+    if (!(await rateLimit(req, res, 'pushClick'))) return;
     const data = parseBody(schemas.pushClickSchema, body);
     await pushService.recordClick(data.campaignId);
     sendJson(res, 200, { success: true, message: 'Recorded', data: null });
@@ -110,6 +113,9 @@ module.exports = async (req, res) => {
     const schemas = require('../../backend/dist/validators/schemas');
     const { ContactMessage, NewsletterSubscriber } = require('../../backend/dist/models/Contact');
     const body = await readJsonBody(req);
+
+    // Contact form and newsletter: no flooding the inbox or the subscriber list
+    if (!(await rateLimit(req, res, 'contact'))) return;
 
     // POST /newsletter
     if (route === 'newsletter') {

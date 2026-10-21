@@ -2,6 +2,17 @@ const path = require('path');
 const { connectMongo } = require('../mongo');
 const { sendJson, readJsonBody } = require('../http');
 const { setAuthCookies, clearAuthCookies, parseBody } = require('./cookies');
+const { rateLimit } = require('../rateLimit');
+
+// Which limit each action counts against; emails are also limited per address
+const ACTION_LIMITS = {
+  register: 'register',
+  'password-reset/request': 'emailSend',
+  'verification/resend': 'emailSend',
+  'password-reset/confirm': 'emailLink',
+  'verification/confirm': 'emailLink',
+  'mfa/login': 'mfa',
+};
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -24,6 +35,10 @@ module.exports = async (req, res) => {
     const authService = require('../../../backend/dist/services/auth.service');
     const schemas = require('../../../backend/dist/validators/schemas');
     const body = await readJsonBody(req);
+
+    const limit = ACTION_LIMITS[action];
+    const perEmail = limit === 'emailSend' && typeof body?.email === 'string' ? body.email : undefined;
+    if (limit && !(await rateLimit(req, res, limit, perEmail))) return;
 
     if (action === 'register') {
       const data = parseBody(schemas.registerSchema, body);
