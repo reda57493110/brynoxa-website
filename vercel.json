@@ -5,7 +5,6 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/api/v1/db-ping", "destination": "/api/v1/health?__resource=db-ping" },
     { "source": "/api/v1/brands", "destination": "/api/v1/categories?__resource=brands" },
     { "source": "/api/v1/brands/(.*)", "destination": "/api/v1/categories?__resource=brands&__route=$1" },
     { "source": "/api/v1/notifications", "destination": "/api/v1/wishlist?__resource=notifications" },

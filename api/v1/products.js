@@ -1,5 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
+const { paging } = require('../_lib/paging');
 const { sendJson } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 
@@ -89,8 +90,8 @@ module.exports = async (req, res) => {
     }
 
     // GET /products
-    const page = Number(raw.page || 1);
-    const limit = Number(raw.limit || 12);
+    // Never more than 100 products per request (the shop asks for at most 60)
+    const { page, limit } = paging(raw, 12);
     const isAdmin = raw.admin === 'true';
     if (isAdmin) {
       const user = await requireStaff(req, res, ['products:read']);

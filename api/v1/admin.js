@@ -1,4 +1,5 @@
 const path = require('path');
+const { paging } = require('../_lib/paging');
 const { sendJson, readJsonBody } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 const { parseImageUpload, assertAllowedImage } = require('../_lib/multipart');
@@ -266,8 +267,7 @@ async function handleOrderRoutes(req, res, route, query) {
   if (route === 'orders' && req.method === 'GET') {
     const user = await requireStaff(req, res, ['orders:read']);
     if (!user) return;
-    const page = Number(query.page || 1);
-    const limit = Number(query.limit || 20);
+    const { page, limit } = paging(query);
     const result = await orderService.listAllOrders(page, limit, query.status, query.q, { from: query.from, to: query.to }, query.sort, query.deposit);
     sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
     return;
@@ -508,8 +508,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const page = Number(query.page || 1);
-    const limit = Number(query.limit || 20);
+    const { page, limit } = paging(query);
 
     if (!route || route === 'dashboard') {
       const user = await requireStaff(req, res, [

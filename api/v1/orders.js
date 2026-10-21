@@ -1,6 +1,7 @@
 const path = require('path');
 const crypto = require('crypto');
 const { connectMongo } = require('../_lib/mongo');
+const { paging } = require('../_lib/paging');
 const { sendJson, readJsonBody } = require('../_lib/http');
 const { optionalUser, requireUser } = require('../_lib/auth');
 const { rateLimit } = require('../_lib/rateLimit');
@@ -152,8 +153,7 @@ module.exports = async (req, res) => {
     if (!route && req.method === 'GET') {
       const user = await requireUser(req, res);
       if (!user) return;
-      const page = Number(query.page || 1);
-      const limit = Number(query.limit || 10);
+      const { page, limit } = paging(query, 10);
       const result = await orderService.listUserOrders(user._id.toString(), page, limit);
       sendJson(res, 200, paginated(result.items.map(orderService.customerOrderView), result.page, result.limit, result.total));
       return;
