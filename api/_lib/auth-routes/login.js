@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { connectMongo } = require('../mongo');
 const { sendJson, readJsonBody } = require('../http');
 const { rateLimit } = require('../rateLimit');
+const { isPublishedDefaultPassword } = require('../../../backend/dist/utils/blockedPasswords');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -67,7 +68,8 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const passwordOk = await bcrypt.compare(password, user?.password || DUMMY_HASH);
+    // The old published default never signs anyone in (counted as a wrong password)
+    const passwordOk = (await bcrypt.compare(password, user?.password || DUMMY_HASH)) && !isPublishedDefaultPassword(password);
     if (!user?.password || !passwordOk) {
       if (user) {
         // Count the failure; lock the account after too many

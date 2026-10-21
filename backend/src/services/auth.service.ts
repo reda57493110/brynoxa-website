@@ -9,7 +9,7 @@ import { createCipheriv, createDecipheriv } from 'crypto';
 import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
-import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
+import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword, isPublishedDefaultPassword } from '../utils/blockedPasswords';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
@@ -518,7 +518,8 @@ export async function loginUser(
   if (user?.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
-  if (!user || !(await user.comparePassword(password))) {
+  // The old published default never signs anyone in (counted as a wrong password)
+  if (!user || isPublishedDefaultPassword(password) || !(await user.comparePassword(password))) {
     if (user) await recordFailedLogin(user);
     throw new ApiError(401, 'Invalid email or password');
   }

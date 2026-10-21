@@ -41,3 +41,10 @@ export const BLOCKED_PASSWORD_MESSAGE = 'This password is too common or was publ
 export function isBlockedPassword(password: string) {
   return BLOCKED.has(createHash('sha256').update(String(password).trim().toLowerCase()).digest('hex'));
 }
+
+/** The default admin password that was published in this repo's history: never accepted at sign-in. */
+const PUBLISHED_DEFAULT = '5c06eb3d5a05a19f49476d694ca81a36344660e9d5b98e3d6a6630f31c2422e7';
+
+export function isPublishedDefaultPassword(password: string) {
+  return createHash('sha256').update(String(password).trim().toLowerCase()).digest('hex') === PUBLISHED_DEFAULT;
+}
