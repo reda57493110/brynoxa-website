@@ -66,17 +66,19 @@ export const SOCIAL_LINKS = [
 /**
  * Customer services, in display order. Copy lives in i18n `services.items`;
  * `terms` is the matching Terms of Sale section shown on the service page.
- * Photos are free Unsplash photos (Unsplash License), linked from Unsplash's image server.
+ * Photos are free Unsplash / Pexels photos (their free licenses), linked from their image servers.
  */
 const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1600&h=1000&q=80`
+const pexels = (id: number) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1600&h=1000&fit=crop`
 
 export const CUSTOMER_SERVICES = [
-  // gaming PC lit in blue
-  { id: 'warranty', slug: 'warranty', photo: unsplash('1660855551740-4474188debdb'), terms: 'warranty' },
-  // packing a parcel to send back
-  { id: 'returns', slug: 'returns', photo: unsplash('1648747067192-790595bc6d5e'), terms: 'returns' },
-  // a new laptop just out of its box: check it, then pay
-  { id: 'cod', slug: 'cash-on-delivery', photo: unsplash('1778758421918-7176d4342765'), terms: 'payment' },
+  // technician fixing a laptop
+  { id: 'warranty', slug: 'warranty', photo: pexels(10558598), terms: 'warranty' },
+  // customer handing a parcel back to a courier
+  { id: 'returns', slug: 'returns', photo: pexels(7843933), terms: 'returns' },
+  // customer paying the courier in cash at the door
+  { id: 'cod', slug: 'cash-on-delivery', photo: pexels(6818151), terms: 'payment' },
   // courier carrying parcels to the door
   { id: 'delivery', slug: 'home-delivery', photo: unsplash('1615897370727-d091b76d47a5'), terms: 'delivery' },
   // support team on headsets
