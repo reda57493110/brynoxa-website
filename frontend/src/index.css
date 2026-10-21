@@ -364,6 +364,12 @@ html[lang="ar"] {
 
 }
 
+/* Packshots on white: a soft light-grey studio backdrop; with mix-blend-multiply the photo's own
+   white melts into it, so the product looks placed, not boxed */
+.photo-stage {
+  background: radial-gradient(120% 95% at 50% 32%, #ffffff 0%, #f2f5f8 52%, #e3e8ee 100%);
+}
+
 /* Home spotlight: gentle float, rotating border light, shine sweep on the button */
 /* Home hero backdrop */
 @keyframes hero-glow-drift {

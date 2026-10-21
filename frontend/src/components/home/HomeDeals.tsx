@@ -113,7 +113,7 @@ export function HomeDealsShowcase({ products }: { products: Product[] }) {
                 <span
                   className={cn(
                     'relative block h-12 w-full overflow-hidden sm:h-16',
-                    imageFit(image) === 'contain' ? 'bg-white' : 'bg-white/10'
+                    imageFit(image) === 'contain' ? 'photo-stage' : 'bg-white/10'
                   )}
                 >
                   {image ? (

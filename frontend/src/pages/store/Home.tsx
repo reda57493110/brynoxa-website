@@ -35,10 +35,17 @@ const CATEGORY_PHOTOS: Record<string, string> = {
   accessories: '/categories/accessories.jpg',
 }
 
-function categoryTileClass(index: number) {
+/**
+ * Bento of categories: the first two are big; the rest fill rows of three (two on tablets). The
+ * last tile stretches over what is left of its row, so the grid never ends with an empty gap.
+ */
+function categoryTileClass(index: number, count: number) {
   if (index === 0) return 'min-h-[18rem] sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:min-h-[24rem]'
-  if (index === 1) return 'min-h-[18rem] lg:row-span-2 lg:min-h-[24rem]'
-  return 'min-h-[12.5rem]'
+  if (index === 1) return cn('min-h-[18rem] lg:row-span-2 lg:min-h-[24rem]', count === 2 && 'sm:col-span-2 lg:col-span-1')
+  const last = index === count - 1
+  const lgLeft = (count - 2) % 3 // tiles on the last desktop row (0 = full)
+  const smOdd = (count - 1) % 2 === 1 // tablets: tile 0 takes a row, the rest go two by two
+  return cn('min-h-[12.5rem]', last && smOdd && 'sm:col-span-2', last && lgLeft === 1 && 'lg:col-span-3', last && lgLeft === 2 && 'lg:col-span-2', last && smOdd && lgLeft === 0 && 'lg:col-span-1')
 }
 
 function categoryIcon(slug: string, name: string): SiteIconName {
@@ -173,12 +180,12 @@ export function Home() {
           {/* Why buy here, at a glance */}
           <motion.ul
             {...fadeUp(reduceMotion, 0.3)}
-            className="order-4 -mx-4 mt-2 flex gap-1.5 overflow-x-auto px-4 text-[10px] text-[var(--fg)] [scrollbar-width:none] sm:mx-0 sm:mt-6 sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:overflow-visible sm:px-0 sm:text-sm dark:text-white/90 [&::-webkit-scrollbar]:hidden"
+            className="order-4 mt-3 grid grid-cols-2 gap-1.5 text-[11px] text-[var(--fg)] sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:text-sm dark:text-white/90"
           >
             {TRUST.map((item) => (
               <li
                 key={item.key}
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/70 px-2 py-0.5 sm:border-0 sm:bg-transparent sm:p-0 dark:border-white/10 dark:bg-white/5 sm:dark:bg-transparent"
+                className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]/70 px-2.5 py-1.5 sm:shrink-0 sm:whitespace-nowrap sm:rounded-full sm:border-0 sm:bg-transparent sm:p-0 dark:border-white/10 dark:bg-white/5 sm:dark:bg-transparent"
               >
                 <SiteIcon name={item.icon} size={12} className="shrink-0 text-[var(--brand-text)] dark:text-[var(--brand)]" />
                 {t(item.key)}
@@ -350,7 +357,7 @@ export function Home() {
                     return (
                       <motion.div
                         key={c._id}
-                        className={categoryTileClass(i)}
+                        className={categoryTileClass(i, categoryList.length)}
                         initial={reduceMotion ? false : { opacity: 0, y: 14 }}
                         whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: '-40px' }}
@@ -367,7 +374,8 @@ export function Home() {
                           <div
                             className={cn(
                               'relative overflow-hidden bg-[var(--bg-muted)]',
-                              featuredTile ? 'min-h-[10.5rem] flex-1' : 'aspect-[16/10]'
+                              // Same photo height for every small tile, also the one stretched over a row
+                              featuredTile ? 'min-h-[10.5rem] flex-1' : 'h-44 sm:h-48'
                             )}
                           >
                             {photo ? (

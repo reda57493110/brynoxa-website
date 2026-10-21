@@ -30,7 +30,7 @@ const SPEC_ICON: Record<string, SiteIconName> = {
 }
 
 /** Up to `max` headline specs (the template's important ones, in order), formatted for display. */
-function keySpecs(p: Product, locale: ReturnType<typeof useLocaleStore.getState>['locale'], max = 3) {
+export function keySpecs(p: Product, locale: ReturnType<typeof useLocaleStore.getState>['locale'], max = 3) {
   const category = typeof p.category === 'object' ? (p.category as Category) : null
   const tpl = getTemplate(resolveTemplate(p.specTemplate, category))
   const specs = p.specs || {}
@@ -96,14 +96,13 @@ function DealSticker({ percent, className }: { percent: number; className?: stri
   )
 }
 
-/** Pulsing dot + "Only 3 left" / "In stock". */
+/** Dot + "Only 3 left" / "In stock". */
 export function StockLine({ product, className }: { product: Product; className?: string }) {
   const t = useT()
   const low = isLow(product)
   return (
     <span className={cn('inline-flex items-center gap-1.5 font-medium', low ? 'text-[#ffc53d]' : 'text-[#3dd68c]', className)}>
       <span className="relative flex h-2 w-2">
-        <span className={cn('absolute inline-flex h-full w-full rounded-full opacity-75 motion-safe:animate-ping', low ? 'bg-[#ffc53d]' : 'bg-[#3dd68c]')} />
         <span className={cn('relative inline-flex h-2 w-2 rounded-full', low ? 'bg-[#ffc53d]' : 'bg-[#3dd68c]')} />
       </span>
       {low ? t('stock.onlyLeft', { count: product.stock }) : t('stock.inStock')}
@@ -133,7 +132,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             key={p._id}
             percent={d.percent}
             className={cn(
-              'absolute -end-2.5 -top-3 z-20 h-14 w-14 text-base transition-[opacity,transform] sm:-end-5 sm:-top-5 sm:h-20 sm:w-20 sm:text-xl duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'absolute end-3 top-3 z-20 h-12 w-12 text-sm transition-[opacity,transform] sm:end-4 sm:top-4 sm:h-16 sm:w-16 sm:text-lg duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
               i === active ? '-rotate-6 scale-100 opacity-100' : 'pointer-events-none rotate-6 scale-75 opacity-0'
             )}
           />
@@ -177,7 +176,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         className={cn(
           // Grows to fill the frame when this deal has less text than the others
           'relative isolate aspect-[4/3] flex-1 overflow-hidden [@media(max-height:820px)]:aspect-[16/10]',
-          contain ? 'bg-white' : 'bg-[#0b1116]'
+          contain ? 'photo-stage' : 'bg-[#0b1116]'
         )}
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
@@ -262,13 +261,6 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             onClick={add}
             className="relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--brand)] px-4 text-sm font-semibold sm:h-12 sm:px-5 sm:text-base text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
-            {/* Shine only on the visible deal (hidden ones stay idle) */}
-            {active ? (
-              <span
-                className="pointer-events-none absolute inset-y-0 start-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent motion-safe:animate-[spotlight-shine_3.2s_ease-in-out_infinite]"
-                aria-hidden="true"
-              />
-            ) : null}
             <SiteIcon name="cart" size={16} />
             {t('common.addToCart')}
           </button>

@@ -20,6 +20,7 @@ import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayName } from '@/i18n'
+import { keySpecs } from '@/components/home/HomeSpotlight'
 import type { Locale } from '@/i18n'
 
 /** Main photo, or undefined (the card then shows a neutral placeholder — no external request). */
@@ -58,6 +59,8 @@ export function ProductCard({
   const removeCompare = useCompareStore((s) => s.remove)
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
+  // Featured card: the product's headline specs (processor, memory, storage…)
+  const specs = variant === 'spotlight' ? keySpecs(product, locale, 4) : []
   const spotlight = variant === 'spotlight'
   const off = salePercent(product)
   const brand = brandName(product)
@@ -128,16 +131,16 @@ export function ProductCard({
     <article
       className={cn(
         'product-card group flex h-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 ease-out hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg',
-        spotlight ? 'flex-col lg:grid lg:grid-cols-[1.35fr_1fr] lg:items-stretch' : 'flex-col'
+        spotlight ? 'flex-col lg:grid lg:grid-cols-[1.15fr_1fr] lg:items-stretch' : 'flex-col'
       )}
     >
       <div
         ref={photo.ref}
         className={cn(
           'relative overflow-hidden',
-          contain ? 'bg-white' : 'bg-[var(--bg-muted)]',
+          contain ? 'photo-stage' : 'bg-[var(--bg-muted)]',
           spotlight
-            ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[22rem]'
+            ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[20rem] lg:max-h-[26rem]'
             : 'aspect-square'
         )}
       >
@@ -243,6 +246,27 @@ export function ProductCard({
         </Link>
         {spotlight && blurb ? (
           <p className="line-clamp-2 max-w-md text-sm font-medium leading-relaxed text-[var(--fg-muted)]">{blurb}</p>
+        ) : null}
+        {spotlight && specs.length ? (
+          <ul className="flex flex-wrap gap-1.5">
+            {specs.map((s) => (
+              <li
+                key={s.key}
+                className="inline-flex max-w-full items-center gap-1.5 truncate rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] px-2.5 py-1.5 text-xs font-medium text-[var(--fg)]"
+              >
+                <SiteIcon name={s.icon} size={13} className="shrink-0 text-[var(--brand-text)]" />
+                <span className="truncate">{s.value}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {spotlight ? (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--fg-muted)]">
+            <span className="inline-flex items-center gap-1">
+              <SiteIcon name="banknote" size={13} />
+              {t('deposit.payOnDelivery')}
+            </span>
+          </div>
         ) : null}
         <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
           <Price
