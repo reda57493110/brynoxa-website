@@ -300,7 +300,9 @@ export async function setupMfa(userId: string, options?: { rotate?: boolean }) {
   if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff account not found');
   if (user.mfaEnabled) throw new ApiError(409, 'MFA is already enabled');
 
-  const rotate = options?.rotate !== false;
+  // Keep the pending key unless a new QR code is asked for: opening setup again (another tab,
+  // a second click) must not replace the key the phone already scanned
+  const rotate = options?.rotate === true || !user.mfaPendingSecretEncrypted;
   let secret: string;
   if (!rotate && user.mfaPendingSecretEncrypted) {
     secret = decryptMfaSecret(user.mfaPendingSecretEncrypted);
@@ -322,7 +324,7 @@ export async function verifyMfaSetup(userId: string, code: string) {
   if (!(await verifyTotp(secret, code))) {
     throw new ApiError(
       400,
-      'Invalid authenticator code. Delete any old Brynoxa entries in your app, scan this QR again, and enter the newest 6-digit code (not a recovery code).'
+      'That code did not match. Type the code your app shows right now. If it still fails: check that your phone sets the time automatically, or press "New QR code", delete the old Brynoxa entry in your app and scan again.'
     );
   }
 

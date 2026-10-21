@@ -28,7 +28,9 @@ module.exports = async (req, res) => {
     const userId = user._id.toString();
 
     if (action === 'mfa/setup') {
-      const data = await authService.setupMfa(userId);
+      const body = await readJsonBody(req).catch(() => ({}));
+      // Same QR code again unless "New QR code" was pressed
+      const data = await authService.setupMfa(userId, { rotate: body?.rotate === true });
       sendJson(res, 200, {
         success: true,
         message: 'MFA setup created',

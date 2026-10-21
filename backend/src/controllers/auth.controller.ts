@@ -68,7 +68,8 @@ export const completeMfaLogin = asyncHandler(async (req: Request, res: Response)
 });
 
 export const setupMfa = asyncHandler(async (req: Request, res: Response) => {
-  sendSuccess(res, await authService.setupMfa(req.user!.userId), 'MFA setup created');
+  // Same QR code again unless "New QR code" was pressed
+  sendSuccess(res, await authService.setupMfa(req.user!.userId, { rotate: req.body?.rotate === true }), 'MFA setup created');
 });
 
 export const verifyMfaSetup = asyncHandler(async (req: Request, res: Response) => {

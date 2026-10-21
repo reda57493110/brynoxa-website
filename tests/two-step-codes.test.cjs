@@ -26,3 +26,32 @@ test('sign-in and turning 2-step off use the code up (same or older code refused
   assert.match(src, /\$set: \{ mfaLastStep: step \}/);
   assert.equal((src.match(/await consumeTotp\(user, code\)/g) || []).length, 2, 'used by sign-in and by turning 2-step off');
 });
+
+test('turning 2-step on: same QR until "New QR code", and a code from a slightly-off phone clock works', async () => {
+  const { User } = require(dist('models/User'));
+  const auth = require(dist('services/auth.service'));
+  require(dist('models/Settings')).Settings.findOne = async () => ({ emailNotifications: {}, emailMessages: {} });
+  const user = new User({ name: 'Owner', email: 'owner@x.com', password: 'x'.repeat(20), role: 'admin' });
+  user.save = async function () {
+    return this;
+  };
+  const chain = { select: () => Promise.resolve(user) };
+  User.findById = () => chain;
+
+  const first = await auth.setupMfa(String(user._id));
+  const again = await auth.setupMfa(String(user._id)); // second tab / second click
+  assert.equal(again.secret, first.secret, 'opening setup again keeps the same QR code');
+  const fresh = await auth.setupMfa(String(user._id), { rotate: true }); // "New QR code"
+  assert.notEqual(fresh.secret, first.secret, '"New QR code" gives a new one');
+
+  const app = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(fresh.secret), digits: 6, period: 30, algorithm: 'SHA1' });
+  // phone clock 50 s behind
+  const code = app.generate({ timestamp: Date.now() - 50_000 });
+  const result = await auth.verifyMfaSetup(String(user._id), code);
+  assert.equal(result.recoveryCodes.length, 10);
+  assert.equal(user.mfaEnabled, true);
+});
+
+test('a really old code (3 minutes) is still refused', () => {
+  assert.equal(totpStep(secret, codeAt(-180)), null);
+});

@@ -24,8 +24,11 @@ export async function createTotpUri(options: {
   return toTotp(options.secret, options).toString();
 }
 
-/** ±1 step (30 s each side): enough for a phone clock that is slightly off. */
-const TOTP_WINDOW = 1;
+/**
+ * ±2 steps (about a minute each side): a phone clock that is a bit off, or a code that changed
+ * while it was being typed, still works. Each code can only be used once (see consumeTotp).
+ */
+const TOTP_WINDOW = 2;
 
 /**
  * The 30-second time step a valid 6-digit code belongs to, or null if the code is wrong.

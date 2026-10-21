@@ -38,10 +38,10 @@ function TwoStepPanel() {
   const [code, setCode] = useState('')
   const { busy, error, run } = useAction()
 
-  const startSetup = () =>
+  const startSetup = (rotate = false) =>
     run(async () => {
       setCode('')
-      setSetup((await authApi.setupMfa()).data.data)
+      setSetup((await authApi.setupMfa(rotate)).data.data)
     })
 
   const copyCodes = async () => {
@@ -79,7 +79,7 @@ function TwoStepPanel() {
             <ol className="list-decimal space-y-1 ps-5 text-sm text-[var(--fg-muted)]">
               <li>Remove any old Brynoxa entry from your app.</li>
               <li>Scan the QR code, or enter the key below.</li>
-              <li>Type the 6-digit code your app shows.</li>
+              <li>Type the 6-digit code your app shows right now.</li>
             </ol>
             <code className="block break-all rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-xs">{setup.secret}</code>
             <form
@@ -112,7 +112,7 @@ function TwoStepPanel() {
                 <Button type="submit" loading={busy} disabled={code.length !== 6}>
                   Verify and turn on
                 </Button>
-                <Button type="button" variant="ghost" disabled={busy} onClick={() => void startSetup()}>
+                <Button type="button" variant="ghost" disabled={busy} onClick={() => void startSetup(true)}>
                   New QR code
                 </Button>
                 <Button type="button" variant="ghost" disabled={busy} onClick={() => setSetup(null)}>

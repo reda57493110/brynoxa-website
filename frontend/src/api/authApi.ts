@@ -20,8 +20,9 @@ export const authApi = {
   completeMfaLogin: (payload: { mfaToken: string; code: string }) =>
     api.post<ApiResponse<AuthPayload>>('/auth/mfa/login', payload),
 
-  setupMfa: () =>
-    api.post<ApiResponse<{ secret: string; qrCodeDataUrl: string }>>('/auth/mfa/setup'),
+  /** rotate: true = a brand-new QR code ("New QR code"); otherwise the pending one is shown again */
+  setupMfa: (rotate = false) =>
+    api.post<ApiResponse<{ secret: string; qrCodeDataUrl: string }>>('/auth/mfa/setup', { rotate }),
 
   verifyMfaSetup: (code: string) =>
     api.post<ApiResponse<{ recoveryCodes: string[] }>>('/auth/mfa/verify', { code }),
