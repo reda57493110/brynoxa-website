@@ -618,7 +618,7 @@ export async function exportCustomersCsv(query: CustomerListQuery, canSeeProfit:
   const cell = (v: unknown) => {
     const s = v === null || v === undefined ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : String(v);
     // Quote, and neutralise spreadsheet formulas
-    return `"${(/^[=+\-@]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`;
+    return `"${(/^[=+\-@\t\r]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`;
   };
   const headers = [
     'Customer ID', 'Name', 'Email', 'Phone', 'Company', 'Type', 'Status', 'Wholesale tier', 'Registered',

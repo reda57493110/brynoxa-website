@@ -521,14 +521,15 @@ module.exports = async (req, res) => {
       ]);
       if (!user) return;
       const now = Date.now();
+      const { getDashboardStats, dashboardStatsFor } = require('../../backend/dist/services/admin.service');
+      // One cached summary; each role only receives the parts it may see
       if (dashboardCache.data && now - dashboardCache.at < DASHBOARD_CACHE_MS) {
-        sendJson(res, 200, { success: true, message: 'Success', data: dashboardCache.data });
+        sendJson(res, 200, { success: true, message: 'Success', data: dashboardStatsFor(dashboardCache.data, user.role) });
         return;
       }
-      const { getDashboardStats } = require('../../backend/dist/services/admin.service');
       const stats = await getDashboardStats();
       dashboardCache = { at: now, data: stats };
-      sendJson(res, 200, { success: true, message: 'Success', data: stats });
+      sendJson(res, 200, { success: true, message: 'Success', data: dashboardStatsFor(stats, user.role) });
       return;
     }
 

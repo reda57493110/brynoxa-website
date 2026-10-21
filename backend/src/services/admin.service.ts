@@ -1,3 +1,4 @@
+import { hasPermission, type Permission } from '../permissions';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
@@ -132,6 +133,37 @@ async function buildDashboardStats() {
   };
 }
 
+type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
+
+/**
+ * The dashboard summary also feeds the menu badges of every staff role. Each role only gets the
+ * parts for pages it can open: no sales totals or customer names for catalog/marketing staff.
+ */
+export function dashboardStatsFor(stats: DashboardStats, role: string | undefined | null): DashboardStats {
+  const can = (...perms: Permission[]) => hasPermission(role, 'dashboard') || perms.some((p) => hasPermission(role, p));
+  const orders = can('orders:read');
+  const products = can('products:read', 'inventory:write');
+  return {
+    ...stats,
+    todayOrders: orders ? stats.todayOrders : 0,
+    todayOrderValue: orders ? stats.todayOrderValue : 0,
+    orderCount: orders ? stats.orderCount : 0,
+    pendingOrders: orders ? stats.pendingOrders : 0,
+    attentionOrders: orders ? stats.attentionOrders : 0,
+    recentOrders: orders ? stats.recentOrders : [],
+    ordersByStatus: orders ? stats.ordersByStatus : {},
+    customerCount: can('customers:read') ? stats.customerCount : 0,
+    productCount: products ? stats.productCount : 0,
+    activeProducts: products ? stats.activeProducts : 0,
+    lowStock: products ? stats.lowStock : 0,
+    outOfStock: products ? stats.outOfStock : 0,
+    lowStockProducts: products ? stats.lowStockProducts : [],
+    unreadMessages: can('messages') ? stats.unreadMessages : 0,
+    // Reviews were removed from the shop
+    reviewCount: 0,
+  };
+}
+
 export async function deleteCustomer(id: string) {
   const user = await User.findOne({ _id: id, role: 'customer' });
   if (!user) throw new ApiError(404, 'Customer not found');
@@ -215,7 +247,8 @@ export async function createStaffUser(input: {
   }
 
   if (isProd) await sendVerificationEmail(user);
-  return user;
+  // Fresh copy without the password hash and tokens (select:false fields)
+  return User.findById(user._id);
 }
 
 export async function setUserRole(

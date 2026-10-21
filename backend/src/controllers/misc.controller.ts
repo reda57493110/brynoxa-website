@@ -87,9 +87,9 @@ export const deleteCoupon = asyncHandler(async (req: Request, res: Response) => 
   sendSuccess(res, null, 'Coupon deleted');
 });
 
-export const dashboard = asyncHandler(async (_req: Request, res: Response) => {
+export const dashboard = asyncHandler(async (req: Request, res: Response) => {
   const stats = await adminService.getDashboardStats();
-  sendSuccess(res, stats);
+  sendSuccess(res, adminService.dashboardStatsFor(stats, (req as AuthRequest).user?.role));
 });
 
 /** Sales analytics for the dashboard (revenue, orders, comparison, best sellers). Profit needs "reports". */
