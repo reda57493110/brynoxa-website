@@ -134,20 +134,8 @@ module.exports = async (req, res) => {
       success: true,
       message: 'Logged in',
       data: {
-        user: {
-          _id: user._id,
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          phone: user.phone,
-          addresses: user.addresses || [],
-          avatar: user.avatar,
-          isActive: user.isActive,
-          isGuest: Boolean(user.isGuest),
-          mfaEnabled: Boolean(user.mfaEnabled),
-          createdAt: user.createdAt,
-        },
+        // Same user details as /me and auto sign-in (incl. wholesale status)
+        user: { ...require('../../../backend/dist/services/auth.service').sanitizeUser(user), addresses: user.addresses || [] },
         accessToken,
       },
     });

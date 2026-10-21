@@ -2,6 +2,21 @@ const path = require('path');
 const { sendJson, readJsonBody } = require('../http');
 const { requireUser } = require('../auth');
 
+/** Same checks as the Express routes (unknown fields dropped, sizes limited). */
+function validated(schemaName, body, partial = false) {
+  const schemas = require('../../../backend/dist/validators/schemas');
+  const schema = partial ? schemas[schemaName].partial() : schemas[schemaName];
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    const issue = parsed.error.issues?.[0];
+    const where = issue?.path?.length ? `${issue.path.join('.')}: ` : '';
+    const err = new Error(`${where}${issue?.message || 'Invalid data'}`);
+    err.statusCode = 400;
+    throw err;
+  }
+  return parsed.data;
+}
+
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
   module.paths.unshift(backendNodeModules);
@@ -41,9 +56,9 @@ module.exports = async (req, res) => {
     }
 
     if (!route && req.method === 'PATCH') {
-      const body = await readJsonBody(req);
-      if (body.name !== undefined) user.name = String(body.name).trim();
-      if (body.phone !== undefined) user.phone = String(body.phone).trim();
+      const body = validated('updateProfileSchema', await readJsonBody(req));
+      if (body.name !== undefined) user.name = body.name;
+      if (body.phone !== undefined) user.phone = body.phone;
       await user.save();
       sendJson(res, 200, {
         success: true,
@@ -54,7 +69,7 @@ module.exports = async (req, res) => {
     }
 
     if (route === 'addresses' && req.method === 'POST') {
-      const body = await readJsonBody(req);
+      const body = validated('addressSchema', await readJsonBody(req));
       if (body.isDefault || user.addresses.length === 0) {
         user.addresses.forEach((a) => {
           a.isDefault = false;
@@ -81,7 +96,7 @@ module.exports = async (req, res) => {
       }
 
       if (req.method === 'PATCH') {
-        const body = await readJsonBody(req);
+        const body = validated('addressSchema', await readJsonBody(req), true);
         Object.assign(address, body);
         if (body.isDefault) {
           user.addresses.forEach((a) => {

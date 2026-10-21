@@ -57,20 +57,21 @@ export const resetPasswordSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().min(2).max(80).optional(),
-  phone: z.string().optional(),
+  name: z.string().trim().min(2).max(80).optional(),
+  phone: z.string().trim().max(30).optional(),
 });
 
+/** Also the checkout delivery address: limits are generous so a real order is never refused. */
 export const addressSchema = z.object({
-  label: z.string().default('Home'),
-  fullName: z.string().min(2),
-  line1: z.string().min(3),
-  line2: z.string().optional(),
-  city: z.string().min(2),
-  state: z.string().optional(),
-  postalCode: z.string().optional().default('00000'),
-  country: z.string().optional().default('MA'),
-  phone: z.string().min(5),
+  label: z.string().trim().max(40).default('Home'),
+  fullName: z.string().trim().min(2).max(100),
+  line1: z.string().trim().min(3).max(200),
+  line2: z.string().trim().max(200).optional(),
+  city: z.string().trim().min(2).max(80),
+  state: z.string().trim().max(80).optional(),
+  postalCode: z.string().trim().max(20).optional().default('00000'),
+  country: z.string().trim().max(56).optional().default('MA'),
+  phone: z.string().trim().min(5).max(30),
   isDefault: z.boolean().optional(),
 });
 

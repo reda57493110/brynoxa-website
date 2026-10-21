@@ -47,23 +47,6 @@ function setAuthCookies(res, refreshToken, csrfToken) {
   ]);
 }
 
-function sanitizeUser(user) {
-  return {
-    _id: user._id,
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    phone: user.phone,
-    addresses: user.addresses || [],
-    avatar: user.avatar,
-    isActive: user.isActive,
-    isGuest: Boolean(user.isGuest),
-    mfaEnabled: Boolean(user.mfaEnabled),
-    createdAt: user.createdAt,
-  };
-}
-
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
@@ -87,7 +70,7 @@ module.exports = async (req, res) => {
 
     let payload;
     try {
-      payload = jwt.verify(cookieToken, process.env.JWT_REFRESH_SECRET);
+      payload = jwt.verify(cookieToken, process.env.JWT_REFRESH_SECRET, { algorithms: ['HS256'] });
     } catch {
       sendJson(res, 401, { success: false, message: 'Invalid refresh token' });
       return;
@@ -136,7 +119,8 @@ module.exports = async (req, res) => {
       success: true,
       message: 'Token refreshed',
       data: {
-        user: sanitizeUser(user),
+        // Same user details as sign-in and /me (incl. wholesale status)
+        user: require('../../../backend/dist/services/auth.service').sanitizeUser(user),
         accessToken,
       },
     });
