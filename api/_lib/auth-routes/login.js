@@ -156,14 +156,6 @@ module.exports = async (req, res) => {
     }
   } catch (err) {
     console.error('Fast login failed:', err);
-    const raw = err instanceof Error ? err.message : 'Server error';
-    const message =
-      /SSL|tlsv|CERT|ECONN|Mongo|server selection/i.test(raw)
-        ? 'Sign in temporarily unavailable. Please try again in a moment.'
-        : raw;
-    sendJson(res, 500, {
-      success: false,
-      message,
-    });
+    sendJson(res, 500, { success: false, message: 'Sign in temporarily unavailable. Please try again in a moment.' });
   }
 };

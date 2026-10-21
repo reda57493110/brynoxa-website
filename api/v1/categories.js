@@ -1,6 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
-const { sendJson } = require('../_lib/http');
+const { sendJson, sendError } = require('../_lib/http');
 const { optionalUser } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -70,8 +70,13 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // GET /categories — `?all=true` returns inactive too (admin); storefront omits them.
-    const activeOnly = query.all !== 'true';
+    // GET /categories — `?all=true` returns hidden ones too, for staff only (same as brands)
+    let activeOnly = true;
+    if (query.all === 'true') {
+      const user = await optionalUser(req);
+      const { isStaffRole } = require('../../backend/dist/permissions');
+      if (user && isStaffRole(user.role)) activeOnly = false;
+    }
     const items = await catalog.listCategories(activeOnly);
     sendJson(res, 200, {
       success: true,
@@ -80,10 +85,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Fast categories failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

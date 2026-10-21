@@ -2,7 +2,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { connectMongo } = require('../_lib/mongo');
 const { paging } = require('../_lib/paging');
-const { sendJson, readJsonBody } = require('../_lib/http');
+const { sendJson, readJsonBody, sendError } = require('../_lib/http');
 const { optionalUser, requireUser } = require('../_lib/auth');
 const { rateLimit } = require('../_lib/rateLimit');
 
@@ -228,11 +228,6 @@ module.exports = async (req, res) => {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
   } catch (err) {
     console.error('Fast orders failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-      ...(err?.errors ? { errors: err.errors } : {}),
-    });
+    sendError(res, err);
   }
 };

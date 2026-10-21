@@ -1,6 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../mongo');
-const { sendJson, readJsonBody } = require('../http');
+const { sendJson, readJsonBody, sendError } = require('../http');
 const { setAuthCookies, clearAuthCookies, parseBody } = require('./cookies');
 const { rateLimit } = require('../rateLimit');
 
@@ -125,10 +125,6 @@ module.exports = async (req, res) => {
     sendJson(res, 404, { success: false, message: 'Not found' });
   } catch (err) {
     console.error('Fast auth account flow failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

@@ -1,6 +1,6 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
-const { sendJson, readJsonBody } = require('../_lib/http');
+const { sendJson, readJsonBody, sendError } = require('../_lib/http');
 const { requireUser } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -116,10 +116,6 @@ module.exports = async (req, res) => {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
   } catch (err) {
     console.error('Fast wishlist failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

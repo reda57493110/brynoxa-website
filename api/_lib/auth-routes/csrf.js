@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { sendJson } = require('../http');
+const { sendJson, sendError } = require('../http');
 
 function parseCookies(header = '') {
   const out = {};
@@ -45,9 +45,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Fast CSRF failed:', err);
-    sendJson(res, 500, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

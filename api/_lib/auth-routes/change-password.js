@@ -1,5 +1,5 @@
 const path = require('path');
-const { sendJson, readJsonBody } = require('../http');
+const { sendJson, readJsonBody, sendError } = require('../http');
 const { requireUser } = require('../auth');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
@@ -30,10 +30,6 @@ module.exports = async (req, res) => {
     sendJson(res, 200, { success: true, message: 'Password changed', data: null });
   } catch (err) {
     console.error('Fast change-password failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

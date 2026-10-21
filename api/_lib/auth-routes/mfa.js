@@ -1,5 +1,5 @@
 const path = require('path');
-const { sendJson, readJsonBody } = require('../http');
+const { sendJson, readJsonBody, sendError } = require('../http');
 const { requireStaff } = require('../auth');
 const { parseBody } = require('./cookies');
 
@@ -64,10 +64,6 @@ module.exports = async (req, res) => {
     sendJson(res, 404, { success: false, message: 'Not found' });
   } catch (err) {
     console.error('Fast MFA management failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

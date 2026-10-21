@@ -1,6 +1,6 @@
 const path = require('path');
 const { paging } = require('../_lib/paging');
-const { sendJson, readJsonBody } = require('../_lib/http');
+const { sendJson, readJsonBody, sendError } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 const { parseImageUpload, assertAllowedImage } = require('../_lib/multipart');
 
@@ -588,10 +588,6 @@ module.exports = async (req, res) => {
     await delegateToExpress(req, res, route, query);
   } catch (err) {
     console.error('Fast admin failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

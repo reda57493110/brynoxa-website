@@ -1,5 +1,5 @@
 const path = require('path');
-const { sendJson, readJsonBody } = require('../http');
+const { sendJson, readJsonBody, sendError } = require('../http');
 const { requireUser } = require('../auth');
 
 /** Same checks as the Express routes (unknown fields dropped, sizes limited). */
@@ -127,10 +127,6 @@ module.exports = async (req, res) => {
     sendJson(res, 405, { success: false, message: 'Method not allowed' });
   } catch (err) {
     console.error('Fast auth/me failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

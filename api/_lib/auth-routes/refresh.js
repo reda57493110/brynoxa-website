@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const { connectMongo } = require('../mongo');
-const { sendJson } = require('../http');
+const { sendJson, sendError } = require('../http');
 
 function hashRefreshToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -126,9 +126,6 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Fast refresh failed:', err);
-    sendJson(res, 500, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };

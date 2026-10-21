@@ -1,7 +1,7 @@
 const path = require('path');
 const { connectMongo } = require('../_lib/mongo');
 const { paging } = require('../_lib/paging');
-const { sendJson } = require('../_lib/http');
+const { sendJson, sendError } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
@@ -129,11 +129,7 @@ module.exports = async (req, res) => {
     });
   } catch (err) {
     console.error('Fast products failed:', err);
-    const status = err?.statusCode || 500;
-    sendJson(res, status, {
-      success: false,
-      message: err instanceof Error ? err.message : 'Server error',
-    });
+    sendError(res, err);
   }
 };
 
