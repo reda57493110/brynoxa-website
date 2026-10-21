@@ -76,6 +76,7 @@ function parseAmount(v: string): number | null | undefined {
 /** Where the money went: money in, each cost, what is left. */
 function Breakdown({ r }: { r: ProfitReport }) {
   const t = r.totals
+  const [open, setOpen] = useState(false)
   const line = (label: ReactNode, value: number, hint?: ReactNode, negative = true) => (
     <div className="flex items-baseline justify-between gap-3 py-1.5">
       <dt className="min-w-0">
@@ -88,7 +89,24 @@ function Breakdown({ r }: { r: ProfitReport }) {
     </div>
   )
   return (
-    <Panel title="Where the money went" description={`${dayLabel(r.from)} – ${dayLabel(r.to)} · orders by the day they were placed`}>
+    <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] sm:rounded-2xl">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center gap-3 px-3 py-3 text-start transition hover:bg-[var(--bg-muted)] sm:px-5"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">Where the money went</span>
+          <span className="block text-xs text-[var(--fg-muted)]">{open ? `${dayLabel(r.from)} – ${dayLabel(r.to)} · orders by the day they were placed` : 'Click to see each cost'}</span>
+        </span>
+        <span className={cn('shrink-0 font-display text-base font-semibold tabular-nums', t.netProfit < 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]')}>
+          {signed(t.netProfit)}
+        </span>
+        <SiteIcon name="chevron-down" size={16} className={cn('shrink-0 text-[var(--fg-muted)] transition', open && 'rotate-180')} />
+      </button>
+      {open ? (
+      <div className="space-y-3 border-t border-[var(--border)] px-3 py-3 sm:px-5 sm:py-4">
       <dl className="divide-y divide-[var(--border)] text-sm">
         {line(
           'Money received',
@@ -124,7 +142,9 @@ function Breakdown({ r }: { r: ProfitReport }) {
           {t.open > 0 ? `${t.open} order${t.open === 1 ? '' : 's'} still in progress (${money(t.openValue)}) count once delivered.` : ''}
         </p>
       ) : null}
-    </Panel>
+      </div>
+      ) : null}
+    </section>
   )
 }
 
