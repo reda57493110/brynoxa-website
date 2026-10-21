@@ -122,6 +122,7 @@ export function Services() {
                         className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                         loading="lazy"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0b1116]/55 via-transparent to-[#0b1116]/25" aria-hidden="true" />
                       <span className="absolute end-3 top-3 rounded-full border border-white/20 bg-black/45 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/90 backdrop-blur-sm">
                         {item.highlight}
                       </span>

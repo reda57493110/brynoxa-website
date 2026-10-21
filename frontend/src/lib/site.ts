@@ -66,14 +66,23 @@ export const SOCIAL_LINKS = [
 /**
  * Customer services, in display order. Copy lives in i18n `services.items`;
  * `terms` is the matching Terms of Sale section shown on the service page.
+ * Photos are free Unsplash photos (Unsplash License), linked from Unsplash's image server.
  */
+const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1600&h=1000&q=80`
+
 export const CUSTOMER_SERVICES = [
-  { id: 'warranty', slug: 'warranty', photo: '/services/warranty-art.jpg', terms: 'warranty' },
-  { id: 'returns', slug: 'returns', photo: '/services/returns-art.jpg', terms: 'returns' },
-  { id: 'cod', slug: 'cash-on-delivery', photo: '/services/cod-art.jpg', terms: 'payment' },
-  { id: 'delivery', slug: 'home-delivery', photo: '/services/delivery-art.jpg', terms: 'delivery' },
-  { id: 'support', slug: 'live-support', photo: '/services/support-art.jpg', terms: null },
-  { id: 'repair', slug: 'repair', photo: '/services/repair-art.jpg', terms: null },
+  // gaming PC lit in blue
+  { id: 'warranty', slug: 'warranty', photo: unsplash('1660855551740-4474188debdb'), terms: 'warranty' },
+  // packing a parcel to send back
+  { id: 'returns', slug: 'returns', photo: unsplash('1648747067192-790595bc6d5e'), terms: 'returns' },
+  // a new laptop just out of its box: check it, then pay
+  { id: 'cod', slug: 'cash-on-delivery', photo: unsplash('1778758421918-7176d4342765'), terms: 'payment' },
+  // courier carrying parcels to the door
+  { id: 'delivery', slug: 'home-delivery', photo: unsplash('1615897370727-d091b76d47a5'), terms: 'delivery' },
+  // support team on headsets
+  { id: 'support', slug: 'live-support', photo: unsplash('1626863905121-3b0c0ed7b94c'), terms: null },
+  // technician fitting a graphics card
+  { id: 'repair', slug: 'repair', photo: unsplash('1604754742629-3e5728249d73'), terms: null },
 ] as const
 
 export type CustomerService = (typeof CUSTOMER_SERVICES)[number]
