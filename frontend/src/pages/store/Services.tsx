@@ -9,9 +9,6 @@ import { CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 
-const photoOverlay =
-  'absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent'
-
 const SERVICES_HERO_IMAGE =
   'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=2560&q=80'
 
@@ -115,28 +112,26 @@ export function Services() {
                 >
                   <Link
                     to={`/services/${service.slug}`}
-                    className="group relative flex h-full min-h-[13rem] flex-col overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:min-h-[14rem] sm:p-6"
+                    className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                   >
-                    <SafeImage
-                      src={service.photo}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover mix-blend-multiply transition duration-500 group-hover:scale-[1.04] dark:mix-blend-normal"
-                      loading="lazy"
-                    />
-                    <div className={photoOverlay} aria-hidden="true" />
-                    <div className="relative flex justify-end">
-                      <span className="rounded-full border border-white/25 bg-black/35 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/90 backdrop-blur-sm">
+                    {/* The illustration on top, the text below it (never written over the art) */}
+                    <div className="relative aspect-[16/9] overflow-hidden bg-[#0b1116]">
+                      <SafeImage
+                        src={service.photo}
+                        alt=""
+                        className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                        loading="lazy"
+                      />
+                      <span className="absolute end-3 top-3 rounded-full border border-white/20 bg-black/45 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white/90 backdrop-blur-sm">
                         {item.highlight}
                       </span>
                     </div>
-                    <div className="relative mt-auto">
-                      <h3 className="font-display text-lg font-semibold tracking-tight text-white sm:text-xl">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-white/80">
+                    <div className="flex flex-1 flex-col p-5 sm:p-6">
+                      <h3 className="font-display text-lg font-semibold tracking-tight sm:text-xl">{item.title}</h3>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[var(--fg-muted)]">
                         {item.summary}
                       </p>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand)] sm:mt-4">
+                      <span className="mt-auto inline-flex items-center gap-1.5 pt-3 text-sm font-medium text-[var(--brand-text)] sm:pt-4">
                         {t('services.learnMore')}
                         <SiteIcon
                           name="arrow-right"

@@ -68,12 +68,12 @@ export const SOCIAL_LINKS = [
  * `terms` is the matching Terms of Sale section shown on the service page.
  */
 export const CUSTOMER_SERVICES = [
-  { id: 'warranty', slug: 'warranty', photo: '/services/warranty.jpg', terms: 'warranty' },
-  { id: 'returns', slug: 'returns', photo: '/services/returns.jpg', terms: 'returns' },
-  { id: 'cod', slug: 'cash-on-delivery', photo: '/services/cod.jpg', terms: 'payment' },
-  { id: 'delivery', slug: 'home-delivery', photo: '/services/delivery.jpg', terms: 'delivery' },
-  { id: 'support', slug: 'live-support', photo: '/services/support.jpg', terms: null },
-  { id: 'repair', slug: 'repair', photo: '/services/repair.jpg', terms: null },
+  { id: 'warranty', slug: 'warranty', photo: '/services/warranty-art.jpg', terms: 'warranty' },
+  { id: 'returns', slug: 'returns', photo: '/services/returns-art.jpg', terms: 'returns' },
+  { id: 'cod', slug: 'cash-on-delivery', photo: '/services/cod-art.jpg', terms: 'payment' },
+  { id: 'delivery', slug: 'home-delivery', photo: '/services/delivery-art.jpg', terms: 'delivery' },
+  { id: 'support', slug: 'live-support', photo: '/services/support-art.jpg', terms: null },
+  { id: 'repair', slug: 'repair', photo: '/services/repair-art.jpg', terms: null },
 ] as const
 
 export type CustomerService = (typeof CUSTOMER_SERVICES)[number]
