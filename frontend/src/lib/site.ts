@@ -73,8 +73,8 @@ const pexels = (id: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1600&h=1000&fit=crop`
 
 export const CUSTOMER_SERVICES = [
-  // technician fixing a laptop
-  { id: 'warranty', slug: 'warranty', photo: pexels(10558598), terms: 'warranty' },
+  // a new laptop handed over with its signed papers (covered from the day it arrives)
+  { id: 'warranty', slug: 'warranty', photo: pexels(7190857), terms: 'warranty' },
   // customer handing a parcel back to a courier
   { id: 'returns', slug: 'returns', photo: pexels(7843933), terms: 'returns' },
   // customer paying the courier in cash at the door
