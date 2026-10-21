@@ -137,7 +137,7 @@ export const setOrderDeposit = asyncHandler(async (req: AuthRequest, res: Respon
 });
 
 export const deleteOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
-  await orderService.deleteOrder(param(req, 'id'));
+  await orderService.deleteOrder(param(req, 'id'), { isOwner: req.user?.role === 'admin' });
   sendSuccess(res, null, 'Order deleted');
 });
 

@@ -324,7 +324,7 @@ async function handleOrderRoutes(req, res, route, query) {
   if (match && req.method === 'DELETE') {
     const user = await requireStaff(req, res, ['orders:write']);
     if (!user) return;
-    await orderService.deleteOrder(match[1]);
+    await orderService.deleteOrder(match[1], { isOwner: user.role === 'admin' });
     dashboardCache = { at: 0, data: null };
     sendJson(res, 200, { success: true, message: 'Order deleted', data: null });
     return;

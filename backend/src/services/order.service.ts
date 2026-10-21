@@ -10,6 +10,8 @@ import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
 import { getWholesaleTerms } from './wholesale.service';
 import { dispatchOrderStock, releaseOrderStock, reserveOrderStock } from './orderStock.service';
 import { ApiError } from '../utils/ApiError';
+import { DepositProof } from '../models/DepositProof';
+import { DepositReceipt } from '../models/DepositReceipt';
 import { IAddress } from '../models/User';
 import { createHash, randomBytes, randomInt } from 'crypto';
 import { waitUntil } from '@vercel/functions';
@@ -983,9 +985,36 @@ export async function getOrderById(id: string) {
   return order;
 }
 
-export async function deleteOrder(id: string) {
+const DELETABLE_STATUSES: OrderStatus[] = ['pending', 'no_answer', 'confirmed', 'cancelled'];
+
+/**
+ * Why staff may not delete this order (null = they may): once money moved or the parcel left,
+ * deleting would erase a real sale from revenue, profit and the customer's history — cancel it
+ * instead. The owner can still delete any order (test orders…).
+ */
+export function orderDeleteBlock(order: {
+  orderStatus: OrderStatus;
+  deliveredAt?: Date | null;
+  stockDispatched?: boolean;
+  paymentStatus?: string;
+  deposit?: { status?: string } | null;
+  refunds?: unknown[];
+}): string | null {
+  if (wasDelivered(order)) return 'This order was delivered';
+  if (order.stockDispatched || !DELETABLE_STATUSES.includes(order.orderStatus)) return 'This order has already been shipped';
+  if (order.deposit?.status === 'received') return 'A deposit was received for this order';
+  if (order.paymentStatus === 'paid') return 'This order is paid';
+  if (order.refunds?.length) return 'This order has refunds';
+  return null;
+}
+
+export async function deleteOrder(id: string, opts: { isOwner?: boolean } = {}) {
+  if (!Types.ObjectId.isValid(id)) throw new ApiError(404, 'Order not found');
   const order = await Order.findById(id);
   if (!order) throw new ApiError(404, 'Order not found');
+
+  const blocked = opts.isOwner ? null : orderDeleteBlock(order);
+  if (blocked) throw new ApiError(403, `${blocked}, so only the owner can delete it.`);
 
   if (order.stockReserved && !order.stockDispatched) {
     await releaseOrderStock(order, 'order deleted');
@@ -1000,6 +1029,8 @@ export async function deleteOrder(id: string) {
   }
 
   await Order.deleteOne({ _id: order._id });
+  // Private payment photos of this order go with it
+  await Promise.all([DepositProof.deleteMany({ order: order._id }), DepositReceipt.deleteMany({ order: order._id })]);
   await Notification.deleteMany({
     $or: [
       { link: `/account/orders/${order.orderNumber}` },
