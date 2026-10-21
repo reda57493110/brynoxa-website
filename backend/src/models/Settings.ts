@@ -93,6 +93,9 @@ export interface ISettings extends Document {
   /** Shown to customers whose order needs a deposit: how to pay it (bank RIB, transfer agency…). */
   depositInstructions: string;
   depositMethods: DepositMethod[];
+  /** Last change to the payment details (who / when), shown in the editor. */
+  paymentDetailsChangedAt?: Date;
+  paymentDetailsChangedBy?: string;
   /** On/off per automatic email; missing keys count as on. */
   emailNotifications: Partial<Record<EmailEvent, boolean>>;
   /** Optional extra paragraph added to a customer email. */
@@ -134,6 +137,8 @@ const settingsSchema = new Schema<ISettings>(
     supportEmail: { type: String, default: 'brynoxa.shop@gmail.com' },
     codEnabled: { type: Boolean, default: true },
     depositInstructions: { type: String, default: '', maxlength: 2000 },
+    paymentDetailsChangedAt: { type: Date },
+    paymentDetailsChangedBy: { type: String, maxlength: 200 },
     depositMethods: {
       type: [
         new Schema(
@@ -372,7 +377,7 @@ export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, 
 }
 
 /** Fields only staff may read (pricing tiers, segment rules, email configuration). */
-const PRIVATE_SETTINGS = ['courierCosts', 'depositMethods', 'depositInstructions', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+const PRIVATE_SETTINGS = ['courierCosts', 'depositMethods', 'depositInstructions', 'paymentDetailsChangedAt', 'paymentDetailsChangedBy', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
 
 /** Settings safe for the public storefront. */
 export function publicSettings(settings: ISettings) {

@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { toast } from '@/store/toastStore'
+import { formatDateTime } from '@/lib/format'
 import type { DepositMethod, DepositMethodType, StoreSettings } from '@/types'
 import { DEFAULT_ATM_CODES, STEP_PLACEHOLDERS, defaultSteps, depositSteps } from '@/lib/depositSteps'
 import { Button } from '@/components/ui/Button'
@@ -226,7 +227,17 @@ export function OrdersSettings() {
   return (
     <SettingsCard
       title="Your payment details"
-      description="Private: only customers you ask for a deposit see them, on their order page. Switch an option off to keep it without showing it."
+      description={
+        <>
+          Private: only customers you ask for a deposit see them, on their order page. Switch an option off to keep it without showing it.
+          {current.data?.changedAt ? (
+            <span className="mt-1 block font-medium text-[var(--fg)]">
+              Last changed {formatDateTime(current.data.changedAt)}
+              {current.data.changedBy ? ` by ${current.data.changedBy}` : ''}
+            </span>
+          ) : null}
+        </>
+      }
       footer={
         <SaveBar
           dirty={dirty}

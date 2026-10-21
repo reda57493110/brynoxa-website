@@ -1,4 +1,5 @@
 import { getSettings, sanitizeDepositMethods } from '../models/Settings';
+import { stampPaymentDetailsChange } from '../utils/paymentDetailsAudit';
 import { Response } from 'express';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess, sendPaginated } from '../utils/ApiResponse';
@@ -176,16 +177,26 @@ export const myDepositProofImage = asyncHandler(async (req: AuthRequest, res: Re
   sendImage(res, await depositPayment.getMyDepositProofImage(req.user!.userId, param(req, 'orderNumber'), param(req, 'proofId')));
 });
 
-/** Admin → Orders → Deposits & payments: your payment details (orders staff, not only Settings). */
+/** Your payment details: order staff can read them (to share with customers); only the owner changes them. */
 export const getDepositMethods = asyncHandler(async (_req: AuthRequest, res: Response) => {
   const settings = await getSettings();
-  sendSuccess(res, { depositMethods: settings.depositMethods ?? [], depositInstructions: settings.depositInstructions ?? '' });
+  sendSuccess(res, paymentDetailsView(settings));
 });
+
+function paymentDetailsView(settings: Awaited<ReturnType<typeof getSettings>>) {
+  return {
+    depositMethods: settings.depositMethods ?? [],
+    depositInstructions: settings.depositInstructions ?? '',
+    changedAt: settings.paymentDetailsChangedAt ?? null,
+    changedBy: settings.paymentDetailsChangedBy ?? null,
+  };
+}
 
 export const saveDepositMethods = asyncHandler(async (req: AuthRequest, res: Response) => {
   const settings = await getSettings();
   settings.depositMethods = sanitizeDepositMethods(req.body.depositMethods);
   if (req.body.depositInstructions !== undefined) settings.depositInstructions = String(req.body.depositInstructions).slice(0, 2000);
+  await stampPaymentDetailsChange(settings, req.user?.userId);
   await settings.save();
-  sendSuccess(res, { depositMethods: settings.depositMethods, depositInstructions: settings.depositInstructions }, 'Payment options saved');
+  sendSuccess(res, paymentDetailsView(settings), 'Payment options saved');
 });

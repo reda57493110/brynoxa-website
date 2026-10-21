@@ -100,6 +100,10 @@ module.exports = async (req, res) => {
           settings[key] = body[key];
         }
       }
+      if (body.depositMethods !== undefined || body.depositInstructions !== undefined) {
+        const { stampPaymentDetailsChange } = require('../../backend/dist/utils/paymentDetailsAudit');
+        await stampPaymentDetailsChange(settings, user._id.toString());
+      }
       await settings.save();
 
       sendJson(res, 200, {

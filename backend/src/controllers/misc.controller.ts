@@ -30,6 +30,7 @@ import { User } from '../models/User';
 import * as pushService from '../services/push.service';
 import { param } from '../utils/params';
 import { getUserAgent } from '../utils/requestMeta';
+import { stampPaymentDetailsChange, touchesPaymentDetails } from '../utils/paymentDetailsAudit';
 
 export const createReview = asyncHandler(async (req: Request, res: Response) => {
   const result = await reviewService.createReview({
@@ -245,8 +246,11 @@ export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response
 export const updateStoreSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSettings();
   const body = { ...req.body } as Record<string, unknown>;
-  // Courier prices are saved from Admin → Profit only
+  // Courier prices are saved from Admin → Profit only; the change stamp is set by the server
   delete body.courierCosts;
+  delete body.paymentDetailsChangedAt;
+  delete body.paymentDetailsChangedBy;
+  if (touchesPaymentDetails(body)) await stampPaymentDetailsChange(settings, (req as AuthRequest).user?.userId);
   if (Array.isArray(body.shippingByCity)) {
     body.shippingByCity = sanitizeShippingByCity(body.shippingByCity);
   }

@@ -44,6 +44,9 @@ function cleanParams<T extends object>(params?: T) {
   return Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
 }
 
+/** Your payment details, with who changed them last */
+type PaymentDetails = { depositMethods: DepositMethod[]; depositInstructions: string; changedAt?: string | null; changedBy?: string | null }
+
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
   /** Admin → Analytics report for the last `days` days. */
@@ -73,9 +76,10 @@ export const adminApi = {
 
   /** Admin → Orders → Deposits & payments: your payment details (RIB, Cash Plus…) */
   depositMethods: {
-    get: () => api.get<ApiResponse<{ depositMethods: DepositMethod[]; depositInstructions: string }>>('/admin/deposit-methods'),
+    get: () => api.get<ApiResponse<PaymentDetails>>('/admin/deposit-methods'),
+    /** Owner only (settings permission) */
     save: (payload: { depositMethods: DepositMethod[]; depositInstructions: string }) =>
-      api.put<ApiResponse<{ depositMethods: DepositMethod[]; depositInstructions: string }>>('/admin/deposit-methods', payload),
+      api.put<ApiResponse<PaymentDetails>>('/admin/deposit-methods', payload),
   },
 
   /** Admin → Complete your setup: hand-picked recommendations per main product */

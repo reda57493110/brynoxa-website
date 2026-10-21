@@ -88,10 +88,11 @@ router.post(
   order.logOrderContact
 );
 router.get('/admin/deposit-methods', requireAuth, requirePermission('orders:read'), order.getDepositMethods);
+// Changing where customers send money is owner-only (settings); order staff can only read them
 router.put(
   '/admin/deposit-methods',
   requireAuth,
-  requirePermission('orders:write'),
+  requirePermission('settings'),
   validate(depositMethodsSchema),
   order.saveDepositMethods
 );
