@@ -127,7 +127,7 @@ function AtmCodesEditor({ method, onChange }: { method: DepositMethod; onChange:
 function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (steps: string) => void }) {
   const custom = Boolean(method.steps?.trim())
   const [open, setOpen] = useState(custom)
-  const example = depositSteps(method, { customer: 'Ahmed', amount: '500 DH', order: 'BRX-20261020-1234' })
+  const example = depositSteps(method, { customer: 'Ahmed', amount: '500 DH', order: 'BRX-20261020-K7M2QX' })
   const insert = (token: string) => onChange(`${method.steps || defaultSteps(method.type)}${(method.steps || '').endsWith('\n') || !method.steps ? '' : ' '}${token}`)
 
   return (

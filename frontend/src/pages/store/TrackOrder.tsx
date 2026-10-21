@@ -58,7 +58,7 @@ export function TrackOrder() {
               label={t('orders.trackOrderNumber')}
               value={orderNumber}
               onChange={(e) => setOrderNumber(e.target.value)}
-              placeholder="BRX-20260323-1234"
+              placeholder="BRX-20260323-K7M2QX"
               required
               autoComplete="off"
             />

@@ -11,7 +11,7 @@ import { getWholesaleTerms } from './wholesale.service';
 import { dispatchOrderStock, releaseOrderStock, reserveOrderStock } from './orderStock.service';
 import { ApiError } from '../utils/ApiError';
 import { IAddress } from '../models/User';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import { waitUntil } from '@vercel/functions';
 import {
   notifyDepositReceived,
@@ -34,11 +34,16 @@ import {
   type OrderStatusGroup,
 } from '../utils/orderStatus';
 
-function generateOrderNumber() {
+// No 0/O or 1/I, so a number read over the phone is not misheard
+const ORDER_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/** BRX-YYYYMMDD-XXXXXX: 6 random characters (about a billion per day), so it cannot be guessed. */
+export function generateOrderNumber() {
   const now = new Date();
   const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `BRX-${stamp}-${rand}`;
+  let code = '';
+  for (let i = 0; i < 6; i++) code += ORDER_CODE_CHARS[randomInt(ORDER_CODE_CHARS.length)];
+  return `BRX-${stamp}-${code}`;
 }
 
 function hashReceiptToken(token: string) {
@@ -207,10 +212,29 @@ export async function createCodOrder(input: {
   }
 
   const receiptToken = randomBytes(32).toString('hex');
-  let order: InstanceType<typeof Order>;
+  let order!: InstanceType<typeof Order>;
   try {
-    order = await Order.create({
-      orderNumber: generateOrderNumber(),
+    // A clash on the order number is extremely unlikely; try a fresh number if it happens
+    for (let attempt = 1; ; attempt++) {
+      try {
+        order = await createOrderDoc(generateOrderNumber());
+        break;
+      } catch (err) {
+        const dup = (err as { code?: number; keyPattern?: Record<string, unknown> })?.code === 11000;
+        const onNumber = Boolean((err as { keyPattern?: Record<string, unknown> })?.keyPattern?.orderNumber);
+        if (!dup || !onNumber || attempt >= 3) throw err;
+      }
+    }
+  } catch (error) {
+    if (couponClaimed && couponMeta) {
+      await Coupon.updateOne({ _id: couponMeta.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
+    }
+    throw error;
+  }
+
+  function createOrderDoc(orderNumber: string) {
+    return Order.create({
+      orderNumber,
       receiptTokenHash: hashReceiptToken(receiptToken),
       user: input.userId,
       items: orderItems,
@@ -235,11 +259,6 @@ export async function createCodOrder(input: {
       customerNote: input.customerNote,
       stockReserved: false,
     });
-  } catch (error) {
-    if (couponClaimed && couponMeta) {
-      await Coupon.updateOne({ _id: couponMeta.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
-    }
-    throw error;
   }
 
   try {
@@ -287,10 +306,8 @@ function phonesMatch(a: string, b: string) {
   const left = normalizePhoneDigits(a);
   const right = normalizePhoneDigits(b);
   if (!left || !right) return false;
-  if (left === right) return true;
-  const minLen = Math.min(left.length, right.length);
-  if (minLen < 8) return false;
-  return left.endsWith(right) || right.endsWith(left);
+  // The whole number must match (formats like +212 6…, 00212 6…, 06… are already the same here)
+  return left.length >= 8 && left === right;
 }
 
 /**
