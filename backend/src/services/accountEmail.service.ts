@@ -31,6 +31,23 @@ export function verificationEmail(user: AccountUser, link: string) {
   };
 }
 
+/** A guest customer (ordered without an account) choosing a password: proves they own the email. */
+export function accountClaimEmail(user: AccountUser, link: string) {
+  return {
+    subject: 'Finish creating your account — Brynoxa',
+    ...build(
+      'Finish creating your account',
+      'Choose a password to see your Brynoxa orders.',
+      [
+        hello(user),
+        paragraphs('Someone asked to create a Brynoxa account with this email. You already ordered with us, so choose a password to open your account and follow your orders.'),
+        button('Choose my password', link),
+        paragraphs('This link expires in one hour and can be used once. If you did not ask for it, ignore this email — nothing changes.'),
+      ].join('')
+    ),
+  };
+}
+
 export function passwordResetEmail(user: AccountUser, link: string) {
   return {
     subject: 'Reset your password — Brynoxa',

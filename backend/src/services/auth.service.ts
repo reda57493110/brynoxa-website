@@ -12,7 +12,7 @@ import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { createTotpSecret, createTotpUri, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
-import { notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
+import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
 
 function scheduleStaffLoginNotify(
   user: { name?: string; email?: string; role?: string; phone?: string },
@@ -93,13 +93,35 @@ export async function requestPasswordReset(email: string) {
   const user = await User.findOne({ email: email.trim().toLowerCase() }).select(
     '+passwordResetTokenHash +passwordResetExpires'
   );
-  if (!user || user.isGuest) return;
+  if (!user) return;
+  // A guest (ordered without an account) gets the same one-time link to choose a password
+  await sendPasswordLink(user, user.isGuest ? accountClaimEmail : passwordResetEmail);
+}
+
+/** One-time "choose a password" link; whoever uses it proves they own the email. */
+async function sendPasswordLink(
+  user: InstanceType<typeof User>,
+  template: (user: InstanceType<typeof User>, link: string) => { subject: string; html: string; text: string }
+) {
   const token = randomBytes(32).toString('hex');
   user.passwordResetTokenHash = hashOneTimeToken(token);
   user.passwordResetExpires = new Date(Date.now() + ONE_TIME_TOKEN_TTL_MS);
   await user.save({ validateBeforeSave: false });
   const link = `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  await sendSecurityEmail(user.email, passwordResetEmail(user, link));
+  await sendSecurityEmail(user.email, template(user, link));
+}
+
+/**
+ * Someone wants an account for an email that already has guest orders. The account is only
+ * handed over through a link sent to that email — never in the request itself.
+ */
+async function startGuestClaim(guestId: unknown) {
+  if (!isEmailConfigured()) {
+    throw new ApiError(409, 'You already ordered with this email. Please contact us to activate your account.');
+  }
+  const user = await User.findById(guestId).select('+passwordResetTokenHash +passwordResetExpires');
+  if (!user || !user.isGuest) throw new ApiError(409, 'Email already registered');
+  await sendPasswordLink(user, accountClaimEmail);
 }
 
 export async function resendVerificationEmail(email: string) {
@@ -148,6 +170,11 @@ export async function resetPassword(token: string, newPassword: string) {
   user.passwordResetExpires = undefined;
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
+  // Using the emailed link proves the email: a guest record becomes a real account
+  if (user.isGuest) {
+    user.isGuest = false;
+    user.emailVerified = true;
+  }
   await user.save();
   notifySecurityEvent(user, 'password-reset');
 }
@@ -354,28 +381,29 @@ export async function resolveCheckoutCustomer(input: {
 
   const existing = await User.findOne({ email }).select('+password +refreshToken');
 
-  if (input.password) {
-    if (existing && !existing.isGuest) {
-      throw new ApiError(409, 'Email already registered — please sign in');
-    }
+  if (input.password && existing && !existing.isGuest) {
+    throw new ApiError(409, 'Email already registered — please sign in');
+  }
 
-    let user = existing;
-    if (user) {
-      user.name = input.name;
-      user.phone = input.phone || user.phone;
-      user.password = input.password;
-      user.isGuest = false;
-      user.emailVerified = true;
-    } else {
-      user = await User.create({
-        name: input.name,
-        email,
-        password: input.password,
-        phone: input.phone,
-        isGuest: false,
-        emailVerified: true,
-      });
+  // Earlier guest orders use this email: the order goes through as a guest and a link to choose
+  // a password is emailed, instead of handing the account (and its orders) to whoever typed it
+  if (input.password && existing?.isGuest) {
+    if (isEmailConfigured()) {
+      try {
+        await startGuestClaim(existing._id);
+      } catch (err) {
+        console.warn('Account claim email failed', err);
+      }
     }
+  } else if (input.password) {
+    const user = await User.create({
+      name: input.name,
+      email,
+      password: input.password,
+      phone: input.phone,
+      isGuest: false,
+      emailVerified: true,
+    });
 
     if (input.shippingAddress && user.addresses.length === 0) {
       user.addresses.push({
@@ -417,9 +445,9 @@ export async function resolveCheckoutCustomer(input: {
       phone: input.phone,
       isGuest: true,
     });
-  } else {
-    user.name = input.name;
-    if (input.phone) user.phone = input.phone;
+  } else if (!user.phone && input.phone) {
+    // Existing guest: anyone can type this email, so only fill in what is missing
+    user.phone = input.phone;
   }
 
   if (input.shippingAddress && user.addresses.length === 0) {
@@ -453,23 +481,20 @@ export async function registerUser(input: {
   const exists = await User.findOne({ email }).select('+password +refreshToken');
   if (exists && !exists.isGuest) throw new ApiError(409, 'Email already registered');
 
-  let user = exists;
-  if (user) {
-    user.name = input.name;
-    user.password = input.password;
-    user.phone = input.phone || user.phone;
-    user.isGuest = false;
-    user.emailVerified = true;
-  } else {
-    user = await User.create({
-      name: input.name,
-      email,
-      password: input.password,
-      phone: input.phone,
-      isGuest: false,
-      emailVerified: true,
-    });
+  // Guest orders already use this email: the owner confirms through an emailed link
+  if (exists) {
+    await startGuestClaim(exists._id);
+    return { verificationRequired: true as const };
   }
+
+  const user = await User.create({
+    name: input.name,
+    email,
+    password: input.password,
+    phone: input.phone,
+    isGuest: false,
+    emailVerified: true,
+  });
 
   const { accessToken, refreshToken } = issueTokens(user);
   user.refreshToken = hashRefreshToken(refreshToken);
