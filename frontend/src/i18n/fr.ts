@@ -247,6 +247,7 @@ export const fr: Messages = {
     mfaTitle: 'Vérifiez votre identité',
     mfaBody: 'Entrez le code à 6 chiffres de votre application d’authentification.',
     mfaCode: 'Code d’authentification',
+    mfaHint: 'Ouvrez votre application d’authentification (ex. Google Authenticator) → Brynoxa. Le code change toutes les 30 secondes.',
     mfaCodeRequired: 'Entrez votre code d’authentification',
     mfaVerify: 'Vérifier et se connecter',
     mfaBack: 'Retour à la connexion',

@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
 import { wishlistApi } from '@/api/wishlistApi'
 import { getErrorMessage } from '@/api/client'
@@ -12,6 +12,8 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 
 import { isStaffRole } from '@/lib/permissions'
+import { SiteIcon } from '@/components/ui/SiteIcon'
+import type { AuthLayoutContext } from '@/app/layouts/AuthLayout'
 
 function resolvePostLoginPath(role: string, from?: string) {
   if (from?.startsWith('/admin')) return isStaffRole(role) ? from : '/'
@@ -35,14 +37,22 @@ export function Login() {
   const [mfaCode, setMfaCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [formError, setFormError] = useState('')
+  // No shop slogan under the security check
+  const layout = useOutletContext<AuthLayoutContext | undefined>()
+  useEffect(() => {
+    layout?.setHideHint(Boolean(mfaToken))
+    return () => layout?.setHideHint(false)
+  }, [mfaToken, layout])
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (e?: FormEvent, codeNow?: string) => {
+    e?.preventDefault()
+    if (loading) return
     setFormError('')
+    const code = (codeNow ?? mfaCode).trim()
 
     const trimmedEmail = email.trim()
     if (mfaToken) {
-      if (!mfaCode.trim()) {
+      if (!/^\d{6}$/.test(code)) {
         setFormError(t('auth.mfaCodeRequired'))
         return
       }
@@ -60,7 +70,7 @@ export function Login() {
     setLoading(true)
     try {
       const res = mfaToken
-        ? await authApi.completeMfaLogin({ mfaToken, code: mfaCode.trim() })
+        ? await authApi.completeMfaLogin({ mfaToken, code })
         : await authApi.login({ email: trimmedEmail, password })
       const payload = res.data?.data
       if (!mfaToken && payload?.mfaRequired && payload.mfaToken) {
@@ -91,6 +101,8 @@ export function Login() {
       const serverBusy =
         message.includes('timed out') || message.includes('Cannot reach the server')
       setFormError(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
+      // Wrong code: empty the box so the next code can be typed straight away
+      if (mfaToken) setMfaCode('')
       toast.error(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
     } finally {
       setLoading(false)
@@ -99,27 +111,53 @@ export function Login() {
 
   return (
     <div>
-      <p className="kicker">{mfaToken ? t('auth.mfaKicker') : t('auth.kicker')}</p>
-      <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">
-        {mfaToken ? t('auth.mfaTitle') : t('auth.signInTitle')}
-      </h1>
-      <p className="mt-1 text-sm text-[var(--fg-muted)]">
-        {mfaToken ? t('auth.mfaBody') : t('auth.signInBody')}
-      </p>
+      {mfaToken ? (
+        <div className="flex flex-col items-center text-center">
+          <span className="grid size-12 place-items-center rounded-2xl bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
+            <SiteIcon name="shield" size={22} />
+          </span>
+          <h1 className="mt-3 font-display text-2xl font-semibold tracking-tight">{t('auth.mfaTitle')}</h1>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.mfaBody')}</p>
+          {email.trim() ? <p className="mt-2 rounded-full bg-[var(--bg-muted)] px-3 py-1 text-xs font-medium">{email.trim()}</p> : null}
+        </div>
+      ) : (
+        <>
+          <p className="kicker">{t('auth.kicker')}</p>
+          <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.signInTitle')}</h1>
+          <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.signInBody')}</p>
+        </>
+      )}
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
         {mfaToken ? (
-          <Input
-            label={t('auth.mfaCode')}
-            name="mfaCode"
-            inputMode="text"
-            value={mfaCode}
-            onChange={(e) => {
-              setMfaCode(e.target.value)
-              if (formError) setFormError('')
-            }}
-            required
-            autoComplete="one-time-code"
-          />
+          <div>
+            <label htmlFor="mfaCode" className="sr-only">
+              {t('auth.mfaCode')}
+            </label>
+            <input
+              id="mfaCode"
+              name="mfaCode"
+              value={mfaCode}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 6)
+                setMfaCode(digits)
+                if (formError) setFormError('')
+                // Signs in on its own once the 6th digit is typed
+                if (digits.length === 6) void onSubmit(undefined, digits)
+              }}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              autoComplete="one-time-code"
+              autoFocus
+              placeholder="••••••"
+              aria-describedby="mfa-hint"
+              className="h-16 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-center font-mono text-3xl tracking-[0.5em] outline-none transition focus:border-[var(--brand)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--brand)_30%,transparent)]"
+              dir="ltr"
+            />
+            <p id="mfa-hint" className="mt-2 text-center text-xs text-[var(--fg-muted)]">
+              {t('auth.mfaHint')}
+            </p>
+          </div>
         ) : (
           <>
             <Input

@@ -245,6 +245,7 @@ export const en = {
     mfaTitle: 'Verify your identity',
     mfaBody: 'Enter the 6-digit code from your authenticator app.',
     mfaCode: 'Authentication code',
+    mfaHint: 'Open your authenticator app (e.g. Google Authenticator) → Brynoxa. The code changes every 30 seconds.',
     mfaCodeRequired: 'Enter your authentication code',
     mfaVerify: 'Verify and sign in',
     mfaBack: 'Back to sign in',

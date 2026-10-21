@@ -247,6 +247,7 @@ export const ar: Messages = {
     mfaTitle: 'تحقق من هويتك',
     mfaBody: 'أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.',
     mfaCode: 'رمز المصادقة',
+    mfaHint: 'افتح تطبيق المصادقة (مثل Google Authenticator) ← Brynoxa. يتغيّر الرمز كل 30 ثانية.',
     mfaCodeRequired: 'أدخل رمز المصادقة',
     mfaVerify: 'تحقق وسجّل الدخول',
     mfaBack: 'العودة إلى تسجيل الدخول',
