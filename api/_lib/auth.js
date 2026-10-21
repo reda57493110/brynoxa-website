@@ -8,6 +8,15 @@ if (!module.paths.includes(backendNodeModules)) {
   module.paths.unshift(backendNodeModules);
 }
 
+/** Verifies an access token; step tokens (MFA challenge) are refused. */
+function verifyAccessJwt(token) {
+  const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
+  if (!payload || typeof payload !== 'object' || payload.purpose || !payload.userId) {
+    throw new Error('Not an access token');
+  }
+  return payload;
+}
+
 async function loadUserFromAuthHeader(req) {
   await connectMongo();
 
@@ -16,7 +25,7 @@ async function loadUserFromAuthHeader(req) {
 
   let payload;
   try {
-    payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET);
+    payload = verifyAccessJwt(header.slice(7));
   } catch {
     return null;
   }
@@ -41,7 +50,7 @@ async function requireUser(req, res) {
 
   let payload;
   try {
-    payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET);
+    payload = verifyAccessJwt(header.slice(7));
   } catch {
     sendJson(res, 401, { success: false, message: 'Invalid or expired token' });
     return null;

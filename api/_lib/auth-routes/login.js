@@ -76,7 +76,8 @@ module.exports = async (req, res) => {
     if (user.mfaEnabled && STAFF_ROLES.has(user.role)) {
       const mfaToken = jwt.sign(
         { userId: user._id.toString(), purpose: 'mfa' },
-        process.env.JWT_ACCESS_SECRET,
+        // Own key so it can never pass as an access token (same as backend utils/tokens.ts)
+        `${process.env.JWT_ACCESS_SECRET}:mfa-challenge`,
         { expiresIn: '5m' }
       );
       sendJson(res, 200, {

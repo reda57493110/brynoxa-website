@@ -27,7 +27,8 @@ module.exports = async (req, res) => {
     const header = req.headers.authorization || '';
     if (header.startsWith('Bearer ')) {
       try {
-        const payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET);
+        const payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
+        if (payload.purpose) throw new Error('Not an access token');
         await connectMongo();
         const { logoutUser } = require('../../../backend/dist/services/auth.service');
         await logoutUser(payload.userId);
