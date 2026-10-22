@@ -367,14 +367,17 @@ html[lang="ar"] {
 /* Home hero photo: shows on the deal-card side and fades out before the headline (mirrored in
    Arabic) and toward the bottom, so the text always sits on a calm background */
 .hero-photo {
-  -webkit-mask-image: linear-gradient(to right, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
-  mask-image: linear-gradient(to right, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to right, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
+  mask-image: linear-gradient(to right, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
+html:not(.dark) .hero-photo {
+  filter: saturate(1.1) contrast(1.04);
+}
 [dir='rtl'] .hero-photo {
-  -webkit-mask-image: linear-gradient(to left, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
-  mask-image: linear-gradient(to left, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+  -webkit-mask-image: linear-gradient(to left, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
+  mask-image: linear-gradient(to left, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
 }
 @media (max-width: 1023px) {
   /* phones / tablets: the deals sit under the headline, so keep the photo soft everywhere */
@@ -382,7 +385,7 @@ html[lang="ar"] {
   [dir='rtl'] .hero-photo {
     -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
     mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
-    opacity: 0.35;
+    opacity: 0.5;
   }
 }
 
@@ -393,54 +396,6 @@ html[lang="ar"] {
 }
 
 /* Home spotlight: gentle float, rotating border light, shine sweep on the button */
-/* Home hero backdrop */
-@keyframes hero-glow-drift {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-5%, 6%, 0);
-  }
-}
-
-@keyframes hero-glow-drift-alt {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(6%, -4%, 0);
-  }
-}
-
-/* One grid cell (64px) per loop, so it repeats seamlessly */
-@keyframes hero-grid-move {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(0, 64px, 0);
-  }
-}
-
-@keyframes hero-horizon-breathe {
-  from {
-    opacity: 0.65;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Paths use pathLength=1000 */
-@keyframes hero-circuit-pulse {
-  from {
-    stroke-dashoffset: 1000;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 /* Image loading: shine sweeping across the frame */
 @keyframes image-shimmer {
   from {

@@ -139,21 +139,35 @@ export function Home() {
           <div className="flex min-w-0 flex-col sm:block">
           {/* Hidden on phones (wrapper: .kicker sets its own display) */}
           <motion.div {...fadeUp(reduceMotion, 0)} className="max-sm:hidden">
-            <p className="kicker text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]">{t('home.kicker')}</p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_10%,var(--bg-elevated))] px-3.5 py-1.5 font-display text-sm font-semibold text-[var(--brand-text)] shadow-soft dark:bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] dark:text-[var(--brand)]">
+              <span className="size-2 rounded-full bg-[var(--brand)] shadow-[0_0_0_4px_color-mix(in_srgb,var(--brand)_22%,transparent)]" />
+              {t('home.kicker')}
+            </p>
           </motion.div>
 
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="order-1 max-w-2xl font-display text-base font-semibold leading-snug tracking-tight sm:mt-4 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
+            className="order-1 max-w-2xl font-display text-base font-bold leading-snug tracking-tight sm:mt-5 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
           >
             {t('home.heroTitleLead')}
-            <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{t('home.heroTitleAccent')}</span>
+            <span className="block">
+              <span className="relative isolate inline-block">
+                {/* marker stroke under the accent words */}
+                <span
+                  className="absolute inset-x-[-0.08em] bottom-[0.06em] h-[0.3em] rounded-full bg-[color-mix(in_srgb,var(--brand)_26%,transparent)] dark:bg-[color-mix(in_srgb,var(--brand)_28%,transparent)]"
+                  aria-hidden="true"
+                />
+                <span className="relative bg-gradient-to-r from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">
+                  {t('home.heroTitleAccent')}
+                </span>
+              </span>
+            </span>
           </motion.h1>
 
           <motion.p
             {...fadeUp(reduceMotion, 0.16)}
-            className="mt-3 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] max-sm:hidden sm:mt-5 sm:text-lg dark:text-white/80"
+            className="mt-3 max-w-lg text-[13px] font-medium leading-relaxed text-[var(--fg)]/75 max-sm:hidden sm:mt-5 sm:text-lg dark:text-white/85"
           >
             {t('home.heroBody')}
           </motion.p>
@@ -180,14 +194,16 @@ export function Home() {
           {/* Why buy here, at a glance */}
           <motion.ul
             {...fadeUp(reduceMotion, 0.3)}
-            className="order-4 mt-3 grid grid-cols-2 gap-1.5 text-[11px] text-[var(--fg)] sm:mt-6 sm:flex sm:flex-wrap sm:gap-x-5 sm:gap-y-2 sm:text-sm dark:text-white/90"
+            className="order-4 mt-3 grid grid-cols-2 gap-1.5 text-[11px] font-medium text-[var(--fg)] sm:mt-7 sm:flex sm:flex-wrap sm:gap-2 sm:text-sm dark:text-white/90"
           >
             {TRUST.map((item) => (
               <li
                 key={item.key}
-                className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]/70 px-2.5 py-1.5 sm:shrink-0 sm:whitespace-nowrap sm:rounded-full sm:border-0 sm:bg-transparent sm:p-0 dark:border-white/10 dark:bg-white/5 sm:dark:bg-transparent"
+                className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]/85 px-2.5 py-1.5 shadow-soft backdrop-blur-sm sm:shrink-0 sm:gap-2 sm:whitespace-nowrap sm:rounded-full sm:px-3.5 sm:py-2 dark:border-white/10 dark:bg-white/[0.06]"
               >
-                <SiteIcon name={item.icon} size={12} className="shrink-0 text-[var(--brand-text)] dark:text-[var(--brand)]" />
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] sm:size-6 dark:text-[var(--brand)]">
+                  <SiteIcon name={item.icon} size={12} />
+                </span>
                 {t(item.key)}
               </li>
             ))}
