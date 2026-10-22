@@ -152,17 +152,8 @@ export function Home() {
             className="order-1 max-w-2xl font-display text-[1.75rem] font-bold leading-[1.12] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-5xl md:text-6xl lg:[text-shadow:none] dark:text-white"
           >
             {t('home.heroTitleLead')}
-            <span className="block">
-              <span className="relative isolate inline-block">
-                {/* marker stroke under the accent words */}
-                <span
-                  className="absolute inset-x-[-0.08em] bottom-[0.06em] h-[0.3em] rounded-full bg-[color-mix(in_srgb,var(--brand)_26%,transparent)] dark:bg-[color-mix(in_srgb,var(--brand)_28%,transparent)]"
-                  aria-hidden="true"
-                />
-                <span className="relative bg-gradient-to-r from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">
-                  {t('home.heroTitleAccent')}
-                </span>
-              </span>
+            <span className="block w-fit bg-gradient-to-r [text-shadow:none] from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">
+              {t('home.heroTitleAccent')}
             </span>
           </motion.h1>
 
