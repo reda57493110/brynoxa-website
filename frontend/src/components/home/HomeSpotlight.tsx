@@ -219,7 +219,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         />
       </div>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-between gap-2 p-3 sm:-mt-6 sm:block sm:space-y-3 sm:p-5 sm:pt-0">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-between gap-2 p-3 sm:-mt-6 sm:block sm:flex-none sm:space-y-3 sm:p-5 sm:pt-0">
         <div className="min-w-0">
           {brand ? <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand)] sm:text-xs">{brand}</p> : null}
           <p className="mt-0.5 line-clamp-2 font-display text-sm font-semibold leading-snug drop-shadow sm:mt-1 sm:text-xl xl:text-2xl">
