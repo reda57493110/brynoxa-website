@@ -175,7 +175,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         ref={photo.ref}
         className={cn(
           // Grows to fill the frame when this deal has less text than the others
-          'relative isolate aspect-[4/3] flex-1 overflow-hidden [@media(max-height:820px)]:aspect-[16/10]',
+          'relative isolate aspect-[16/10] flex-1 overflow-hidden sm:aspect-[4/3] sm:[@media(max-height:820px)]:aspect-[16/10]',
           contain ? 'photo-stage' : 'bg-[#0b1116]'
         )}
       >
@@ -196,7 +196,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             'absolute inset-0 -z-10 h-full w-full max-w-none transition duration-700 ease-out group-hover:scale-[1.05]',
             // Packshots on white: whole product visible, clear of the fade; mix-blend-multiply
             // melts the photo's own off-white background into the card
-            contain ? 'object-contain px-6 pb-12 pt-10 mix-blend-multiply' : 'object-cover',
+            contain ? 'object-contain px-5 pb-9 pt-5 mix-blend-multiply sm:px-6 sm:pb-12 sm:pt-10' : 'object-cover',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
         />
@@ -209,7 +209,14 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           {d ? t('home.spotlightDeal') : t('product.featuredPick')}
         </span>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent" aria-hidden="true" />
+        {/* Fade into the dark text area (a little past the edge, so no seam shows) */}
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 -bottom-px z-10 bg-gradient-to-t from-[#0b1116] to-transparent',
+            contain ? 'h-20 via-[#0b1116]/40 sm:h-24' : 'h-16'
+          )}
+          aria-hidden="true"
+        />
       </div>
 
       <div className="relative z-10 -mt-6 space-y-2.5 p-3.5 pt-0 sm:space-y-3 sm:p-5 sm:pt-0">

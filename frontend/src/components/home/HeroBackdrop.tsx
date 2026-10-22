@@ -21,7 +21,7 @@ export function HeroBackdrop() {
       />
       {/* Phones / tablets: the photo is a clear band at the top; it darkens toward the headline and the deals */}
       <div
-        className={`${layer} inset-x-0 top-0 h-[34rem] bg-[linear-gradient(180deg,rgb(5_8_11/0.3)_0%,rgb(5_8_11/0)_22%,rgb(5_8_11/0.5)_55%,var(--bg)_100%)] lg:hidden`}
+        className={`${layer} inset-x-0 top-0 h-[26rem] bg-[linear-gradient(180deg,rgb(5_8_11/0.3)_0%,rgb(5_8_11/0)_25%,rgb(5_8_11/0.55)_55%,var(--bg)_100%)] lg:hidden`}
       />
       {/* Top: keeps the navigation bar calm; bottom: blends into the section */}
       <div className={`${layer} inset-x-0 top-0 h-28 bg-gradient-to-b from-[var(--bg)]/70 to-transparent`} />
