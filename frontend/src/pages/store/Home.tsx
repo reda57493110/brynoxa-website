@@ -82,10 +82,10 @@ function useMediaQuery(query: string) {
 }
 
 const TRUST = [
-  { key: 'home.proofCod', icon: 'banknote' },
-  { key: 'home.proofDelivery', icon: 'truck' },
-  { key: 'home.proofWarranty', icon: 'shield' },
-  { key: 'home.proofReturns', icon: 'refresh' },
+  { key: 'home.heroPerkCod', icon: 'banknote' },
+  { key: 'home.heroPerkDelivery', icon: 'truck' },
+  { key: 'home.heroPerkWarranty', icon: 'shield' },
+  { key: 'home.heroPerkReturns', icon: 'refresh' },
 ] as const
 
 export function Home() {
@@ -181,14 +181,14 @@ export function Home() {
               to="/shop"
               className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[var(--brand)] px-3.5 text-[11px] font-semibold leading-none text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:gap-2 sm:px-6 sm:text-base"
             >
-              {t('common.shopNow')}
+              {t('home.heroCtaShop')}
               <SiteIcon name="arrow-right" size={12} className="rtl:rotate-180" />
             </Link>
             <a
               href="#categories"
               className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--border)] bg-white/90 px-3.5 text-[11px] font-medium leading-none text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:border-white/18 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white sm:h-12 sm:px-5 sm:text-base"
             >
-              {t('common.browseCategories')}
+              {t('home.heroCtaBrowse')}
             </a>
           </motion.div>
 
