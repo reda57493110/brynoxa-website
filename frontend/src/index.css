@@ -364,28 +364,41 @@ html[lang="ar"] {
 
 }
 
-/* Home hero photo: shows on the deal-card side and fades out before the headline (mirrored in
-   Arabic) and toward the bottom, so the text always sits on a calm background */
-.hero-photo {
-  -webkit-mask-image: linear-gradient(to right, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
-  mask-image: linear-gradient(to right, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
+/* Home hero "speed of light": the streaks photo is light-on-black, so in dark mode it is screened
+   onto the page (black disappears); in light mode it is inverted (hue kept) and multiplied, giving
+   fine blue strokes on white. Softer behind the headline, fades out toward the bottom. */
+.hero-streaks {
+  mix-blend-mode: screen;
+  filter: saturate(1.35);
+  -webkit-mask-image: linear-gradient(to right, rgb(0 0 0 / 0.35) 0%, black 50%), linear-gradient(to bottom, black 60%, transparent 98%);
+  mask-image: linear-gradient(to right, rgb(0 0 0 / 0.35) 0%, black 50%), linear-gradient(to bottom, black 60%, transparent 98%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
-html:not(.dark) .hero-photo {
-  filter: saturate(1.1) contrast(1.04);
+[dir='rtl'] .hero-streaks {
+  -webkit-mask-image: linear-gradient(to left, rgb(0 0 0 / 0.35) 0%, black 50%), linear-gradient(to bottom, black 60%, transparent 98%);
+  mask-image: linear-gradient(to left, rgb(0 0 0 / 0.35) 0%, black 50%), linear-gradient(to bottom, black 60%, transparent 98%);
 }
-[dir='rtl'] .hero-photo {
-  -webkit-mask-image: linear-gradient(to left, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
-  mask-image: linear-gradient(to left, transparent 24%, black 58%), linear-gradient(to bottom, black 55%, transparent 96%);
+html:not(.dark) .hero-streaks {
+  mix-blend-mode: multiply;
+  filter: invert(1) hue-rotate(180deg) saturate(1.6) contrast(1.1);
+  opacity: 0.75;
 }
 @media (max-width: 1023px) {
-  /* phones / tablets: the deals sit under the headline, so keep the photo soft everywhere */
-  .hero-photo,
-  [dir='rtl'] .hero-photo {
-    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
-    mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
-    opacity: 0.5;
+  /* phones / tablets: the deals sit under the headline, so keep the streaks soft everywhere */
+  .hero-streaks,
+  [dir='rtl'] .hero-streaks {
+    -webkit-mask-image: linear-gradient(to bottom, black 35%, transparent 90%);
+    mask-image: linear-gradient(to bottom, black 35%, transparent 90%);
+    opacity: 0.6;
+  }
+}
+@keyframes hero-streaks-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-2.5%, 1.5%, 0) scale(1.04);
   }
 }
 
