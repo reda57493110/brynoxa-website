@@ -131,11 +131,11 @@ export function Home() {
       {/* The header always uses the dark design (the photo is made for it), in light mode too */}
       <section
         aria-labelledby="home-hero-heading"
-        className="dark relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--fg)] sm:min-h-[100svh]"
+        className="dark relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden rounded-b-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:min-h-[100svh] sm:rounded-b-[3rem]"
       >
         <HeroBackdrop />
 
-        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-6 pt-[calc(var(--nav-height)+0.75rem)] sm:pb-10 sm:pt-[calc(var(--nav-height)+1.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
+        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-7 pt-[calc(var(--nav-height)+9.5rem)] sm:pb-10 sm:pt-[calc(var(--nav-height)+1.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
           {/* Phones: headline → deals → buttons → trust chips. Tablet / desktop: normal order */}
           <div className="flex min-w-0 flex-col sm:block">
           {/* Hidden on phones (wrapper: .kicker sets its own display) */}
@@ -149,7 +149,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="order-1 max-w-2xl font-display text-base font-bold leading-snug tracking-tight sm:mt-5 text-balance text-[var(--fg)] sm:text-5xl md:text-6xl dark:text-white"
+            className="order-1 max-w-2xl font-display text-[1.75rem] font-bold leading-[1.12] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-5xl md:text-6xl lg:[text-shadow:none] dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block">

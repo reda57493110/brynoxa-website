@@ -373,12 +373,12 @@ html[lang="ar"] {
 }
 
 @media (max-width: 1023px) {
-  /* phones / tablets: the deals sit under the headline */
+  /* phones / tablets: the deals sit under the headline, so the photo is a clear band at the top,
+     framed on the monitor and the glowing PC */
   .hero-showroom {
-    background-position: 50% 30%;
-    opacity: 0.45;
-    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 80%);
-    mask-image: linear-gradient(to bottom, black 30%, transparent 80%);
+    bottom: auto;
+    height: 34rem;
+    background-position: 93% 35%;
   }
 }
 

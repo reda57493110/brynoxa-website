@@ -17,7 +17,11 @@ export function HeroBackdrop() {
       <div className={`${layer} hero-showroom inset-0 bg-cover`} style={{ backgroundImage: HERO_PHOTO }} />
       {/* Headline side: a fade so the text reads on the photo */}
       <div
-        className={`${layer} inset-0 bg-[linear-gradient(95deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.85)_30%,rgb(5_8_11/0.35)_50%,transparent_64%)] rtl:-scale-x-100`}
+        className={`${layer} inset-0 bg-[linear-gradient(95deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.85)_30%,rgb(5_8_11/0.35)_50%,transparent_64%)] max-lg:hidden rtl:-scale-x-100`}
+      />
+      {/* Phones / tablets: the photo is a clear band at the top; it darkens toward the headline and the deals */}
+      <div
+        className={`${layer} inset-x-0 top-0 h-[34rem] bg-[linear-gradient(180deg,rgb(5_8_11/0.3)_0%,rgb(5_8_11/0)_22%,rgb(5_8_11/0.5)_55%,var(--bg)_100%)] lg:hidden`}
       />
       {/* Top: keeps the navigation bar calm; bottom: blends into the section */}
       <div className={`${layer} inset-x-0 top-0 h-28 bg-gradient-to-b from-[var(--bg)]/70 to-transparent`} />
