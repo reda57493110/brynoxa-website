@@ -128,10 +128,10 @@ export function Home() {
 
   return (
     <>
-      {/* The header always uses the dark design (the photo is made for it), in light mode too */}
+      {/* The header always uses the dark design (the photo is made for it), in light mode too; a rounded card with a small gap around it */}
       <section
         aria-labelledby="home-hero-heading"
-        className="dark relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden rounded-b-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:min-h-[100svh] sm:rounded-b-[3rem]"
+        className="dark relative mx-2 -mt-[calc(var(--nav-height)-0.5rem)] flex flex-col overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:mx-3 sm:-mt-[calc(var(--nav-height)-0.75rem)] sm:min-h-[calc(100svh-0.75rem)] sm:rounded-[3rem]"
       >
         <HeroBackdrop />
 
