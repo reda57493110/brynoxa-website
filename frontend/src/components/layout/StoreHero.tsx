@@ -138,6 +138,7 @@ export function StoreHero({
   titleId = 'page-heading',
   maxWidthClassName = 'max-w-7xl',
   frameOverlay,
+  alwaysDark = false,
   children,
 }: {
   /** Feature the Admin → Settings → Page header product; omit to show the photo. */
@@ -156,6 +157,8 @@ export function StoreHero({
   maxWidthClassName?: string
   /** Decorative badges laid over the photo (absolutely positioned by the caller). */
   frameOverlay?: ReactNode
+  /** Use the dark design in light mode too, as a rounded card with a small gap around it (like the home header). */
+  alwaysDark?: boolean
   children?: ReactNode
 }) {
   const reduceMotion = useReducedMotion()
@@ -165,7 +168,12 @@ export function StoreHero({
   return (
     <section
       aria-labelledby={titleId}
-      className="relative -mt-[var(--nav-height)] w-full pt-[calc(var(--nav-height)+0.75rem)] dark:pt-0"
+      className={cn(
+        'relative',
+        alwaysDark
+          ? 'dark mx-2 -mt-[calc(var(--nav-height)-0.5rem)] overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:mx-3 sm:-mt-[calc(var(--nav-height)-0.75rem)] sm:rounded-[2.5rem]'
+          : '-mt-[var(--nav-height)] w-full pt-[calc(var(--nav-height)+0.75rem)] dark:pt-0'
+      )}
     >
       <div
         className={cn(
@@ -175,7 +183,21 @@ export function StoreHero({
       >
         <div className="relative overflow-hidden md:rounded-[1.75rem] md:border md:border-[var(--border)] md:bg-[var(--bg-elevated)] md:shadow-soft dark:rounded-none dark:border-0 dark:shadow-none md:dark:bg-[#080b0e]">
           <div className="absolute inset-0 hidden dark:block" aria-hidden="true">
-            {showcase ? (
+            {alwaysDark ? (
+              <>
+                {/* The page photo behind everything (phones too), faded on the text side */}
+                <SafeImage
+                  src={image}
+                  alt=""
+                  width={2560}
+                  height={1440}
+                  sizes="100vw"
+                  className={cn('absolute inset-0 h-full w-full max-w-none object-cover', imagePosition)}
+                  fetchPriority="high"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(95deg,rgb(5_8_11/0.95)_0%,rgb(5_8_11/0.82)_32%,rgb(5_8_11/0.35)_58%,rgb(5_8_11/0.2)_100%)] max-md:bg-[linear-gradient(180deg,rgb(5_8_11/0.35)_0%,rgb(5_8_11/0.55)_45%,rgb(5_8_11/0.92)_100%)] rtl:-scale-x-100 max-md:rtl:scale-x-100" />
+              </>
+            ) : showcase ? (
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_30%,rgba(0,194,255,0.16),transparent_60%)] rtl:-scale-x-100" />
             ) : (
               <>
@@ -198,7 +220,8 @@ export function StoreHero({
             className={cn(
               'relative z-10 grid items-center gap-4 px-0 pb-4 pt-0 sm:px-0 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-8 md:px-8 md:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-10 lg:px-10 lg:py-8',
               !showcase && 'md:dark:grid-cols-1!',
-              'dark:px-0 dark:pb-4 dark:pt-[calc(var(--nav-height)+0.5rem)] sm:dark:px-0 md:dark:px-6 md:dark:pb-10 md:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
+              alwaysDark ? 'dark:pt-[calc(var(--nav-height)+3.5rem)] dark:pb-5 md:dark:pt-[calc(var(--nav-height)+2rem)]' : 'dark:pt-[calc(var(--nav-height)+0.5rem)]',
+              'dark:px-0 dark:pb-4 sm:dark:px-0 md:dark:px-6 md:dark:pb-10 md:dark:pt-[calc(var(--nav-height)+2rem)] lg:dark:px-8',
               maxWidthClassName
             )}
           >
@@ -238,7 +261,7 @@ export function StoreHero({
             </div>
 
             {product ? (
-              <motion.div {...fadeUp(reduceMotion, 0.1)} className="relative order-first md:order-none">
+              <motion.div {...fadeUp(reduceMotion, 0.1)} className={cn('relative order-first md:order-none', alwaysDark && 'max-md:hidden')}>
                 <div
                   className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] md:dark:block"
                   aria-hidden="true"
@@ -246,7 +269,12 @@ export function StoreHero({
                 <HeroProductCard product={product} />
               </motion.div>
             ) : pending ? (
-              <div className="relative order-first aspect-[4/3.5] overflow-hidden bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5">
+              <div
+                className={cn(
+                  'relative order-first aspect-[4/3.5] overflow-hidden bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5',
+                  alwaysDark && 'max-md:hidden'
+                )}
+              >
                 <div className="absolute inset-0 animate-pulse bg-[var(--bg-elevated)]/40" aria-hidden="true" />
                 <ImageSpinner />
               </div>
