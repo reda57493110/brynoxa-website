@@ -364,29 +364,11 @@ html[lang="ar"] {
 
 }
 
-/* Home hero photo (dark mode): sharp, framed so the computers sit in view beside the headline */
+/* Home hero photo: sharp, framed so the computers sit in view beside the headline */
 .hero-showroom {
   background-position: 62% 50%;
 }
 [dir='rtl'] .hero-showroom {
-  transform: scaleX(-1);
-}
-
-/* Home hero "showroom window" (light mode): the same photo in a large rounded panel on the deals
-   side; the deal card floats over it, the monitor shows beside the card and the PC behind/after it */
-.hero-window {
-  top: 7.5rem;
-  bottom: 9%;
-  inset-inline-start: 50.5%;
-  inset-inline-end: 2%;
-  border-radius: 2.75rem;
-  border: 1px solid rgb(0 119 168 / 0.22);
-  box-shadow:
-    0 0 0 8px rgb(255 255 255 / 0.7),
-    0 0 0 9px rgb(0 119 168 / 0.1),
-    0 40px 90px -30px rgb(10 40 70 / 0.45);
-}
-[dir='rtl'] .hero-window > :first-child {
   transform: scaleX(-1);
 }
 
@@ -397,9 +379,6 @@ html[lang="ar"] {
     opacity: 0.45;
     -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 80%);
     mask-image: linear-gradient(to bottom, black 30%, transparent 80%);
-  }
-  .hero-window {
-    display: none;
   }
 }
 

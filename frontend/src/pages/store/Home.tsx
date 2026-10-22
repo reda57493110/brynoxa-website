@@ -128,9 +128,10 @@ export function Home() {
 
   return (
     <>
+      {/* The header always uses the dark design (the photo is made for it), in light mode too */}
       <section
         aria-labelledby="home-hero-heading"
-        className="relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden bg-[var(--bg)] sm:min-h-[100svh]"
+        className="dark relative -mt-[var(--nav-height)] flex w-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--fg)] sm:min-h-[100svh]"
       >
         <HeroBackdrop />
 
