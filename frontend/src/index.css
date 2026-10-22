@@ -364,6 +364,28 @@ html[lang="ar"] {
 
 }
 
+/* Home hero photo: shows on the deal-card side and fades out before the headline (mirrored in
+   Arabic) and toward the bottom, so the text always sits on a calm background */
+.hero-photo {
+  -webkit-mask-image: linear-gradient(to right, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+  mask-image: linear-gradient(to right, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+[dir='rtl'] .hero-photo {
+  -webkit-mask-image: linear-gradient(to left, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+  mask-image: linear-gradient(to left, transparent 34%, black 70%), linear-gradient(to bottom, black 55%, transparent 96%);
+}
+@media (max-width: 1023px) {
+  /* phones / tablets: the deals sit under the headline, so keep the photo soft everywhere */
+  .hero-photo,
+  [dir='rtl'] .hero-photo {
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
+    mask-image: linear-gradient(to bottom, black 30%, transparent 85%);
+    opacity: 0.35;
+  }
+}
+
 /* Packshots on white: a soft light-grey studio backdrop; with mix-blend-multiply the photo's own
    white melts into it, so the product looks placed, not boxed */
 .photo-stage {
