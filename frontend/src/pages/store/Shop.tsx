@@ -20,9 +20,8 @@ import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { StoreHero, heroChip, heroInput } from '@/components/layout/StoreHero'
 
-// Blue-lit monitor and a glowing gaming PC (free Pexels photo)
 const SHOP_HERO_IMAGE =
-  'https://images.pexels.com/photos/7858742/pexels-photo-7858742.jpeg?auto=compress&cs=tinysrgb&w=2200&h=1240&fit=crop'
+  'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
 
 export function Shop() {
   const t = useT()
@@ -188,7 +187,6 @@ export function Shop() {
     <>
       <StoreHero
         page="shop"
-        alwaysDark
         titleId="shop-heading"
         image={SHOP_HERO_IMAGE}
         imagePosition="object-[50%_40%]"
@@ -245,9 +243,7 @@ export function Shop() {
           {(
             [
               { icon: 'banknote' as const, label: t('home.heroPerkCod') },
-              { icon: 'truck' as const, label: t('home.heroPerkDelivery') },
               { icon: 'shield' as const, label: t('home.heroPerkWarranty') },
-              { icon: 'refresh' as const, label: t('home.heroPerkReturns') },
             ] as const
           ).map((item) => (
             <li key={item.label} className={heroChip}>
