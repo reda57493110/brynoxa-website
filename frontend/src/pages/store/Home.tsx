@@ -149,7 +149,7 @@ export function Home() {
           <motion.h1
             id="home-hero-heading"
             {...fadeUp(reduceMotion, 0.08)}
-            className="order-1 max-w-2xl font-display text-[1.75rem] font-bold leading-[1.12] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-5xl md:text-6xl lg:[text-shadow:none] dark:text-white"
+            className="order-1 max-w-2xl font-display text-[1.5rem] font-bold leading-[1.15] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-4xl md:text-[2.75rem] xl:text-5xl lg:[text-shadow:none] dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block w-fit bg-gradient-to-r [text-shadow:none] from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">

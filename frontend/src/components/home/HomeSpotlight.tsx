@@ -79,7 +79,7 @@ function DealSticker({ percent, className }: { percent: number; className?: stri
   return (
     <span
       className={cn(
-        'relative inline-flex flex-col items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_26%,#9be8ff_0%,var(--brand)_48%,#0091c2_100%)] text-[var(--brand-fg)] shadow-[0_8px_20px_-8px_rgb(0_145_194/0.6)] ring-[3px] ring-white dark:ring-[#0b1116]',
+        'relative inline-flex flex-col items-center justify-center rounded-full bg-[radial-gradient(circle_at_32%_26%,#9be8ff_0%,var(--brand)_48%,#0091c2_100%)] text-[var(--brand-fg)] shadow-[0_8px_20px_-8px_rgb(0_145_194/0.6)] ring-2 ring-white dark:ring-[#0b1116]',
         className
       )}
       aria-label={`-${percent}% ${t('home.offLabel')}`}
@@ -132,7 +132,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             key={p._id}
             percent={d.percent}
             className={cn(
-              'absolute z-20 h-10 w-10 text-xs transition-[opacity,transform] max-sm:start-[calc(42%-2.85rem)] max-sm:top-2 sm:end-4 sm:top-4 sm:h-16 sm:w-16 sm:text-lg duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'absolute z-20 h-9 w-9 text-[11px] transition-[opacity,transform] max-sm:start-[calc(42%-2.6rem)] max-sm:top-2 sm:end-4 sm:top-4 sm:h-12 sm:w-12 sm:text-sm duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
               i === active ? '-rotate-6 scale-100 opacity-100' : 'pointer-events-none rotate-6 scale-75 opacity-0'
             )}
           />
