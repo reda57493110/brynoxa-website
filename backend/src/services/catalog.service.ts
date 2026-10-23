@@ -179,9 +179,14 @@ export async function deleteCategory(id: string) {
   return category;
 }
 
+/**
+ * Public list: active brands that at least one visible product uses (the shop filter only offers
+ * brands the owner actually sells). Staff (`activeOnly = false`) get every brand, to pick from.
+ */
 export async function listBrands(activeOnly = true) {
-  const filter = activeOnly ? { isActive: true } : {};
-  return Brand.find(filter).sort({ name: 1 });
+  if (!activeOnly) return Brand.find({}).sort({ name: 1 });
+  const used = await Product.distinct('brand', { isActive: true, brand: { $ne: null } });
+  return Brand.find({ isActive: true, _id: { $in: used } }).sort({ name: 1 });
 }
 
 export async function createBrand(data: { name: string; logo?: string; isActive?: boolean }) {
