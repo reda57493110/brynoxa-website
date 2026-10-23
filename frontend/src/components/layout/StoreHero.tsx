@@ -52,7 +52,7 @@ function HeroProductCard({ product }: { product: Product }) {
     >
       <div
         ref={photo.ref}
-        className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:aspect-[16/10] lg:aspect-[16/9]"
+        className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:m-2.5 md:aspect-[16/10] md:rounded-[1.1rem] lg:aspect-[16/9]"
       >
         {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-[var(--bg-muted)]" aria-hidden="true" />}
         <SafeImage
