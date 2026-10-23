@@ -172,7 +172,7 @@ export function Shop() {
 
   const chip = (active: boolean) =>
     cn(
-      'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border ps-1 pe-3.5 text-[13px] font-medium transition active:scale-[0.97] sm:h-10 sm:gap-2 sm:ps-1.5 sm:pe-4 sm:text-sm',
+      'inline-flex h-8 shrink-0 items-center gap-1 rounded-full border ps-1 pe-3 text-xs font-medium transition active:scale-[0.97] sm:h-10 sm:gap-2 sm:ps-1.5 sm:pe-4 sm:text-sm',
       'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
       active
         ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
@@ -182,11 +182,11 @@ export function Shop() {
   const chipIcon = (active: boolean, name: SiteIconName) => (
     <span
       className={cn(
-        'grid size-7 shrink-0 place-items-center rounded-full',
+        'grid size-6 shrink-0 place-items-center rounded-full sm:size-7',
         active ? 'bg-white/25 text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
       )}
     >
-      <SiteIcon name={name} size={15} />
+      <SiteIcon name={name} size={13} />
     </span>
   )
 
