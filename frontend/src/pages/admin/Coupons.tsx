@@ -17,7 +17,7 @@ import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { Coupon } from '@/types'
 
-const EMPTY = { code: '', type: 'percent' as 'percent' | 'fixed', value: '10', minOrder: '0', maxUses: '100', expiresAt: '' }
+const EMPTY = { code: '', type: 'percent' as 'percent' | 'fixed', value: '10', minOrder: '0', maxUses: '100', perCustomerLimit: '1', expiresAt: '' }
 
 /** What the shop will actually do with this code right now. */
 function couponState(c: Coupon): { label: string; variant: BadgeVariant } {
@@ -49,6 +49,7 @@ export function Coupons() {
           : undefined,
     minOrder: Number(form.minOrder) < 0 ? '0 or more' : undefined,
     maxUses: !Number.isInteger(Number(form.maxUses)) || Number(form.maxUses) < 0 ? 'Whole number, 0 = unlimited' : undefined,
+    perCustomerLimit: !Number.isInteger(Number(form.perCustomerLimit)) || Number(form.perCustomerLimit) < 0 ? 'Whole number, 0 = unlimited' : undefined,
   }
   const valid = form.code.trim().length >= 3 && !Object.values(errors).some(Boolean)
 
@@ -60,6 +61,7 @@ export function Coupons() {
         value,
         minOrder: Number(form.minOrder) || 0,
         maxUses: Number(form.maxUses) || 0,
+        perCustomerLimit: Number(form.perCustomerLimit) || 0,
         expiresAt: form.expiresAt || undefined,
       }),
     onSuccess: () => {
@@ -150,6 +152,15 @@ export function Coupons() {
             value={form.maxUses}
             onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
             error={errors.maxUses}
+          />
+          <Input
+            label="Uses per customer (0 = ∞)"
+            type="number"
+            min={0}
+            step={1}
+            value={form.perCustomerLimit}
+            onChange={(e) => setForm({ ...form, perCustomerLimit: e.target.value })}
+            error={errors.perCustomerLimit}
           />
           <div className="col-span-2 lg:col-span-1">
           <Input

@@ -11,6 +11,7 @@ export async function createCoupon(data: {
   value: number;
   minOrder?: number;
   maxUses?: number;
+  perCustomerLimit?: number;
   startsAt?: string;
   expiresAt?: string;
   isActive?: boolean;
@@ -31,6 +32,7 @@ export async function updateCoupon(id: string, data: Partial<{
   value: number;
   minOrder: number;
   maxUses: number;
+  perCustomerLimit: number;
   startsAt: string;
   expiresAt: string;
   isActive: boolean;
@@ -42,6 +44,7 @@ export async function updateCoupon(id: string, data: Partial<{
   if (data.value !== undefined) coupon.value = data.value;
   if (data.minOrder !== undefined) coupon.minOrder = data.minOrder;
   if (data.maxUses !== undefined) coupon.maxUses = data.maxUses;
+  if (data.perCustomerLimit !== undefined) coupon.perCustomerLimit = data.perCustomerLimit;
   if (data.startsAt !== undefined) coupon.startsAt = data.startsAt ? new Date(data.startsAt) : undefined;
   if (data.expiresAt !== undefined) coupon.expiresAt = data.expiresAt ? new Date(data.expiresAt) : undefined;
   if (data.isActive !== undefined) coupon.isActive = data.isActive;

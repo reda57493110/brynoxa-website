@@ -147,9 +147,10 @@ export const createOrderSchema = z.object({
         qty: z.number().int().min(1).max(99),
       })
     )
-    .min(1),
+    .min(1)
+    .max(50),
   shippingAddress: addressSchema,
-  couponCode: z.string().optional(),
+  couponCode: z.string().max(64).optional(),
   customerNote: z.string().max(500).optional(),
   /** Guest checkout — required when not logged in */
   email: z.string().trim().email().optional(),
@@ -224,13 +225,14 @@ export const couponSchema = z.object({
   value: z.number().min(0),
   minOrder: z.number().min(0).optional(),
   maxUses: z.number().int().min(0).optional(),
+  perCustomerLimit: z.number().int().min(0).max(1000).optional(),
   startsAt: z.string().datetime().optional().or(z.string().optional()),
   expiresAt: z.string().datetime().optional().or(z.string().optional()),
   isActive: z.boolean().optional(),
 });
 
 export const validateCouponSchema = z.object({
-  code: z.string().min(1),
+  code: z.string().min(1).max(64),
   subtotal: z.number().min(0),
 });
 

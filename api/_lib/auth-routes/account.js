@@ -37,7 +37,8 @@ module.exports = async (req, res) => {
     const body = await readJsonBody(req);
 
     const limit = ACTION_LIMITS[action];
-    let perKey = limit === 'emailSend' && typeof body?.email === 'string' ? body.email : undefined;
+    // Actions that send an email to an address are also limited per address
+    let perKey = (limit === 'emailSend' || action === 'register') && typeof body?.email === 'string' ? body.email : undefined;
     if (action === 'mfa/login' && typeof body?.mfaToken === 'string') {
       // Count code tries per account (from any address) and per sign-in challenge; the token is
       // checked properly afterwards, here it only names the account / the challenge

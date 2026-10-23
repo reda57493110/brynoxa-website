@@ -112,6 +112,11 @@ module.exports = async (req, res) => {
       if (!(await rateLimit(req, res, 'order'))) return;
       const user = await optionalUser(req);
       const shippingAddress = body.shippingAddress;
+      // Per customer too: the email gets order and account emails, the phone identifies a guest
+      const emailKey = body.email ? `email:${String(body.email).trim().toLowerCase()}` : user ? `user:${user._id}` : null;
+      const phoneKey = String(shippingAddress?.phone || '').replace(/\D/g, '').slice(-9);
+      if (emailKey && !(await rateLimit(req, res, 'orderPerCustomer', emailKey, { perIp: false }))) return;
+      if (phoneKey.length >= 8 && !(await rateLimit(req, res, 'orderPerCustomer', `phone:${phoneKey}`, { perIp: false }))) return;
 
       const { userId, auth } = await authService.resolveCheckoutCustomer({
         // Match Express optionalAuth: guest sessions do not count as signed-in checkout.

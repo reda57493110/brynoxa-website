@@ -77,6 +77,32 @@ export async function validateCoupon(code: string, subtotal: number) {
   return { coupon, discount };
 }
 
+/** Same phone written differently ("06 12-34", "+212 6 12 34") → its last 9 digits. */
+export function phoneKey(phone?: string) {
+  return String(phone || '').replace(/\D/g, '').slice(-9);
+}
+
+/**
+ * A coupon limited per customer: counts this person's orders that used it (not cancelled), by
+ * account or by phone number — a guest giving a new email each time still has the same phone.
+ */
+async function assertCouponPerCustomer(couponId: Types.ObjectId, limit: number, userId: string, phone?: string) {
+  if (!limit || limit <= 0) return;
+  const key = phoneKey(phone);
+  const used = await Order.find(
+    { 'coupon.couponId': couponId, orderStatus: { $ne: 'cancelled' } },
+    { user: 1, 'shippingAddress.phone': 1 }
+  )
+    .limit(5000)
+    .lean();
+  const mine = used.filter(
+    (o) => String(o.user) === String(userId) || (key.length >= 8 && phoneKey(o.shippingAddress?.phone) === key)
+  ).length;
+  if (mine >= limit) {
+    throw new ApiError(400, limit === 1 ? 'You have already used this coupon' : `This coupon can be used ${limit} times per customer`);
+  }
+}
+
 async function claimCoupon(couponId: Types.ObjectId) {
   const now = new Date();
   const coupon = await Coupon.findOneAndUpdate(
@@ -169,12 +195,12 @@ const formatDh = (amount: number) => `${amount.toLocaleString('en-US')} DH`;
 async function priceOrder(subtotal: number, couponCode?: string, city?: string) {
   const settings = await getSettings();
   let discount = 0;
-  let couponMeta: { code: string; couponId: Types.ObjectId } | undefined;
+  let couponMeta: { code: string; couponId: Types.ObjectId; perCustomerLimit: number } | undefined;
 
   if (couponCode) {
     const { coupon, discount: d } = await validateCoupon(couponCode, subtotal);
     discount = d;
-    couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId };
+    couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId, perCustomerLimit: coupon.perCustomerLimit || 0 };
   }
 
   const taxable = Math.max(subtotal - discount, 0);
@@ -208,6 +234,7 @@ export async function createCodOrder(input: {
 
   let couponClaimed = false;
   if (couponMeta) {
+    await assertCouponPerCustomer(couponMeta.couponId, couponMeta.perCustomerLimit, input.userId, input.shippingAddress?.phone);
     await claimCoupon(couponMeta.couponId);
     couponClaimed = true;
   }
@@ -242,7 +269,7 @@ export async function createCodOrder(input: {
       pricing: { ...pricing, wholesaleDiscount },
       channel: terms ? 'wholesale' : 'retail',
       wholesaleTier: terms ? { id: terms.tierId, name: terms.tierName, discountPercent: terms.discountPercent } : undefined,
-      coupon: couponMeta,
+      coupon: couponMeta ? { code: couponMeta.code, couponId: couponMeta.couponId } : undefined,
       shippingAddress: input.shippingAddress,
       paymentMethod: 'cod',
       paymentStatus: 'pending',

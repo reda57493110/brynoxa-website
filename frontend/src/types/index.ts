@@ -378,6 +378,8 @@ export interface Coupon {
   value: number
   minOrder: number
   maxUses: number
+  /** 0 = no limit */
+  perCustomerLimit?: number
   usedCount: number
   startsAt?: string
   expiresAt?: string

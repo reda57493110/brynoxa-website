@@ -20,6 +20,8 @@ const LIMITS = {
   emailLink: { max: 20, windowMs: 15 * 60 * 1000, message: 'Too many attempts. Please wait a few minutes and try again.' },
   // Shop. Generous: many customers in Morocco share one mobile IP address.
   order: { max: 20, windowMs: 60 * 60 * 1000, message: 'Too many orders from this connection. Please wait a little or contact us on WhatsApp.' },
+  // Same email or phone, from any connection (stops order / email floods aimed at one person)
+  orderPerCustomer: { max: 8, windowMs: 60 * 60 * 1000, message: 'Too many orders for this email or phone. Please wait a little or contact us on WhatsApp.' },
   track: { max: 30, windowMs: 15 * 60 * 1000, message: 'Too many tracking attempts. Please wait a few minutes and try again.' },
   coupon: { max: 30, windowMs: 15 * 60 * 1000, message: 'Too many coupon attempts. Please wait a few minutes and try again.' },
   depositReport: { max: 20, windowMs: 60 * 60 * 1000, message: 'Too many attempts. Please wait a little and try again.' },

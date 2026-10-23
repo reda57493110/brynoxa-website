@@ -6,6 +6,8 @@ export interface ICoupon extends Document {
   value: number;
   minOrder: number;
   maxUses: number;
+  /** How many orders one customer may place with it (0 = no limit). */
+  perCustomerLimit: number;
   usedCount: number;
   startsAt?: Date;
   expiresAt?: Date;
@@ -19,6 +21,7 @@ const couponSchema = new Schema<ICoupon>(
     value: { type: Number, required: true, min: 0 },
     minOrder: { type: Number, default: 0 },
     maxUses: { type: Number, default: 0 },
+    perCustomerLimit: { type: Number, default: 0, min: 0 },
     usedCount: { type: Number, default: 0 },
     startsAt: { type: Date },
     expiresAt: { type: Date },
