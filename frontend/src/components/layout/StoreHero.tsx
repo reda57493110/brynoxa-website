@@ -52,7 +52,10 @@ function HeroProductCard({ product }: { product: Product }) {
     >
       <div
         ref={photo.ref}
-        className="relative aspect-[4/3] overflow-hidden bg-[var(--bg-muted)] md:m-2.5 md:aspect-[16/10] md:rounded-[1.1rem] lg:aspect-[16/9]"
+        className={cn(
+          'relative aspect-[4/3] overflow-hidden md:m-2.5 md:aspect-[16/10] md:rounded-[1.1rem] lg:aspect-[16/9]',
+          contain ? 'photo-stage' : 'bg-[var(--bg-muted)]'
+        )}
       >
         {photo.loaded ? null : <div className="absolute inset-0 animate-pulse bg-[var(--bg-muted)]" aria-hidden="true" />}
         <SafeImage
@@ -65,7 +68,7 @@ function HeroProductCard({ product }: { product: Product }) {
           referrerPolicy="no-referrer"
           className={cn(
             'absolute inset-0 h-full w-full max-w-none transition duration-500 group-hover:scale-[1.04]',
-            contain ? 'bg-white object-contain p-4 sm:p-6' : 'object-cover',
+            contain ? 'object-contain p-4 mix-blend-multiply sm:p-6' : 'object-cover',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
           loading="eager"

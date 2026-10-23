@@ -138,7 +138,9 @@ export function ProductCard({
       <div
         ref={photo.ref}
         className={cn(
+          // Inset with all four corners rounded (not cut by the card edge)
           'relative overflow-hidden',
+          spotlight ? 'm-2 rounded-[1.1rem] sm:m-3' : 'm-1.5 rounded-[calc(var(--radius-card)-0.3rem)]',
           contain ? 'photo-stage' : 'bg-[var(--bg-muted)]',
           spotlight
             ? 'aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:min-h-[20rem] lg:max-h-[26rem]'
@@ -166,7 +168,7 @@ export function ProductCard({
             }
             className={cn(
               'h-full w-full transition duration-500 ease-out group-hover:scale-[1.03]',
-              contain ? 'object-contain p-3 sm:p-5' : 'object-cover',
+              contain ? 'object-contain p-3 mix-blend-multiply sm:p-5' : 'object-cover',
               photo.loaded ? 'opacity-100' : 'opacity-0'
             )}
           />
