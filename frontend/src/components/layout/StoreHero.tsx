@@ -48,12 +48,12 @@ function HeroProductCard({ product }: { product: Product }) {
   return (
     <Link
       to={`/product/${product.slug}`}
-      className="group relative block overflow-hidden transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] md:rounded-2xl md:border md:border-[var(--border)] md:bg-[var(--bg-elevated)] md:shadow-soft md:hover:border-[var(--brand)] md:dark:border-white/10 md:dark:bg-[#0e1419]"
+      className="group relative block overflow-hidden transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] mx-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft hover:border-[var(--brand)] sm:mx-6 md:mx-0 dark:border-white/10 dark:bg-[#0e1419]"
     >
       <div
         ref={photo.ref}
         className={cn(
-          'relative aspect-[4/3] overflow-hidden md:aspect-[16/10] md:rounded-[calc(1rem-1px)] lg:aspect-[16/9]',
+          'relative aspect-[16/10] overflow-hidden rounded-[calc(1rem-1px)] lg:aspect-[16/9]',
           contain ? 'photo-stage' : 'bg-[var(--bg-muted)]'
         )}
       >
@@ -94,7 +94,7 @@ function HeroProductCard({ product }: { product: Product }) {
       </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 pt-3 sm:px-6 md:border-t md:border-[var(--border)] md:px-5 md:py-3.5 md:dark:border-white/10">
+      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-5 md:py-3.5">
         <div className="min-w-0">
           {brand ? (
             <p className="text-[11px] font-medium uppercase tracking-wider text-[var(--fg-muted)] max-md:hidden dark:text-white/60">
