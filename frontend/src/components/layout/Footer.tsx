@@ -1,8 +1,4 @@
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { categoriesApi } from '@/api/categoriesApi'
-import { categoryDisplayName } from '@/i18n'
-import { useLocaleStore } from '@/store/localeStore'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -41,18 +37,10 @@ function FooterHeading({ children }: { children: string }) {
 export function Footer() {
   const t = useT()
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
-  const locale = useLocaleStore((s) => s.locale)
-  // Categories on every page: easy to reach for customers, and links Google follows
-  const categories = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => (await categoriesApi.list()).data.data,
-    staleTime: 5 * 60_000,
-  })
-  const categoryLinks = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking').slice(0, 6)
 
   return (
     <footer className="mt-auto border-t border-[var(--border)] bg-[var(--bg-elevated)] pb-[env(safe-area-inset-bottom)]">
-      <Container className="grid gap-5 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_1fr_minmax(0,1.15fr)] lg:gap-8 lg:py-10">
+      <Container className="grid gap-5 py-5 sm:grid-cols-2 sm:gap-8 sm:py-8 lg:grid-cols-[minmax(0,1.4fr)_1fr_1fr_minmax(0,1.15fr)] lg:gap-8 lg:py-10">
         <div className="sm:col-span-2 lg:col-span-1">
           <div className="flex flex-wrap items-center gap-3">
             <BrandLogo markClassName="h-9 w-9 sm:h-10 sm:w-10" />
@@ -97,20 +85,6 @@ export function Footer() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:contents">
-          {categoryLinks.length ? (
-            <nav aria-label={t('shop.shopByCategory')}>
-              <FooterHeading>{t('shop.shopByCategory')}</FooterHeading>
-              <ul className="mt-2 flex flex-col gap-1.5 sm:mt-3 sm:gap-2">
-                {categoryLinks.map((c) => (
-                  <li key={c._id}>
-                    <Link to={`/category/${c.slug}`} className={linkClass}>
-                      {categoryDisplayName(locale, c.slug, c.name)}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          ) : null}
           <nav aria-label={t('footer.explore')}>
             <FooterHeading>{t('footer.explore')}</FooterHeading>
             <ul className="mt-2 flex flex-col gap-1.5 sm:mt-3 sm:gap-2">
