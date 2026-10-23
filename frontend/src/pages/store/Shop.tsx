@@ -290,8 +290,9 @@ export function Shop() {
             ))}
           </div>
 
-          <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5 sm:gap-3 lg:shrink-0 lg:border-0 lg:pt-0">
-          <p className="min-w-0 truncate text-xs text-[var(--fg-muted)] sm:text-sm">
+          {/* Phones: count on its own line, Filters + Sort as two equal buttons under it (fits any text size) */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5 sm:flex-nowrap sm:gap-3 lg:shrink-0 lg:border-0 lg:pt-0">
+          <p className="min-w-0 text-xs text-[var(--fg-muted)] sm:truncate sm:text-sm">
             {productsLoading ? (
               t('ui.loadingProducts')
             ) : (
@@ -315,10 +316,10 @@ export function Shop() {
               </>
             )}
           </p>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center lg:block">
             <button
               type="button"
-              className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm lg:hidden"
+              className="relative inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm lg:hidden"
               onClick={() => setFiltersOpen(true)}
             >
               <SiteIcon name="sliders" size={16} />
@@ -329,7 +330,7 @@ export function Shop() {
                 </span>
               ) : null}
             </button>
-            <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} />
+            <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} className="max-sm:h-10 max-sm:w-full" />
           </div>
           </div>
         </div>
