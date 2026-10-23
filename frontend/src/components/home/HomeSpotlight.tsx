@@ -132,7 +132,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             key={p._id}
             percent={d.percent}
             className={cn(
-              'absolute z-20 h-9 w-9 text-[11px] transition-[opacity,transform] max-sm:start-[calc(42%-2.6rem)] max-sm:top-2 sm:end-4 sm:top-4 sm:h-12 sm:w-12 sm:text-sm duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'absolute z-20 h-9 w-9 text-[11px] transition-[opacity,transform] end-3 top-3 sm:end-4 sm:top-4 sm:h-12 sm:w-12 sm:text-sm duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
               i === active ? '-rotate-6 scale-100 opacity-100 delay-200' : 'pointer-events-none rotate-6 scale-90 opacity-0 delay-0 duration-250'
             )}
           />
@@ -167,7 +167,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'relative flex overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white [grid-area:1/1] sm:flex-col transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[opacity]',
+        'relative flex flex-col overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white [grid-area:1/1] transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[opacity]',
         // Old deal out in 0.25 s, new deal in over 0.6 s right after: the two never show on top of each other
         active ? 'z-[1] opacity-100 delay-200 duration-600' : 'pointer-events-none opacity-0 delay-0 duration-250'
       )}
@@ -176,7 +176,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         ref={photo.ref}
         className={cn(
           // Grows to fill the frame when this deal has less text than the others
-          'relative isolate overflow-hidden max-sm:min-h-[9.75rem] max-sm:w-[42%] max-sm:flex-none sm:aspect-[4/3] sm:flex-1 sm:[@media(max-height:820px)]:aspect-[16/10]',
+          'relative isolate aspect-[16/10] flex-1 overflow-hidden sm:aspect-[4/3] sm:[@media(max-height:820px)]:aspect-[16/10]',
           'bg-[#0b1116]'
         )}
       >
@@ -201,7 +201,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             // Packshots on white: inside the white frame, whole product visible; mix-blend-multiply
             // melts the photo's own off-white background into the frame
             contain
-              ? 'inset-0 h-full w-full object-contain p-2.5 mix-blend-multiply sm:inset-x-4 sm:bottom-8 sm:top-4 sm:h-[calc(100%-3rem)] sm:w-[calc(100%-2rem)] sm:p-6'
+              ? 'inset-0 h-full w-full object-contain px-5 pb-9 pt-5 mix-blend-multiply sm:inset-x-4 sm:bottom-8 sm:top-4 sm:h-[calc(100%-3rem)] sm:w-[calc(100%-2rem)] sm:p-6'
               : 'inset-0 h-full w-full object-cover',
             // a soft zoom-in as the deal appears
             active ? 'scale-100' : 'sm:scale-[1.06]',
@@ -212,24 +212,28 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         {/* Whole picture opens the product; buttons below stay clickable */}
         <Link to={href} className="absolute inset-0 z-0" aria-label={product.name} />
 
-        <span className="pointer-events-none absolute start-3 top-3 z-10 inline-flex h-7 items-center max-sm:hidden gap-1.5 rounded-full bg-[#0b1116]/80 px-2.5 text-[11px] font-semibold sm:start-4 sm:top-4 sm:h-8 sm:px-3 sm:text-xs">
+        <span className="pointer-events-none absolute start-3 top-3 z-10 inline-flex h-7 items-center gap-1.5 rounded-full bg-[#0b1116]/80 px-2.5 text-[11px] font-semibold sm:start-4 sm:top-4 sm:h-8 sm:px-3 sm:text-xs">
           <SiteIcon name="star" size={13} solid className="text-[var(--brand)]" />
           {d ? t('home.spotlightDeal') : t('product.featuredPick')}
         </span>
 
         {/* Full photos fade into the dark text area (a little past the edge, so no seam shows) */}
+        {/* Phones: white packshots fade into the dark text area too */}
+        {contain ? (
+          <div className="pointer-events-none absolute inset-x-0 -bottom-px z-10 h-20 bg-gradient-to-t from-[#0b1116] via-[#0b1116]/40 to-transparent sm:hidden" aria-hidden="true" />
+        ) : null}
         {contain ? null : (
           <div
-            className="pointer-events-none absolute inset-x-0 -bottom-px z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent max-sm:hidden"
+            className="pointer-events-none absolute inset-x-0 -bottom-px z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent"
             aria-hidden="true"
           />
         )}
       </div>
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-between gap-2 p-3 sm:-mt-6 sm:block sm:flex-none sm:space-y-3 sm:p-5 sm:pt-0">
+      <div className="relative z-10 -mt-6 space-y-2.5 p-3.5 pt-0 sm:space-y-3 sm:p-5 sm:pt-0">
         <div className="min-w-0">
           {brand ? <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--brand)] sm:text-xs">{brand}</p> : null}
-          <p className="mt-0.5 line-clamp-2 font-display text-sm font-semibold leading-snug drop-shadow sm:mt-1 sm:text-xl xl:text-2xl">
+          <p className="mt-0.5 line-clamp-2 font-display text-base font-semibold leading-snug drop-shadow sm:mt-1 sm:text-xl xl:text-2xl">
             {product.name}
             {product.variantLabel ? <span className="font-normal text-white/65"> · {product.variantLabel}</span> : null}
           </p>
@@ -251,8 +255,8 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         <div className="flex items-end justify-between gap-3">
           <div className="leading-tight">
             <p className="flex flex-wrap items-baseline gap-x-2">
-              <span className="whitespace-nowrap font-display text-lg font-bold tracking-tight sm:text-[2rem] xl:text-[2.25rem]">{formatCurrency(product.price)}</span>
-              {d ? <span className="whitespace-nowrap text-xs text-white/50 line-through sm:text-base">{formatCurrency(product.compareAtPrice!)}</span> : null}
+              <span className="whitespace-nowrap font-display text-[1.45rem] font-bold tracking-tight sm:text-[2rem] xl:text-[2.25rem]">{formatCurrency(product.price)}</span>
+              {d ? <span className="whitespace-nowrap text-sm text-white/50 line-through sm:text-base">{formatCurrency(product.compareAtPrice!)}</span> : null}
             </p>
             {d ? (
               <p className="mt-1 inline-flex rounded-md bg-[var(--brand)]/20 px-2 py-0.5 text-[11px] font-semibold text-[#7adfff] sm:text-xs">
@@ -260,7 +264,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
               </p>
             ) : null}
           </div>
-          <div className="shrink-0 space-y-1 text-end text-[11px] max-sm:hidden sm:space-y-1.5 sm:text-xs">
+          <div className="shrink-0 space-y-1 text-end text-[11px] sm:space-y-1.5 sm:text-xs">
             <StockLine product={product} className="justify-end" />
           </div>
         </div>
@@ -269,7 +273,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           <button
             type="button"
             onClick={add}
-            className="relative inline-flex h-9 flex-1 items-center justify-center gap-1.5 overflow-hidden rounded-full bg-[var(--brand)] px-3 text-xs font-semibold sm:h-12 sm:gap-2 sm:px-5 sm:text-base text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="relative inline-flex h-10 flex-1 items-center justify-center gap-2 overflow-hidden rounded-full bg-[var(--brand)] px-4 text-sm font-semibold sm:h-12 sm:px-5 sm:text-base text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           >
             <SiteIcon name="cart" size={16} />
             {t('common.addToCart')}
@@ -278,7 +282,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             to={href}
             aria-label={t('product.viewProduct')}
             title={t('product.viewProduct')}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/30 max-sm:hidden sm:h-12 sm:w-12 text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/30 sm:h-12 sm:w-12 text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)]"
           >
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
           </Link>

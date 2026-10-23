@@ -134,7 +134,7 @@ export function Home() {
       >
         <HeroBackdrop />
 
-        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-7 pt-[calc(var(--nav-height)+10.5rem)] sm:pb-10 sm:pt-[calc(var(--nav-height)+1.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
+        <Container className="relative z-10 grid flex-1 items-center [align-content:safe_center] gap-8 pb-7 pt-[calc(var(--nav-height)+4.25rem)] sm:pb-10 sm:pt-[calc(var(--nav-height)+1.75rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)] xl:gap-14">
           {/* Phones: headline → deals → buttons → trust chips. Tablet / desktop: normal order */}
           <div className="flex min-w-0 flex-col sm:block">
           {/* Hidden on phones (wrapper: .kicker sets its own display) */}
