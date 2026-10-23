@@ -490,6 +490,13 @@ export const en = {
     loadError: 'Couldn’t load wishlist',
     loadErrorBody: 'Check your connection and try again.',
   },
+  notFound: {
+    title: 'Page not found — Brynoxa',
+    heading: 'This page does not exist',
+    body: 'The link may be old or mistyped. The product may also be sold out and removed.',
+    shop: 'Go to the shop',
+    home: 'Home page',
+  },
   searchBox: {
     recent: 'Recent searches',
     browse: 'Browse categories',

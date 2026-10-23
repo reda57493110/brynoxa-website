@@ -492,6 +492,13 @@ export const ar: Messages = {
     loadError: 'تعذر تحميل المفضلة',
     loadErrorBody: 'تحقق من الاتصال ثم أعد المحاولة.',
   },
+  notFound: {
+    title: 'الصفحة غير موجودة — Brynoxa',
+    heading: 'هاد الصفحة ما كايناش',
+    body: 'يمكن الرابط قديم ولا فيه غلط. ويمكن المنتوج تحيّد.',
+    shop: 'سير للمتجر',
+    home: 'الصفحة الرئيسية',
+  },
   searchBox: {
     recent: 'آخر عمليات البحث',
     browse: 'تصفّح الأقسام',

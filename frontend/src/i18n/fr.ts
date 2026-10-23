@@ -495,6 +495,13 @@ export const fr: Messages = {
     loadError: 'Impossible de charger les favoris',
     loadErrorBody: 'Vérifiez votre connexion et réessayez.',
   },
+  notFound: {
+    title: 'Page introuvable — Brynoxa',
+    heading: 'Cette page n’existe pas',
+    body: 'Le lien est peut-être ancien ou mal écrit. Le produit a peut-être aussi été retiré.',
+    shop: 'Aller à la boutique',
+    home: 'Accueil',
+  },
   searchBox: {
     recent: 'Recherches récentes',
     browse: 'Parcourir les catégories',

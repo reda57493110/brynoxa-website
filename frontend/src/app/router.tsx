@@ -12,6 +12,7 @@ import { Home } from '@/pages/store/Home'
 // Admin only: kept out of the shoppers' bundle
 const AdminLayout = lazy(() => import('@/app/layouts/AdminLayout').then((m) => ({ default: m.AdminLayout })))
 const Shop = lazy(() => import('@/pages/store/Shop').then((m) => ({ default: m.Shop })))
+const NotFound = lazy(() => import('@/pages/store/NotFound').then((m) => ({ default: m.NotFound })))
 const CategoryPage = lazy(() =>
   import('@/pages/store/CategoryPage').then((m) => ({ default: m.CategoryPage }))
 )
@@ -222,6 +223,7 @@ export function AppRouter() {
         />
         <Route path="track-order" element={<S><TrackOrder /></S>} />
         <Route path="order-confirmation/:orderNumber" element={<S><OrderConfirmation /></S>} />
+        <Route path="*" element={<S><NotFound /></S>} />
       </Route>
 
       <Route element={<AuthLayout />}>
@@ -293,7 +295,6 @@ export function AppRouter() {
         <Route path="settings" element={<S><AdminSettings /></S>} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

@@ -57,6 +57,7 @@ export function CategoryPage() {
       : t('meta.shopTitle'),
     description: displayDescription || t('meta.shopDescription'),
     path: slug ? `/category/${slug}` : '/shop',
+    noIndex: !category.data,
   })
 
   if (category.isError) {

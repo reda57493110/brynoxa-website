@@ -21,6 +21,8 @@ import { trackViewItem } from '@/lib/analytics'
 import { recordProductView } from '@/lib/push'
 import { useSeo } from '@/hooks/useSeo'
 import { productData } from '@/lib/structuredData'
+import { productSeoText } from '@/lib/productSeo'
+import { keySpecs } from '@/components/home/HomeSpotlight'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
@@ -76,9 +78,22 @@ export function ProductDetail() {
     product.data?.description?.slice(0, 160) ||
     t('meta.shopDescription')
 
+  // Google title / snippet: model + key specs + price in Morocco + our promises (page language)
+  const seoText = product.data
+    ? productSeoText({
+        name: product.data.variantLabel ? `${product.data.name} (${product.data.variantLabel})` : product.data.name,
+        price: product.data.price,
+        specs: keySpecs(product.data, locale, 4).map((s) => s.value),
+        shortDescription: product.data.shortDescription,
+        locale,
+      })
+    : null
+
   useSeo({
-    title: product.data ? `${product.data.name} — Brynoxa` : t('productPage.titleFallback'),
-    description: productDescription,
+    title: seoText?.title ?? t('productPage.titleFallback'),
+    description: seoText?.description ?? productDescription,
+    // A product that is gone (or still loading) is not a page for Google
+    noIndex: !product.data,
     image: productImage || '/brand/brynoxa-logo-social.png',
     type: product.data ? 'product' : 'website',
     path: slug ? `/product/${slug}` : undefined,
