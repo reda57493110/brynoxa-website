@@ -6,6 +6,8 @@ const { dist, setTestEnv } = require('./_helpers.cjs');
 setTestEnv();
 
 const remote = require(dist('utils/remoteImage'));
+// Kept before a later test replaces it with a fake download
+const realFetchRemoteImage = remote.fetchRemoteImage;
 const upload = require(dist('services/upload.service'));
 const { Product } = require(dist('models/Product'));
 const { isOutsidePhoto, copyOutsidePhotos, copyCatalogOutsidePhotos } = require(dist('services/imageImport.service'));
@@ -102,4 +104,15 @@ test('existing catalogue: the button copies a few products per call and always f
   assert.match(products[0].images[0].url, /^\/api\/v1\/images\//, 'copied');
   assert.equal(products[1].images[0].url, 'https://shop.example/broken.jpg', 'kept as link');
   assert.equal((await copyCatalogOutsidePhotos({ dryRun: true, skip })).remaining, 0);
+});
+
+test('IPv6 forms that hide a private IPv4 address are blocked too', async () => {
+  // what the URL parser turns [::ffff:127.0.0.1] / [::127.0.0.1] into, plus NAT64 / 6to4 / Teredo
+  for (const ip of ['::ffff:7f00:1', '::ffff:a9fe:a9fe', '::7f00:1', '64:ff9b::a00:1', '2002:7f00:1::', '2001::1', '::']) {
+    assert.ok(remote.isPrivateAddress(ip), ip);
+  }
+  // Photo addresses with an IP number inside the brackets are refused before any connection
+  for (const url of ['http://[::ffff:127.0.0.1]/a.jpg', 'http://[::ffff:a9fe:a9fe]/latest/meta-data/', 'http://[2606:4700::1111]/a.jpg', 'http://2130706433/a.jpg', 'http://0x7f.1/a.jpg']) {
+    await assert.rejects(realFetchRemoteImage(url), /not allowed/, url);
+  }
 });
