@@ -53,7 +53,7 @@ function HeroProductCard({ product }: { product: Product }) {
       <div
         ref={photo.ref}
         className={cn(
-          'relative aspect-[4/3] overflow-hidden md:m-2.5 md:aspect-[16/10] md:rounded-[1.1rem] lg:aspect-[16/9]',
+          'relative aspect-[4/3] overflow-hidden md:aspect-[16/10] md:rounded-[calc(1rem-1px)] lg:aspect-[16/9]',
           contain ? 'photo-stage' : 'bg-[var(--bg-muted)]'
         )}
       >

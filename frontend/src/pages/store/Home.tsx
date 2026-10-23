@@ -380,8 +380,8 @@ export function Home() {
                         >
                           <div
                             className={cn(
-                              // Inset with all four corners rounded, like the product cards
-                              'relative m-2 overflow-hidden rounded-[1.05rem] bg-[var(--bg-muted)]',
+                              // Fills the tile to its edges, rounded on all four corners like the tile
+                              'relative overflow-hidden rounded-[calc(1.35rem-1px)] bg-[var(--bg-muted)]',
                               // Same photo height for every small tile, also the one stretched over a row
                               featuredTile ? 'min-h-[10.5rem] flex-1' : 'h-44 sm:h-48'
                             )}
