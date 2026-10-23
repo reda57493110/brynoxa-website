@@ -21,6 +21,7 @@ import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayName } from '@/i18n'
 import { keySpecs } from '@/components/home/HomeSpotlight'
+import { formatCurrency } from '@/lib/format'
 import type { Locale } from '@/i18n'
 
 /** Main photo, or undefined (the card then shows a neutral placeholder — no external request). */
@@ -222,7 +223,9 @@ export function ProductCard({
       <div
         className={cn(
           'flex flex-1 flex-col',
-          spotlight ? 'justify-center gap-2.5 p-4 sm:gap-3 sm:p-5 lg:p-6' : 'gap-1 p-2.5 sm:gap-2 sm:p-4'
+          spotlight
+            ? 'relative justify-center gap-2.5 bg-[radial-gradient(120%_90%_at_100%_0%,color-mix(in_srgb,var(--brand)_10%,transparent),transparent_60%)] p-4 sm:gap-3 sm:p-6 lg:px-10 lg:py-8'
+            : 'gap-1 p-2.5 sm:gap-2 sm:p-4'
         )}
       >
         <p
@@ -238,7 +241,7 @@ export function ProductCard({
           className={cn(
             'font-display font-semibold leading-snug text-[var(--fg)] transition duration-200 hover:text-[var(--brand-text)]',
             spotlight
-              ? 'text-base sm:text-xl lg:text-2xl'
+              ? 'text-lg sm:text-2xl lg:text-[1.75rem] lg:leading-tight'
               : 'line-clamp-2 min-h-[2rem] text-xs leading-snug sm:min-h-[2.75rem] sm:text-base'
           )}
         >
@@ -261,21 +264,34 @@ export function ProductCard({
           </ul>
         ) : null}
         {spotlight ? (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[var(--fg-muted)]">
-            <span className="inline-flex items-center gap-1">
-              <SiteIcon name="banknote" size={13} />
-              {t('deposit.payOnDelivery')}
-            </span>
-          </div>
+          <ul className="flex flex-wrap gap-1.5 text-[var(--fg)] sm:grid sm:grid-cols-3 sm:gap-2">
+            {(
+              [
+                { icon: 'banknote', key: 'home.heroPerkCod' },
+                { icon: 'shield', key: 'home.heroPerkWarranty' },
+                { icon: 'truck', key: 'home.heroPerkDelivery' },
+              ] as const
+            ).map((perk) => (
+              <li
+                key={perk.key}
+                className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)]/70 py-1 pe-2.5 ps-1 text-[11px] font-medium sm:flex-col sm:items-start sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-xs"
+              >
+                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] sm:size-6">
+                  <SiteIcon name={perk.icon} size={12} />
+                </span>
+                {t(perk.key)}
+              </li>
+            ))}
+          </ul>
         ) : null}
         <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
           <Price
             price={product.price}
             compareAt={product.compareAtPrice}
-            showDiscountBadge={spotlight}
+            showDiscountBadge={false}
             className={
               spotlight
-                ? '[&>span:first-child]:text-lg sm:[&>span:first-child]:text-2xl'
+                ? '[&>span:first-child]:text-2xl sm:[&>span:first-child]:text-[2rem]'
                 : 'min-h-[1.5rem] items-center sm:min-h-[1.875rem] [&>span:first-child]:text-sm sm:[&>span:first-child]:text-lg'
             }
           />
@@ -284,9 +300,16 @@ export function ProductCard({
             <p className="-mt-1 min-h-[0.875rem] truncate text-[10px] font-medium text-[var(--brand-text)] sm:min-h-4 sm:text-xs">
               {product.variantGroup ? t('productPage.moreOptions') : ' '}
             </p>
-          ) : product.variantGroup ? (
-            <p className="-mt-1 text-xs font-medium text-[var(--brand-text)]">{t('productPage.moreOptions')}</p>
-          ) : null}
+          ) : (
+            <div className="-mt-1 flex flex-wrap items-center gap-2">
+              {off ? (
+                <span className="inline-flex rounded-md bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] px-2 py-0.5 text-xs font-semibold text-[var(--brand-text)]">
+                  {t('home.spotlightSave', { amount: formatCurrency(product.compareAtPrice! - product.price) })}
+                </span>
+              ) : null}
+              {product.variantGroup ? <span className="text-xs font-medium text-[var(--brand-text)]">{t('productPage.moreOptions')}</span> : null}
+            </div>
+          )}
           <div className={cn('flex items-center', spotlight ? 'gap-2' : 'gap-1 sm:gap-2')}>
             {!spotlight ? (
               <Link
@@ -302,7 +325,7 @@ export function ProductCard({
               className={cn(
                 'rounded-full',
                 spotlight
-                  ? 'h-8 px-3 text-xs sm:h-10 sm:px-5 sm:text-sm'
+                  ? 'h-11 flex-1 px-5 text-sm sm:max-w-xs sm:text-base'
                   : 'h-8 min-w-0 flex-1 gap-1 px-1 text-xs sm:h-9 sm:gap-2 sm:px-3 sm:text-sm'
               )}
               onClick={onAddCart}
@@ -317,7 +340,7 @@ export function ProductCard({
               type="button"
               size="sm"
               variant={compareHas ? 'secondary' : 'outline'}
-              className="h-8 w-9 shrink-0 !px-0 sm:h-9"
+              className="h-11 w-11 shrink-0 !px-0"
               onClick={onCompare}
               aria-label={compareHas ? t('compare.remove') : t('compare.add')}
               title={compareHas ? t('compare.remove') : t('compare.add')}
