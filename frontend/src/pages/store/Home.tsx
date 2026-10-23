@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
+import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { useLocaleStore } from '@/store/localeStore'
@@ -86,6 +87,15 @@ const TRUST = [
   { key: 'home.heroPerkDelivery', icon: 'truck' },
   { key: 'home.heroPerkWarranty', icon: 'shield' },
   { key: 'home.heroPerkReturns', icon: 'refresh' },
+] as const
+
+const CTA_PHOTO =
+  'url(https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop)'
+
+const CTA_STEPS = [
+  { icon: 'cart', title: 'home.ctaStep1Title', body: 'home.ctaStep1Body' },
+  { icon: 'package-check', title: 'home.ctaStep2Title', body: 'home.ctaStep2Body' },
+  { icon: 'banknote', title: 'home.ctaStep3Title', body: 'home.ctaStep3Body' },
 ] as const
 
 export function Home() {
@@ -448,43 +458,84 @@ export function Home() {
       >
         <Container>
           <motion.div
-            className="cta-band relative overflow-hidden rounded-[1.75rem] px-6 py-10 sm:px-10 sm:py-12 lg:px-14 lg:py-14"
+            className="dark relative overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem]"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SiteIcon
-              name="package-check"
-              size={96}
-              className="pointer-events-none absolute -left-8 bottom-[-2rem] text-[var(--brand)] opacity-[0.12]"
+            {/* Same computer photo as the header, so the page opens and closes in one look */}
+            <div
+              className="pointer-events-none absolute inset-0 bg-cover bg-[position:80%_50%] opacity-60 rtl:-scale-x-100"
+              style={{ backgroundImage: CTA_PHOTO }}
+              aria-hidden="true"
             />
-            <div className="relative max-w-2xl">
-              <p className="kicker">{t('home.ctaKicker')}</p>
-              <h2
-                id="home-cta-heading"
-                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
-              >
-                {t('home.ctaTitle')}
-              </h2>
-              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                {t('home.ctaBody')}
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Link
-                  to="/shop"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+            <div
+              className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,rgb(5_8_11/0.97)_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.7)_100%)] rtl:-scale-x-100"
+              aria-hidden="true"
+            />
+            <div className="relative grid gap-8 px-5 py-9 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:px-14 lg:py-14">
+              <div>
+                <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] px-3 py-1 font-display text-xs font-semibold text-[var(--brand)] sm:text-sm">
+                  <SiteIcon name="shield" size={14} />
+                  {t('home.ctaKicker')}
+                </p>
+                <h2
+                  id="home-cta-heading"
+                  className="mt-4 max-w-xl font-display text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl"
                 >
-                  {t('common.shopNow')}
-                  <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-                </Link>
-                <Link
-                  to="/contact"
-                  className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-base font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] dark:bg-white/5"
-                >
-                  {t('common.contact')}
-                </Link>
+                  {t('home.ctaTitle')}
+                </h2>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/75 sm:text-base">{t('home.ctaBody')}</p>
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/shop"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                  >
+                    {t('home.heroCtaShop')}
+                    <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+                  </Link>
+                  <a
+                    href={whatsappHref()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 text-base font-medium text-white transition hover:border-[#25d366] hover:bg-[#25d366]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                  >
+                    <SiteIcon name="chat" size={16} className="text-[#25d366]" />
+                    {t('home.ctaWhatsapp')}
+                  </a>
+                </div>
               </div>
+
+              {/* How it works, in three steps */}
+              <ol className="relative grid gap-3">
+                <span
+                  className="pointer-events-none absolute bottom-8 start-[2.1rem] top-8 w-px bg-gradient-to-b from-[var(--brand)] via-[var(--brand)]/40 to-[#3dd68c] sm:start-[2.4rem]"
+                  aria-hidden="true"
+                />
+                {CTA_STEPS.map((step, i) => (
+                  <li
+                    key={step.icon}
+                    className="relative flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1116]/80 p-3.5 backdrop-blur-sm sm:p-4"
+                  >
+                    <span
+                      className={cn(
+                        'relative grid size-10 shrink-0 place-items-center rounded-full sm:size-11',
+                        i === CTA_STEPS.length - 1 ? 'bg-[#3dd68c] text-[#04140b]' : 'bg-[var(--brand)] text-[var(--brand-fg)]'
+                      )}
+                    >
+                      <SiteIcon name={step.icon} size={18} />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                        {t('home.ctaStepLabel', { n: i + 1 })}
+                      </span>
+                      <span className="block font-display text-base font-semibold text-white sm:text-lg">{t(step.title)}</span>
+                      <span className="block text-sm text-white/65">{t(step.body)}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
             </div>
           </motion.div>
         </Container>

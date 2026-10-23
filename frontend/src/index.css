@@ -340,15 +340,6 @@ html[lang="ar"] {
     background: var(--bg);
   }
 
-  .cta-band {
-    position: relative;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--bg-elevated);
-    color: var(--fg);
-    box-shadow: var(--shadow-soft);
-  }
-
   .home-hero-photo {
     max-width: none;
   }
