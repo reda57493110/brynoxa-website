@@ -182,7 +182,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
         {contain ? (
-          <div className="photo-stage absolute inset-2 -z-20 rounded-[1.1rem] sm:inset-x-4 sm:bottom-8 sm:top-4" aria-hidden="true" />
+          <div className="photo-stage absolute inset-0 -z-20 sm:inset-x-4 sm:bottom-8 sm:top-4 sm:rounded-[1.1rem]" aria-hidden="true" />
         ) : null}
         <SafeImage
           src={src}
@@ -201,7 +201,7 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
             // Packshots on white: inside the white frame, whole product visible; mix-blend-multiply
             // melts the photo's own off-white background into the frame
             contain
-              ? 'inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] object-contain p-3 mix-blend-multiply sm:inset-x-4 sm:bottom-8 sm:top-4 sm:h-[calc(100%-3rem)] sm:w-[calc(100%-2rem)] sm:p-6'
+              ? 'inset-0 h-full w-full object-contain p-3 mix-blend-multiply sm:inset-x-4 sm:bottom-8 sm:top-4 sm:h-[calc(100%-3rem)] sm:w-[calc(100%-2rem)] sm:p-6'
               : 'inset-0 h-full w-full object-cover',
             // a soft zoom-in as the deal appears
             active ? 'scale-100' : 'scale-[1.06]',
