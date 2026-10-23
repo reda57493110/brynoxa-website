@@ -35,8 +35,7 @@ export const updateCategory = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const deleteCategory = asyncHandler(async (req: Request, res: Response) => {
-  const moveTo = typeof req.query.moveTo === 'string' ? req.query.moveTo : undefined;
-  await catalog.deleteCategory(param(req, 'id'), moveTo);
+  await catalog.deleteCategory(param(req, 'id'), { canDeleteProducts: hasPermission(req.user?.role, 'products:delete') });
   sendSuccess(res, null, 'Category deleted');
 });
 

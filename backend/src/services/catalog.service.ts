@@ -179,22 +179,23 @@ export async function updateCategory(id: string, data: Partial<{
 }
 
 /**
- * Deletes a category. If products are still in it, `moveTo` (another category) is required: they
- * are moved there first, so no product is ever left without a category.
+ * Deletes a category together with its products (each one the same way as a product delete:
+ * unused photos removed, variant groups updated). Orders keep their own copy of what was bought.
+ * Deleting products needs the products:delete permission (`canDeleteProducts`).
  */
-export async function deleteCategory(id: string, moveTo?: string) {
+export async function deleteCategory(id: string, { canDeleteProducts = false } = {}) {
   if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Category not found');
   const category = await Category.findById(id);
   if (!category) throw new ApiError(404, 'Category not found');
-  const inUse = await Product.countDocuments({ category: id });
-  if (inUse) {
-    if (!moveTo) {
-      throw new ApiError(400, `This category still has ${inUse} product${inUse === 1 ? '' : 's'}. Choose a category to move them to.`);
-    }
-    if (!mongoose.isValidObjectId(moveTo) || String(moveTo) === String(id) || !(await Category.exists({ _id: moveTo }))) {
-      throw new ApiError(400, 'Choose another existing category to move the products to');
-    }
-    await Product.updateMany({ category: id }, { $set: { category: moveTo } });
+  const productIds = (await Product.find({ category: id }, { _id: 1 }).lean()).map((p) => String(p._id));
+  if (productIds.length && !canDeleteProducts) {
+    throw new ApiError(403, 'This category has products, and deleting products needs the "delete products" permission');
+  }
+  for (const productId of productIds) {
+    await deleteProduct(productId).catch((err) => {
+      // Already gone (deleted at the same moment): nothing to do
+      if (!(err instanceof ApiError && err.statusCode === 404)) throw err;
+    });
   }
   // Sub-categories keep working, one level up
   await Category.updateMany({ parent: id }, { $set: { parent: category.parent ?? null } });

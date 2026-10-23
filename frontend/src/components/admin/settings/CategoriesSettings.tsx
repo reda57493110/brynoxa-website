@@ -106,7 +106,6 @@ export function CategoriesSettings() {
   const [newUploading, setNewUploading] = useState(false)
   const [uploadingId, setUploadingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<Category | null>(null)
-  const [moveTo, setMoveTo] = useState('')
   useReportDirty('categories', Boolean(name.trim() || description.trim() || newPhoto))
 
   const categories = useQuery({
@@ -142,7 +141,7 @@ export function CategoriesSettings() {
   })
 
   const remove = useMutation({
-    mutationFn: (v: { id: string; moveTo?: string }) => adminApi.categories.remove(v.id, v.moveTo),
+    mutationFn: (id: string) => adminApi.categories.remove(id),
     onSuccess: () => {
       refresh()
       qc.invalidateQueries({ queryKey: ['products'] })
@@ -176,9 +175,7 @@ export function CategoriesSettings() {
 
   const list = categories.data ?? []
   const pending = (id: string) => (update.isPending && update.variables?.id === id) || uploadingId === id
-  const others = deleting ? list.filter((c) => c._id !== deleting._id) : []
   const deletingCount = deleting?.productCount ?? 0
-  const needsMove = deletingCount > 0
 
   return (
     <SettingsCard
@@ -288,10 +285,7 @@ export function CategoriesSettings() {
                   </Button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setDeleting(c)
-                      setMoveTo('')
-                    }}
+                    onClick={() => setDeleting(c)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]"
                     aria-label={`Delete ${c.name}`}
                   >
@@ -308,56 +302,17 @@ export function CategoriesSettings() {
       <p className="text-[11px] text-[var(--fg-muted)]">Hidden categories and their products are not shown in the shop.</p>
 
       <Modal open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Delete “${deleting?.name ?? ''}”?`} size="sm">
-        {needsMove ? (
-          <div className="flex flex-col gap-3">
-            <p className="text-sm leading-relaxed text-[var(--fg-muted)]">
-              It still has {deletingCount} product
-              {deletingCount === 1 ? '' : 's'}. Choose where to move {deletingCount === 1 ? 'it' : 'them'}, then the category is deleted.
-            </p>
-            {others.length ? (
-              <label className="flex flex-col gap-1.5 text-sm">
-                <span className="font-medium">Move products to</span>
-                <select
-                  value={moveTo}
-                  onChange={(e) => setMoveTo(e.target.value)}
-                  className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3.5"
-                >
-                  <option value="" disabled>
-                    Choose a category
-                  </option>
-                  {others.map((o) => (
-                    <option key={o._id} value={o._id}>
-                      {o.name}
-                      {!o.isActive ? ' (hidden)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <p className="text-sm text-[var(--danger)]">Add another category first, so the products have somewhere to go.</p>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm leading-relaxed text-[var(--fg-muted)]">It has no products. This cannot be undone.</p>
-        )}
+        <p className="text-sm leading-relaxed text-[var(--fg-muted)]">
+          {deletingCount
+            ? `Its ${deletingCount} product${deletingCount === 1 ? ' is' : 's are'} deleted too. Past orders are not affected. This cannot be undone.`
+            : 'This cannot be undone.'}
+        </p>
         <div className="mt-5 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setDeleting(null)}>
             Cancel
           </Button>
-          <Button
-            type="button"
-            variant="danger"
-            loading={remove.isPending}
-            disabled={needsMove && !moveTo}
-            onClick={() =>
-              deleting &&
-              remove.mutate({
-                id: deleting._id,
-                moveTo: needsMove ? moveTo : undefined,
-              })
-            }
-          >
-            {needsMove ? 'Move and delete' : 'Delete'}
+          <Button type="button" variant="danger" loading={remove.isPending} onClick={() => deleting && remove.mutate(deleting._id)}>
+            Delete
           </Button>
         </div>
       </Modal>
