@@ -291,7 +291,11 @@ export function Checkout() {
     }
     setValidating(true)
     try {
-      const res = await couponsApi.validate(couponCode.trim(), subtotal)
+      const res = await couponsApi.validate(
+        couponCode.trim(),
+        subtotal,
+        items.map((i) => ({ productId: i.productId, qty: i.qty }))
+      )
       setDiscount(res.data.data.discount || 0)
       setAppliedCoupon(couponCode.trim().toUpperCase())
       toast.success(res.data.message || t('checkout.couponApplied'))

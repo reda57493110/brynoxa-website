@@ -258,8 +258,13 @@ export const orderDepositSchema = z
 
 export const couponSchema = z.object({
   code: z.string().min(3).max(32),
-  type: z.enum(['percent', 'fixed']),
+  type: z.enum(['percent', 'fixed', 'price']),
   value: z.number().min(0),
+  /** type "price": the special unit price of each chosen product */
+  productPrices: z
+    .array(z.object({ product: z.string().regex(/^[a-f0-9]{24}$/i), price: z.number().min(0).max(10_000_000) }))
+    .max(50)
+    .optional(),
   minOrder: z.number().min(0).optional(),
   maxUses: z.number().int().min(0).optional(),
   perCustomerLimit: z.number().int().min(0).max(1000).optional(),
@@ -271,6 +276,8 @@ export const couponSchema = z.object({
 export const validateCouponSchema = z.object({
   code: z.string().min(1).max(64),
   subtotal: z.number().min(0),
+  /** The cart, for coupons with special prices on some products */
+  items: z.array(z.object({ productId: z.string().max(40), qty: z.number().int().min(1).max(99) })).max(50).optional(),
 });
 
 export const settingsSchema = z.object({

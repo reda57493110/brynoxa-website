@@ -55,7 +55,33 @@ function hashReceiptToken(token: string) {
 }
 
 
-export async function validateCoupon(code: string, subtotal: number) {
+/** Lines of the cart / order a special-price coupon is checked against. */
+export type CouponLine = { product: unknown; price: number; qty: number };
+
+/**
+ * Special-price coupon: on each chosen product the customer pays the special price instead of
+ * the price of the line (never more than the line); other products are not touched.
+ */
+export function specialPriceDiscount(productPrices: { product: unknown; price: number }[], lines: CouponLine[]) {
+  const special = new Map(productPrices.map((p) => [String(p.product), p.price]));
+  let discount = 0;
+  for (const l of lines) {
+    const price = special.get(String(l.product));
+    if (price !== undefined && l.price > price) discount += (l.price - price) * l.qty;
+  }
+  return roundMoney(discount);
+}
+
+/** Checkout preview: the cart lines priced from the catalog (the order itself is priced again). */
+export async function couponLinesFor(items?: { productId: string; qty: number }[]): Promise<CouponLine[] | undefined> {
+  if (!items?.length) return undefined;
+  const ids = items.map((i) => i.productId).filter((id) => Types.ObjectId.isValid(id));
+  const products = await Product.find({ _id: { $in: ids }, isActive: true }).select('price');
+  const price = new Map(products.map((p) => [String(p._id), p.price]));
+  return items.filter((i) => price.has(i.productId)).map((i) => ({ product: i.productId, price: price.get(i.productId)!, qty: i.qty }));
+}
+
+export async function validateCoupon(code: string, subtotal: number, lines?: CouponLine[]) {
   const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
   if (!coupon) throw new ApiError(404, 'Invalid coupon');
   const now = new Date();
@@ -69,7 +95,10 @@ export async function validateCoupon(code: string, subtotal: number) {
   }
 
   let discount = 0;
-  if (coupon.type === 'percent') {
+  if (coupon.type === 'price') {
+    discount = specialPriceDiscount(coupon.productPrices || [], lines || []);
+    if (discount <= 0) throw new ApiError(400, 'This coupon is for other products');
+  } else if (coupon.type === 'percent') {
     discount = (subtotal * coupon.value) / 100;
   } else {
     discount = coupon.value;
@@ -204,13 +233,13 @@ function productsDeposit(depositTotal: number, total: number): IOrderDeposit | u
 
 const formatDh = (amount: number) => `${amount.toLocaleString('en-US')} DH`;
 
-async function priceOrder(subtotal: number, couponCode?: string, city?: string) {
+async function priceOrder(subtotal: number, couponCode?: string, city?: string, lines?: CouponLine[]) {
   const settings = await getSettings();
   let discount = 0;
   let couponMeta: { code: string; couponId: Types.ObjectId; perCustomerLimit: number } | undefined;
 
   if (couponCode) {
-    const { coupon, discount: d } = await validateCoupon(couponCode, subtotal);
+    const { coupon, discount: d } = await validateCoupon(couponCode, subtotal, lines);
     discount = d;
     couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId, perCustomerLimit: coupon.perCustomerLimit || 0 };
   }
@@ -240,7 +269,8 @@ export async function createCodOrder(input: {
   const { pricing, couponMeta } = await priceOrder(
     subtotal,
     input.couponCode,
-    input.shippingAddress?.city
+    input.shippingAddress?.city,
+    orderItems
   );
   const deposit = productsDeposit(depositTotal, pricing.total);
 
@@ -515,7 +545,8 @@ export async function updateUserOrderItems(
   const { pricing: basePricing, couponMeta } = await priceOrder(
     subtotal,
     previousCouponCode,
-    order.shippingAddress?.city
+    order.shippingAddress?.city,
+    orderItems
   );
   const pricing = { ...basePricing, wholesaleDiscount };
 

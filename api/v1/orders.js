@@ -82,7 +82,7 @@ module.exports = async (req, res) => {
     if (route === 'coupons/validate' && req.method === 'POST') {
       if (!(await rateLimit(req, res, 'coupon'))) return;
       const body = parseBody(schemas.validateCouponSchema, await readJsonBody(req));
-      const { coupon, discount } = await orderService.validateCoupon(body.code, body.subtotal);
+      const { coupon, discount } = await orderService.validateCoupon(body.code, body.subtotal, await orderService.couponLinesFor(body.items));
       sendJson(res, 200, {
         success: true,
         message: 'Success',

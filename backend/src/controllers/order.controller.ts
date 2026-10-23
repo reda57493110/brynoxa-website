@@ -84,7 +84,8 @@ export const updateMyOrderItems = asyncHandler(async (req: AuthRequest, res: Res
 });
 
 export const validateCoupon = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { coupon, discount } = await orderService.validateCoupon(req.body.code, req.body.subtotal);
+  const lines = await orderService.couponLinesFor(req.body.items);
+  const { coupon, discount } = await orderService.validateCoupon(req.body.code, req.body.subtotal, lines);
   sendSuccess(res, {
     code: coupon.code,
     type: coupon.type,

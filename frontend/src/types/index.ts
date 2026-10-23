@@ -378,8 +378,11 @@ export interface CreateOrderResult {
 export interface Coupon {
   _id: string
   code: string
-  type: 'percent' | 'fixed'
+  /** price: a special price on chosen products */
+  type: 'percent' | 'fixed' | 'price'
   value: number
+  /** type "price": the special unit price per product (product is filled in the admin list) */
+  productPrices?: { product: string | { _id: string; name: string; price: number }; price: number }[]
   minOrder: number
   maxUses: number
   /** 0 = no limit */
