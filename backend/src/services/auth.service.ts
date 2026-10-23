@@ -11,6 +11,7 @@ import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
 import { signMfaChallenge, verifyMfaChallenge } from '../utils/tokens';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword, isPublishedDefaultPassword } from '../utils/blockedPasswords';
+import { checkPasswordEvenTime } from '../utils/passwordTiming';
 import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
@@ -554,11 +555,14 @@ export async function loginUser(
   const user = await User.findOne({ email: email.toLowerCase() }).select(
     '+password +refreshToken +failedLoginAttempts +lockedUntil'
   );
+  // The password is always checked (against a dummy when the email is unknown, and also while
+  // locked), so the time taken never tells whether an email has an account
+  const passwordOk = await checkPasswordEvenTime(password, user?.password);
   if (user?.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
   // The old published default never signs anyone in (counted as a wrong password)
-  if (!user || isPublishedDefaultPassword(password) || !(await user.comparePassword(password))) {
+  if (!user || isPublishedDefaultPassword(password) || !passwordOk) {
     if (user) await recordFailedLogin(user);
     throw new ApiError(401, 'Invalid email or password');
   }

@@ -1,12 +1,12 @@
 const path = require('path');
 const Module = require('module');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { connectMongo } = require('../mongo');
 const { sendJson, readJsonBody } = require('../http');
 const { rateLimit } = require('../rateLimit');
 const { isPublishedDefaultPassword } = require('../../../backend/dist/utils/blockedPasswords');
+const { checkPasswordEvenTime } = require('../../../backend/dist/utils/passwordTiming');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -18,8 +18,6 @@ const STAFF_ROLES = new Set(['admin', 'orders', 'catalog', 'support', 'marketing
 // Same as backend auth.service: 5 wrong passwords lock the account for 15 minutes
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
-// Compared against when the email is unknown, so the reply takes as long as for a real account
-const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', 10);
 
 function hashRefreshToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -63,13 +61,17 @@ module.exports = async (req, res) => {
     const conn = await connectMongo();
     const user = await conn.db.collection('users').findOne({ email });
 
+    // Always checked, with the same cost (a dummy when the email is unknown, and also while locked),
+    // so the time taken never tells whether an email has an account
+    const passwordMatches = await checkPasswordEvenTime(password, user?.password);
+
     if (user?.lockedUntil && new Date(user.lockedUntil).getTime() > Date.now()) {
       sendJson(res, 429, { success: false, message: 'Account temporarily locked. Try again later.' });
       return;
     }
 
     // The old published default never signs anyone in (counted as a wrong password)
-    const passwordOk = (await bcrypt.compare(password, user?.password || DUMMY_HASH)) && !isPublishedDefaultPassword(password);
+    const passwordOk = passwordMatches && !isPublishedDefaultPassword(password);
     if (!user?.password || !passwordOk) {
       if (user) {
         // Count the failure; lock the account after too many

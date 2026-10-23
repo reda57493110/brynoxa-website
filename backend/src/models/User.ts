@@ -200,7 +200,8 @@ const userSchema = new Schema<IUser>(
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   const bcrypt = await import('bcryptjs');
-  this.password = await bcrypt.hash(this.password, 12);
+  const { PASSWORD_HASH_ROUNDS } = await import('../utils/passwordTiming');
+  this.password = await bcrypt.hash(this.password, PASSWORD_HASH_ROUNDS);
 });
 
 userSchema.methods.comparePassword = async function (candidate: string) {
