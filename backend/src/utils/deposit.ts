@@ -46,13 +46,13 @@ type DepositLike =
   | undefined;
 
 /**
- * Transfer fees the shop covers: what staff set (0 = none), else the fees the customer reported
- * with their proof of payment.
+ * Transfer fees the shop covers: only what staff set. The fee the customer types when reporting
+ * their payment is information for staff, never taken off by itself (a customer could otherwise
+ * type any "fee" and bring the amount the courier collects down to 0).
  */
 function coveredFees(deposit: DepositLike) {
   if (!deposit) return 0;
-  const fees = typeof deposit.feeCredit === 'number' ? deposit.feeCredit : (deposit.payment?.fee ?? 0);
-  return Math.max(0, fees || 0);
+  return Math.max(0, typeof deposit.feeCredit === 'number' ? deposit.feeCredit : 0);
 }
 
 /** Transfer fees the shop covers for the customer (only once the deposit is received). */

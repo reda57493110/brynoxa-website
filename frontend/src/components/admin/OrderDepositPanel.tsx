@@ -319,13 +319,16 @@ export function OrderDepositPanel({ order }: { order: Order }) {
               <p
                 className={cn(
                   'text-[10px]',
-                  deposit.amount + (payment?.fee ?? 0) + dueOnDelivery(order) > order.pricing.total + 0.005
+                  deposit.amount + (deposit.feeCredit ?? 0) + dueOnDelivery(order) > order.pricing.total + 0.005
                     ? 'font-medium text-[var(--warning)]'
                     : 'text-[var(--fg-muted)]'
                 )}
               >
-                Customer pays {formatCurrency(deposit.amount + (payment?.fee ?? 0) + dueOnDelivery(order))} in total
-                {payment?.fee ? ` (incl. ${formatCurrency(payment.fee)} transfer fees)` : ''} · order {formatCurrency(order.pricing.total)}
+                Customer pays {formatCurrency(deposit.amount + (deposit.feeCredit ?? 0) + dueOnDelivery(order))} in total
+                {deposit.feeCredit ? ` (incl. ${formatCurrency(deposit.feeCredit)} transfer fees we cover)` : ''} · order {formatCurrency(order.pricing.total)}
+                {payment?.fee && typeof deposit.feeCredit !== 'number'
+                  ? ` · The customer says they paid ${formatCurrency(payment.fee)} in fees: check it, then Save below to take it off.`
+                  : ''}
               </p>
               {deposit.receivedAt ? (
                 <div className="flex justify-between gap-3">

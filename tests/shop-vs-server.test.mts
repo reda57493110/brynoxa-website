@@ -43,13 +43,14 @@ test('deposit per product line: same result in the shop and on the server', () =
 
 test('amount collected on delivery: deposit and covered transfer fees taken off, never below 0', () => {
   const orders = [
-    { pricing: { total: 2000 }, deposit: { amount: 200, status: 'received', payment: { fee: 35 } } }, // fees reported by the customer
+    // fees the customer reported are NOT taken off until staff confirm them (a customer could type any fee)
+    { pricing: { total: 2000 }, deposit: { amount: 200, status: 'received', payment: { fee: 1800 } } },
     { pricing: { total: 2000 }, deposit: { amount: 200, status: 'received', feeCredit: 0, payment: { fee: 35 } } }, // staff: no fees covered
     { pricing: { total: 2000 }, deposit: { amount: 200, status: 'received', feeCredit: 20 } },
     { pricing: { total: 2000 }, deposit: { amount: 2000, status: 'received' } },
     { pricing: { total: 2000 }, deposit: null },
   ];
-  const expected = [1765, 1800, 1780, 0, 2000];
+  const expected = [1800, 1800, 1780, 0, 2000];
   orders.forEach((o, i) => {
     assert.equal(serverDeposit.dueOnDelivery(o), expected[i], `server case ${i}`);
     assert.equal(shopDeposit.dueOnDelivery(o), expected[i], `shop case ${i}`);

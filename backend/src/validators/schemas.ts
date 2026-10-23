@@ -623,7 +623,8 @@ export const depositPaymentSchema = z.object({
   senderPhone: z.string().trim().max(30).optional(),
   paidOn: z.string().trim().max(20).optional(),
   amountSent: z.number().min(0).max(10_000_000).optional(),
-  fee: z.number().min(0).max(100_000).optional(),
+  // Information for staff only (never taken off by itself); real transfer fees are a few dirhams
+  fee: z.number().min(0).max(500).optional(),
   place: z.string().trim().max(120).optional(),
   codes: z.array(z.object({ label: z.string().max(40), value: z.string().trim().max(40) })).max(4).optional(),
   reference: z.string().trim().max(80).optional(),

@@ -24,11 +24,14 @@ type WithDeposit = {
   deposit?: { amount: number; status?: string; feeCredit?: number; payment?: { fee?: number } } | null
 }
 
-/** Transfer fees the shop covers: what staff set (0 = none), else the fees the customer reported. */
+/**
+ * Transfer fees the shop covers: only what staff set (the customer's reported fee is information,
+ * never taken off by itself). Same as backend coveredFees.
+ */
 export function feesCovered(order: WithDeposit) {
   const d = order.deposit
   if (!d) return 0
-  const fees = typeof d.feeCredit === 'number' ? d.feeCredit : (d.payment?.fee ?? 0)
+  const fees = typeof d.feeCredit === 'number' ? d.feeCredit : 0
   return Math.max(0, Math.min(fees || 0, Math.max(0, order.pricing.total - (d.amount || 0))))
 }
 

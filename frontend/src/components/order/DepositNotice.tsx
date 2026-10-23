@@ -164,7 +164,8 @@ function ReportPaymentForm({
         senderPhone: senderPhone.trim() || undefined,
         paidOn: paidOn || undefined,
         amountSent: amountSent.trim() && Number.isFinite(Number(amountSent)) ? Number(amountSent) : undefined,
-        fee: fee.trim() && Number.isFinite(Number(fee)) ? Number(fee) : undefined,
+        // Shown to staff only; capped like the server (500 DH)
+        fee: fee.trim() && Number.isFinite(Number(fee)) ? Math.min(500, Math.max(0, Number(fee))) : undefined,
         place: place.trim() || undefined,
         codes: kind === 'atm' ? codeLabels.map((label) => ({ label, value: (codes[label] ?? '').trim() })) : undefined,
         note: note.trim() || undefined,
