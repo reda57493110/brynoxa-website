@@ -560,6 +560,8 @@ export const en = {
     failed: 'Could not enable notifications, please try again',
   },
   productPage: {
+    similarKicker: 'Compare before you choose',
+    similarTitle: 'Similar products',
     buyNow: 'Buy now',
     completeSetup: 'Complete your setup',
     completeSetupBody: 'Accessories that go well with this product',

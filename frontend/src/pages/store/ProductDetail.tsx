@@ -15,6 +15,7 @@ import { Price } from '@/components/product/Price'
 import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { StockBadge } from '@/components/product/StockBadge'
 import { CompleteSetup } from '@/components/product/CompleteSetup'
+import { SimilarProducts } from '@/components/product/SimilarProducts'
 import { useCartStore } from '@/store/cartStore'
 import { formatCurrency } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
@@ -375,6 +376,7 @@ export function ProductDetail() {
         ) : null}
 
         <CompleteSetup productId={p._id} />
+        <SimilarProducts product={p} categorySlug={category?.slug} />
       </Container>
 
       {/* Mobile sticky buy bar */}

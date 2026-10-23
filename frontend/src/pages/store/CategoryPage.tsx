@@ -64,6 +64,8 @@ export function CategoryPage() {
       : t('meta.shopDescription'),
     path: slug ? `/category/${slug}` : '/shop',
     noIndex: !category.data,
+    // Share preview shows the category photo instead of the logo
+    image: category.data?.image || undefined,
   })
 
   if (category.isError) {

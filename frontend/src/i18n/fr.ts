@@ -565,6 +565,8 @@ export const fr: Messages = {
     failed: "Impossible d'activer les notifications, réessayez",
   },
   productPage: {
+    similarKicker: 'Comparez avant de choisir',
+    similarTitle: 'Produits similaires',
     buyNow: 'Acheter maintenant',
     completeSetup: 'Complétez votre équipement',
     completeSetupBody: 'Des accessoires qui vont bien avec ce produit',

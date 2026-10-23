@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, type CSSProperties } from 'react'
 import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHomeDeals } from '@/hooks/useHomeDeals'
@@ -79,8 +79,10 @@ const TRUST = [
   { key: 'home.heroPerkReturns', icon: 'refresh' },
 ] as const
 
-const CTA_PHOTO =
-  'url(https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop)'
+// Closing banner photo, sized for the screen (~55 KB on phones)
+const ctaPhoto = (w: number) =>
+  `url(https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${Math.round((w * 9) / 16)}&fit=crop)`
+const CTA_PHOTOS = { '--cta-sm': ctaPhoto(900), '--cta-lg': ctaPhoto(1600) } as CSSProperties
 
 const CTA_STEPS = [
   { icon: 'cart', title: 'home.ctaStep1Title', body: 'home.ctaStep1Body' },
@@ -458,8 +460,8 @@ export function Home() {
           >
             {/* Dark mode: the same computer photo as the header, so the page opens and closes in one look */}
             <div
-              className="pointer-events-none absolute inset-0 hidden bg-cover bg-[position:80%_50%] opacity-60 rtl:-scale-x-100 dark:block"
-              style={{ backgroundImage: CTA_PHOTO }}
+              className="pointer-events-none absolute inset-0 hidden bg-cover bg-[position:80%_50%] opacity-60 [background-image:var(--cta-sm)] rtl:-scale-x-100 dark:block lg:[background-image:var(--cta-lg)]"
+              style={CTA_PHOTOS}
               aria-hidden="true"
             />
             <div

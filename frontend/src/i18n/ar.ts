@@ -562,6 +562,8 @@ export const ar: Messages = {
     failed: 'تعذّر تفعيل الإشعارات، حاول مرة أخرى',
   },
   productPage: {
+    similarKicker: 'قارن قبل ما تختار',
+    similarTitle: 'منتوجات مشابهة',
     buyNow: 'اشترِ الآن',
     completeSetup: 'أكمل تجهيزك',
     completeSetupBody: 'إكسسوارات تناسب هذا المنتج',

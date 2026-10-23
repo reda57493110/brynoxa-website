@@ -6,15 +6,22 @@
  * The hero section always uses the dark design (`dark` class on it in Home.tsx), in light mode too.
  */
 
+import type { CSSProperties } from 'react'
+
 const layer = 'pointer-events-none absolute [backface-visibility:hidden]'
 
-const HERO_PHOTO =
-  'url(https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=2200&h=1240&fit=crop)'
+// Same photo, sized for the screen: ~95 KB on phones (a band at the top), ~230 KB on computers
+const photo = (w: number) =>
+  `url(https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=${w}&h=${Math.round((w * 1240) / 2200)}&fit=crop)`
+const HERO_PHOTOS = { '--hero-sm': photo(1200), '--hero-lg': photo(1920) } as CSSProperties
 
 export function HeroBackdrop() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#05080b]" aria-hidden="true">
-      <div className={`${layer} hero-showroom inset-0 bg-cover`} style={{ backgroundImage: HERO_PHOTO }} />
+      <div
+        className={`${layer} hero-showroom inset-0 bg-cover [background-image:var(--hero-sm)] lg:[background-image:var(--hero-lg)]`}
+        style={HERO_PHOTOS}
+      />
       {/* Headline side: a fade so the text reads on the photo */}
       <div
         className={`${layer} inset-0 bg-[linear-gradient(95deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.85)_30%,rgb(5_8_11/0.35)_50%,transparent_64%)] max-lg:hidden rtl:-scale-x-100`}
