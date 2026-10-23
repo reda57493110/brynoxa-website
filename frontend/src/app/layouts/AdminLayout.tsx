@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Navigate, Outlet, useLocation, useNavigationType } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation, useNavigationType } from 'react-router-dom'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 import { AdminTopbar } from '@/components/layout/AdminTopbar'
 import { Drawer } from '@/components/ui/Drawer'
@@ -32,6 +33,12 @@ export function AdminLayout() {
   const navigationType = useNavigationType()
   const mainRef = useRef<HTMLElement>(null)
   const role = useAuthStore((s) => s.user?.role)
+  const mfaEnabled = useAuthStore((s) => Boolean(s.user?.mfaEnabled))
+  const mfaDeadline = useAuthStore((s) => s.user?.mfaSetupDeadline)
+  // Staff need 2-step sign-in: a reminder during the grace period, then only Security opens
+  const mfaDaysLeft = !mfaEnabled && mfaDeadline ? Math.ceil((new Date(mfaDeadline).getTime() - Date.now()) / 86_400_000) : null
+  const mfaOverdue = mfaDaysLeft !== null && mfaDaysLeft <= 0
+  const onSecurity = location.pathname.startsWith('/admin/security')
   const home = staffHomePath(role)
   const required = requiredPermissionForPath(location.pathname)
 
@@ -59,6 +66,10 @@ export function AdminLayout() {
     })
     return () => cancelAnimationFrame(frame)
   }, [location.key, navigationType])
+
+  if (mfaOverdue && !onSecurity) {
+    return <Navigate to="/admin/security" replace />
+  }
 
   if (required && !hasPermission(role, required)) {
     return <Navigate to={home} replace />
@@ -100,6 +111,26 @@ export function AdminLayout() {
           className="min-w-0 flex-1 overflow-x-clip px-3 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-6"
         >
           <div className="mx-auto w-full max-w-6xl min-w-0">
+            {mfaDaysLeft !== null ? (
+              <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--warning)_45%,transparent)] bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] px-4 py-3 text-sm">
+                <SiteIcon name="shield" size={18} className="shrink-0 text-[var(--warning)]" />
+                <p className="min-w-0 flex-1">
+                  {mfaOverdue ? (
+                    <strong>Turn on 2-step sign-in to keep using admin.</strong>
+                  ) : (
+                    <>
+                      <strong>2-step sign-in is required for staff.</strong> Turn it on within{' '}
+                      {mfaDaysLeft === 1 ? '1 day' : `${mfaDaysLeft} days`} — after that, admin pages stay closed until it is on.
+                    </>
+                  )}
+                </p>
+                {!onSecurity ? (
+                  <Link to="/admin/security" className="inline-flex h-9 items-center rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)]">
+                    Turn it on
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
             <Outlet />
           </div>
         </main>

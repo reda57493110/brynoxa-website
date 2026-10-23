@@ -58,7 +58,7 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (!(await rateLimit(req, res, 'login'))) return;
+    if (!(await rateLimit(req, res, 'login', email))) return;
 
     const conn = await connectMongo();
     const user = await conn.db.collection('users').findOne({ email });

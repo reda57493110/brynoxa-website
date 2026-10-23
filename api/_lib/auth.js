@@ -73,13 +73,22 @@ async function requireUser(req, res) {
   return user;
 }
 
-async function requireStaff(req, res, permissions = []) {
+/**
+ * Staff with the given permission. After the grace period staff need 2-step sign-in
+ * (utils/mfaPolicy); `allowWithoutMfa` is only for the pages that set it up.
+ */
+async function requireStaff(req, res, permissions = [], { allowWithoutMfa = false } = {}) {
   const user = await requireUser(req, res);
   if (!user) return null;
 
   const { hasPermission, isStaffRole } = require('../../backend/dist/permissions');
   if (!isStaffRole(user.role)) {
     sendJson(res, 403, { success: false, message: 'Staff access required' });
+    return null;
+  }
+  const policy = require('../../backend/dist/utils/mfaPolicy');
+  if (!allowWithoutMfa && policy.mfaSetupOverdue(user)) {
+    sendJson(res, 403, { success: false, message: policy.MFA_REQUIRED_MESSAGE, code: policy.MFA_REQUIRED_CODE });
     return null;
   }
   if (permissions.length && !permissions.some((permission) => hasPermission(user.role, permission))) {

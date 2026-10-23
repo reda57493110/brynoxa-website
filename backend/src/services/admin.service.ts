@@ -1,5 +1,6 @@
 import { hasPermission, type Permission } from '../permissions';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
+import { newMfaGraceUntil } from '../utils/mfaPolicy';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { User } from '../models/User';
@@ -229,6 +230,7 @@ export async function createStaffUser(input: {
     user.name = name;
     user.password = input.password;
     user.role = role;
+    if (!user.mfaEnabled) user.mfaGraceUntil = newMfaGraceUntil();
     user.isGuest = false;
     user.isActive = true;
     user.emailVerified = !isProd;
@@ -240,6 +242,7 @@ export async function createStaffUser(input: {
       email,
       password: input.password,
       role,
+      mfaGraceUntil: newMfaGraceUntil(),
       isGuest: false,
       isActive: true,
       emailVerified: !isProd,
@@ -277,10 +280,13 @@ export async function setUserRole(
     throw new ApiError(400, 'You cannot remove your own staff access');
   }
 
+  const wasStaff = isStaffRole(target.role);
   target.role = nextRole;
   if (isStaffRole(nextRole)) {
     target.isGuest = false;
     target.isActive = true;
+    // A newly promoted person gets their own 7 days to turn on 2-step
+    if (!wasStaff && !target.mfaEnabled) target.mfaGraceUntil = newMfaGraceUntil();
   }
   target.refreshToken = undefined;
   await target.save();

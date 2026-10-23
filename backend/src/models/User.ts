@@ -75,6 +75,8 @@ export interface IUser extends Document {
   passwordResetExpires?: Date;
   refreshToken?: string;
   mfaEnabled: boolean;
+  /** Staff without 2-step must turn it on before this date (see utils/mfaPolicy). */
+  mfaGraceUntil?: Date;
   mfaSecretEncrypted?: string;
   /** Time step of the last 2-step code used (a code can only be used once). */
   mfaLastStep?: number;
@@ -182,6 +184,7 @@ const userSchema = new Schema<IUser>(
     passwordResetExpires: { type: Date, select: false },
     refreshToken: { type: String, select: false },
     mfaEnabled: { type: Boolean, default: false },
+    mfaGraceUntil: { type: Date },
     mfaSecretEncrypted: { type: String, select: false },
     mfaLastStep: { type: Number, select: false },
     mfaClockSkewSteps: { type: Number, select: false },

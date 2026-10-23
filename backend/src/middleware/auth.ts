@@ -5,6 +5,7 @@ import { issuedBeforePasswordChange } from '../utils/tokenFreshness';
 import { ApiError } from '../utils/ApiError';
 import { User } from '../models/User';
 import { hasPermission, isStaffRole, type Permission } from '../permissions';
+import { MFA_REQUIRED_CODE, MFA_REQUIRED_MESSAGE, mfaSetupOverdue } from '../utils/mfaPolicy';
 
 export async function requireAuth(req: AuthRequest, _res: Response, next: NextFunction) {
   try {
@@ -21,7 +22,7 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
     if (issuedBeforePasswordChange(payload, user)) {
       throw new ApiError(401, 'Session ended after a password change — please sign in again');
     }
-    req.user = { userId: user._id.toString(), role: user.role };
+    req.user = { userId: user._id.toString(), role: user.role, mfaOverdue: mfaSetupOverdue(user) };
     next();
   } catch (err) {
     if (err instanceof ApiError) return next(err);
@@ -29,8 +30,19 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
   }
 }
 
-/** Any staff role (not storefront customer). */
+const mfaRequired = () => new ApiError(403, MFA_REQUIRED_MESSAGE, undefined, MFA_REQUIRED_CODE);
+
+/** Any staff role (not storefront customer), with 2-step on once the grace period is over. */
 export function requireStaff(req: AuthRequest, _res: Response, next: NextFunction) {
+  if (!req.user || !isStaffRole(req.user.role)) {
+    return next(new ApiError(403, 'Staff access required'));
+  }
+  if (req.user.mfaOverdue) return next(mfaRequired());
+  next();
+}
+
+/** Staff role only, no 2-step requirement: the pages that set 2-step up. */
+export function requireStaffRole(req: AuthRequest, _res: Response, next: NextFunction) {
   if (!req.user || !isStaffRole(req.user.role)) {
     return next(new ApiError(403, 'Staff access required'));
   }
@@ -42,6 +54,7 @@ export function requirePermission(...permissions: Permission[]) {
     if (!req.user || !isStaffRole(req.user.role)) {
       return next(new ApiError(403, 'Staff access required'));
     }
+    if (req.user.mfaOverdue) return next(mfaRequired());
     const ok = permissions.some((p) => hasPermission(req.user!.role, p));
     if (!ok) {
       return next(new ApiError(403, 'You do not have permission for this action'));

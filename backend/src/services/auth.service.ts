@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { User } from '../models/User';
+import { mfaSetupDeadline } from '../utils/mfaPolicy';
 import { ApiError } from '../utils/ApiError';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/tokens';
 import { env, isProd, isEmailConfigured } from '../config/env';
@@ -205,15 +206,23 @@ async function consumeTotp(user: InstanceType<typeof User>, code: string) {
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
 
+/**
+ * Counts a wrong password / code in one atomic step, so many attempts sent at the same moment all
+ * count (a read-then-save would let a burst count as one). Locks the account at the limit.
+ */
 async function recordFailedLogin(user: InstanceType<typeof User>) {
-  const failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
-  user.failedLoginAttempts = failedLoginAttempts;
-  if (failedLoginAttempts >= MAX_LOGIN_ATTEMPTS) {
-    user.lockedUntil = new Date(Date.now() + LOGIN_LOCKOUT_MS);
+  const after = await User.findOneAndUpdate(
+    { _id: user._id },
+    { $inc: { failedLoginAttempts: 1 } },
+    { new: true, projection: { failedLoginAttempts: 1 } }
+  ).select('+failedLoginAttempts');
+  if ((after?.failedLoginAttempts || 0) >= MAX_LOGIN_ATTEMPTS) {
     // After the lock, a fresh set of attempts
-    user.failedLoginAttempts = 0;
+    await User.updateOne(
+      { _id: user._id },
+      { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS), failedLoginAttempts: 0 } }
+    );
   }
-  await user.save({ validateBeforeSave: false });
 }
 
 export async function migrateRefreshTokens() {
@@ -292,6 +301,8 @@ function sanitizeUser(user: InstanceType<typeof User>) {
     customerType: user.customerType || 'retail',
     wholesaleStatus: user.wholesale?.status || 'none',
     mfaEnabled: Boolean(user.mfaEnabled),
+    // Staff without 2-step: last day to turn it on (the admin shows a reminder, then asks for it)
+    mfaSetupDeadline: mfaSetupDeadline(user)?.toISOString() ?? null,
     createdAt: user.createdAt,
   };
 }

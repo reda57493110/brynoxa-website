@@ -37,6 +37,8 @@ export interface User {
   isActive: boolean
   isGuest?: boolean
   mfaEnabled?: boolean
+  /** Staff without 2-step: last day to turn it on (then staff pages ask for it). */
+  mfaSetupDeadline?: string | null
   customerType?: CustomerType
   wholesaleStatus?: WholesaleStatus
   createdAt?: string

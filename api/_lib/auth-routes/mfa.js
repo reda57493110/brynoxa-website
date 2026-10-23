@@ -19,7 +19,8 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const user = await requireStaff(req, res);
+    // Setting up 2-step must stay open for staff whose grace period is over
+    const user = await requireStaff(req, res, [], { allowWithoutMfa: true });
     if (!user) return;
 
     const action = req.__authAction || '';

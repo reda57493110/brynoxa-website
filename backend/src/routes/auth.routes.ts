@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as auth from '../controllers/auth.controller';
 import { validate } from '../middleware/validate';
-import { requireAuth, requireStaff } from '../middleware/auth';
+import { requireAuth, requireStaffRole } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimit';
 import {
   registerSchema,
@@ -29,9 +29,9 @@ router.post('/mfa/login', authLimiter, validate(mfaLoginSchema), auth.completeMf
 router.post('/refresh', auth.refresh);
 router.post('/logout', requireAuth, auth.logout);
 router.post('/change-password', requireAuth, validate(changePasswordSchema), auth.changePassword);
-router.post('/mfa/setup', requireAuth, requireStaff, auth.setupMfa);
-router.post('/mfa/verify', requireAuth, requireStaff, validate(mfaCodeSchema), auth.verifyMfaSetup);
-router.post('/mfa/disable', requireAuth, requireStaff, validate(mfaCodeSchema), auth.disableMfa);
+router.post('/mfa/setup', requireAuth, requireStaffRole, auth.setupMfa);
+router.post('/mfa/verify', requireAuth, requireStaffRole, validate(mfaCodeSchema), auth.verifyMfaSetup);
+router.post('/mfa/disable', requireAuth, requireStaffRole, validate(mfaCodeSchema), auth.disableMfa);
 router.get('/me', requireAuth, auth.me);
 router.patch('/me', requireAuth, validate(updateProfileSchema), auth.updateProfile);
 router.post('/me/addresses', requireAuth, validate(addressSchema), auth.addAddress);
