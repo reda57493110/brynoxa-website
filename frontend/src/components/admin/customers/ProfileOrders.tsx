@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ORDER_ORIGIN_LABEL, originOf } from '@/lib/orderOrigin'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/format'
 import { orderStatusLabel, orderStatusVariant } from '@/lib/admin'
@@ -141,6 +142,11 @@ export function ProfileOrders({
                       <Link to={`/admin/orders/${ord._id}`} className="font-medium hover:text-[var(--brand-text)]">
                         #{ord.orderNumber}
                       </Link>
+                      {originOf(ord) !== 'website' ? (
+                        <span className="ms-1.5 rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] px-1.5 py-px text-[10px] font-medium text-[var(--brand-text)]">
+                          {ORDER_ORIGIN_LABEL[originOf(ord)]}
+                        </span>
+                      ) : null}
                     </td>
                     <td className={`${td} whitespace-nowrap`}>{formatDate(ord.createdAt)}</td>
                     <td className={td}>

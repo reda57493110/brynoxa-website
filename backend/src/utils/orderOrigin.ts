@@ -20,6 +20,21 @@ export const ORDER_ORIGIN_LABEL: Record<OrderOrigin, string> = {
   other: 'Other',
 };
 
+/** "Guest TikTok", "Guest Shop"…: the label of a customer added by staff from that source. */
+export function guestLabel(origin: OrderOrigin): string {
+  const short: Partial<Record<OrderOrigin, string>> = { phone: 'Phone', store: 'Shop' };
+  return `Guest ${short[origin] ?? ORDER_ORIGIN_LABEL[origin]}`;
+}
+
+/** Customers list filter by where they came from (no source = website). */
+export function customerSourceFilter(value?: string): Record<string, unknown> | undefined {
+  if (!value) return undefined;
+  if (value === 'other_channels') return { source: { $nin: ['website', null] } };
+  if (value === 'website') return { source: { $in: ['website', null] } };
+  if ((ORDER_ORIGINS as readonly string[]).includes(value)) return { source: value };
+  return undefined;
+}
+
 /** Orders list filter: one source, or "other" = every source except the website. */
 export function originFilter(value?: string): Record<string, unknown> | undefined {
   if (!value) return undefined;

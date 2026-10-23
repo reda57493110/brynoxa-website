@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { MANUAL_ORDER_ORIGINS, ORDER_ORIGIN_LABEL } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
@@ -79,6 +80,18 @@ export function CustomerFilters({
                 <option value="retail">Retail</option>
                 <option value="wholesale">Wholesale</option>
                 <option value="business">Business</option>
+              </select>
+            </Field>
+            <Field label="Came from">
+              <select className={fieldCls} value={values.source} onChange={(e) => onChange({ source: e.target.value })}>
+                <option value="">Anywhere</option>
+                <option value="website">Website</option>
+                <option value="other_channels">Social media, phone & shop</option>
+                {MANUAL_ORDER_ORIGINS.map((o) => (
+                  <option key={o} value={o}>
+                    {ORDER_ORIGIN_LABEL[o]}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Account status">

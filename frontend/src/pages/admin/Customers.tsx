@@ -113,6 +113,7 @@ export function Customers() {
     minOrders: filters.minOrders || undefined,
     maxOrders: filters.maxOrders || undefined,
     minProfit: filters.minProfit || undefined,
+    source: filters.source || undefined,
   }
 
   const summary = useQuery({

@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
+import { ORDER_ORIGINS } from '../utils/orderOrigin';
 
 export interface IAddress {
   _id?: Types.ObjectId;
@@ -68,6 +69,8 @@ export interface IUser extends Document {
   isActive: boolean;
   /** Checkout without password — cannot sign in until they set one */
   isGuest: boolean;
+  /** Where the customer came from (set when staff add them with an order: TikTok, the shop…). Empty = website. */
+  source?: string;
   emailVerified: boolean;
   emailVerificationTokenHash?: string;
   emailVerificationExpires?: Date;
@@ -177,6 +180,7 @@ const userSchema = new Schema<IUser>(
     activity: { type: [activitySchema], default: [], select: false },
     isActive: { type: Boolean, default: true },
     isGuest: { type: Boolean, default: false },
+    source: { type: String, enum: [...ORDER_ORIGINS, null], default: undefined },
     emailVerified: { type: Boolean, default: true },
     emailVerificationTokenHash: { type: String, select: false },
     emailVerificationExpires: { type: Date, select: false },

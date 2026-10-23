@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { shownEmail } from '@/lib/orderOrigin'
+import { customerLabel, shownEmail } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { CustomerRow } from '@/types'
@@ -43,7 +43,7 @@ export function CustomerTable({
                 <div className="flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
-                      {c.name}
+                      {customerLabel(c)}
                       {c.companyName ? <span className="font-normal text-[var(--fg-muted)]"> · {c.companyName}</span> : null}
                     </p>
                     <p className="truncate text-[11px] text-[var(--fg-muted)]">{shownEmail(c.email)}</p>
@@ -115,7 +115,7 @@ export function CustomerTable({
                 <tr key={c._id} className="border-t border-[var(--border)] align-top">
                   <td className="max-w-[12rem] px-3 py-3">
                     <Link to={`/admin/customers/${c._id}`} className="block truncate font-medium hover:text-[var(--brand-text)]">
-                      {c.name}
+                      {customerLabel(c)}
                     </Link>
                     <p className="truncate text-xs text-[var(--fg-muted)]">{c.customerId}</p>
                     {c.companyName ? <p className="truncate text-xs text-[var(--fg-muted)]">{c.companyName}</p> : null}

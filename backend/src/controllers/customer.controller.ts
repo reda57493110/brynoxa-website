@@ -56,6 +56,7 @@ export function parseCustomerQuery(q: Record<string, unknown>): CustomerListQuer
     maxNet: numberParam(q.maxNet),
     minProfit: numberParam(q.minProfit),
     segment: str(q.segment, 24),
+    source: str(q.source, 24),
     sort: pick(q.sort, ['spent', 'net', 'profit', 'orders', 'lastOrder', 'registered', 'name'] as const),
     dir: pick(q.dir, ['asc', 'desc'] as const),
   };

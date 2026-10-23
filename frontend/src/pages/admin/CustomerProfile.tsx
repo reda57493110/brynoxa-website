@@ -1,5 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
-import { shownEmail } from '@/lib/orderOrigin'
+import { customerLabel, shownEmail } from '@/lib/orderOrigin'
 import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
@@ -182,7 +182,7 @@ export function CustomerProfile() {
       {/* Header */}
       <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-2xl">{c.name}</h1>
+          <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-2xl">{customerLabel(c)}</h1>
           <p className="mt-0.5 text-sm break-all text-[var(--fg-muted)]">
             {c.customerId}{shownEmail(c.email) ? ` · ${shownEmail(c.email)}` : ''}
           </p>

@@ -74,6 +74,7 @@ export const FILTER_KEYS = [
   'minOrders',
   'maxOrders',
   'minProfit',
+  'source',
 ] as const
 export type FilterKey = (typeof FILTER_KEYS)[number]
 export type FilterValues = Record<FilterKey, string>

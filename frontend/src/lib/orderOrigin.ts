@@ -23,6 +23,21 @@ export function originOf(o: { origin?: string | null }): OrderOrigin {
   return (ORDER_ORIGINS as readonly string[]).includes(o.origin || '') ? (o.origin as OrderOrigin) : 'website'
 }
 
+/** "Guest TikTok", "Guest Shop"… (same as the backend guestLabel). */
+export function guestLabel(origin: OrderOrigin): string {
+  const short: Partial<Record<OrderOrigin, string>> = { phone: 'Phone', store: 'Shop' }
+  return `Guest ${short[origin] ?? ORDER_ORIGIN_LABEL[origin]}`
+}
+
+/** "Ahmed / Guest TikTok" for customers added from another source; just the name for website ones. */
+export function customerLabel(c: { name?: string | null; source?: string | null }): string {
+  const from = originOf({ origin: c.source })
+  if (from === 'website') return c.name || '—'
+  const guest = guestLabel(from)
+  // Added without a name: the name already is "Guest TikTok"
+  return !c.name || c.name === guest ? guest : `${c.name} / ${guest}`
+}
+
 /** Customers entered without an email get a hidden stand-in address; never show it. */
 export function shownEmail(email?: string | null): string {
   return email && !/\.invalid$/i.test(email) ? email : ''

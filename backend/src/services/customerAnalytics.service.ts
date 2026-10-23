@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { customerSourceFilter } from '../utils/orderOrigin';
 import { OPEN_STATUSES, closedWithoutSale, wasDelivered } from '../utils/orderStatus';
 import { Order, type OrderStatus } from '../models/Order';
 import { Product } from '../models/Product';
@@ -38,6 +39,7 @@ type LeanOrder = {
   deposit?: { amount: number; status: 'pending' | 'received'; source?: string; receivedAt?: Date; feeCredit?: number; payment?: { fee?: number } } | null;
   refunds?: { amount: number; reason: string; itemsReturned?: boolean; at: Date }[];
   channel?: 'retail' | 'wholesale';
+  origin?: string;
   wholesaleTier?: { id: string; name: string; discountPercent: number };
   coupon?: { code?: string };
   createdAt: Date;
@@ -241,6 +243,7 @@ type CustomerLean = {
   isActive: boolean;
   emailVerified?: boolean;
   isGuest?: boolean;
+  source?: string;
   createdAt: Date;
 };
 
@@ -288,6 +291,8 @@ export interface CustomerListQuery {
   maxNet?: number;
   minProfit?: number;
   segment?: string;
+  /** Where the customer came from (lib orderOrigin), or "other_channels" */
+  source?: string;
   sort?: 'spent' | 'net' | 'profit' | 'orders' | 'lastOrder' | 'registered' | 'name';
   dir?: 'asc' | 'desc';
 }
@@ -302,7 +307,8 @@ async function loadCustomers(query: CustomerListQuery) {
   const q = query.q?.trim();
   if (q) {
     const rx = new RegExp(escapeRegex(q.replace(/^C-/i, '')), 'i');
-    const or: Record<string, unknown>[] = [{ name: rx }, { email: rx }, { phone: rx }, { 'business.companyName': rx }];
+    // Also by where they came from ("tiktok", "instagram"…)
+    const or: Record<string, unknown>[] = [{ name: rx }, { email: rx }, { phone: rx }, { 'business.companyName': rx }, { source: rx }];
     const idPart = q.replace(/^C-/i, '').toLowerCase();
     if (/^[a-f0-9]{4,24}$/.test(idPart)) {
       or.push({ $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: `${idPart}$` } } });
@@ -316,6 +322,8 @@ async function loadCustomers(query: CustomerListQuery) {
   if (query.status === 'disabled') and.push({ isActive: false });
   if (query.status === 'unverified') and.push({ emailVerified: false });
   if (query.status === 'wholesale-pending') and.push({ 'wholesale.status': 'pending' });
+  const fromSource = customerSourceFilter(query.source);
+  if (fromSource) and.push(fromSource);
   if (query.registeredFrom || query.registeredTo) {
     and.push({
       createdAt: {
@@ -326,7 +334,7 @@ async function loadCustomers(query: CustomerListQuery) {
   }
   if (and.length) filter.$and = and;
   return User.find(filter)
-    .select('name email phone customerType wholesale business isActive emailVerified isGuest createdAt')
+    .select('name email phone customerType wholesale business isActive emailVerified isGuest source createdAt')
     .lean<CustomerLean[]>();
 }
 
@@ -388,6 +396,7 @@ export async function listCustomerOverview(query: CustomerListQuery, canSeeProfi
       wholesaleStatus: u.wholesale?.status || 'none',
       tierName: tierName(u, tiers),
       isGuest: Boolean(u.isGuest),
+      source: u.source || 'website',
       registeredAt: u.createdAt,
       segments: segmentsFor(u, lifetime, cfg, now),
       metrics: canSeeProfit ? metrics : redactProfit(metrics),
@@ -570,6 +579,7 @@ export async function customerProfile(
         orderStatus: o.orderStatus,
         paymentStatus: o.paymentStatus,
         channel: o.channel || 'retail',
+        origin: o.origin || 'website',
         tierName: o.wholesaleTier?.name,
         items: o.items.reduce((a, i) => a + i.qty, 0),
         total: o.pricing.total,

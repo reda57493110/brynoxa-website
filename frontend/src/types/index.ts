@@ -797,6 +797,8 @@ export interface CustomerRow {
   wholesaleStatus: WholesaleStatus
   tierName?: string
   isGuest: boolean
+  /** Where the customer came from (lib/orderOrigin.ts) */
+  source?: string
   registeredAt: string
   segments: SegmentKey[]
   metrics: CustomerMetrics
@@ -819,6 +821,7 @@ export interface CustomerListParams {
   maxNet?: number | string
   minProfit?: number | string
   segment?: string
+  source?: string
   sort?: 'spent' | 'net' | 'profit' | 'orders' | 'lastOrder' | 'registered' | 'name'
   dir?: 'asc' | 'desc'
 }
@@ -884,6 +887,7 @@ export interface CustomerProfileOrder {
   orderStatus: OrderStatus
   paymentStatus: PaymentStatus
   channel: 'retail' | 'wholesale'
+  origin?: string
   tierName?: string
   items: number
   total: number
@@ -915,6 +919,7 @@ export interface CustomerProfile {
     emailVerified?: boolean
     isActive: boolean
     isGuest?: boolean
+    source?: string
     createdAt: string
     customerType?: CustomerType
     status: CustomerAccountStatus

@@ -24,7 +24,7 @@ import {
 } from './orderNotify.service';
 import { invalidateDashboardCache } from './admin.service';
 import { User } from '../models/User';
-import { ORDER_ORIGIN_LABEL, originFilter, type OrderOrigin } from '../utils/orderOrigin';
+import { ORDER_ORIGIN_LABEL, guestLabel, originFilter, type OrderOrigin } from '../utils/orderOrigin';
 import {
   DELIVERY_ISSUES,
   ORDER_STATUSES,
@@ -334,7 +334,10 @@ function phonePattern(phone: string) {
  * phone number, else a new guest. Without an email, the guest gets an address on the reserved
  * ".invalid" domain, which is never emailed (email.service skips it).
  */
-export async function resolveManualCustomer(input: { fullName: string; phone: string; email?: string; city: string; line1?: string }) {
+export async function resolveManualCustomer(
+  input: { fullName: string; phone: string; email?: string; city: string; line1?: string },
+  origin?: OrderOrigin
+) {
   const email = input.email?.trim().toLowerCase();
   let user = email ? await User.findOne({ email }) : null;
   if (user && user.role !== 'customer') throw new ApiError(400, 'This email belongs to a staff account — use the customer\'s own email');
@@ -349,6 +352,8 @@ export async function resolveManualCustomer(input: { fullName: string; phone: st
       password: randomBytes(24).toString('hex'),
       phone: input.phone,
       isGuest: true,
+      // Shown as "Ahmed / TikTok" in Customers, so staff see where the customer came from
+      source: origin && origin !== 'website' ? origin : undefined,
       addresses: [
         {
           label: 'Home',
@@ -375,7 +380,7 @@ export async function createManualOrder(
   input: {
     origin: string;
     items: { productId: string; qty: number; price?: number }[];
-    customer: { fullName: string; phone: string; email?: string; city: string; line1?: string };
+    customer: { fullName?: string; phone: string; email?: string; city: string; line1?: string };
     shipping?: number;
     discount?: number;
     deliveryCost?: number;
@@ -393,8 +398,9 @@ export async function createManualOrder(
   const tax = roundMoney((taxable * settings.taxRate) / 100);
   const pricing = { subtotal, discount, shipping, tax, total: roundMoney(taxable + shipping + tax), wholesaleDiscount: 0 };
 
-  const user = await resolveManualCustomer(input.customer);
-  const c = input.customer;
+  // No name given: "Guest TikTok", so the customer is still easy to recognise
+  const c = { ...input.customer, fullName: input.customer.fullName?.trim() || guestLabel(origin) };
+  const user = await resolveManualCustomer(c, origin);
   // A sale in the shop has no courier; otherwise the amount given, else the default courier price
   const deliveryCost = typeof input.deliveryCost === 'number' ? input.deliveryCost : origin === 'store' ? 0 : undefined;
 
@@ -1142,7 +1148,7 @@ export async function listAllOrders(
 
 export async function getOrderById(id: string) {
   const order = await Order.findById(id)
-    .populate('user', 'name email phone')
+    .populate('user', 'name email phone source')
     .populate('timeline.by', 'name')
     .populate('contactAttempts.by', 'name')
     .populate('refunds.by', 'name');

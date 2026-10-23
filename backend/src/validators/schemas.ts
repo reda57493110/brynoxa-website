@@ -177,7 +177,8 @@ export const manualOrderSchema = z.object({
     .min(1)
     .max(50),
   customer: z.object({
-    fullName: z.string().trim().min(2).max(100),
+    /** Empty = "Guest TikTok" (the source) */
+    fullName: z.union([z.string().trim().min(2).max(100), z.literal('')]).optional(),
     phone: z.string().trim().min(5).max(30),
     email: z.union([z.string().trim().email().max(160), z.literal('')]).optional(),
     city: z.string().trim().min(2).max(80),

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ORDER_ORIGIN_LABEL, originOf, shownEmail } from '@/lib/orderOrigin'
+import { ORDER_ORIGIN_LABEL, customerLabel, originOf, shownEmail } from '@/lib/orderOrigin'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -117,10 +117,16 @@ export function OrderDetail() {
           ) : null}
         </div>
         <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
-          <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
+          {user?._id ? (
+            <Link to={`/admin/customers/${user._id}`} className="block truncate font-medium text-[var(--fg)] hover:text-[var(--brand-text)]" title="Customer history">
+              {customerLabel(user)}
+            </Link>
+          ) : (
+            <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
+          )}
           <p className="break-all">{shownEmail(user?.email)}</p>
           <p>{user?.phone || 'No phone'} · COD</p>
-          {user?.email ? (
+          {shownEmail(user?.email) ? (
             <Link
               to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
               className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-[var(--brand-text)] hover:underline"

@@ -100,6 +100,15 @@ test('customer: found by phone written another way, else a guest that is never e
   assert.match(newUsers[0].email, /^phone-612345678-[0-9a-f]{8}@no-email\.invalid$/);
   assert.equal(newUsers[0].isGuest, true);
 
+  assert.equal(newUsers[0].source, 'instagram', 'shown as "Salma / Guest Instagram"');
+
+  // No name: "Guest TikTok"
+  newUsers.length = 0;
+  created.length = 0;
+  await orders.createManualOrder({ ...base, origin: 'tiktok', customer: { ...base.customer, fullName: '' } }, 'staff1');
+  assert.equal(newUsers[0].name, 'Guest TikTok');
+  assert.equal(created[0].shippingAddress.fullName, 'Guest TikTok');
+
   users = [{ _id: 'u-staff', email: 'boss@shop.test', role: 'admin' }];
   await assert.rejects(
     orders.createManualOrder({ ...base, customer: { ...base.customer, email: 'boss@shop.test' } }, 'staff1'),

@@ -180,7 +180,7 @@ export const adminApi = {
       origin: string
       status: 'pending' | 'confirmed' | 'delivered'
       items: { productId: string; qty: number; price?: number }[]
-      customer: { fullName: string; phone: string; email?: string; city: string; line1?: string }
+      customer: { fullName?: string; phone: string; email?: string; city: string; line1?: string }
       shipping?: number
       discount?: number
       deliveryCost?: number

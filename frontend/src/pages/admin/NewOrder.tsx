@@ -12,7 +12,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SocialGlyph } from '@/components/contact/BrandIcons'
 import { Spinner } from '@/components/ui/Spinner'
 import { formatCurrency } from '@/lib/format'
-import { MANUAL_ORDER_ORIGINS, ORDER_ORIGIN_LABEL, type OrderOrigin } from '@/lib/orderOrigin'
+import { MANUAL_ORDER_ORIGINS, ORDER_ORIGIN_LABEL, guestLabel, type OrderOrigin } from '@/lib/orderOrigin'
 import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
 import type { Product } from '@/types'
@@ -79,7 +79,7 @@ export function NewOrder() {
 
   const errors = {
     lines: !lines.length ? 'Add at least one product' : undefined,
-    fullName: customer.fullName.trim().length < 2 ? 'Enter the customer name' : undefined,
+    fullName: customer.fullName.trim().length === 1 ? 'Enter the full name, or leave it empty' : undefined,
     phone: customer.phone.replace(/\D/g, '').length < 8 ? 'Enter a phone number' : undefined,
     city: !inStore && customer.city.trim().length < 2 ? 'Enter the city' : undefined,
     email: customer.email.trim() && !/^\S+@\S+\.\S+$/.test(customer.email.trim()) ? 'Check the email' : undefined,
@@ -97,7 +97,7 @@ export function NewOrder() {
         status,
         items: lines.map((l) => ({ productId: l.product._id, qty: l.qty, price: amount(l.price) })),
         customer: {
-          fullName: customer.fullName.trim(),
+          fullName: customer.fullName.trim() || undefined,
           phone: customer.phone.trim(),
           email: customer.email.trim() || undefined,
           city: customer.city.trim() || (inStore ? 'Shop' : ''),
@@ -273,9 +273,12 @@ export function NewOrder() {
         {errors.stock ? <p className="mt-2 text-xs text-[var(--danger)]">Not enough stock for {errors.stock}.</p> : null}
       </Panel>
 
-      <Panel title="Customer" description="If this phone or email already bought from you, the order is added to that customer.">
+      <Panel
+        title="Customer"
+        description={`Saved in Customers as “${customer.fullName.trim() ? `${customer.fullName.trim()} / ` : ''}${guestLabel(origin)}” with all their orders. If this phone or email already bought from you, the order goes to that customer.`}
+      >
         <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Name" {...field('fullName')} maxLength={100} error={tried ? errors.fullName : undefined} />
+          <Input label="Name (optional)" {...field('fullName')} placeholder={guestLabel(origin)} maxLength={100} error={tried ? errors.fullName : undefined} />
           <Input label="Phone" type="tel" {...field('phone')} maxLength={30} error={tried ? errors.phone : undefined} />
           <Input label={inStore ? 'City (optional)' : 'City'} {...field('city')} maxLength={80} error={tried ? errors.city : undefined} />
           <Input label="Address (optional)" {...field('line1')} maxLength={200} />
