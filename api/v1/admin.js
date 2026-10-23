@@ -72,7 +72,7 @@ function validated(schemaName, body, partial = false) {
   return parsed.data;
 }
 
-async function handleCategoryMutation(req, res, route) {
+async function handleCategoryMutation(req, res, route, query = {}) {
   const user = await requireStaff(req, res, ['products:write']);
   if (!user) return;
 
@@ -100,7 +100,7 @@ async function handleCategoryMutation(req, res, route) {
   }
 
   if (req.method === 'DELETE') {
-    await catalog.deleteCategory(id);
+    await catalog.deleteCategory(id, typeof query.moveTo === 'string' ? query.moveTo : undefined);
     sendJson(res, 200, { success: true, message: 'Category deleted', data: null });
     return;
   }
@@ -435,7 +435,7 @@ module.exports = async (req, res) => {
         sendJson(res, 405, { success: false, message: 'Use GET /categories' });
         return;
       }
-      await handleCategoryMutation(req, res, route);
+      await handleCategoryMutation(req, res, route, query);
       return;
     }
 

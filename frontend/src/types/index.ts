@@ -88,6 +88,8 @@ export interface Category {
   sortOrder: number
   /** Spec form for products in this category (lib/specs.ts template id). */
   specTemplate?: string
+  /** Staff list only: products in this category. */
+  productCount?: number
   createdAt?: string
   updatedAt?: string
 }

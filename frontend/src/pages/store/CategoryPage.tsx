@@ -13,6 +13,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
+import { categoryPhoto } from '@/lib/categoryPhoto'
 import { cn } from '@/lib/cn'
 
 export function CategoryPage() {
@@ -65,7 +66,7 @@ export function CategoryPage() {
     path: slug ? `/category/${slug}` : '/shop',
     noIndex: !category.data,
     // Share preview shows the category photo instead of the logo
-    image: category.data?.image || undefined,
+    image: category.data ? categoryPhoto(category.data) : undefined,
   })
 
   if (category.isError) {

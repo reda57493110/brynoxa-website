@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
+import { categoryPhoto } from '@/lib/categoryPhoto'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -26,17 +27,6 @@ import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
 const HERO_IMAGE =
   'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=2560&q=85'
-
-const CATEGORY_PHOTOS: Record<string, string> = {
-  laptops: '/categories/laptops.webp',
-  'gaming-pcs': '/categories/gaming-pcs.webp',
-  monitors: '/categories/monitors.jpg',
-  keyboards: '/categories/keyboards.jpg',
-  mice: '/categories/mice.jpg',
-  headphones: '/categories/headphones.jpg',
-  components: '/categories/components.jpg',
-  accessories: '/categories/accessories.jpg',
-}
 
 /**
  * Bento of categories: the first two are big; the rest fill rows of three (two on tablets). The
@@ -356,7 +346,7 @@ export function Home() {
                     )),
                   ]
                 : categoryList.map((c, i) => {
-                    const photo = CATEGORY_PHOTOS[c.slug] ?? c.image
+                    const photo = categoryPhoto(c)
                     const featuredTile = i < 2
                     const icon = categoryIcon(c.slug, c.name)
                     const name = categoryDisplayName(locale, c.slug, c.name)

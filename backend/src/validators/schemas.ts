@@ -78,9 +78,10 @@ export const addressSchema = z.object({
 });
 
 export const categorySchema = z.object({
-  name: z.string().min(2),
-  description: z.string().optional(),
-  image: z.string().optional(),
+  name: z.string().min(2).max(60),
+  description: z.string().max(300).optional(),
+  // Photo address (uploaded or pasted); empty = the built-in photo
+  image: z.union([z.string().max(1000).regex(/^(https:\/\/|\/(?!\/))/), z.literal('')]).optional(),
   parent: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().optional(),

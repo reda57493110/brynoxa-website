@@ -151,7 +151,9 @@ export const adminApi = {
       api.post<ApiResponse<Category>>('/admin/categories', payload),
     update: (id: string, payload: Partial<Category>) =>
       api.patch<ApiResponse<Category>>(`/admin/categories/${id}`, payload),
-    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/categories/${id}`),
+    /** `moveTo`: another category for its products (required when it still has some). */
+    remove: (id: string, moveTo?: string) =>
+      api.delete<ApiResponse<null>>(`/admin/categories/${id}`, { params: moveTo ? { moveTo } : undefined }),
   },
 
   brands: {

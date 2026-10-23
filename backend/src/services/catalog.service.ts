@@ -113,7 +113,12 @@ export async function listCategories(activeOnly = true) {
     slug: { $nin: ['office', 'networking'] },
   };
   if (activeOnly) filter.isActive = true;
-  return Category.find(filter).sort({ sortOrder: 1, name: 1 }).populate('parent', 'name slug');
+  const items = await Category.find(filter).sort({ sortOrder: 1, name: 1 }).populate('parent', 'name slug');
+  if (activeOnly) return items;
+  // Staff list: how many products each one holds (shown in Settings, needed before a delete)
+  const counts = await Product.aggregate<{ _id: unknown; n: number }>([{ $group: { _id: '$category', n: { $sum: 1 } } }]);
+  const byId = new Map(counts.map((c) => [String(c._id), c.n]));
+  return items.map((c) => ({ ...c.toObject(), productCount: byId.get(String(c._id)) || 0 }));
 }
 
 export async function getCategoryBySlug(slug: string) {
@@ -173,11 +178,27 @@ export async function updateCategory(id: string, data: Partial<{
   return category;
 }
 
-export async function deleteCategory(id: string) {
-  const inUse = await Product.exists({ category: id });
-  if (inUse) throw new ApiError(400, 'Category has products; reassign them first');
-  const category = await Category.findByIdAndDelete(id);
+/**
+ * Deletes a category. If products are still in it, `moveTo` (another category) is required: they
+ * are moved there first, so no product is ever left without a category.
+ */
+export async function deleteCategory(id: string, moveTo?: string) {
+  if (!mongoose.isValidObjectId(id)) throw new ApiError(404, 'Category not found');
+  const category = await Category.findById(id);
   if (!category) throw new ApiError(404, 'Category not found');
+  const inUse = await Product.countDocuments({ category: id });
+  if (inUse) {
+    if (!moveTo) {
+      throw new ApiError(400, `This category still has ${inUse} product${inUse === 1 ? '' : 's'}. Choose a category to move them to.`);
+    }
+    if (!mongoose.isValidObjectId(moveTo) || String(moveTo) === String(id) || !(await Category.exists({ _id: moveTo }))) {
+      throw new ApiError(400, 'Choose another existing category to move the products to');
+    }
+    await Product.updateMany({ category: id }, { $set: { category: moveTo } });
+  }
+  // Sub-categories keep working, one level up
+  await Category.updateMany({ parent: id }, { $set: { parent: category.parent ?? null } });
+  await Category.deleteOne({ _id: id });
   invalidateActiveCategoryCache();
   return category;
 }
