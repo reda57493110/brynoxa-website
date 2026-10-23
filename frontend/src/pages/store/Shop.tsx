@@ -172,17 +172,17 @@ export function Shop() {
 
   const chip = (active: boolean) =>
     cn(
-      'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border ps-1.5 pe-4 text-sm font-medium transition active:scale-[0.97] sm:h-11',
+      'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border ps-1 pe-3.5 text-[13px] font-medium transition active:scale-[0.97] sm:h-10 sm:gap-2 sm:ps-1.5 sm:pe-4 sm:text-sm',
       'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
       active
         ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
-        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
     )
 
   const chipIcon = (active: boolean, name: SiteIconName) => (
     <span
       className={cn(
-        'grid size-7 shrink-0 place-items-center rounded-full sm:size-8',
+        'grid size-7 shrink-0 place-items-center rounded-full',
         active ? 'bg-white/25 text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
       )}
     >
@@ -261,35 +261,36 @@ export function Shop() {
         </ul>
       </StoreHero>
 
-      <Container className="max-w-[96rem] py-5 sm:py-10">
-        <div
-          className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:mb-6 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
-          aria-label={t('shop.shopByCategory')}
-        >
-          <button
-            type="button"
-            className={chip(!filters.category)}
-            onClick={() => update({ category: undefined })}
+      <Container className="max-w-[96rem] pb-8 pt-4 sm:pb-10 sm:pt-6">
+        <div className="mb-4 flex flex-col gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:mb-5 sm:gap-3 sm:p-3.5 lg:flex-row lg:items-center lg:justify-between">
+          <div
+            className="-mx-3 flex min-w-0 gap-1.5 overflow-x-auto px-3 [scrollbar-width:none] sm:-mx-4 sm:gap-2 sm:px-4 lg:mx-0 lg:flex-1 lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
+            aria-label={t('shop.shopByCategory')}
           >
-            {chipIcon(!filters.category, 'layers')}
-            {t('shop.all')}
-          </button>
-          {categoryList.map((c) => (
             <button
-              key={c._id}
               type="button"
-              className={chip(filters.category === c.slug)}
-              onClick={() =>
-                update({ category: filters.category === c.slug ? undefined : c.slug })
-              }
+              className={chip(!filters.category)}
+              onClick={() => update({ category: undefined })}
             >
-              {chipIcon(filters.category === c.slug, categoryIcon(c.slug, c.name))}
-              {categoryDisplayName(locale, c.slug, c.name)}
+              {chipIcon(!filters.category, 'layers')}
+              {t('shop.all')}
             </button>
-          ))}
-        </div>
+            {categoryList.map((c) => (
+              <button
+                key={c._id}
+                type="button"
+                className={chip(filters.category === c.slug)}
+                onClick={() =>
+                  update({ category: filters.category === c.slug ? undefined : c.slug })
+                }
+              >
+                {chipIcon(filters.category === c.slug, categoryIcon(c.slug, c.name))}
+                {categoryDisplayName(locale, c.slug, c.name)}
+              </button>
+            ))}
+          </div>
 
-        <div className="sticky top-[calc(var(--nav-height)+0.25rem)] z-20 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 shadow-soft backdrop-blur-md sm:static sm:mb-5 sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5 sm:gap-3 lg:shrink-0 lg:border-0 lg:pt-0">
           <p className="min-w-0 truncate text-xs text-[var(--fg-muted)] sm:text-sm">
             {productsLoading ? (
               t('ui.loadingProducts')
@@ -329,6 +330,7 @@ export function Shop() {
               ) : null}
             </button>
             <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} />
+          </div>
           </div>
         </div>
 
