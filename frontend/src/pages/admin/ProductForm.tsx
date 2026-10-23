@@ -27,6 +27,7 @@ import { VariantsPanel, defaultVariantOptions } from '@/components/admin/Variant
 import { createVersions, validateVersionRows, type VersionRow } from '@/components/admin/VariantRows'
 import { variantLabel, variantableFields } from '@/lib/variants'
 import { SPEC_FIELDS } from '@/lib/specs'
+import { productNameHint } from '@/lib/productNameHint'
 import {
   distribute,
   draftEntries,
@@ -115,6 +116,23 @@ function FormJumpBar({ hasVersions }: { hasVersions: boolean }) {
         </button>
       ))}
     </nav>
+  )
+}
+
+/** Tip under the product name so it can be found on Google (see lib/productNameHint). */
+function NameTip({ name, brand }: { name: string; brand: string }) {
+  const hint = productNameHint(name, brand)
+  if (!hint) return null
+  const text = {
+    brand_only: 'This is only the brand. Add the model and key specs, e.g. "HP EliteBook 840 G8 i7 16GB 512GB" — customers search Google with those words.',
+    too_short: 'Short name: add the model and key specs (processor, RAM, storage), e.g. "HP EliteBook 840 G8 i7 16GB". It helps customers find it on Google.',
+    too_long: 'Long name: Google shows about 60 characters. Keep the model and the most important specs first.',
+  }[hint]
+  return (
+    <p className="mt-1.5 flex items-start gap-1.5 rounded-lg bg-[color-mix(in_srgb,var(--warning)_14%,transparent)] px-2.5 py-1.5 text-xs text-[var(--fg)]">
+      <SiteIcon name="search" size={13} className="mt-0.5 shrink-0 text-[var(--warning)]" />
+      {text}
+    </p>
   )
 }
 
@@ -640,9 +658,10 @@ export function ProductForm() {
             label="Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            placeholder="e.g. HP EliteBook 830 G8"
+            placeholder="e.g. HP EliteBook 840 G8 i7 16GB 512GB"
             required
           />
+          <NameTip name={form.name} brand={form.brand} />
         </div>
         <Select
           label="Category"
