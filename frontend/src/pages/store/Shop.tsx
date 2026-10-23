@@ -30,6 +30,22 @@ export function Shop() {
   const locale = useLocaleStore((s) => s.locale)
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
+  // Phones: one or two products per row (remembered on this device; one by default)
+  const [phoneCols, setPhoneCols] = useState<1 | 2>(() => {
+    try {
+      return localStorage.getItem('brynoxa-shop-cols') === '2' ? 2 : 1
+    } catch {
+      return 1
+    }
+  })
+  const choosePhoneCols = (cols: 1 | 2) => {
+    setPhoneCols(cols)
+    try {
+      localStorage.setItem('brynoxa-shop-cols', String(cols))
+    } catch {
+      /* private mode: keep it for this visit only */
+    }
+  }
   const [searchDraft, setSearchDraft] = useState(params.get('q') || '')
 
   useEffect(() => {
@@ -316,6 +332,24 @@ export function Shop() {
               </>
             )}
           </p>
+          <div className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg)] p-0.5 sm:hidden" role="group" aria-label={t('shop.viewLabel')}>
+            {([1, 2] as const).map((cols) => (
+              <button
+                key={cols}
+                type="button"
+                onClick={() => choosePhoneCols(cols)}
+                aria-pressed={phoneCols === cols}
+                aria-label={cols === 1 ? t('shop.viewOne') : t('shop.viewTwo')}
+                title={cols === 1 ? t('shop.viewOne') : t('shop.viewTwo')}
+                className={cn(
+                  'grid size-8 place-items-center rounded-full transition',
+                  phoneCols === cols ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                )}
+              >
+                <SiteIcon name={cols === 1 ? 'view-one' : 'view-two'} size={15} />
+              </button>
+            ))}
+          </div>
           <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center lg:block">
             <button
               type="button"
@@ -390,7 +424,7 @@ export function Shop() {
                 <ProductGrid
                   products={products.data?.items}
                   loading={productsLoading}
-                  className="grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                  className={cn(phoneCols === 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2', 'lg:grid-cols-3 xl:grid-cols-4')}
                   emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
                   emptyDescription={
                     hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')

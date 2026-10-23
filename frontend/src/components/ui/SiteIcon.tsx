@@ -1,5 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import {
+  LayoutGrid,
+  Square,
   AlertTriangle,
   Armchair,
   ArrowLeft,
@@ -112,6 +114,8 @@ const ICONS = {
   settings: Settings,
   shield: Shield,
   sliders: SlidersHorizontal,
+  'view-one': Square,
+  'view-two': LayoutGrid,
   star: Star,
   sun: Sun,
   tag: Tag,
