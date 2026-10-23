@@ -4,7 +4,7 @@ import * as misc from '../controllers/misc.controller';
 import * as profit from '../controllers/profit.controller';
 import { validate } from '../middleware/validate';
 import { requireAuth, requirePermission, optionalAuth } from '../middleware/auth';
-import { orderLimiter } from '../middleware/rateLimit';
+import { orderLimiter, couponLimiter } from '../middleware/rateLimit';
 import {
   createOrderSchema,
   updateOrderItemsSchema,
@@ -68,7 +68,7 @@ router.post(
 );
 router.get('/orders/:orderNumber/deposit-proofs/:proofId', requireAuth, order.myDepositProofImage);
 router.get('/orders/:orderNumber', requireAuth, order.myOrder);
-router.post('/coupons/validate', optionalAuth, validate(validateCouponSchema), order.validateCoupon);
+router.post('/coupons/validate', couponLimiter, optionalAuth, validate(validateCouponSchema), order.validateCoupon);
 
 router.get('/admin/orders', requireAuth, requirePermission('orders:read'), order.adminOrders);
 router.get('/admin/orders/:id', requireAuth, requirePermission('orders:read'), order.adminOrder);
