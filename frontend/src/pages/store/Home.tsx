@@ -447,7 +447,7 @@ export function Home() {
       >
         <Container>
           <motion.div
-            className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[radial-gradient(90%_120%_at_100%_0%,color-mix(in_srgb,var(--brand)_14%,transparent),transparent_60%),radial-gradient(70%_90%_at_0%_100%,color-mix(in_srgb,var(--brand)_8%,transparent),transparent_60%)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem] dark:border-0 dark:bg-none dark:bg-[#05080b]"
+            className="relative overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[radial-gradient(90%_120%_at_100%_0%,color-mix(in_srgb,var(--brand)_14%,transparent),transparent_60%),radial-gradient(70%_90%_at_0%_100%,color-mix(in_srgb,var(--brand)_8%,transparent),transparent_60%)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem] dark:border-0 dark:bg-none dark:bg-[#05080b]"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
@@ -463,7 +463,7 @@ export function Home() {
               className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(100deg,rgb(5_8_11/0.97)_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.7)_100%)] rtl:-scale-x-100 dark:block"
               aria-hidden="true"
             />
-            <div className="relative grid gap-8 px-5 py-9 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:px-14 lg:py-14">
+            <div className="relative grid gap-5 px-4 py-6 sm:gap-8 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:px-14 lg:py-14">
               <div>
                 <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] px-3 py-1 font-display text-xs font-semibold text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]">
                   <SiteIcon name="shield" size={14} />
@@ -471,15 +471,15 @@ export function Home() {
                 </p>
                 <h2
                   id="home-cta-heading"
-                  className="mt-4 max-w-xl font-display text-2xl font-bold leading-tight tracking-tight text-[var(--fg)] sm:text-4xl dark:text-white"
+                  className="mt-3 max-w-xl font-display text-xl font-bold leading-tight tracking-tight text-[var(--fg)] sm:mt-4 sm:text-4xl dark:text-white"
                 >
                   {t('home.ctaTitle')}
                 </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base dark:text-white/75">{t('home.ctaBody')}</p>
-                <div className="mt-7 flex flex-wrap items-center gap-3">
+                <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-[var(--fg-muted)] sm:mt-3 sm:text-base dark:text-white/75">{t('home.ctaBody')}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-7 sm:gap-3">
                   <Link
                     to="/shop"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-6 text-base font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:gap-2 sm:px-6 sm:text-base"
                   >
                     {t('home.heroCtaShop')}
                     <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
@@ -488,7 +488,7 @@ export function Home() {
                     href={whatsappHref()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-base font-medium text-[var(--fg)] transition hover:border-[#25d366] hover:bg-[#25d366]/10 dark:border-white/20 dark:bg-white/5 dark:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm font-medium sm:h-12 sm:gap-2 sm:px-5 sm:text-base text-[var(--fg)] transition hover:border-[#25d366] hover:bg-[#25d366]/10 dark:border-white/20 dark:bg-white/5 dark:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                   >
                     <SiteIcon name="chat" size={16} className="text-[#1faa53] dark:text-[#25d366]" />
                     {t('home.ctaWhatsapp')}
@@ -497,30 +497,30 @@ export function Home() {
               </div>
 
               {/* How it works, in three steps */}
-              <ol className="relative grid gap-3">
+              <ol className="relative grid gap-2 sm:gap-3">
                 <span
-                  className="pointer-events-none absolute bottom-8 start-[2.1rem] top-8 w-px bg-gradient-to-b from-[var(--brand)] via-[var(--brand)]/40 to-[#3dd68c] sm:start-[2.4rem]"
+                  className="pointer-events-none absolute bottom-6 start-[1.75rem] top-6 w-px sm:bottom-8 sm:top-8 bg-gradient-to-b from-[var(--brand)] via-[var(--brand)]/40 to-[#3dd68c] sm:start-[2.4rem]"
                   aria-hidden="true"
                 />
                 {CTA_STEPS.map((step, i) => (
                   <li
                     key={step.icon}
-                    className="relative flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/85 p-3.5 shadow-soft backdrop-blur-sm sm:p-4 dark:border-white/10 dark:bg-[#0b1116]/80 dark:shadow-none"
+                    className="relative flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)]/85 p-2.5 shadow-soft sm:gap-4 sm:rounded-2xl sm:p-4 backdrop-blur-sm sm:p-4 dark:border-white/10 dark:bg-[#0b1116]/80 dark:shadow-none"
                   >
                     <span
                       className={cn(
-                        'relative grid size-10 shrink-0 place-items-center rounded-full sm:size-11',
+                        'relative grid size-8 shrink-0 place-items-center rounded-full sm:size-11',
                         i === CTA_STEPS.length - 1 ? 'bg-[#3dd68c] text-[#04140b]' : 'bg-[var(--brand)] text-[var(--brand-fg)]'
                       )}
                     >
-                      <SiteIcon name={step.icon} size={18} />
+                      <SiteIcon name={step.icon} size={16} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] dark:text-white/45">
+                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] max-sm:hidden dark:text-white/45">
                         {t('home.ctaStepLabel', { n: i + 1 })}
                       </span>
-                      <span className="block font-display text-base font-semibold text-[var(--fg)] sm:text-lg dark:text-white">{t(step.title)}</span>
-                      <span className="block text-sm text-[var(--fg-muted)] dark:text-white/65">{t(step.body)}</span>
+                      <span className="block font-display text-sm font-semibold text-[var(--fg)] sm:text-lg dark:text-white">{t(step.title)}</span>
+                      <span className="block text-xs text-[var(--fg-muted)] sm:text-sm dark:text-white/65">{t(step.body)}</span>
                     </span>
                   </li>
                 ))}
