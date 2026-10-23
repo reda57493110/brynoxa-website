@@ -24,14 +24,34 @@ function escapeXml(value) {
     .replace(/'/g, '&apos;');
 }
 
-function urlEntry(loc, { lastmod, changefreq, priority } = {}) {
-  return `  <url>
-    <loc>${escapeXml(loc)}</loc>${
-      lastmod ? `\n    <lastmod>${escapeXml(lastmod)}</lastmod>` : ''
-    }${changefreq ? `\n    <changefreq>${changefreq}</changefreq>` : ''}${
-      priority !== undefined ? `\n    <priority>${priority}</priority>` : ''
-    }
-  </url>`;
+// Each page exists in English (/shop), French (/fr/shop) and Arabic (/ar/shop)
+const LANGS = [
+  { prefix: '', hreflang: 'en' },
+  { prefix: '/fr', hreflang: 'fr-MA' },
+  { prefix: '/ar', hreflang: 'ar-MA' },
+];
+
+function localized(origin, path, prefix) {
+  if (!prefix) return `${origin}${path}`;
+  return `${origin}${prefix}${path === '/' ? '' : path}`;
+}
+
+/** One <url> per language for this page, each listing the other languages (hreflang). */
+function urlEntry(origin, path, { lastmod, changefreq, priority } = {}) {
+  const alternates = [
+    ...LANGS.map(
+      (l) => `    <xhtml:link rel="alternate" hreflang="${l.hreflang}" href="${escapeXml(localized(origin, path, l.prefix))}"/>`
+    ),
+    `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(localized(origin, path, ''))}"/>`,
+  ].join('\n');
+  return LANGS.map(
+    (l) => `  <url>
+    <loc>${escapeXml(localized(origin, path, l.prefix))}</loc>
+${alternates}${lastmod ? `\n    <lastmod>${escapeXml(lastmod)}</lastmod>` : ''}${
+      changefreq ? `\n    <changefreq>${changefreq}</changefreq>` : ''
+    }${priority !== undefined ? `\n    <priority>${priority}</priority>` : ''}
+  </url>`
+  ).join('\n');
 }
 
 function toDate(value) {
@@ -82,7 +102,7 @@ module.exports = async (req, res) => {
       .lean();
 
     categoryUrls = categories.map((c) =>
-      urlEntry(`${origin}/category/${c.slug}`, {
+      urlEntry(origin, `/category/${c.slug}`, {
         lastmod: toDate(c.updatedAt),
         changefreq: 'weekly',
         priority: '0.8',
@@ -102,7 +122,7 @@ module.exports = async (req, res) => {
       : [];
 
     productUrls = products.map((p) =>
-      urlEntry(`${origin}/product/${p.slug}`, {
+      urlEntry(origin, `/product/${p.slug}`, {
         lastmod: toDate(p.updatedAt),
         changefreq: 'weekly',
         priority: '0.85',
@@ -114,10 +134,10 @@ module.exports = async (req, res) => {
   }
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${staticPages
   .map((p) =>
-    urlEntry(`${origin}${p.path}`, {
+    urlEntry(origin, p.path, {
       changefreq: p.changefreq,
       priority: p.priority,
     })

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { ALL_PATH_LOCALES, currentPathLocale, localizedPath, stripLocale } from '@/lib/localePath'
 
 export type SeoInput = {
   title: string
@@ -86,7 +87,10 @@ export function useSeo({
     const previousTitle = document.title
     document.title = title
 
-    const url = absoluteUrl(path ?? `${window.location.pathname}${window.location.search}`)
+    // Page path without the language prefix; the address of this page is in the current language
+    const basePath = path ?? stripLocale(window.location.pathname)
+    const lang = currentPathLocale()
+    const url = absoluteUrl(localizedPath(basePath, lang))
     const imageUrl = absoluteUrl(image)
     const robots = noIndex ? 'noindex, nofollow' : 'index, follow'
 
@@ -103,6 +107,20 @@ export function useSeo({
     upsertMeta('name', 'twitter:description', description)
     upsertMeta('name', 'twitter:image', imageUrl)
     upsertLink('canonical', url.split('?')[0])
+    upsertMeta('property', 'og:locale', lang === 'fr' ? 'fr_MA' : lang === 'ar' ? 'ar_MA' : 'en_US')
+    // The same page in the other languages (indexable pages only)
+    document.head.querySelectorAll('link[data-hreflang]').forEach((el) => el.remove())
+    if (!noIndex) {
+      const clean = basePath.split('?')[0]
+      for (const l of [...ALL_PATH_LOCALES, 'x-default' as const]) {
+        const link = document.createElement('link')
+        link.rel = 'alternate'
+        link.hreflang = l === 'x-default' ? 'x-default' : l === 'en' ? 'en' : `${l}-MA`
+        link.href = absoluteUrl(localizedPath(clean, l === 'x-default' ? 'en' : l))
+        link.setAttribute('data-hreflang', '')
+        document.head.appendChild(link)
+      }
+    }
     upsertJsonLd(jsonLdKey ? (JSON.parse(jsonLdKey) as Record<string, unknown>) : null)
 
     return () => {

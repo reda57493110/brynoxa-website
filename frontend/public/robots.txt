@@ -1,11 +1,22 @@
 User-agent: *
 Allow: /
 
+# Private pages, in every language (/fr/…, /ar/…)
 Disallow: /admin
 Disallow: /account
 Disallow: /checkout
 Disallow: /cart
 Disallow: /login
 Disallow: /register
+Disallow: /fr/account
+Disallow: /fr/checkout
+Disallow: /fr/cart
+Disallow: /fr/login
+Disallow: /fr/register
+Disallow: /ar/account
+Disallow: /ar/checkout
+Disallow: /ar/cart
+Disallow: /ar/login
+Disallow: /ar/register
 
 Sitemap: https://brynoxa-website-lime.vercel.app/sitemap.xml

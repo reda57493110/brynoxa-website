@@ -3,6 +3,7 @@
  * price, stock, condition, returns and delivery country, so search results can show price / stock.
  */
 import { CONTACT } from '@/lib/site'
+import { currentPathLocale, localizedPath } from '@/lib/localePath'
 import type { Brand, Category, Product } from '@/types'
 
 function origin() {
@@ -67,7 +68,9 @@ const CONDITION: Record<string, string> = {
 
 /** One product page: the product, its offer, and the breadcrumb (Shop › Category › Product). */
 export function productData(p: Product, description: string) {
-  const url = `${origin()}/product/${p.slug}`
+  const lang = currentPathLocale()
+  const page = (path: string) => `${origin()}${localizedPath(path, lang)}`
+  const url = page(`/product/${p.slug}`)
   const brand = typeof p.brand === 'object' && p.brand ? (p.brand as Brand).name : undefined
   const category = typeof p.category === 'object' && p.category ? (p.category as Category) : null
   const images = (p.images ?? []).map((i) => absolute(i.url))
@@ -106,9 +109,9 @@ export function productData(p: Product, description: string) {
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Shop', item: `${origin()}/shop` },
+          { '@type': 'ListItem', position: 1, name: 'Shop', item: page('/shop') },
           ...(category
-            ? [{ '@type': 'ListItem', position: 2, name: category.name, item: `${origin()}/category/${category.slug}` }]
+            ? [{ '@type': 'ListItem', position: 2, name: category.name, item: page(`/category/${category.slug}`) }]
             : []),
           { '@type': 'ListItem', position: category ? 3 : 2, name: p.name, item: url },
         ],

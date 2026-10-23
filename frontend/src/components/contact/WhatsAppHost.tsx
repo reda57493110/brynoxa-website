@@ -126,7 +126,7 @@ export function WhatsAppHost() {
   const slug = onProductPage ? location.pathname.split('/')[2] ?? '' : ''
   const cachedProduct = slug ? qc.getQueryData<Product>(['product', slug]) : undefined
   const productName = storedProductName || cachedProduct?.name || ''
-  const productUrl = onProductPage ? `${window.location.origin}${location.pathname}` : ''
+  const productUrl = onProductPage ? `${window.location.origin}${window.location.pathname}` : ''
 
   const [selected, setSelected] = useState<WhatsAppTopic | null>(null)
   const [orderNumber, setOrderNumber] = useState('')

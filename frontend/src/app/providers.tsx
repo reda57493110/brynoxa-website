@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
+import { routerBasename } from '@/lib/localePath'
 import { useThemeStore } from '@/store/themeStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { useAuthStore } from '@/store/authStore'
@@ -54,7 +55,7 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <BrowserRouter basename={routerBasename()}>
         <BootstrapAuth>
           {children}
           <AnalyticsListener />

@@ -46,6 +46,7 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 - `api/*Api.ts` — axios wrappers on `api/client.ts` (bearer access token + CSRF-protected cookie refresh flow).
 - `store/*` — Zustand stores (auth, cart, compare, wishlist, locale, theme, toast, whatsapp).
 - `i18n/{en,fr,ar}.ts` + `hooks/useT.ts` — all UI strings; add keys to all three files.
+- Language is in the address: English has no prefix (`/shop`), French / Arabic live under `/fr` and `/ar` (router basename from `lib/localePath.ts`, set in `themeInit.ts`; switching language reloads the page). `useSeo` adds canonical + hreflang; `api/sitemap.js` lists all three. Links inside the app need no prefix.
 - `components/ui/` — design primitives; `components/product/` — catalog UI; `lib/` — helpers (format, image, analytics, site config, whatsapp).
 - `public/sw.js` — service worker for push notifications.
 - Env: `VITE_API_URL`, optional `VITE_GA_MEASUREMENT_ID`, `VITE_SITE_URL`.
