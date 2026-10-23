@@ -14,8 +14,9 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
+import { categoryIcon } from '@/lib/categoryIcon'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -47,18 +48,6 @@ function categoryTileClass(index: number, count: number) {
   const lgLeft = (count - 2) % 3 // tiles on the last desktop row (0 = full)
   const smOdd = (count - 1) % 2 === 1 // tablets: tile 0 takes a row, the rest go two by two
   return cn('min-h-[12.5rem]', last && smOdd && 'sm:col-span-2', last && lgLeft === 1 && 'lg:col-span-3', last && lgLeft === 2 && 'lg:col-span-2', last && smOdd && lgLeft === 0 && 'lg:col-span-1')
-}
-
-function categoryIcon(slug: string, name: string): SiteIconName {
-  const key = `${slug} ${name}`.toLowerCase()
-  if (key.includes('laptop')) return 'laptop'
-  if (key.includes('gaming')) return 'gamepad'
-  if (key.includes('monitor')) return 'monitor'
-  if (key.includes('keyboard')) return 'keyboard'
-  if (key.includes('mice') || key.includes('mouse')) return 'mouse'
-  if (key.includes('headphone') || key.includes('audio')) return 'headphones'
-  if (key.includes('component')) return 'cpu'
-  return 'package'
 }
 
 const fadeUp = (reduce: boolean | null, delay = 0) =>

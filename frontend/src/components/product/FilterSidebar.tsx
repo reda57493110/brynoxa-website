@@ -240,7 +240,7 @@ export function FilterSidebar({
       ) : null}
 
       <FilterSection title={t('shop.priceDh')} icon="tag">
-        <div className="grid grid-cols-2 gap-2">
+        <div className={cn('grid gap-2', plain ? 'grid-cols-2' : 'grid-cols-1')}>
           {PRICE_PRESETS.map((preset) => {
             const label =
               preset.max && !preset.min

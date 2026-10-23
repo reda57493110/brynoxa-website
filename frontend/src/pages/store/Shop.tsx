@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
@@ -14,6 +14,7 @@ import { Drawer } from '@/components/ui/Drawer'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
+import { categoryIcon } from '@/lib/categoryIcon'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
@@ -171,12 +172,23 @@ export function Shop() {
 
   const chip = (active: boolean) =>
     cn(
-      'inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:h-9 sm:px-3.5 sm:text-sm',
+      'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border ps-1.5 pe-4 text-sm font-medium transition active:scale-[0.97] sm:h-11',
       'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
       active
-        ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+        ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
+        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
     )
+
+  const chipIcon = (active: boolean, name: SiteIconName) => (
+    <span
+      className={cn(
+        'grid size-7 shrink-0 place-items-center rounded-full sm:size-8',
+        active ? 'bg-white/25 text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
+      )}
+    >
+      <SiteIcon name={name} size={15} />
+    </span>
+  )
 
   return (
     <>
@@ -259,6 +271,7 @@ export function Shop() {
             className={chip(!filters.category)}
             onClick={() => update({ category: undefined })}
           >
+            {chipIcon(!filters.category, 'layers')}
             {t('shop.all')}
           </button>
           {categoryList.map((c) => (
@@ -270,6 +283,7 @@ export function Shop() {
                 update({ category: filters.category === c.slug ? undefined : c.slug })
               }
             >
+              {chipIcon(filters.category === c.slug, categoryIcon(c.slug, c.name))}
               {categoryDisplayName(locale, c.slug, c.name)}
             </button>
           ))}
@@ -281,12 +295,17 @@ export function Shop() {
               t('ui.loadingProducts')
             ) : (
               <>
-                <span className="hidden text-[var(--fg-muted)] sm:inline">{t('shop.showing')} </span>
-                <span className="font-medium text-[var(--fg)]">
-                  {total === 0
-                    ? t('shop.zeroProducts')
-                    : t('shop.productsCount', { from, to, total })}
-                </span>
+                {total === 0 ? (
+                  <span className="font-medium text-[var(--fg)]">{t('shop.zeroProducts')}</span>
+                ) : (
+                  <>
+                    <span className="font-display text-base font-bold text-[var(--fg)] sm:text-lg">{total}</span>{' '}
+                    <span className="font-medium text-[var(--fg)]">{t('shop.productsWord')}</span>
+                    {total > to - from + 1 ? (
+                      <span className="hidden text-[var(--fg-muted)] sm:inline"> · {t('shop.productsCount', { from, to, total })}</span>
+                    ) : null}
+                  </>
+                )}
                 {sidebarFilterCount > 0 ? (
                   <span className="ms-1 text-[11px] text-[var(--brand-text)] sm:ms-2 sm:text-xs">
                     · {t('shop.refined', { count: sidebarFilterCount })}
@@ -296,19 +315,6 @@ export function Shop() {
             )}
           </p>
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              className={cn(
-                'hidden h-10 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition sm:inline-flex',
-                filters.inStock
-                  ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-                  : 'border-[var(--border)] hover:border-[var(--brand)]'
-              )}
-              onClick={() => update({ inStock: filters.inStock ? undefined : 'true' })}
-            >
-              <SiteIcon name="package-check" size={14} />
-              {t('shop.inStockOnly')}
-            </button>
             <button
               type="button"
               className="relative inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm lg:hidden"
