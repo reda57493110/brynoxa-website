@@ -1,13 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
-import { wishlistApi } from '@/api/wishlistApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { LegalConsent } from '@/components/legal/LegalConsent'
 import { useAuthStore } from '@/store/authStore'
-import { useWishlistStore } from '@/store/wishlistStore'
 import { toast } from '@/store/toastStore'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -17,8 +15,6 @@ export function Register() {
   usePageTitle(t('auth.titleRegister'))
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
-  const localIds = useWishlistStore((s) => s.ids)
-  const setFromServer = useWishlistStore((s) => s.setFromServer)
 
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -68,15 +64,6 @@ export function Register() {
       setAuth(payload.user, payload.accessToken)
       toast.success(t('auth.registerSuccess'))
       navigate('/', { replace: true })
-
-      if (localIds.length) {
-        void wishlistApi
-          .sync(localIds)
-          .then((r) => setFromServer(r.data.data))
-          .catch(() => {
-            /* ignore */
-          })
-      }
     } catch (err) {
       const message = getErrorMessage(err, t('auth.registerFailed'))
       setFormError(message)

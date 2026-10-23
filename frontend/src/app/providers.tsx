@@ -4,9 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { useThemeStore } from '@/store/themeStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { useAuthStore } from '@/store/authStore'
-import { useWishlistStore } from '@/store/wishlistStore'
 import { restoreSession } from '@/api/client'
-import { wishlistApi } from '@/api/wishlistApi'
 import { Toaster } from '@/components/ui/Toaster'
 import { AnalyticsListener } from '@/components/analytics/AnalyticsListener'
 
@@ -22,7 +20,7 @@ const queryClient = new QueryClient({
 })
 
 // Signing out or into another account: drop everything cached for the previous one
-// (orders, order pages, wishlist, notifications…) so nothing stale or someone else's shows.
+// (orders, order pages, notifications…) so nothing stale or someone else's shows.
 let lastUserId: string | null | undefined
 useAuthStore.subscribe((state) => {
   const id = state.user?._id ?? null
@@ -33,8 +31,6 @@ useAuthStore.subscribe((state) => {
 function BootstrapAuth({ children }: { children: ReactNode }) {
   const hydrateTheme = useThemeStore((s) => s.hydrateTheme)
   const setBootstrapped = useAuthStore((s) => s.setBootstrapped)
-  const localIds = useWishlistStore((s) => s.ids)
-  const setFromServer = useWishlistStore((s) => s.setFromServer)
 
   useEffect(() => {
     hydrateTheme()
@@ -42,22 +38,8 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
     let cancelled = false
 
     ;(async () => {
-      const token = await restoreSession()
-      if (cancelled) return
-      // Unlock routing immediately — wishlist is storefront-only and must not block /admin.
-      setBootstrapped(true)
-      if (!token) return
-      try {
-        if (localIds.length) {
-          const synced = await wishlistApi.sync(localIds)
-          if (!cancelled) setFromServer(synced.data.data)
-        } else {
-          const wish = await wishlistApi.list()
-          if (!cancelled) setFromServer(wish.data.data)
-        }
-      } catch {
-        /* wishlist optional */
-      }
+      await restoreSession()
+      if (!cancelled) setBootstrapped(true)
     })()
 
     return () => {

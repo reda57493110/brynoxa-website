@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { motion, useReducedMotion } from 'framer-motion'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
-import { wishlistApi } from '@/api/wishlistApi'
-import { getErrorMessage } from '@/api/client'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { PageLoader } from '@/components/ui/PageLoader'
@@ -18,9 +16,6 @@ import { QuantityStepper } from '@/components/product/QuantityStepper'
 import { StockBadge } from '@/components/product/StockBadge'
 import { CompleteSetup } from '@/components/product/CompleteSetup'
 import { useCartStore } from '@/store/cartStore'
-import { useWishlistStore } from '@/store/wishlistStore'
-import { useAuthStore } from '@/store/authStore'
-import { toast } from '@/store/toastStore'
 import { formatCurrency } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
 import { recordProductView } from '@/lib/push'
@@ -51,10 +46,6 @@ export function ProductDetail() {
   const [qty, setQty] = useState(1)
 
   const addItem = useCartStore((s) => s.addItem)
-  const isAuth = useAuthStore((s) => s.isAuthenticated())
-  const isWish = useWishlistStore((s) => s.isWishlisted)
-  const toggleLocal = useWishlistStore((s) => s.toggleLocal)
-  const setFromServer = useWishlistStore((s) => s.setFromServer)
 
   const product = useQuery({
     queryKey: ['product', slug],
@@ -200,7 +191,6 @@ export function ProductDetail() {
   const categoryName = category
     ? categoryDisplayName(locale, category.slug, category.name)
     : null
-  const wishlisted = isWish(p._id)
 
   const cartLine = {
     productId: p._id,
@@ -228,25 +218,6 @@ export function ProductDetail() {
   // Specifications are shown once, beside the photos, grouped by the product's spec type
   const specTemplate = resolveTemplate(p.specTemplate, category)
   const outOfStock = p.stock <= 0
-
-  const onWishlist = async () => {
-    try {
-      if (isAuth) {
-        if (wishlisted) {
-          setFromServer((await wishlistApi.remove(p._id)).data.data)
-          toast.info(t('product.removedWishlist'))
-        } else {
-          setFromServer((await wishlistApi.add(p._id)).data.data)
-          toast.success(t('product.savedWishlist'))
-        }
-      } else {
-        toggleLocal(p._id)
-        toast.info(wishlisted ? t('product.removedWishlist') : t('product.savedLocal'))
-      }
-    } catch (e) {
-      toast.error(getErrorMessage(e))
-    }
-  }
 
   const proofChips = [
     { icon: 'package-check' as const, label: t('home.proofCod') },
@@ -393,15 +364,6 @@ export function ProductDetail() {
                 </Button>
               </div>
               <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--border)] pt-2.5 text-xs sm:mt-3 sm:pt-3 sm:text-sm">
-                <button
-                  type="button"
-                  onClick={onWishlist}
-                  aria-pressed={wishlisted}
-                  className="inline-flex items-center gap-1.5 font-medium text-[var(--fg-muted)] transition hover:text-[var(--brand-text)] aria-pressed:text-[var(--brand-text)]"
-                >
-                  <SiteIcon name="heart" size={14} />
-                  {wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
-                </button>
                 <button
                   type="button"
                   onClick={() => openWhatsAppPicker({ topic: 'product', productName: p.name })}

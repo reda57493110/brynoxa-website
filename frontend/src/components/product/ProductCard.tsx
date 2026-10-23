@@ -6,15 +6,11 @@ import { Price } from './Price'
 import { StockBadge } from './StockBadge'
 import { ConditionBadge } from './ConditionBadge'
 import { useCartStore } from '@/store/cartStore'
-import { useWishlistStore } from '@/store/wishlistStore'
-import { useAuthStore } from '@/store/authStore'
 import { useCompareStore } from '@/store/compareStore'
-import { wishlistApi } from '@/api/wishlistApi'
 import { toast } from '@/store/toastStore'
 import { Button } from '@/components/ui/Button'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { useImageLoaded } from '@/hooks/useImageLoaded'
-import { getErrorMessage } from '@/api/client'
 import { cn } from '@/lib/cn'
 import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
@@ -51,10 +47,6 @@ export function ProductCard({
   variant?: 'grid' | 'spotlight'
 }) {
   const addItem = useCartStore((s) => s.addItem)
-  const wishlisted = useWishlistStore((s) => s.isWishlisted(product._id))
-  const toggleLocal = useWishlistStore((s) => s.toggleLocal)
-  const setFromServer = useWishlistStore((s) => s.setFromServer)
-  const isAuth = useAuthStore((s) => s.isAuthenticated())
   const compareHas = useCompareStore((s) => s.has(product._id))
   const addCompare = useCompareStore((s) => s.add)
   const removeCompare = useCompareStore((s) => s.remove)
@@ -92,27 +84,6 @@ export function ProductCard({
       sku: product.sku,
       condition: product.condition,
     })
-  }
-
-  const onWishlist = async () => {
-    try {
-      if (isAuth) {
-        if (wishlisted) {
-          const res = await wishlistApi.remove(product._id)
-          setFromServer(res.data.data)
-          toast.info(t('product.removedWishlist'))
-        } else {
-          const res = await wishlistApi.add(product._id)
-          setFromServer(res.data.data)
-          toast.success(t('product.savedWishlist'))
-        }
-      } else {
-        toggleLocal(product._id)
-        toast.info(wishlisted ? t('product.removedWishlist') : t('product.savedLocal'))
-      }
-    } catch (e) {
-      toast.error(getErrorMessage(e))
-    }
   }
 
   const onCompare = () => {
@@ -190,25 +161,12 @@ export function ProductCard({
             compact={!spotlight}
           />
         </div>
-        <button
-          type="button"
-          onClick={onWishlist}
-          className={cn(
-            'absolute end-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition sm:end-3 sm:top-3 sm:h-9 sm:w-9',
-            wishlisted
-              ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
-              : 'border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
-          )}
-          aria-label={wishlisted ? t('product.removeWishlist') : t('product.addWishlist')}
-        >
-          <SiteIcon name="heart" size={14} solid={wishlisted} />
-        </button>
         {!spotlight ? (
           <button
             type="button"
             onClick={onCompare}
             className={cn(
-              'absolute end-2 top-11 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition sm:end-3 sm:top-14 sm:h-9 sm:w-9',
+              'absolute end-2 top-2 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border backdrop-blur-md transition sm:end-3 sm:top-3 sm:h-9 sm:w-9',
               compareHas
                 ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
                 : 'border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'

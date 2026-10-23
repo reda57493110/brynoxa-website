@@ -21,9 +21,6 @@ const ProductDetail = lazy(() =>
 const Search = lazy(() => import('@/pages/store/Search').then((m) => ({ default: m.Search })))
 const Cart = lazy(() => import('@/pages/store/Cart').then((m) => ({ default: m.Cart })))
 const Checkout = lazy(() => import('@/pages/store/Checkout').then((m) => ({ default: m.Checkout })))
-const Wishlist = lazy(() =>
-  import('@/pages/store/Wishlist').then((m) => ({ default: m.Wishlist }))
-)
 const Compare = lazy(() => import('@/pages/store/Compare').then((m) => ({ default: m.Compare })))
 const Notifications = lazy(() =>
   import('@/pages/store/Notifications').then((m) => ({ default: m.Notifications }))
@@ -176,7 +173,6 @@ export function AppRouter() {
         <Route path="search" element={<S><Search /></S>} />
         <Route path="cart" element={<S><Cart /></S>} />
         <Route path="checkout" element={<S><Checkout /></S>} />
-        <Route path="wishlist" element={<S><Wishlist /></S>} />
         <Route path="compare" element={<S><Compare /></S>} />
         <Route
           path="account/notifications"

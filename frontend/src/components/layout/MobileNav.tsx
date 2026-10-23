@@ -5,7 +5,6 @@ import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
 import { authApi } from '@/api/authApi'
 import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
-import { useWishlistStore } from '@/store/wishlistStore'
 import { useCompareStore } from '@/store/compareStore'
 import { useThemeStore } from '@/store/themeStore'
 import { toast } from '@/store/toastStore'
@@ -17,7 +16,6 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const cartCount = useCartStore((s) => s.itemCount())
-  const wishCount = useWishlistStore((s) => s.ids.length)
   const compareCount = useCompareStore((s) => s.items.length)
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggleTheme)
@@ -28,7 +26,6 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
     { to: '/shop', label: t('common.shop'), icon: 'search' },
     { to: '/services', label: t('common.services'), icon: 'shield' },
     { to: '/contact', label: t('common.contact'), icon: 'mail' },
-    { to: '/wishlist', label: t('common.wishlist'), icon: 'heart', count: wishCount },
     { to: '/compare', label: t('compare.heading'), icon: 'layers', count: compareCount },
     { to: '/cart', label: t('common.cart'), icon: 'cart', count: cartCount },
     {

@@ -135,7 +135,7 @@ const en: Record<LegalPage, LegalDocument> = {
           'Order and delivery details: full name, phone number, address, city, and the products you order.',
           'Account details, if you create one: name, email address and a password (stored encrypted — we can never read it).',
           'Messages you send us through the contact form, WhatsApp, phone or email.',
-          'Your wishlist, and newsletter or notification preferences.',
+          'Your newsletter or notification preferences.',
           'Basic technical data needed to run the website securely, such as your browser type and IP address in security logs.',
         ],
       },
@@ -164,7 +164,7 @@ const en: Record<LegalPage, LegalDocument> = {
         id: 'cookies',
         title: '5. Cookies and local storage',
         paragraphs: [
-          'We use only what the website needs to work: a secure cookie that keeps you signed in, and storage in your browser for your cart, wishlist, language and theme. We do not use advertising cookies. If we ever add audience measurement, we will ask for your consent first.',
+          'We use only what the website needs to work: a secure cookie that keeps you signed in, and storage in your browser for your cart, language and theme. We do not use advertising cookies. If we ever add audience measurement, we will ask for your consent first.',
         ],
       },
       {
