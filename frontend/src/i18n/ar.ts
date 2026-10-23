@@ -201,6 +201,7 @@ export const ar: Messages = {
     shopByCategory: 'تسوق حسب الفئة',
     all: 'الكل',
     filters: 'عوامل التصفية',
+    showResults: 'شوف {count} منتوج',
     productsCount: '{from}–{to} من {total}',
     zeroProducts: '٠ منتجات',
     loadError: 'تعذر تحميل المتجر',

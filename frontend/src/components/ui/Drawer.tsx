@@ -12,6 +12,8 @@ interface DrawerProps {
   children: ReactNode
   side?: 'left' | 'right'
   className?: string
+  /** Stays pinned at the bottom (e.g. "Show 12 products"); the content above scrolls. */
+  footer?: ReactNode
 }
 
 export function Drawer({
@@ -21,6 +23,7 @@ export function Drawer({
   children,
   side = 'right',
   className,
+  footer,
 }: DrawerProps) {
   const t = useT()
   const panelRef = useRef<HTMLElement>(null)
@@ -87,7 +90,7 @@ export function Drawer({
         aria-labelledby={title ? 'drawer-title' : undefined}
         tabIndex={-1}
         className={cn(
-          'absolute top-0 flex h-full w-full max-w-sm flex-col border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft-lg',
+          'absolute top-0 flex h-[100dvh] w-full max-w-sm flex-col border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft-lg',
           side === 'right' ? 'end-0 border-s' : 'start-0 border-e',
           className
         )}
@@ -100,7 +103,12 @@ export function Drawer({
             </Button>
           </div>
         ) : null}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">{children}</div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain p-4 [-webkit-overflow-scrolling:touch]">{children}</div>
+        {footer ? (
+          <div className="shrink-0 border-t border-[var(--border)] bg-[var(--bg-elevated)] px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+            {footer}
+          </div>
+        ) : null}
       </aside>
     </div>,
     document.body

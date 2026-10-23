@@ -59,7 +59,8 @@ function FilterSection({
   )
 }
 
-function OptionRow({
+/** A choice as a pill; the chosen one is filled in the brand colour. */
+function OptionChip({
   active,
   label,
   onClick,
@@ -72,16 +73,17 @@ function OptionRow({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm transition',
+        'inline-flex h-10 max-w-full items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition active:scale-[0.97]',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
         active
-          ? 'bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] font-semibold text-[var(--brand-text)]'
-          : 'text-[var(--fg)] hover:bg-[var(--bg-muted)]'
+          ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
+          : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
       )}
     >
+      {active ? <SiteIcon name="check" size={14} className="shrink-0" /> : null}
       <span className="truncate">{label}</span>
-      {active ? <SiteIcon name="check" size={14} className="shrink-0 text-[var(--brand-text)]" /> : null}
     </button>
   )
 }
@@ -126,7 +128,7 @@ export function FilterSidebar({
           'rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft'
       )}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className={cn('flex items-center justify-between gap-3', plain && 'hidden')}>
         <div className="flex min-w-0 items-center gap-2">
           <h2 className="font-display text-lg font-semibold tracking-tight">{t('shop.filters')}</h2>
           {hasActive ? <Badge variant="brand">{activeCount}</Badge> : null}
@@ -189,14 +191,14 @@ export function FilterSidebar({
 
       {!hideCategories ? (
         <FilterSection title={t('shop.category')} icon="layers">
-          <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40 p-1.5">
-            <OptionRow
+          <div className="flex flex-wrap gap-2">
+            <OptionChip
               active={!values.category}
               label={t('shop.allCategories')}
               onClick={() => onChange({ ...values, category: undefined })}
             />
             {categories.map((c) => (
-              <OptionRow
+              <OptionChip
                 key={c._id}
                 active={values.category === c.slug}
                 label={categoryDisplayName(locale, c.slug, c.name)}
@@ -214,14 +216,14 @@ export function FilterSidebar({
 
       {brands.length > 0 ? (
         <FilterSection title={t('shop.brand')} icon="boxes">
-          <div className="max-h-48 space-y-0.5 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40 p-1.5">
-            <OptionRow
+          <div className="flex flex-wrap gap-2">
+            <OptionChip
               active={!values.brand}
               label={t('shop.all')}
               onClick={() => onChange({ ...values, brand: undefined })}
             />
             {brands.map((b) => (
-              <OptionRow
+              <OptionChip
                 key={b._id}
                 active={values.brand === b.slug}
                 label={displayBrand(b.name)}
@@ -238,7 +240,7 @@ export function FilterSidebar({
       ) : null}
 
       <FilterSection title={t('shop.priceDh')} icon="tag">
-        <div className="grid grid-cols-1 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           {PRICE_PRESETS.map((preset) => {
             const label =
               preset.max && !preset.min
@@ -259,17 +261,15 @@ export function FilterSidebar({
                   })
                 }
                 className={cn(
-                  'flex min-h-10 w-full items-center justify-between gap-2 rounded-xl border px-3 py-2 text-left text-xs font-semibold leading-5 transition',
+                  'flex min-h-11 w-full items-center justify-between gap-1.5 rounded-xl border px-3 py-2 text-start text-[13px] font-semibold leading-5 transition active:scale-[0.97]',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                   active
-                    ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-                    : 'border-[var(--border)] text-[var(--fg)] hover:border-[var(--brand)]'
+                    ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
+                    : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)]'
                 )}
               >
                 <span className="min-w-0 flex-1 truncate">{label}</span>
-                {active ? (
-                  <SiteIcon name="check" size={14} className="shrink-0 text-[var(--brand-text)]" />
-                ) : null}
+                {active ? <SiteIcon name="check" size={14} className="shrink-0" /> : null}
               </button>
             )
           })}
@@ -284,11 +284,12 @@ export function FilterSidebar({
               <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.min')}</span>
               <input
                 type="number"
+                inputMode="numeric"
                 min={0}
                 value={values.minPrice || ''}
                 onChange={(e) => onChange({ ...values, minPrice: e.target.value || undefined })}
                 placeholder="0"
-                className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm outline-none ring-brand"
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-base outline-none ring-brand sm:text-sm"
               />
             </label>
             <span className="mb-2.5 text-sm leading-none text-[var(--fg-muted)]" aria-hidden>
@@ -298,11 +299,12 @@ export function FilterSidebar({
               <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.max')}</span>
               <input
                 type="number"
+                inputMode="numeric"
                 min={0}
                 value={values.maxPrice || ''}
                 onChange={(e) => onChange({ ...values, maxPrice: e.target.value || undefined })}
                 placeholder={t('shop.any')}
-                className="h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm outline-none ring-brand"
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-base outline-none ring-brand sm:text-sm"
               />
             </label>
           </div>

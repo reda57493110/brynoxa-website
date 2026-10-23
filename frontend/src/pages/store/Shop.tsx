@@ -11,6 +11,7 @@ import { FilterSidebar, type FilterValues } from '@/components/product/FilterSid
 import { SortSelect } from '@/components/product/SortSelect'
 import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
+import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -161,14 +162,8 @@ export function Shop() {
       categories={categoryList}
       brands={brandList}
       values={filterValues}
-      onChange={(next) => {
-        onFilterChange(next)
-        if (plain) setFiltersOpen(false)
-      }}
-      onClear={() => {
-        clearFilters()
-        if (plain) setFiltersOpen(false)
-      }}
+      onChange={onFilterChange}
+      onClear={clearFilters}
       plain={plain}
       hideCategories
     />
@@ -410,6 +405,16 @@ export function Shop() {
         onClose={() => setFiltersOpen(false)}
         title={t('shop.filters')}
         side="left"
+        footer={
+          <div className="flex gap-2">
+            <Button variant="outline" className="h-12 shrink-0 rounded-full px-5" onClick={clearFilters} disabled={!sidebarFilterCount}>
+              {t('ui.clear')}
+            </Button>
+            <Button className="h-12 flex-1 rounded-full text-base" onClick={() => setFiltersOpen(false)}>
+              {productsLoading ? t('ui.loadingProducts') : t('shop.showResults', { count: total })}
+            </Button>
+          </div>
+        }
       >
         {sidebar(true)}
       </Drawer>

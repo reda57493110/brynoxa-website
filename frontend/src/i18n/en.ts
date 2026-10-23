@@ -199,6 +199,7 @@ export const en = {
     shopByCategory: 'Shop by category',
     all: 'All',
     filters: 'Filters',
+    showResults: 'Show {count} products',
     productsCount: '{from}–{to} of {total}',
     zeroProducts: '0 products',
     loadError: 'Couldn’t load the shop',

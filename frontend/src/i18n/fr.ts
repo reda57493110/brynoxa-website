@@ -201,6 +201,7 @@ export const fr: Messages = {
     shopByCategory: 'Acheter par catégorie',
     all: 'Tout',
     filters: 'Filtres',
+    showResults: 'Voir {count} produits',
     productsCount: '{from}–{to} sur {total}',
     zeroProducts: '0 produits',
     loadError: 'Impossible de charger la boutique',
