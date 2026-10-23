@@ -133,7 +133,7 @@ function SpotlightShell({ products, active, children }: { products: Product[]; a
             percent={d.percent}
             className={cn(
               'absolute z-20 h-9 w-9 text-[11px] transition-[opacity,transform] max-sm:start-[calc(42%-2.6rem)] max-sm:top-2 sm:end-4 sm:top-4 sm:h-12 sm:w-12 sm:text-sm duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
-              i === active ? '-rotate-6 scale-100 opacity-100' : 'pointer-events-none rotate-6 scale-75 opacity-0'
+              i === active ? '-rotate-6 scale-100 opacity-100 delay-200' : 'pointer-events-none rotate-6 scale-90 opacity-0 delay-0 duration-250'
             )}
           />
         ) : null
@@ -167,8 +167,9 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'relative flex overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white [grid-area:1/1] sm:flex-col transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-[opacity,transform]',
-        active ? 'z-[1] translate-x-0 scale-100 opacity-100' : 'pointer-events-none translate-x-4 scale-[0.985] opacity-0 rtl:-translate-x-4'
+        'relative flex overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white [grid-area:1/1] sm:flex-col transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[opacity]',
+        // Old deal out in 0.25 s, new deal in over 0.6 s right after: the two never show on top of each other
+        active ? 'z-[1] opacity-100 delay-200 duration-600' : 'pointer-events-none opacity-0 delay-0 duration-250'
       )}
     >
       <div
@@ -176,10 +177,13 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
         className={cn(
           // Grows to fill the frame when this deal has less text than the others
           'relative isolate overflow-hidden max-sm:min-h-[9.75rem] max-sm:w-[42%] max-sm:flex-none sm:aspect-[4/3] sm:flex-1 sm:[@media(max-height:820px)]:aspect-[16/10]',
-          contain ? 'photo-stage' : 'bg-[#0b1116]'
+          'bg-[#0b1116]'
         )}
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
+        {contain ? (
+          <div className="photo-stage absolute inset-2 -z-20 rounded-[1.1rem] sm:inset-x-4 sm:bottom-8 sm:top-4" aria-hidden="true" />
+        ) : null}
         <SafeImage
           src={src}
           srcSet={imageSrcSet(image, [640, 960, 1280, 1600])}
@@ -193,10 +197,14 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           onLoad={photo.onLoad}
           onError={photo.onError}
           className={cn(
-            'absolute inset-0 -z-10 h-full w-full max-w-none transition duration-700 ease-out group-hover:scale-[1.05]',
-            // Packshots on white: whole product visible, clear of the fade; mix-blend-multiply
-            // melts the photo's own off-white background into the card
-            contain ? 'object-contain p-2.5 mix-blend-multiply sm:px-6 sm:pb-12 sm:pt-10' : 'object-cover',
+            'absolute -z-10 max-w-none transition duration-[900ms] ease-out group-hover:scale-[1.05]',
+            // Packshots on white: inside the white frame, whole product visible; mix-blend-multiply
+            // melts the photo's own off-white background into the frame
+            contain
+              ? 'inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] object-contain p-3 mix-blend-multiply sm:inset-x-4 sm:bottom-8 sm:top-4 sm:h-[calc(100%-3rem)] sm:w-[calc(100%-2rem)] sm:p-6'
+              : 'inset-0 h-full w-full object-cover',
+            // a soft zoom-in as the deal appears
+            active ? 'scale-100' : 'scale-[1.06]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
         />
@@ -209,14 +217,13 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           {d ? t('home.spotlightDeal') : t('product.featuredPick')}
         </span>
 
-        {/* Fade into the dark text area (a little past the edge, so no seam shows) */}
-        <div
-          className={cn(
-            'pointer-events-none absolute inset-x-0 -bottom-px z-10 bg-gradient-to-t from-[#0b1116] to-transparent max-sm:hidden',
-            contain ? 'h-20 via-[#0b1116]/40 sm:h-24' : 'h-16'
-          )}
-          aria-hidden="true"
-        />
+        {/* Full photos fade into the dark text area (a little past the edge, so no seam shows) */}
+        {contain ? null : (
+          <div
+            className="pointer-events-none absolute inset-x-0 -bottom-px z-10 h-16 bg-gradient-to-t from-[#0b1116] to-transparent max-sm:hidden"
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-between gap-2 p-3 sm:-mt-6 sm:block sm:flex-none sm:space-y-3 sm:p-5 sm:pt-0">
