@@ -2,12 +2,11 @@ import type { Messages } from './en'
 
 export const ar: Messages = {
   meta: {
-    homeTitle: 'Brynoxa — حواسيب محمولة ومكتبية ومكوّنات',
+    homeTitle: 'PC Gamer ولابتوبات في المغرب — الدفع عند الاستلام | Brynoxa',
     contactTitle: 'اتصل بنا — Brynoxa',
     servicesTitle: 'الضمان والإرجاع والتوصيل — Brynoxa',
     shopTitle: 'المتجر — Brynoxa',
-    homeDescription:
-      'اشترِ حواسيب ومكوّنات من Brynoxa. الدفع عند الاستلام في المغرب، دعم واتساب وضمان 6 أشهر.',
+    homeDescription: 'PC Gamer، لابتوبات، شاشات ومكونات بأفضل الأثمنة بالدرهم. التوصيل لجميع مدن المغرب، الدفع عند الاستلام وضمان 6 أشهر.',
     shopDescription:
       'تصفّح كتالوج Brynoxa من الحواسيب والمكوّنات. صفِّ حسب الفئة والعلامة — ادفع عند الاستلام.',
     contactDescription:
@@ -20,6 +19,8 @@ export const ar: Messages = {
     termsTitle: 'شروط البيع — Brynoxa',
     termsDescription:
       'شروط البيع لدى Brynoxa: الأسعار، الدفع عند الاستلام، التوصيل في المغرب، الإرجاع خلال 14 يومًا وضمان 6 أشهر.',
+    categoryTitle: '{name} في المغرب — أفضل الأثمنة بالدرهم | Brynoxa',
+    categoryDescription: '{name} بأفضل الأثمنة بالدرهم، مع التوصيل لجميع مدن المغرب. الدفع عند الاستلام، ضمان 6 أشهر وإرجاع خلال 14 يوماً.',
   },
   common: {
     shop: 'المتجر',

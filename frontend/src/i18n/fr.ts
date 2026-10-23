@@ -2,12 +2,11 @@ import type { Messages } from './en'
 
 export const fr: Messages = {
   meta: {
-    homeTitle: 'Brynoxa — PC, ordinateurs portables et composants',
+    homeTitle: 'PC Gamer & Portables au Maroc — Paiement à la livraison | Brynoxa',
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Garantie, retours et livraison — Brynoxa',
     shopTitle: 'Boutique — Brynoxa',
-    homeDescription:
-      'Achetez PC, portables et composants chez Brynoxa. Paiement à la livraison au Maroc, support WhatsApp et garantie 6 mois.',
+    homeDescription: 'PC gamer, portables, écrans et composants aux meilleurs prix en DH. Livraison partout au Maroc, paiement à la livraison, garantie 6 mois.',
     shopDescription:
       'Parcourez le catalogue Brynoxa : PC, portables et composants. Filtrez par catégorie et marque — paiement à la livraison.',
     contactDescription:
@@ -20,6 +19,8 @@ export const fr: Messages = {
     termsTitle: 'Conditions générales de vente — Brynoxa',
     termsDescription:
       'CGV Brynoxa : prix, paiement à la livraison, livraison au Maroc, retours sous 14 jours et garantie 6 mois.',
+    categoryTitle: '{name} au Maroc — Meilleurs prix en DH | Brynoxa',
+    categoryDescription: '{name} aux meilleurs prix en DH, livrés partout au Maroc. Paiement à la livraison, garantie 6 mois et retour sous 14 jours.',
   },
   common: {
     shop: 'Boutique',

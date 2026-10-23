@@ -1,11 +1,10 @@
 export const en = {
   meta: {
-    homeTitle: 'Brynoxa — PCs, laptops, and components',
+    homeTitle: 'Gaming PCs & Laptops in Morocco — Cash on Delivery | Brynoxa',
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Warranty, returns & delivery — Brynoxa',
     shopTitle: 'Shop — Brynoxa',
-    homeDescription:
-      'Buy PCs, laptops, and components from Brynoxa. Cash on delivery across Morocco, WhatsApp support, and 6-month warranty.',
+    homeDescription: 'Gaming PCs, laptops, monitors and components at the best prices in DH. Delivered across Morocco, pay cash at your door, 6-month warranty.',
     shopDescription:
       'Browse Brynoxa’s catalog of PCs, laptops, and components. Filter by category, brand, and stock — pay on delivery in Morocco.',
     contactDescription:
@@ -18,6 +17,8 @@ export const en = {
     termsTitle: 'Terms of Sale — Brynoxa',
     termsDescription:
       'Brynoxa terms of sale: prices, cash on delivery, delivery across Morocco, 14-day returns and 6-month warranty.',
+    categoryTitle: '{name} in Morocco — Best prices in DH | Brynoxa',
+    categoryDescription: '{name} at the best prices in DH, delivered across Morocco. Pay cash at your door, 6-month warranty and 14-day returns.',
   },
   common: {
     shop: 'Shop',

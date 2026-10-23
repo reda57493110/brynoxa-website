@@ -51,11 +51,17 @@ export function CategoryPage() {
       ) || t('shop.categoryFallback')
     : ''
 
+  // Google: "{category} in Morocco — best prices in DH"; the admin's own description first when there is one
+  const ownDescription = category.data
+    ? categoryDisplayDescription(locale, category.data.slug, category.data.description)
+    : ''
   useSeo({
-    title: category.data
-      ? `${displayName} — ${t('shop.title')} · Brynoxa`
-      : t('meta.shopTitle'),
-    description: displayDescription || t('meta.shopDescription'),
+    title: category.data ? t('meta.categoryTitle', { name: displayName }) : t('meta.shopTitle'),
+    description: category.data
+      ? ownDescription
+        ? `${ownDescription.trim().replace(/\.?$/, '.')} ${t('meta.categoryDescription', { name: displayName })}`.slice(0, 300)
+        : t('meta.categoryDescription', { name: displayName })
+      : t('meta.shopDescription'),
     path: slug ? `/category/${slug}` : '/shop',
     noIndex: !category.data,
   })

@@ -15,7 +15,7 @@ export type SeoInput = {
 }
 
 const DEFAULT_DESCRIPTION =
-  'Brynoxa — PCs, laptops, and components. Cash on delivery across Morocco.'
+  'Gaming PCs, laptops, monitors and components at the best prices in DH. Delivered across Morocco, pay cash at your door, 6-month warranty.'
 const DEFAULT_IMAGE = '/brand/brynoxa-logo-social.png'
 
 function siteOrigin() {
