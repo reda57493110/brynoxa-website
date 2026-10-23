@@ -34,6 +34,10 @@ export async function sendEmail(input: {
   idempotencyKey?: string;
   replyTo?: string;
 }): Promise<boolean> {
+  // Customers entered by staff without an email have an address on the reserved ".invalid" domain
+  const recipients = (Array.isArray(input.to) ? input.to : [input.to]).filter((to) => !/\.invalid$/i.test(to.trim()));
+  if (!recipients.length) return false;
+  input = { ...input, to: Array.isArray(input.to) ? recipients : recipients[0] };
   if (!isEmailConfigured()) {
     console.warn(`[email] skipped, Resend not configured: "${input.subject}"`);
     return false;

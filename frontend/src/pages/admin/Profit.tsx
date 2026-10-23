@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { ORDER_ORIGIN_LABEL, originOf } from '@/lib/orderOrigin'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -144,6 +145,39 @@ function Breakdown({ r }: { r: ProfitReport }) {
       ) : null}
       </div>
       ) : null}
+    </section>
+  )
+}
+
+/** Finished sales per source: the website, Instagram, the shop… */
+function SalesBySource({ r }: { r: ProfitReport }) {
+  const rows = (r.bySource ?? []).slice().sort((a, b) => b.moneyIn - a.moneyIn)
+  if (!rows.length) return null
+  const best = Math.max(...rows.map((x) => x.moneyIn), 1)
+  return (
+    <section className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-3 sm:rounded-2xl sm:px-5">
+      <p className="text-sm font-semibold">Where your sales come from</p>
+      <p className="text-xs text-[var(--fg-muted)]">Delivered orders by source · add social media and shop sales in Orders → New order</p>
+      <ul className="mt-3 space-y-2.5">
+        {rows.map((s) => (
+          <li key={s.origin} className="text-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="min-w-0 truncate font-medium">{ORDER_ORIGIN_LABEL[originOf(s)]}</span>
+              <span className="shrink-0 tabular-nums">
+                {money(s.moneyIn)}
+                <span className={cn('ms-2 text-xs', s.profit < 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]')}>{signed(s.profit)}</span>
+              </span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[var(--bg-muted)]">
+              <div className="h-full rounded-full bg-[var(--brand)]" style={{ width: `${Math.max(2, (s.moneyIn / best) * 100)}%` }} />
+            </div>
+            <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
+              {s.sales} sale{s.sales === 1 ? '' : 's'}
+              {s.open ? ` · ${s.open} in progress` : ''}
+            </p>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -702,6 +736,7 @@ export function Profit() {
           ) : null}
 
           <Breakdown r={r} />
+          <SalesBySource r={r} />
 
           <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-[var(--border)]">
             {TABS.map((x) => (

@@ -1,4 +1,5 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
+import { shownEmail } from '@/lib/orderOrigin'
 import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
@@ -183,7 +184,7 @@ export function CustomerProfile() {
         <div className="min-w-0">
           <h1 className="font-display text-lg font-semibold tracking-tight break-words sm:text-2xl">{c.name}</h1>
           <p className="mt-0.5 text-sm break-all text-[var(--fg-muted)]">
-            {c.customerId} · {c.email}
+            {c.customerId}{shownEmail(c.email) ? ` · ${shownEmail(c.email)}` : ''}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <TypeBadge type={c.customerType} tierName={c.tier?.name} />

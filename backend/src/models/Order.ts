@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 import { IAddress } from './User';
 import { DELIVERY_ISSUES, ORDER_STATUSES, type DeliveryIssue, type OrderStatus } from '../utils/orderStatus';
+import { ORDER_ORIGINS, type OrderOrigin } from '../utils/orderOrigin';
 
 export type { OrderStatus, DeliveryIssue };
 
@@ -123,6 +124,10 @@ export interface IOrder extends Document {
   };
   /** Sales channel when the order was placed; never changes afterwards. */
   channel: 'retail' | 'wholesale';
+  /** Where the order came from: website checkout, or entered by staff (social media, shop…). */
+  origin: OrderOrigin;
+  /** Staff member who entered it (orders not placed on the website). */
+  createdBy?: Types.ObjectId;
   wholesaleTier?: { id: string; name: string; discountPercent: number };
   refunds: IOrderRefund[];
   coupon?: {
@@ -265,6 +270,8 @@ const orderSchema = new Schema<IOrder>(
       wholesaleDiscount: { type: Number, default: 0 },
     },
     channel: { type: String, enum: ['retail', 'wholesale'], default: 'retail' },
+    origin: { type: String, enum: ORDER_ORIGINS, default: 'website' },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     wholesaleTier: {
       type: new Schema({ id: String, name: String, discountPercent: Number }, { _id: false }),
       default: undefined,
@@ -341,6 +348,7 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
+orderSchema.index({ origin: 1, createdAt: -1 });
 orderSchema.index({ receiptTokenHash: 1 }, { sparse: true });
 orderSchema.index({ user: 1, orderStatus: 1, 'items.product': 1 });
 // 'Bought together' lookups for Complete your setup

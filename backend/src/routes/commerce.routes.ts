@@ -7,6 +7,7 @@ import { requireAuth, requirePermission, optionalAuth } from '../middleware/auth
 import { orderLimiter, couponLimiter } from '../middleware/rateLimit';
 import {
   createOrderSchema,
+  manualOrderSchema,
   updateOrderItemsSchema,
   updateOrderStatusSchema,
   orderDepositSchema,
@@ -71,6 +72,7 @@ router.get('/orders/:orderNumber', requireAuth, order.myOrder);
 router.post('/coupons/validate', couponLimiter, optionalAuth, validate(validateCouponSchema), order.validateCoupon);
 
 router.get('/admin/orders', requireAuth, requirePermission('orders:read'), order.adminOrders);
+router.post('/admin/orders', requireAuth, requirePermission('orders:write'), validate(manualOrderSchema), order.createManualOrder);
 router.get('/admin/orders/:id', requireAuth, requirePermission('orders:read'), order.adminOrder);
 router.patch(
   '/admin/orders/:id/status',

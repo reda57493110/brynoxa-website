@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { MANUAL_ORDER_ORIGINS, ORDER_ORIGIN_LABEL, originOf } from '@/lib/orderOrigin'
 import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
 import { DepositsView, OrdersTabs } from '@/components/admin/DepositsView'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
@@ -118,6 +119,17 @@ export function Orders() {
   return params.get('view') === 'deposits' ? <DepositsView /> : <OrdersList />
 }
 
+/** Small tag on orders that did not come from the website (Instagram, the shop…). */
+function OriginBadge({ o }: { o: Order }) {
+  const from = originOf(o)
+  if (from === 'website') return null
+  return (
+    <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] px-1.5 py-px text-[10px] font-medium text-[var(--brand-text)]">
+      {ORDER_ORIGIN_LABEL[from]}
+    </span>
+  )
+}
+
 function OrdersList() {
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -129,6 +141,7 @@ function OrdersList() {
   const from = params.get('from') || ''
   const to = params.get('to') || ''
   const sort = params.get('sort') || ''
+  const origin = params.get('origin') || ''
   const [q, setQ] = useState(params.get('q') || '')
   const page = Number(params.get('page') || 1)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -143,7 +156,7 @@ function OrdersList() {
   }, [params])
 
   const orders = useQuery({
-    queryKey: ['admin-orders', { page, status, q: params.get('q') || '', from, to, sort }],
+    queryKey: ['admin-orders', { page, status, q: params.get('q') || '', from, to, sort, origin }],
     queryFn: async () => {
       const res = await adminApi.orders.list({
         page,
@@ -153,6 +166,7 @@ function OrdersList() {
         from: from || undefined,
         to: to || undefined,
         sort: sort || undefined,
+        origin: origin || undefined,
       })
       return { items: res.data.data, meta: res.data.meta }
     },
@@ -247,13 +261,19 @@ function OrdersList() {
   const count = (s: OrderStatus) => stats.data?.ordersByStatus?.[s] ?? 0
   const groupCount = (g: OrderStatusGroup) => statusesInGroup(g).reduce((a, s) => a + count(s), 0)
   const attention = stats.data?.attentionOrders ?? 0
-  const filtered = Boolean(status || params.get('q') || from || to)
+  const filtered = Boolean(status || params.get('q') || from || to || origin)
 
   return (
     <div className={cn('min-w-0 space-y-3', selected.size > 0 && 'pb-20')}>
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
         <div className="flex flex-wrap items-center justify-end gap-2">
+        <Link
+          to="/admin/orders/new"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3 text-xs font-semibold text-[var(--brand-fg)] hover:opacity-90"
+        >
+          <SiteIcon name="plus" size={13} /> New order
+        </Link>
         <button
           type="button"
           onClick={() => setRecording(true)}
@@ -359,6 +379,21 @@ function OrdersList() {
           </span>
         ) : null}
         <select
+          aria-label="Source"
+          value={origin}
+          onChange={(e) => setFilter({ origin: e.target.value || undefined })}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+        >
+          <option value="">All sources</option>
+          <option value="website">Website</option>
+          <option value="other_channels">Social media, phone & shop</option>
+          {MANUAL_ORDER_ORIGINS.map((o) => (
+            <option key={o} value={o}>
+              {ORDER_ORIGIN_LABEL[o]}
+            </option>
+          ))}
+        </select>
+        <select
           aria-label="Sort"
           value={sort}
           onChange={(e) => setFilter({ sort: e.target.value || undefined })}
@@ -429,6 +464,7 @@ function OrdersList() {
                     <div className="mt-1.5 flex flex-wrap items-center gap-1">
                       <StatusBadge o={o} />
                       <PaymentBadge o={o} />
+                      <OriginBadge o={o} />
                     </div>
                   </Link>
                 </li>
@@ -483,7 +519,10 @@ function OrdersList() {
                     </td>
                     <td className="max-w-[12rem] px-2 py-2">
                       <p className="truncate">{customerName(o)}</p>
-                      <p className="truncate text-xs text-[var(--fg-muted)]">{o.shippingAddress?.phone}</p>
+                      <p className="flex min-w-0 items-center gap-1.5 text-xs text-[var(--fg-muted)]">
+                        <span className="truncate">{o.shippingAddress?.phone}</span>
+                        <OriginBadge o={o} />
+                      </p>
                     </td>
                     <td className="whitespace-nowrap px-2 py-2 text-[var(--fg-muted)]" title={formatDateTime(o.createdAt)}>
                       {formatDate(o.createdAt)}

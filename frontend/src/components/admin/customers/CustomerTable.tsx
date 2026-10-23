@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { shownEmail } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { CustomerRow } from '@/types'
@@ -45,7 +46,7 @@ export function CustomerTable({
                       {c.name}
                       {c.companyName ? <span className="font-normal text-[var(--fg-muted)]"> · {c.companyName}</span> : null}
                     </p>
-                    <p className="truncate text-[11px] text-[var(--fg-muted)]">{c.email}</p>
+                    <p className="truncate text-[11px] text-[var(--fg-muted)]">{shownEmail(c.email)}</p>
                   </div>
                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
                     <StatusBadge status={c.status} />
@@ -120,7 +121,7 @@ export function CustomerTable({
                     {c.companyName ? <p className="truncate text-xs text-[var(--fg-muted)]">{c.companyName}</p> : null}
                   </td>
                   <td className="max-w-[14rem] px-3 py-3">
-                    <p className="truncate">{c.email}</p>
+                    <p className="truncate">{shownEmail(c.email)}</p>
                     <p className="truncate text-xs text-[var(--fg-muted)]">{c.phone || '—'}</p>
                   </td>
                   <td className="px-3 py-3">

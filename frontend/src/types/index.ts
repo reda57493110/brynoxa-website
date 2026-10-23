@@ -339,6 +339,8 @@ export interface Order {
   paymentMethod: 'cod'
   paymentStatus: PaymentStatus
   channel?: 'retail' | 'wholesale'
+  /** Where it came from: website checkout, or entered by staff (see lib/orderOrigin.ts) */
+  origin?: string
   wholesaleTier?: { id: string; name: string; discountPercent: number }
   refunds?: OrderRefund[]
   deposit?: OrderDeposit
@@ -571,6 +573,7 @@ export interface ProfitOrderRow {
   other: number
   note: string
   profit: number
+  origin?: string
 }
 
 /** Admin → Profit */
@@ -598,6 +601,8 @@ export interface ProfitReport {
   }[]
   expenses: { id: string; label: string; category: ExpenseCategory; amount: number; day: string; note: string }[]
   expensesByCategory: { category: ExpenseCategory; amount: number }[]
+  /** Finished orders per source (website, Instagram, the shop…) */
+  bySource?: { origin: string; sales: number; moneyIn: number; profit: number; open: number }[]
   productsWithoutCost: { productId: string; name: string; slug: string; sku?: string; price: number; image?: string }[]
 }
 

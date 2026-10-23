@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ORDER_ORIGIN_LABEL, originOf, shownEmail } from '@/lib/orderOrigin'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -101,6 +102,11 @@ export function OrderDetail() {
           ) : refund === 'refunded' ? (
             <Badge variant="muted" className="normal-case">Fully refunded</Badge>
           ) : null}
+          {originOf(o) !== 'website' ? (
+            <Badge variant="brand" className="normal-case">
+              From {ORDER_ORIGIN_LABEL[originOf(o)]}
+            </Badge>
+          ) : null}
           {o.channel === 'wholesale' ? (
             <Badge variant="brand" className="normal-case">
               Wholesale
@@ -112,7 +118,7 @@ export function OrderDetail() {
         </div>
         <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
           <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
-          <p className="break-all">{user?.email}</p>
+          <p className="break-all">{shownEmail(user?.email)}</p>
           <p>{user?.phone || 'No phone'} · COD</p>
           {user?.email ? (
             <Link

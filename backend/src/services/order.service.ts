@@ -23,6 +23,8 @@ import {
   statusNotificationCopy,
 } from './orderNotify.service';
 import { invalidateDashboardCache } from './admin.service';
+import { User } from '../models/User';
+import { ORDER_ORIGIN_LABEL, originFilter, type OrderOrigin } from '../utils/orderOrigin';
 import {
   DELIVERY_ISSUES,
   ORDER_STATUSES,
@@ -129,20 +131,25 @@ async function claimCoupon(couponId: Types.ObjectId) {
  * tier price; listPrice keeps the catalog price and unitCost the product cost at this moment.
  */
 async function buildOrderLines(
-  items: { productId: string; qty: number }[],
-  terms?: WholesaleTerms | null
+  items: { productId: string; qty: number; price?: number }[],
+  terms?: WholesaleTerms | null,
+  opts: { staff?: boolean } = {}
 ) {
   if (!items.length) throw new ApiError(400, 'Add at least one product');
 
-  const merged = new Map<string, number>();
+  const merged = new Map<string, { qty: number; price?: number }>();
   for (const item of items) {
-    const id = item.productId;
-    merged.set(id, (merged.get(id) || 0) + item.qty);
+    if (!Types.ObjectId.isValid(item.productId)) throw new ApiError(400, 'One or more products are unavailable');
+    const prev = merged.get(item.productId);
+    // An agreed price only from staff (the first one given for that product)
+    const price = opts.staff ? (prev?.price ?? item.price) : undefined;
+    merged.set(item.productId, { qty: (prev?.qty || 0) + item.qty, price });
   }
-  const uniqueItems = [...merged.entries()].map(([productId, qty]) => ({ productId, qty }));
+  const uniqueItems = [...merged.entries()].map(([productId, v]) => ({ productId, ...v }));
 
   const productIds = uniqueItems.map((i) => i.productId);
-  const products = await Product.find({ _id: { $in: productIds }, isActive: true }).select('+costPrice');
+  // Staff can also sell a product that is hidden from the shop
+  const products = await Product.find({ _id: { $in: productIds }, ...(opts.staff ? {} : { isActive: true }) }).select('+costPrice');
   if (products.length !== productIds.length) {
     throw new ApiError(400, 'One or more products are unavailable');
   }
@@ -158,7 +165,12 @@ async function buildOrderLines(
       throw new ApiError(400, `Insufficient stock for ${product.name}`);
     }
     const primary = product.images.find((img) => img.isPrimary) || product.images[0];
-    const price = terms ? wholesaleUnitPrice(product.price, terms.discountPercent) : product.price;
+    const price =
+      typeof item.price === 'number'
+        ? roundMoney(item.price)
+        : terms
+          ? wholesaleUnitPrice(product.price, terms.discountPercent)
+          : product.price;
     subtotal += price * item.qty;
     wholesaleDiscount += (product.price - price) * item.qty;
     depositTotal += lineDeposit(product.deposit, price, item.qty);
@@ -311,6 +323,126 @@ export async function createCodOrder(input: {
   return { order, receiptToken };
 }
 
+/** Last 9 digits as a pattern that also matches "06 12-34 56 78", "+212612345678"… */
+function phonePattern(phone: string) {
+  const digits = phoneKey(phone);
+  return digits.length >= 8 ? new RegExp(`${digits.split('').join('\\D*')}\\D*$`) : null;
+}
+
+/**
+ * The customer of an order entered by staff: the account with this email, else the one with this
+ * phone number, else a new guest. Without an email, the guest gets an address on the reserved
+ * ".invalid" domain, which is never emailed (email.service skips it).
+ */
+export async function resolveManualCustomer(input: { fullName: string; phone: string; email?: string; city: string; line1?: string }) {
+  const email = input.email?.trim().toLowerCase();
+  let user = email ? await User.findOne({ email }) : null;
+  if (user && user.role !== 'customer') throw new ApiError(400, 'This email belongs to a staff account — use the customer\'s own email');
+  if (!user) {
+    const rx = phonePattern(input.phone);
+    if (rx) user = await User.findOne({ phone: rx, role: 'customer' }).sort({ isGuest: 1, createdAt: 1 });
+  }
+  if (!user) {
+    user = await User.create({
+      name: input.fullName,
+      email: email || `phone-${phoneKey(input.phone) || 'x'}-${randomBytes(4).toString('hex')}@no-email.invalid`,
+      password: randomBytes(24).toString('hex'),
+      phone: input.phone,
+      isGuest: true,
+      addresses: [
+        {
+          label: 'Home',
+          fullName: input.fullName,
+          line1: input.line1 || input.city,
+          city: input.city,
+          postalCode: '00000',
+          country: 'MA',
+          phone: input.phone,
+          isDefault: true,
+        },
+      ],
+    });
+  }
+  return user;
+}
+
+/**
+ * An order from social media, a phone call or the shop, entered by staff. Same lines, stock and
+ * profit rules as a website order; the customer gets no messages. It can start as new (to
+ * confirm), confirmed (stock reserved) or already delivered and paid (a sale in the shop).
+ */
+export async function createManualOrder(
+  input: {
+    origin: string;
+    items: { productId: string; qty: number; price?: number }[];
+    customer: { fullName: string; phone: string; email?: string; city: string; line1?: string };
+    shipping?: number;
+    discount?: number;
+    deliveryCost?: number;
+    status?: 'pending' | 'confirmed' | 'delivered';
+    adminNote?: string;
+  },
+  staffId: string
+) {
+  const origin = input.origin as OrderOrigin;
+  const { orderItems, subtotal } = await buildOrderLines(input.items, null, { staff: true });
+  const settings = await getSettings();
+  const discount = roundMoney(Math.min(Math.max(input.discount || 0, 0), subtotal));
+  const shipping = roundMoney(Math.max(input.shipping || 0, 0));
+  const taxable = Math.max(subtotal - discount, 0);
+  const tax = roundMoney((taxable * settings.taxRate) / 100);
+  const pricing = { subtotal, discount, shipping, tax, total: roundMoney(taxable + shipping + tax), wholesaleDiscount: 0 };
+
+  const user = await resolveManualCustomer(input.customer);
+  const c = input.customer;
+  // A sale in the shop has no courier; otherwise the amount given, else the default courier price
+  const deliveryCost = typeof input.deliveryCost === 'number' ? input.deliveryCost : origin === 'store' ? 0 : undefined;
+
+  let order!: InstanceType<typeof Order>;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      order = await Order.create({
+        orderNumber: generateOrderNumber(),
+        user: user._id,
+        items: orderItems,
+        pricing,
+        channel: 'retail',
+        origin,
+        createdBy: staffId,
+        shippingAddress: {
+          fullName: c.fullName,
+          line1: c.line1 || (origin === 'store' ? 'In the shop' : c.city),
+          city: c.city,
+          postalCode: '00000',
+          country: 'MA',
+          phone: c.phone,
+        },
+        paymentMethod: 'cod',
+        paymentStatus: 'pending',
+        costs: deliveryCost !== undefined ? { delivery: deliveryCost } : undefined,
+        orderStatus: 'pending',
+        timeline: [{ status: 'pending', note: `Order added by staff — from ${ORDER_ORIGIN_LABEL[origin]}`, at: new Date(), by: staffId }],
+        adminNote: input.adminNote?.trim() || undefined,
+        stockReserved: false,
+      });
+      break;
+    } catch (err) {
+      const e = err as { code?: number; keyPattern?: Record<string, unknown> };
+      if (!(e?.code === 11000 && e.keyPattern?.orderNumber) || attempt >= 3) throw err;
+    }
+  }
+
+  // Walk the normal steps, so stock is reserved / taken out exactly like a website order
+  const steps: OrderStatus[] =
+    input.status === 'delivered' ? ['confirmed', 'shipped', 'delivered'] : input.status === 'confirmed' ? ['confirmed'] : [];
+  for (const step of steps) {
+    const note = step === 'delivered' && origin === 'store' ? 'Sold in the shop and paid' : undefined;
+    order = await updateOrderStatus(String(order._id), step, note, undefined, { by: staffId, silent: true });
+  }
+  invalidateDashboardCache();
+  return order;
+}
+
 /** Guest confirmation: order number plus a high-entropy receipt token. */
 export async function getGuestOrderReceipt(orderNumber: string, receiptToken: string) {
   const order = await Order.findOne({
@@ -435,6 +567,8 @@ export interface StatusChangeExtra {
   staffNote?: string;
   /** Staff member making the change. */
   by?: string;
+  /** No message to the customer (steps of an order entered by staff). */
+  silent?: boolean;
 }
 
 const DELIVERY_ISSUE_LABEL: Record<DeliveryIssue, string> = {
@@ -587,6 +721,8 @@ export async function updateOrderStatus(
   await order.save();
 
   invalidateDashboardCache();
+
+  if (extra.silent) return order;
 
   const copy = statusNotificationCopy(orderStatus);
   if (copy) {
@@ -939,10 +1075,13 @@ export async function listAllOrders(
   q?: string,
   range: { from?: string; to?: string } = {},
   sort?: string,
-  deposit?: string
+  deposit?: string,
+  origin?: string
 ) {
   const filter: Record<string, unknown> = {};
   const and: Record<string, unknown>[] = [];
+  const fromOrigin = originFilter(origin);
+  if (fromOrigin) and.push(fromOrigin);
   const order: Record<string, 1 | -1> =
     sort === 'oldest'
       ? { createdAt: 1 }

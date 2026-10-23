@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { DELIVERY_ISSUES, ORDER_STATUSES } from '../utils/orderStatus';
+import { MANUAL_ORDER_ORIGINS } from '../utils/orderOrigin';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 
@@ -157,6 +158,40 @@ export const createOrderSchema = z.object({
   email: z.string().trim().email().optional(),
   /** Optional: create / upgrade account at checkout */
   password: customerPassword.optional(),
+});
+
+const money = (max: number) => z.number().min(0).max(max);
+
+/** Staff: an order from social media, the phone or the shop, entered in Admin → Orders. */
+export const manualOrderSchema = z.object({
+  origin: z.enum(MANUAL_ORDER_ORIGINS as [string, ...string[]]),
+  items: z
+    .array(
+      z.object({
+        productId: z.string().min(1).max(40),
+        qty: z.number().int().min(1).max(99),
+        /** Agreed unit price; empty = the shop price */
+        price: money(10_000_000).optional(),
+      })
+    )
+    .min(1)
+    .max(50),
+  customer: z.object({
+    fullName: z.string().trim().min(2).max(100),
+    phone: z.string().trim().min(5).max(30),
+    email: z.union([z.string().trim().email().max(160), z.literal('')]).optional(),
+    city: z.string().trim().min(2).max(80),
+    line1: z.union([z.string().trim().max(200), z.literal('')]).optional(),
+  }),
+  /** What the customer pays for delivery */
+  shipping: money(100_000).default(0),
+  /** Discount in DH off the products */
+  discount: money(10_000_000).default(0),
+  /** What the shop pays the courier (Profit); empty = the default courier price */
+  deliveryCost: money(100_000).optional(),
+  /** pending = to confirm, confirmed = agreed (stock reserved), delivered = sold and paid now */
+  status: z.enum(['pending', 'confirmed', 'delivered']).default('pending'),
+  adminNote: z.string().max(2000).optional(),
 });
 
 export const guestOrderReceiptSchema = z.object({

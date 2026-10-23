@@ -25,7 +25,7 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 - `routes/` — `auth.routes.ts`, `catalog.routes.ts` (products, categories, brands, images, complete-your-setup), `commerce.routes.ts` (orders, coupons, wishlist, notifications, admin, profit, push, contact, newsletter, settings), `customer.routes.ts` (customers, refunds, wholesale), `inventory.routes.ts` (stock, receipts, returns, repairs), all under `/api/v1`. Reviews were removed (the `Review` model and old data remain).
 - `controllers/` → `services/` (business logic) → `models/` (Mongoose). Validation schemas in `validators/schemas.ts`.
 - `permissions.ts` — staff role/permission definitions (mirrored in `frontend/src/lib/permissions.ts`).
-- Mirrored by hand in `frontend/src/lib/` — keep both copies in sync: `utils/shipping.ts` (free shipping is checked after the coupon), `utils/orderStatus.ts`, `utils/deposit.ts`, `utils/depositSteps.ts`.
+- Mirrored by hand in `frontend/src/lib/` — keep both copies in sync: `utils/shipping.ts` (free shipping is checked after the coupon), `utils/orderStatus.ts`, `utils/deposit.ts`, `utils/depositSteps.ts`, `utils/orderOrigin.ts` (where an order came from: website, or entered by staff in Admin → Orders → New order).
 - Security helpers: `utils/blockedPasswords.ts`, `utils/tokenFreshness.ts` (tokens issued before a password change are refused), `utils/hideCosts.ts` (purchase costs only for owner/catalog), `utils/paymentDetailsAudit.ts`.
 - Env: see `backend/.env.example` (`MONGODB_URI`, `CLIENT_URL`, JWT secrets and lifetimes, `MFA_ENCRYPTION_KEY`, Resend, VAPID keys, Cloudinary, admin creds).
 

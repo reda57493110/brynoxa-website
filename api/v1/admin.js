@@ -269,8 +269,18 @@ async function handleOrderRoutes(req, res, route, query) {
     const user = await requireStaff(req, res, ['orders:read']);
     if (!user) return;
     const { page, limit } = paging(query);
-    const result = await orderService.listAllOrders(page, limit, query.status, query.q, { from: query.from, to: query.to }, query.sort, query.deposit);
+    const result = await orderService.listAllOrders(page, limit, query.status, query.q, { from: query.from, to: query.to }, query.sort, query.deposit, query.origin);
     sendJson(res, 200, paginated(result.items, result.page, result.limit, result.total));
+    return;
+  }
+
+  // POST /admin/orders — an order from social media, the phone or the shop, entered by staff
+  if (route === 'orders' && req.method === 'POST') {
+    const user = await requireStaff(req, res, ['orders:write']);
+    if (!user) return;
+    const body = validated('manualOrderSchema', await readJsonBody(req));
+    const order = await orderService.createManualOrder(body, String(user._id));
+    sendJson(res, 201, { success: true, message: 'Order added', data: order });
     return;
   }
 

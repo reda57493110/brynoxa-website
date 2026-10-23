@@ -171,8 +171,21 @@ export const adminApi = {
       sort?: string
       /** Orders with a deposit: due, reported (sent, to check), paid or any */
       deposit?: 'due' | 'reported' | 'paid' | 'any'
+      /** A source (lib/orderOrigin.ts) or "other_channels" = all except the website */
+      origin?: string
     }) =>
       api.get<ApiResponse<Order[]>>('/admin/orders', { params }),
+    /** An order from social media, the phone or the shop (Admin → Orders → New order) */
+    create: (payload: {
+      origin: string
+      status: 'pending' | 'confirmed' | 'delivered'
+      items: { productId: string; qty: number; price?: number }[]
+      customer: { fullName: string; phone: string; email?: string; city: string; line1?: string }
+      shipping?: number
+      discount?: number
+      deliveryCost?: number
+      adminNote?: string
+    }) => api.post<ApiResponse<Order>>('/admin/orders', payload),
     get: (id: string) => api.get<ApiResponse<Order>>(`/admin/orders/${id}`),
     updateStatus: (
       id: string,

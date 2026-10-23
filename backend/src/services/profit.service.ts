@@ -6,6 +6,7 @@ import { getSettings } from '../models/Settings';
 import { ORDER_STATUS_GROUP, wasDelivered, type OrderStatus } from '../utils/orderStatus';
 import { feeCreditOf, roundMoney } from '../utils/deposit';
 import { ApiError } from '../utils/ApiError';
+import { ORDER_ORIGINS, type OrderOrigin } from '../utils/orderOrigin';
 import { STORE_TIMEZONE, dayKeys, localDay, type SalesRange } from './dashboard.service';
 
 /**
@@ -30,6 +31,7 @@ type LeanOrder = {
   orderNumber: string;
   createdAt: Date;
   orderStatus: OrderStatus;
+  origin?: OrderOrigin;
   deliveredAt?: Date | null;
   pricing: { total: number; shipping: number; discount: number };
   items: { product: unknown; name: string; price: number; qty: number; unitCost?: number; returnedQty?: number }[];
@@ -107,6 +109,8 @@ function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts)
     day: localDay(o.createdAt),
     createdAt: o.createdAt,
     status: o.orderStatus,
+    // Orders from before the field existed came from the website
+    origin: o.origin || 'website',
     kind,
     customer: o.shippingAddress?.fullName ?? '',
     city: o.shippingAddress?.city ?? '',
@@ -261,6 +265,19 @@ export async function profitReport(range: SalesRange) {
     })
     .sort((a, b) => b.profit - a.profit);
 
+  // Where the sales came from (website, social media, the shop…): finished orders only
+  const bySource = ORDER_ORIGINS.map((origin) => {
+    const list = rows.filter((r) => r.origin === origin && r.kind !== 'open');
+    const sales = list.filter((r) => r.kind === 'sale');
+    return {
+      origin,
+      sales: sales.length,
+      moneyIn: roundMoney(list.reduce((a, r) => a + r.moneyIn, 0)),
+      profit: roundMoney(list.reduce((a, r) => a + r.profit, 0)),
+      open: rows.filter((r) => r.origin === origin && r.kind === 'open').length,
+    };
+  }).filter((s) => s.sales || s.open || s.moneyIn);
+
   const byCategory = EXPENSE_CATEGORIES.map((c) => ({
     category: c,
     amount: roundMoney(expenses.filter((e) => e.category === c).reduce((a, e) => a + e.amount, 0)),
@@ -275,6 +292,7 @@ export async function profitReport(range: SalesRange) {
     totals: totalsOf(rows, spent),
     orders: rows,
     products,
+    bySource,
     expenses: expenses.map((e) => ({
       id: String(e._id),
       label: e.label,

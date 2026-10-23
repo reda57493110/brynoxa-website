@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { shownEmail } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -119,7 +120,7 @@ function PersonalCard({ profile, save, busy }: { profile: CustomerProfile; save:
           <KV label="Name">{c.name}</KV>
           <KV label="Email">
             <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
-              <span className="break-all">{c.email}</span>
+              <span className="break-all">{shownEmail(c.email)}</span>
               <Badge variant={c.emailVerified === false ? 'warning' : 'success'}>
                 {c.emailVerified === false ? 'Unverified' : 'Verified'}
               </Badge>

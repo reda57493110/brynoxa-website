@@ -102,12 +102,19 @@ export const adminOrders = asyncHandler(async (req: AuthRequest, res: Response) 
   const to = typeof req.query.to === 'string' ? req.query.to : undefined;
   const sort = typeof req.query.sort === 'string' ? req.query.sort : undefined;
   const deposit = typeof req.query.deposit === 'string' ? req.query.deposit : undefined;
-  const result = await orderService.listAllOrders(page, limit, status, q, { from, to }, sort, deposit);
+  const origin = typeof req.query.origin === 'string' ? req.query.origin : undefined;
+  const result = await orderService.listAllOrders(page, limit, status, q, { from, to }, sort, deposit, origin);
   sendPaginated(res, result.items, {
     page: result.page,
     limit: result.limit,
     total: result.total,
   });
+});
+
+/** An order from social media, the phone or the shop, entered by staff. */
+export const createManualOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const order = await orderService.createManualOrder(req.body, req.user!.userId);
+  sendSuccess(res, order, 'Order added', 201);
 });
 
 export const adminOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
