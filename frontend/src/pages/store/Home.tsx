@@ -458,35 +458,35 @@ export function Home() {
       >
         <Container>
           <motion.div
-            className="dark relative overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem]"
+            className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[radial-gradient(90%_120%_at_100%_0%,color-mix(in_srgb,var(--brand)_14%,transparent),transparent_60%),radial-gradient(70%_90%_at_0%_100%,color-mix(in_srgb,var(--brand)_8%,transparent),transparent_60%)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem] dark:border-0 dark:bg-none dark:bg-[#05080b]"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Same computer photo as the header, so the page opens and closes in one look */}
+            {/* Dark mode: the same computer photo as the header, so the page opens and closes in one look */}
             <div
-              className="pointer-events-none absolute inset-0 bg-cover bg-[position:80%_50%] opacity-60 rtl:-scale-x-100"
+              className="pointer-events-none absolute inset-0 hidden bg-cover bg-[position:80%_50%] opacity-60 rtl:-scale-x-100 dark:block"
               style={{ backgroundImage: CTA_PHOTO }}
               aria-hidden="true"
             />
             <div
-              className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,rgb(5_8_11/0.97)_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.7)_100%)] rtl:-scale-x-100"
+              className="pointer-events-none absolute inset-0 hidden bg-[linear-gradient(100deg,rgb(5_8_11/0.97)_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.7)_100%)] rtl:-scale-x-100 dark:block"
               aria-hidden="true"
             />
             <div className="relative grid gap-8 px-5 py-9 sm:px-10 sm:py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center lg:gap-12 lg:px-14 lg:py-14">
               <div>
-                <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] px-3 py-1 font-display text-xs font-semibold text-[var(--brand)] sm:text-sm">
+                <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] px-3 py-1 font-display text-xs font-semibold text-[var(--brand-text)] sm:text-sm dark:text-[var(--brand)]">
                   <SiteIcon name="shield" size={14} />
                   {t('home.ctaKicker')}
                 </p>
                 <h2
                   id="home-cta-heading"
-                  className="mt-4 max-w-xl font-display text-2xl font-bold leading-tight tracking-tight text-white sm:text-4xl"
+                  className="mt-4 max-w-xl font-display text-2xl font-bold leading-tight tracking-tight text-[var(--fg)] sm:text-4xl dark:text-white"
                 >
                   {t('home.ctaTitle')}
                 </h2>
-                <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/75 sm:text-base">{t('home.ctaBody')}</p>
+                <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base dark:text-white/75">{t('home.ctaBody')}</p>
                 <div className="mt-7 flex flex-wrap items-center gap-3">
                   <Link
                     to="/shop"
@@ -499,9 +499,9 @@ export function Home() {
                     href={whatsappHref()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 text-base font-medium text-white transition hover:border-[#25d366] hover:bg-[#25d366]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-5 text-base font-medium text-[var(--fg)] transition hover:border-[#25d366] hover:bg-[#25d366]/10 dark:border-white/20 dark:bg-white/5 dark:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                   >
-                    <SiteIcon name="chat" size={16} className="text-[#25d366]" />
+                    <SiteIcon name="chat" size={16} className="text-[#1faa53] dark:text-[#25d366]" />
                     {t('home.ctaWhatsapp')}
                   </a>
                 </div>
@@ -516,7 +516,7 @@ export function Home() {
                 {CTA_STEPS.map((step, i) => (
                   <li
                     key={step.icon}
-                    className="relative flex items-center gap-4 rounded-2xl border border-white/10 bg-[#0b1116]/80 p-3.5 backdrop-blur-sm sm:p-4"
+                    className="relative flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg)]/85 p-3.5 shadow-soft backdrop-blur-sm sm:p-4 dark:border-white/10 dark:bg-[#0b1116]/80 dark:shadow-none"
                   >
                     <span
                       className={cn(
@@ -527,11 +527,11 @@ export function Home() {
                       <SiteIcon name={step.icon} size={18} />
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                      <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] dark:text-white/45">
                         {t('home.ctaStepLabel', { n: i + 1 })}
                       </span>
-                      <span className="block font-display text-base font-semibold text-white sm:text-lg">{t(step.title)}</span>
-                      <span className="block text-sm text-white/65">{t(step.body)}</span>
+                      <span className="block font-display text-base font-semibold text-[var(--fg)] sm:text-lg dark:text-white">{t(step.title)}</span>
+                      <span className="block text-sm text-[var(--fg-muted)] dark:text-white/65">{t(step.body)}</span>
                     </span>
                   </li>
                 ))}
