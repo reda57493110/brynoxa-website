@@ -90,7 +90,7 @@ export const en = {
     kicker: 'Across Morocco',
     heroTitleLead: 'Your dream setup,',
     heroTitleAccent: 'delivered to your door',
-    heroBody: 'Gaming PCs, laptops and parts — from Tangier to Lagouira. Check it first, then pay cash at your door.',
+    heroBody: 'Gaming PCs, laptops, monitors and parts — picked for performance and value.',
     proofCod: 'Cash on delivery',
     proofWarranty: '6-month warranty',
     proofDelivery: 'Delivery across Morocco',

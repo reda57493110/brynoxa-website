@@ -92,7 +92,7 @@ export const fr: Messages = {
     kicker: 'Partout au Maroc',
     heroTitleLead: 'Le setup de vos rêves,',
     heroTitleAccent: 'livré chez vous',
-    heroBody: 'PC gaming, portables et composants — de Tanger à Lagouira. Vous vérifiez, puis vous payez à la livraison.',
+    heroBody: 'PC gaming, portables, écrans et composants — choisis pour la performance et le bon prix.',
     proofCod: 'Paiement à la livraison',
     proofWarranty: 'Garantie 6 mois',
     proofDelivery: 'Livraison partout au Maroc',

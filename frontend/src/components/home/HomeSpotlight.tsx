@@ -262,10 +262,6 @@ function SpotlightArticle({ product, active = true }: { product: Product; active
           </div>
           <div className="shrink-0 space-y-1 text-end text-[11px] max-sm:hidden sm:space-y-1.5 sm:text-xs">
             <StockLine product={product} className="justify-end" />
-            <p className="flex items-center justify-end gap-1 whitespace-nowrap text-white/65 max-sm:hidden">
-              <SiteIcon name="banknote" size={12} />
-              {t('deposit.payOnDelivery')}
-            </p>
           </div>
         </div>
 

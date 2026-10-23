@@ -263,27 +263,6 @@ export function ProductCard({
             ))}
           </ul>
         ) : null}
-        {spotlight ? (
-          <ul className="flex flex-wrap gap-1.5 text-[var(--fg)] sm:grid sm:grid-cols-3 sm:gap-2">
-            {(
-              [
-                { icon: 'banknote', key: 'home.heroPerkCod' },
-                { icon: 'shield', key: 'home.heroPerkWarranty' },
-                { icon: 'truck', key: 'home.heroPerkDelivery' },
-              ] as const
-            ).map((perk) => (
-              <li
-                key={perk.key}
-                className="flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)]/70 py-1 pe-2.5 ps-1 text-[11px] font-medium sm:flex-col sm:items-start sm:gap-1.5 sm:rounded-xl sm:px-3 sm:py-2.5 sm:text-xs"
-              >
-                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] sm:size-6">
-                  <SiteIcon name={perk.icon} size={12} />
-                </span>
-                {t(perk.key)}
-              </li>
-            ))}
-          </ul>
-        ) : null}
         <div className={cn('mt-auto flex flex-col', spotlight ? 'mt-2 gap-2' : 'gap-2 pt-2')}>
           <Price
             price={product.price}
