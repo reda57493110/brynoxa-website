@@ -124,6 +124,7 @@ const AdminCustomerProfile = lazy(() =>
   import('@/pages/admin/CustomerProfile').then((m) => ({ default: m.CustomerProfile }))
 )
 const AdminRoles = lazy(() => import('@/pages/admin/Roles').then((m) => ({ default: m.Roles })))
+const AdminStaffActivity = lazy(() => import('@/pages/admin/StaffActivity').then((m) => ({ default: m.StaffActivity })))
 const AdminEmails = lazy(() => import('@/pages/admin/Emails').then((m) => ({ default: m.Emails })))
 const AdminMessages = lazy(() =>
   import('@/pages/admin/Messages').then((m) => ({ default: m.Messages }))
@@ -290,6 +291,7 @@ export function AppRouter() {
         <Route path="customers" element={<S><AdminCustomers /></S>} />
         <Route path="customers/:id" element={<S><AdminCustomerProfile /></S>} />
         <Route path="roles" element={<S><AdminRoles /></S>} />
+        <Route path="roles/:id" element={<S><AdminStaffActivity /></S>} />
         <Route path="messages" element={<S><AdminMessages /></S>} />
         <Route path="emails" element={<S><AdminEmails /></S>} />
         <Route path="reviews" element={<Navigate to="/admin" replace />} />

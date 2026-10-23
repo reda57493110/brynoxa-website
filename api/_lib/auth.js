@@ -96,6 +96,8 @@ async function requireStaff(req, res, permissions = [], { allowWithoutMfa = fals
     return null;
   }
 
+  // Changes that succeed go to the staff activity log (Admin → Roles)
+  require('../../backend/dist/services/staffActivity.service').trackStaffRequest(req, res, { id: String(user._id), role: user.role });
   return user;
 }
 

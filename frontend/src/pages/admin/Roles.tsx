@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/Select'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Panel } from '@/components/admin/Panel'
+import { TeamActivity } from '@/components/admin/TeamActivity'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatDate } from '@/lib/format'
@@ -220,6 +221,8 @@ export function Roles() {
   return (
     <div className="min-w-0 space-y-4">
       <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Roles</h1>
+
+      <TeamActivity />
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
         <Panel title="Roles and access" description="Click a role to filter the staff list.">

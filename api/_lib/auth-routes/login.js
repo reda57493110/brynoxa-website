@@ -143,6 +143,7 @@ module.exports = async (req, res) => {
     });
 
     if (STAFF_ROLES.has(user.role)) {
+      require('../../../backend/dist/services/staffActivity.service').recordStaffSignIn(user._id.toString(), user.role);
       setTimeout(() => {
         try {
           const { notifyAdminStaffLogin } = require('../../../backend/dist/services/loginNotify.service');

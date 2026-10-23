@@ -6,6 +6,7 @@ import { ApiError } from '../utils/ApiError';
 import { User } from '../models/User';
 import { hasPermission, isStaffRole, type Permission } from '../permissions';
 import { MFA_REQUIRED_CODE, MFA_REQUIRED_MESSAGE, mfaSetupOverdue } from '../utils/mfaPolicy';
+import { trackStaffRequest } from '../services/staffActivity.service';
 
 export async function requireAuth(req: AuthRequest, _res: Response, next: NextFunction) {
   try {
@@ -33,11 +34,13 @@ export async function requireAuth(req: AuthRequest, _res: Response, next: NextFu
 const mfaRequired = () => new ApiError(403, MFA_REQUIRED_MESSAGE, undefined, MFA_REQUIRED_CODE);
 
 /** Any staff role (not storefront customer), with 2-step on once the grace period is over. */
-export function requireStaff(req: AuthRequest, _res: Response, next: NextFunction) {
+export function requireStaff(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.user || !isStaffRole(req.user.role)) {
     return next(new ApiError(403, 'Staff access required'));
   }
   if (req.user.mfaOverdue) return next(mfaRequired());
+  // Changes that succeed go to the staff activity log (Admin → Roles)
+  trackStaffRequest(req, res, { id: req.user.userId, role: req.user.role });
   next();
 }
 
@@ -50,7 +53,7 @@ export function requireStaffRole(req: AuthRequest, _res: Response, next: NextFun
 }
 
 export function requirePermission(...permissions: Permission[]) {
-  return (req: AuthRequest, _res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user || !isStaffRole(req.user.role)) {
       return next(new ApiError(403, 'Staff access required'));
     }
@@ -59,6 +62,7 @@ export function requirePermission(...permissions: Permission[]) {
     if (!ok) {
       return next(new ApiError(403, 'You do not have permission for this action'));
     }
+    trackStaffRequest(req, res, { id: req.user.userId, role: req.user.role });
     next();
   };
 }

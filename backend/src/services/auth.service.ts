@@ -15,6 +15,7 @@ import { checkPasswordEvenTime } from '../utils/passwordTiming';
 import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
+import { recordStaffSignIn } from './staffActivity.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
 
 function scheduleStaffLoginNotify(
@@ -584,6 +585,7 @@ export async function loginUser(
   await user.save({ validateBeforeSave: false });
 
   if (isStaffRole(user.role)) {
+    recordStaffSignIn(user._id.toString(), user.role);
     scheduleStaffLoginNotify(
       { name: user.name, email: user.email, role: user.role, phone: user.phone },
       meta
@@ -629,6 +631,7 @@ export async function completeMfaLogin(
   user.refreshToken = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
 
+  recordStaffSignIn(user._id.toString(), user.role);
   scheduleStaffLoginNotify(
     { name: user.name, email: user.email, role: user.role, phone: user.phone },
     meta
