@@ -38,19 +38,26 @@ function displayBrand(name: string) {
 function FilterSection({
   title,
   icon,
+  compact,
   children,
 }: {
   title: string
   icon: 'layers' | 'boxes' | 'tag' | 'package-check'
+  compact: boolean
   children: ReactNode
 }) {
   return (
-    <section className="space-y-2.5">
+    <section className={compact ? 'space-y-2' : 'space-y-2.5'}>
       <div className="flex items-center gap-2">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)]">
-          <SiteIcon name={icon} size={14} />
+        <span
+          className={cn(
+            'flex items-center justify-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)]',
+            compact ? 'h-6 w-6' : 'h-7 w-7'
+          )}
+        >
+          <SiteIcon name={icon} size={compact ? 12 : 14} />
         </span>
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]">
+        <h3 className={cn('font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]', compact ? 'text-[11px]' : 'text-xs')}>
           {title}
         </h3>
       </div>
@@ -63,10 +70,12 @@ function FilterSection({
 function OptionChip({
   active,
   label,
+  compact,
   onClick,
 }: {
   active: boolean
   label: string
+  compact: boolean
   onClick: () => void
 }) {
   return (
@@ -75,14 +84,15 @@ function OptionChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'inline-flex h-10 max-w-full items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition active:scale-[0.97]',
+        'inline-flex max-w-full items-center gap-1.5 rounded-full border font-medium transition active:scale-[0.97]',
+        compact ? 'h-8 px-3 text-[13px]' : 'h-10 px-3.5 text-sm',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
         active
           ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
           : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
       )}
     >
-      {active ? <SiteIcon name="check" size={14} className="shrink-0" /> : null}
+      {active ? <SiteIcon name="check" size={compact ? 12 : 14} className="shrink-0" /> : null}
       <span className="truncate">{label}</span>
     </button>
   )
@@ -115,6 +125,8 @@ export function FilterSidebar({
     values.inStock,
   ].filter(Boolean).length
   const hasActive = activeCount > 0
+  // Computer sidebar: a little smaller; the phone drawer (`plain`) keeps big touch targets
+  const compact = !plain
 
   const presetActive = (preset: { min?: string; max?: string }) =>
     (preset.min || '') === (values.minPrice || '') &&
@@ -123,14 +135,12 @@ export function FilterSidebar({
   return (
     <aside
       className={cn(
-        'space-y-5',
-        !plain &&
-          'rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-5 shadow-soft'
+        plain ? 'space-y-5' : 'space-y-4 rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-soft'
       )}
     >
       <div className={cn('flex items-center justify-between gap-3', plain && 'hidden')}>
         <div className="flex min-w-0 items-center gap-2">
-          <h2 className="font-display text-lg font-semibold tracking-tight">{t('shop.filters')}</h2>
+          <h2 className="font-display text-base font-semibold tracking-tight">{t('shop.filters')}</h2>
           {hasActive ? <Badge variant="brand">{activeCount}</Badge> : null}
         </div>
         <Button
@@ -148,7 +158,8 @@ export function FilterSidebar({
         type="button"
         onClick={() => onChange({ ...values, inStock: values.inStock ? undefined : true })}
         className={cn(
-          'flex w-full items-start gap-2.5 rounded-2xl border px-3 py-3 text-left transition',
+          'flex w-full items-start gap-2.5 rounded-2xl border text-left transition',
+          compact ? 'px-2.5 py-2' : 'px-3 py-3',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
           values.inStock
             ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_14%,transparent)]'
@@ -157,31 +168,34 @@ export function FilterSidebar({
       >
         <span
           className={cn(
-            'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl',
+            'mt-0.5 flex shrink-0 items-center justify-center rounded-xl',
+            compact ? 'h-7 w-7' : 'h-8 w-8',
             values.inStock
               ? 'bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
           )}
         >
-          <SiteIcon name="package-check" size={15} />
+          <SiteIcon name="package-check" size={compact ? 13 : 15} />
         </span>
         <span className="min-w-0 flex-1 pr-1">
-          <span className="block text-sm font-semibold leading-snug">{t('shop.inStockOnly')}</span>
-          <span className="mt-1 block text-xs leading-snug text-[var(--fg-muted)]">
+          <span className={cn('block font-semibold leading-snug', compact ? 'text-[13px]' : 'text-sm')}>{t('shop.inStockOnly')}</span>
+          <span className={cn('block leading-snug text-[var(--fg-muted)]', compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-xs')}>
             {values.inStock ? t('stock.inStock') : t('shop.any')}
           </span>
         </span>
         <span
           className={cn(
-            'relative mt-0.5 h-6 w-11 shrink-0 rounded-full transition',
+            'relative mt-0.5 shrink-0 rounded-full transition',
+            compact ? 'h-5 w-9' : 'h-6 w-11',
             values.inStock ? 'bg-[var(--brand)]' : 'bg-[var(--bg-muted)]'
           )}
           aria-hidden
         >
           <span
             className={cn(
-              'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition',
-              values.inStock ? 'start-[1.35rem]' : 'start-0.5'
+              'absolute top-0.5 rounded-full bg-white shadow transition',
+              compact ? 'h-4 w-4' : 'h-5 w-5',
+              values.inStock ? (compact ? 'start-[1.15rem]' : 'start-[1.35rem]') : 'start-0.5'
             )}
           />
         </span>
@@ -190,15 +204,17 @@ export function FilterSidebar({
       <div className="h-px bg-[var(--border)]" />
 
       {!hideCategories ? (
-        <FilterSection title={t('shop.category')} icon="layers">
+        <FilterSection compact={compact} title={t('shop.category')} icon="layers">
           <div className="flex flex-wrap gap-2">
             <OptionChip
+                compact={compact}
               active={!values.category}
               label={t('shop.allCategories')}
               onClick={() => onChange({ ...values, category: undefined })}
             />
             {categories.map((c) => (
               <OptionChip
+                compact={compact}
                 key={c._id}
                 active={values.category === c.slug}
                 label={categoryDisplayName(locale, c.slug, c.name)}
@@ -215,15 +231,17 @@ export function FilterSidebar({
       ) : null}
 
       {brands.length > 0 ? (
-        <FilterSection title={t('shop.brand')} icon="boxes">
+        <FilterSection compact={compact} title={t('shop.brand')} icon="boxes">
           <div className="flex flex-wrap gap-2">
             <OptionChip
+                compact={compact}
               active={!values.brand}
               label={t('shop.all')}
               onClick={() => onChange({ ...values, brand: undefined })}
             />
             {brands.map((b) => (
               <OptionChip
+                compact={compact}
                 key={b._id}
                 active={values.brand === b.slug}
                 label={displayBrand(b.name)}
@@ -239,7 +257,7 @@ export function FilterSidebar({
         </FilterSection>
       ) : null}
 
-      <FilterSection title={t('shop.priceDh')} icon="tag">
+      <FilterSection compact={compact} title={t('shop.priceDh')} icon="tag">
         <div className={cn('grid gap-2', plain ? 'grid-cols-2' : 'grid-cols-1')}>
           {PRICE_PRESETS.map((preset) => {
             const label =
@@ -261,7 +279,8 @@ export function FilterSidebar({
                   })
                 }
                 className={cn(
-                  'flex min-h-11 w-full items-center justify-between gap-1.5 rounded-xl border px-3 py-2 text-start text-[13px] font-semibold leading-5 transition active:scale-[0.97]',
+                  'flex w-full items-center justify-between gap-1.5 rounded-xl border px-3 text-start font-semibold leading-5 transition active:scale-[0.97]',
+                  compact ? 'min-h-9 py-1.5 text-xs' : 'min-h-11 py-2 text-[13px]',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                   active
                     ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
@@ -269,13 +288,13 @@ export function FilterSidebar({
                 )}
               >
                 <span className="min-w-0 flex-1 truncate">{label}</span>
-                {active ? <SiteIcon name="check" size={14} className="shrink-0" /> : null}
+                {active ? <SiteIcon name="check" size={compact ? 12 : 14} className="shrink-0" /> : null}
               </button>
             )
           })}
         </div>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40 p-3">
+        <div className={cn('rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40', compact ? 'p-2.5' : 'p-3')}>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--fg-muted)]">
             {t('shop.customRange')}
           </p>
@@ -289,10 +308,10 @@ export function FilterSidebar({
                 value={values.minPrice || ''}
                 onChange={(e) => onChange({ ...values, minPrice: e.target.value || undefined })}
                 placeholder="0"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-base outline-none ring-brand sm:text-sm"
+                className={cn('w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand', compact ? 'h-9 text-[13px]' : 'h-11 text-base sm:text-sm')}
               />
             </label>
-            <span className="mb-2.5 text-sm leading-none text-[var(--fg-muted)]" aria-hidden>
+            <span className={cn('text-sm leading-none text-[var(--fg-muted)]', compact ? 'mb-2' : 'mb-2.5')} aria-hidden>
               –
             </span>
             <label className="min-w-0 space-y-1 text-xs">
@@ -304,7 +323,7 @@ export function FilterSidebar({
                 value={values.maxPrice || ''}
                 onChange={(e) => onChange({ ...values, maxPrice: e.target.value || undefined })}
                 placeholder={t('shop.any')}
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-base outline-none ring-brand sm:text-sm"
+                className={cn('w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand', compact ? 'h-9 text-[13px]' : 'h-11 text-base sm:text-sm')}
               />
             </label>
           </div>
