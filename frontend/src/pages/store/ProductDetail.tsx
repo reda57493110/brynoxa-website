@@ -20,6 +20,7 @@ import { formatCurrency } from '@/lib/format'
 import { trackViewItem } from '@/lib/analytics'
 import { recordProductView } from '@/lib/push'
 import { useSeo } from '@/hooks/useSeo'
+import { productData } from '@/lib/structuredData'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
@@ -81,38 +82,7 @@ export function ProductDetail() {
     image: productImage || '/brand/brynoxa-logo-social.png',
     type: product.data ? 'product' : 'website',
     path: slug ? `/product/${slug}` : undefined,
-    jsonLd: product.data
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          name: product.data.name,
-          description: productDescription,
-          image: productImage ? [productImage] : undefined,
-          sku: product.data.sku,
-          brand: product.data.brand
-            ? {
-                '@type': 'Brand',
-                name:
-                  typeof product.data.brand === 'string'
-                    ? product.data.brand
-                    : (product.data.brand as Brand).name,
-              }
-            : undefined,
-          offers: {
-            '@type': 'Offer',
-            priceCurrency: 'MAD',
-            price: product.data.price,
-            availability:
-              product.data.stock > 0
-                ? 'https://schema.org/InStock'
-                : 'https://schema.org/OutOfStock',
-            url:
-              typeof window !== 'undefined'
-                ? `${window.location.origin}/product/${product.data.slug}`
-                : undefined,
-          },
-        }
-      : null,
+    jsonLd: product.data ? productData(product.data, productDescription) : null,
   })
 
   const fade = (delay = 0) =>
@@ -223,35 +193,9 @@ export function ProductDetail() {
     { icon: 'package-check' as const, label: t('home.proofCod') },
     { icon: 'shield' as const, label: t('home.proofWarranty') },
   ]
-  const productStructuredData = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: p.name,
-    description: p.description,
-    sku: p.sku,
-    image: p.images.map((image) => image.url),
-    brand: brand ? { '@type': 'Brand', name: brand.name } : undefined,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'MAD',
-      price: p.price,
-      itemCondition:
-        p.condition === 'refurbished'
-          ? 'https://schema.org/RefurbishedCondition'
-          : p.condition === 'used'
-            ? 'https://schema.org/UsedCondition'
-            : 'https://schema.org/NewCondition',
-      availability:
-        p.stock > 0
-          ? 'https://schema.org/InStock'
-          : 'https://schema.org/OutOfStock',
-      url: window.location.href,
-    },
-  }
 
   return (
     <>
-      <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
       <Container className="pb-24 pt-3 sm:pb-10 sm:pt-6">
         <motion.nav
           {...fade(0)}

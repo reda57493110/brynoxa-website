@@ -154,7 +154,10 @@ export function Shop() {
       (filters.q
         ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}`
         : t('meta.shopDescription')),
-    path: '/shop',
+    // /shop?category=x is the same list as /category/x: tell Google which address to keep
+    path: filters.category ? `/category/${filters.category}` : '/shop',
+    // Search result pages are endless and thin: kept out of Google
+    noIndex: Boolean(filters.q),
   })
 
   useEffect(() => {

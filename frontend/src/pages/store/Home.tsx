@@ -20,6 +20,7 @@ import { categoryIcon } from '@/lib/categoryIcon'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
+import { organizationData } from '@/lib/structuredData'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 
@@ -119,6 +120,7 @@ export function Home() {
     description: t('meta.homeDescription'),
     path: '/',
     image: HERO_IMAGE,
+    jsonLd: organizationData(),
   })
 
   const categoryList = (categories.data ?? []).filter(
