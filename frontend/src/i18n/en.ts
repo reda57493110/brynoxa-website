@@ -490,6 +490,16 @@ export const en = {
     loadError: 'Couldn’t load wishlist',
     loadErrorBody: 'Check your connection and try again.',
   },
+  searchBox: {
+    recent: 'Recent searches',
+    browse: 'Browse categories',
+    category: 'Category',
+    products: 'Products',
+    seeAll: 'See all {count} results for “{q}”',
+    searchShop: 'Search the shop for “{q}”',
+    noResults: 'No product matches “{q}”',
+    noResultsHint: 'Try another word, a brand (HP, ASUS) or a part (RTX, i7).',
+  },
   compare: {
     title: 'Compare — Brynoxa',
     kicker: 'Find your best option',

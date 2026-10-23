@@ -495,6 +495,16 @@ export const fr: Messages = {
     loadError: 'Impossible de charger les favoris',
     loadErrorBody: 'Vérifiez votre connexion et réessayez.',
   },
+  searchBox: {
+    recent: 'Recherches récentes',
+    browse: 'Parcourir les catégories',
+    category: 'Catégorie',
+    products: 'Produits',
+    seeAll: 'Voir les {count} résultats pour « {q} »',
+    searchShop: 'Chercher « {q} » dans la boutique',
+    noResults: 'Aucun produit pour « {q} »',
+    noResultsHint: 'Essayez un autre mot, une marque (HP, ASUS) ou un composant (RTX, i7).',
+  },
   compare: {
     title: 'Comparer — Brynoxa',
     kicker: 'Trouvez la meilleure option',

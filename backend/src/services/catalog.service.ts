@@ -59,6 +59,9 @@ async function searchConditions(q: string) {
         { sku: new RegExp(`^${escapeRegex(word)}`, 'i') },
         { tags: rx },
         { shortDescription: rx },
+        // "i7", "rtx", "ryzen" find products by their processor / graphics card
+        { 'specs.cpu': rx },
+        { 'specs.gpu': rx },
       ];
       if (cats.length) or.push({ category: { $in: cats.map((c) => c._id) } });
       if (brands.length) or.push({ brand: { $in: brands.map((b) => b._id) } });

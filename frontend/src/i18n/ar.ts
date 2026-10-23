@@ -492,6 +492,16 @@ export const ar: Messages = {
     loadError: 'تعذر تحميل المفضلة',
     loadErrorBody: 'تحقق من الاتصال ثم أعد المحاولة.',
   },
+  searchBox: {
+    recent: 'آخر عمليات البحث',
+    browse: 'تصفّح الأقسام',
+    category: 'قسم',
+    products: 'المنتوجات',
+    seeAll: 'شوف {count} نتيجة ل«{q}»',
+    searchShop: 'قلّب على «{q}» فالمتجر',
+    noResults: 'ما كاين حتى منتوج ل«{q}»',
+    noResultsHint: 'جرّب كلمة أخرى، ماركة (HP، ASUS) ولا قطعة (RTX، i7).',
+  },
   compare: {
     title: 'المقارنة — برينوكسا',
     kicker: 'لقى أحسن اختيار ليك',

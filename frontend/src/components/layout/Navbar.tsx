@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useCartStore } from '@/store/cartStore'
 import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { MobileNav } from './MobileNav'
+import { SearchBox } from './SearchBox'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -17,11 +18,9 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [q, setQ] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
   const mobileSearchRef = useRef<HTMLInputElement>(null)
   const location = useLocation()
-  const navigate = useNavigate()
   const isHome = location.pathname === '/'
   const atTop = isHome && !scrolled
 
@@ -67,13 +66,6 @@ export function Navbar() {
     if (searchOpen) mobileSearchRef.current?.focus()
   }, [searchOpen])
 
-  const onSearch = (e: FormEvent) => {
-    e.preventDefault()
-    const query = q.trim()
-    navigate(query ? `/shop?q=${encodeURIComponent(query)}` : '/shop')
-    setSearchOpen(false)
-  }
-
   return (
     <>
       <header className="sticky top-0 z-50 px-3 pt-[max(0.5rem,env(safe-area-inset-top))] sm:px-8 sm:pt-3 lg:px-12">
@@ -116,22 +108,12 @@ export function Navbar() {
               ))}
             </nav>
 
-            <form onSubmit={onSearch} className="hidden min-w-0 max-w-md flex-1 md:block md:ml-4">
-              <label className="relative block">
-                <span className="sr-only">{t('common.search')}</span>
-                <SiteIcon name="search" size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
-                <input
-                  ref={searchRef}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t('common.searchPlaceholder')}
-                  className="h-9 w-full rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] ps-9 pe-12 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand dark:bg-[var(--bg-input)]"
-                />
-                <kbd className="pointer-events-none absolute end-2.5 top-1/2 hidden -translate-y-1/2 rounded-md border border-[var(--border)] bg-[var(--bg-muted)] px-1.5 py-px text-[10px] font-medium text-[var(--fg-muted)] lg:inline">
-                  /
-                </kbd>
-              </label>
-            </form>
+            <SearchBox
+              inputRef={searchRef}
+              showShortcut
+              className="hidden min-w-0 max-w-md flex-1 md:block md:ml-4"
+              inputClassName="h-9 bg-[var(--bg-elevated)] pe-12 text-sm dark:bg-[var(--bg-input)]"
+            />
 
             <div className="ml-auto flex items-center gap-0 md:ml-1">
               <button
@@ -195,19 +177,12 @@ export function Navbar() {
           </div>
 
           {searchOpen ? (
-            <form onSubmit={onSearch} className="border-t border-[var(--border)] px-3 py-2.5 md:hidden">
-              <label className="relative block">
-                <span className="sr-only">{t('common.search')}</span>
-                <SiteIcon name="search" size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
-                <input
-                  ref={mobileSearchRef}
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={t('common.searchPlaceholder')}
-                  className="h-10 w-full rounded-full border border-[var(--border)] bg-[var(--bg-input)] ps-9 pe-3 text-sm text-[var(--fg)] placeholder:text-[var(--fg-muted)] outline-none ring-brand"
-                />
-              </label>
-            </form>
+            <SearchBox
+              inputRef={mobileSearchRef}
+              onDone={() => setSearchOpen(false)}
+              className="border-t border-[var(--border)] px-3 py-2.5 md:hidden"
+              inputClassName="h-10 bg-[var(--bg-input)] pe-9 text-base sm:text-sm"
+            />
           ) : null}
         </div>
       </header>
