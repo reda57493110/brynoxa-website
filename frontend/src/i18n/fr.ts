@@ -826,8 +826,6 @@ export const fr: Messages = {
     heroTitle: 'Garantie, retours,',
     heroTitleAccent: 'et livraison rapide',
     heroBody: 'Des règles claires, un vrai support et le paiement à la livraison partout au Maroc.',
-    heroTrustTitle: 'Vérifiez d’abord, payez ensuite',
-    heroTrustBody: 'Paiement à la livraison partout au Maroc',
     heroTrustChip: 'Un vrai support humain',
     proofReturns: 'Retours 14 jours',
     howHandled: 'Comment les commandes sont traitées',

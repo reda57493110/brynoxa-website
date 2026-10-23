@@ -823,8 +823,6 @@ export const ar: Messages = {
     heroTitle: 'الضمان والإرجاع',
     heroTitleAccent: 'والتوصيل السريع',
     heroBody: 'سياسات واضحة ودعم حقيقي والدفع عند الاستلام في كل المغرب.',
-    heroTrustTitle: 'افحص أولاً ثم ادفع',
-    heroTrustBody: 'الدفع عند الاستلام في كل المغرب',
     heroTrustChip: 'دعم حقيقي من أشخاص حقيقيين',
     proofReturns: 'إرجاع خلال 14 يوماً',
     howHandled: 'كيف تُعالَج الطلبات',

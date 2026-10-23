@@ -821,8 +821,6 @@ export const en = {
     heroTitle: 'Warranty, returns,',
     heroTitleAccent: 'and fast delivery',
     heroBody: 'Clear policies, real support, and cash on delivery across Morocco.',
-    heroTrustTitle: 'Inspect first, then pay',
-    heroTrustBody: 'Cash on delivery across Morocco',
     heroTrustChip: 'Real people, real support',
     proofReturns: '14-day returns',
     howHandled: 'How orders are handled',
