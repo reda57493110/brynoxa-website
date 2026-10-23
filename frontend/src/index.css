@@ -1,15 +1,20 @@
 @import "tailwindcss";
+/* Fonts served from our own site (no Google Fonts request before the page shows); each file only
+   downloads when a matching character is on screen, so Cairo loads for Arabic only */
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/cairo";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
 }
 
 html[lang="ar"] {
-  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Cairo Variable", "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cairo Variable", "Cairo", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
