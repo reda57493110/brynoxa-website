@@ -15,9 +15,16 @@ declare global {
   }
 }
 
+import { safePath } from './safePath'
+
 const MEASUREMENT_ID = (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined)?.trim()
 
 let initialized = false
+
+/** Full page address for analytics, without secret values (gtag would otherwise send location.href). */
+function safeLocation() {
+  return `${window.location.origin}${safePath(`${window.location.pathname}${window.location.search}`)}`
+}
 
 /** Load GA4 gtag when VITE_GA_MEASUREMENT_ID is set. Safe no-op otherwise. */
 export function initAnalytics() {
@@ -32,6 +39,7 @@ export function initAnalytics() {
   window.gtag('config', MEASUREMENT_ID, {
     send_page_view: false,
     anonymize_ip: true,
+    page_location: safeLocation(),
   })
 
   const script = document.createElement('script')
@@ -46,12 +54,13 @@ function emit(event: string, params?: EventParams) {
     console.debug('[analytics]', event, params || {})
   }
   if (!MEASUREMENT_ID || typeof window.gtag !== 'function') return
-  window.gtag('event', event, params)
+  // Every event carries the page address: always the cleaned one
+  window.gtag('event', event, { page_location: safeLocation(), ...params })
 }
 
 export function trackPageView(path: string, title?: string) {
   emit('page_view', {
-    page_path: path,
+    page_path: safePath(path),
     page_title: title || document.title,
   })
 }

@@ -15,6 +15,8 @@ export function VerifyEmail() {
 
   useEffect(() => {
     const token = params.get('token') || ''
+    // Remove the key from the address once read (history, analytics)
+    if (token) window.history.replaceState(window.history.state, '', window.location.pathname)
     if (!token) {
       setError(t('auth.loginFailed'))
       setStatus('error')

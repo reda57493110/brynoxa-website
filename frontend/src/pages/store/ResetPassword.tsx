@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
 import { getErrorMessage } from '@/api/client'
@@ -12,6 +12,11 @@ export function ResetPassword() {
   usePageTitle(`${t('auth.resetPassword')} — Brynoxa`)
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  // The reset key is read once and removed from the address (history, analytics, screenshots)
+  const [token] = useState(() => params.get('token') || '')
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('token')) window.history.replaceState(window.history.state, '', window.location.pathname)
+  }, [])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
@@ -26,7 +31,7 @@ export function ResetPassword() {
     setLoading(true)
     setError('')
     try {
-      await authApi.resetPassword({ token: params.get('token') || '', newPassword: password })
+      await authApi.resetPassword({ token, newPassword: password })
       navigate('/login', { replace: true })
     } catch (err) {
       setError(getErrorMessage(err))
