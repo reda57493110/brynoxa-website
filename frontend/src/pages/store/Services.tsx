@@ -102,7 +102,7 @@ export function Services() {
                     className="group flex h-full flex-col overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[var(--bg-elevated)] shadow-soft transition duration-300 hover:-translate-y-0.5 hover:border-[var(--brand)] hover:shadow-soft-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
                   >
                     {/* The illustration on top, the text below it (never written over the art) */}
-                    <div className="relative aspect-[16/9] overflow-hidden bg-[#0b1116]">
+                    <div className="relative aspect-[16/9] overflow-hidden rounded-[calc(1.35rem-1px)] bg-[#0b1116]">
                       <SafeImage
                         src={service.photo}
                         alt=""
