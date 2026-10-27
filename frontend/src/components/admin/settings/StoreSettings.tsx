@@ -128,6 +128,8 @@ function AtmCodesEditor({ method, onChange }: { method: DepositMethod; onChange:
 function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (steps: string) => void }) {
   const custom = Boolean(method.steps?.trim())
   const [open, setOpen] = useState(custom)
+  // The worked example is long: shown on demand
+  const [showExample, setShowExample] = useState(false)
   const example = depositSteps(method, { customer: 'Ahmed', amount: '500 DH', order: 'BRX-20261020-K7M2QX' })
   const insert = (token: string) => onChange(`${method.steps || defaultSteps(method.type)}${(method.steps || '').endsWith('\n') || !method.steps ? '' : ' '}${token}`)
 
@@ -178,16 +180,27 @@ function StepsEditor({ method, onChange }: { method: DepositMethod; onChange: (s
           </div>
         </>
       ) : null}
-      <div className="rounded-xl bg-[var(--bg-muted)] px-3 py-2">
-        <p className="mb-1 text-[11px] font-medium text-[var(--fg-muted)]">
-          Example — customer Ahmed, deposit 500 DH{custom ? '' : ' (default steps)'}
-        </p>
-        <ol className="list-decimal space-y-0.5 ps-4 text-xs">
-          {example.map((s, i) => (
-            <li key={i}>{s}</li>
-          ))}
-        </ol>
-      </div>
+      <button
+        type="button"
+        onClick={() => setShowExample((v) => !v)}
+        aria-expanded={showExample}
+        className="inline-flex items-center gap-1 text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]"
+      >
+        {showExample ? 'Hide example' : 'See example'}
+        <SiteIcon name="chevron-down" size={12} className={showExample ? 'rotate-180 transition' : 'transition'} />
+      </button>
+      {showExample ? (
+        <div className="rounded-xl bg-[var(--bg-muted)] px-3 py-2">
+          <p className="mb-1 text-[11px] font-medium text-[var(--fg-muted)]">
+            Example — customer Ahmed, deposit 500 DH{custom ? '' : ' (default steps)'}
+          </p>
+          <ol className="list-decimal space-y-0.5 ps-4 text-xs">
+            {example.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
     </div>
   )
 }

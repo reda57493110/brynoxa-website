@@ -150,6 +150,8 @@ function DepositsList() {
 
 /** Admin → Orders → Deposits & payments */
 export function DepositsView() {
+  // Payment options are set once: folded away unless a link points to them
+  const [showOptions, setShowOptions] = useState(() => typeof window !== 'undefined' && window.location.hash === '#payment-options')
   return (
     <div className="min-w-0 space-y-3 sm:space-y-4">
       <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
@@ -162,8 +164,29 @@ export function DepositsView() {
         <DepositsList />
       </div>
 
-      <div id="payment-options">
-        <OrdersSettings />
+      <div id="payment-options" className="scroll-mt-20">
+        {showOptions ? (
+          <>
+            <div className="mb-2 flex justify-end">
+              <button type="button" onClick={() => setShowOptions(false)} className="text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">
+                Hide payment options
+              </button>
+            </div>
+            <OrdersSettings />
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShowOptions(true)}
+            className="flex w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-3 text-start hover:border-[var(--brand)] sm:rounded-2xl sm:px-5"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold">Payment options</span>
+              <span className="block text-xs text-[var(--fg-muted)]">Bank, Cash Plus, Wafacash… and the steps customers see. Set once.</span>
+            </span>
+            <span className="shrink-0 text-xs font-medium text-[var(--brand-text)]">Show</span>
+          </button>
+        )}
       </div>
     </div>
   )
