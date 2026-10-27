@@ -123,8 +123,17 @@ export function Roles() {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
       qc.invalidateQueries({ queryKey: ['admin-customers'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      const role = res.data.data.role as StaffRole
-      toast.success(`${STAFF_ROLE_LABELS[role] ?? 'Staff'} account created`)
+      const created = res.data.data
+      const label = STAFF_ROLE_LABELS[created.role as StaffRole] ?? 'Staff'
+      if (created.emailVerified === false) {
+        toast.success(
+          created.verificationSent
+            ? `${label} account created. A verification email was sent to ${created.email} — they must click it before signing in (check spam too).`
+            : `${label} account created, but the verification email could not be sent. Use "Mark as verified" in the staff list.`
+        )
+      } else {
+        toast.success(`${label} account created — they can sign in now`)
+      }
       setForm({ name: '', email: '', password: '', role: 'orders' })
       setShowPassword(false)
     },
@@ -137,6 +146,16 @@ export function Roles() {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
       toast.success('Role updated')
       setRoleChange(null)
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+
+  // A staff member who did not get the verification email
+  const verifyEmail = useMutation({
+    mutationFn: (v: { id: string; action: 'resend' | 'mark' }) => adminApi.users.verifyEmail(v.id, v.action),
+    onSuccess: (res, v) => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+      toast.success(v.action === 'mark' ? `${res.data.data.email} can sign in now` : `Verification email sent again to ${res.data.data.email}`)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -214,6 +233,27 @@ export function Roles() {
           {isMe ? <span className="ms-1 text-xs font-normal text-[var(--fg-muted)]">(you)</span> : null}
         </p>
         <p className="truncate text-xs text-[var(--fg-muted)]">{u.email}</p>
+        {u.emailVerified === false ? (
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
+            <span className="font-medium text-[var(--warning)]">Email not verified — cannot sign in yet</span>
+            <button
+              type="button"
+              className="font-medium text-[var(--brand-text)] hover:underline disabled:opacity-50"
+              disabled={verifyEmail.isPending}
+              onClick={() => verifyEmail.mutate({ id: u._id, action: 'resend' })}
+            >
+              Resend email
+            </button>
+            <button
+              type="button"
+              className="font-medium text-[var(--brand-text)] hover:underline disabled:opacity-50"
+              disabled={verifyEmail.isPending}
+              onClick={() => verifyEmail.mutate({ id: u._id, action: 'mark' })}
+            >
+              Mark as verified
+            </button>
+          </p>
+        ) : null}
       </div>
     </div>
   )

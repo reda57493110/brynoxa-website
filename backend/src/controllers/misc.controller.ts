@@ -137,13 +137,20 @@ export const users = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-  const user = await adminService.createStaffUser({
+  const { user, verificationSent } = await adminService.createStaffUser({
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
     role: req.body.role,
   });
-  sendSuccess(res, user, 'User created', 201);
+  sendSuccess(res, { ...user!.toJSON(), verificationSent }, 'User created', 201);
+});
+
+/** Owner: resend the verification email of a staff member, or mark the address verified. */
+export const verifyStaffEmail = asyncHandler(async (req: Request, res: Response) => {
+  const action = req.body?.action === 'mark' ? 'mark' : 'resend';
+  const { user, verificationSent } = await adminService.verifyStaffEmail(param(req, 'id'), action);
+  sendSuccess(res, { ...user.toJSON(), verificationSent }, action === 'mark' ? 'Email marked as verified' : 'Verification email sent');
 });
 
 export const setUserRole = asyncHandler(async (req: Request, res: Response) => {

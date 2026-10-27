@@ -258,6 +258,9 @@ export const adminApi = {
       password: string
       role: Exclude<User['role'], 'customer' | 'admin'>
     }) => api.post<ApiResponse<User>>('/admin/users', payload),
+    /** A staff member who did not get the verification email: send it again, or mark verified */
+    verifyEmail: (id: string, action: 'resend' | 'mark') =>
+      api.post<ApiResponse<User>>(`/admin/users/${id}/verify-email`, { action }),
     setRole: (id: string, role: Exclude<User['role'], 'admin'>) =>
       api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }),
   },

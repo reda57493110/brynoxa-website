@@ -214,6 +214,12 @@ router.post(
   validate(createStaffUserSchema),
   misc.createUser
 );
+router.post(
+  '/admin/users/:id/verify-email',
+  requireAuth,
+  requirePermission('users:manage'),
+  misc.verifyStaffEmail
+);
 router.patch(
   '/admin/users/:id/role',
   requireAuth,

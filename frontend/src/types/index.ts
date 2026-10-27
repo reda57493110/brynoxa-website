@@ -37,6 +37,10 @@ export interface User {
   isActive: boolean
   isGuest?: boolean
   mfaEnabled?: boolean
+  /** false = has not confirmed their email yet (staff cannot sign in until then) */
+  emailVerified?: boolean
+  /** Staff creation: whether the verification email went out */
+  verificationSent?: boolean
   /** Staff without 2-step: last day to turn it on (then staff pages ask for it). */
   mfaSetupDeadline?: string | null
   customerType?: CustomerType

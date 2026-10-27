@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { hasPermission, type Permission } from '../permissions';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { newMfaGraceUntil } from '../utils/mfaPolicy';
@@ -9,7 +10,7 @@ import { Wishlist } from '../models/Wishlist';
 import { Notification } from '../models/Notification';
 import { ContactMessage, NewsletterSubscriber } from '../models/Contact';
 import { ApiError } from '../utils/ApiError';
-import { isProd } from '../config/env';
+import { isEmailConfigured, isProd } from '../config/env';
 import { sendVerificationEmail } from './auth.service';
 import { isStaffRole, STAFF_ROLES, type StaffRole } from '../permissions';
 import { STORE_TIMEZONE } from './dashboard.service';
@@ -225,6 +226,10 @@ export async function createStaffUser(input: {
     email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) ||
     'User';
 
+  // The email check needs a working email sender; without one the account would be locked out
+  // for good, so the owner's word is taken (they can also mark it verified later in Roles)
+  const askToVerify = isProd && isEmailConfigured();
+
   let user = existing;
   if (user) {
     user.name = name;
@@ -233,7 +238,7 @@ export async function createStaffUser(input: {
     if (!user.mfaEnabled) user.mfaGraceUntil = newMfaGraceUntil();
     user.isGuest = false;
     user.isActive = true;
-    user.emailVerified = !isProd;
+    user.emailVerified = !askToVerify;
     user.refreshToken = undefined;
     await user.save();
   } else {
@@ -245,13 +250,46 @@ export async function createStaffUser(input: {
       mfaGraceUntil: newMfaGraceUntil(),
       isGuest: false,
       isActive: true,
-      emailVerified: !isProd,
+      emailVerified: !askToVerify,
     });
   }
 
-  if (isProd) await sendVerificationEmail(user);
+  let verificationSent = false;
+  if (askToVerify) {
+    try {
+      await sendVerificationEmail(user);
+      verificationSent = true;
+    } catch (err) {
+      // The account exists; the owner can resend the email or mark it verified in Roles
+      console.warn('Staff verification email failed:', (err as Error)?.message);
+    }
+  }
   // Fresh copy without the password hash and tokens (select:false fields)
-  return User.findById(user._id);
+  const fresh = await User.findById(user._id);
+  return { user: fresh, verificationSent };
+}
+
+/**
+ * Owner, Roles page: a staff member who cannot find the verification email. "resend" sends a new
+ * link; "mark" confirms the address on the owner's word (the owner created the account).
+ */
+export async function verifyStaffEmail(targetId: string, action: 'resend' | 'mark') {
+  if (!mongoose.isValidObjectId(targetId)) throw new ApiError(404, 'User not found');
+  const user = await User.findById(targetId);
+  if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff member not found');
+  if (user.emailVerified !== false) return { user, verificationSent: false };
+  if (action === 'mark') {
+    user.emailVerified = true;
+    user.emailVerificationTokenHash = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return { user, verificationSent: false };
+  }
+  if (!isEmailConfigured()) {
+    throw new ApiError(400, 'Emails are not set up on this site — use "Mark as verified" instead');
+  }
+  await sendVerificationEmail(user);
+  return { user, verificationSent: true };
 }
 
 export async function setUserRole(

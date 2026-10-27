@@ -47,6 +47,6 @@ test('purchase costs are hidden from order/support staff, kept for owner and cat
 });
 
 test('new staff account replies never include the password; CSV export guards formulas', () => {
-  assert.match(fs.readFileSync(dist('services/admin.service.js'), 'utf8'), /return (User_1\.)?User\.findById\(user\._id\)/);
+  assert.match(fs.readFileSync(dist('services/admin.service.js'), 'utf8'), /const fresh = await (User_1\.)?User\.findById\(user\._id\);\s+return \{ user: fresh, verificationSent \}/);
   assert.ok(fs.readFileSync(dist('services/customerAnalytics.service.js'), 'utf8').includes(String.raw`/^[=+\-@\t\r]/`));
 });
