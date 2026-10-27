@@ -455,6 +455,11 @@ export const setUserRoleSchema = z.object({
   role: z.enum(['customer', 'orders', 'catalog', 'support', 'marketing']),
 });
 
+/** Owner sets a staff member's password (Roles). */
+export const staffPasswordSchema = z.object({
+  password: z.string().min(12).max(100).refine((p) => !isBlockedPassword(p), BLOCKED_PASSWORD_MESSAGE),
+});
+
 export const createStaffUserSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   email: z.string().trim().email(),

@@ -24,6 +24,9 @@ export function AccountSettings() {
   const qc = useQueryClient()
   const setAuth = useAuthStore((s) => s.setAuth)
   const accessToken = useAuthStore((s) => s.accessToken)
+  // Staff (not the owner) cannot change their own password: the owner sets it in Admin → Roles
+  const role = useAuthStore((s) => s.user?.role)
+  const passwordByOwner = Boolean(role && role !== 'customer' && role !== 'admin')
   const toast = useToastStore((s) => s.push)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
@@ -148,6 +151,12 @@ export function AccountSettings() {
         </Button>
       </form>
 
+      {passwordByOwner ? (
+        <div className={`${surfaceCard} mt-8 max-w-lg space-y-2 p-6`}>
+          <h2 className="font-display text-lg font-semibold">{t('account.changePassword')}</h2>
+          <p className="text-sm text-[var(--fg-muted)]">{t('account.passwordByOwner')}</p>
+        </div>
+      ) : (
       <form
         className={`${surfaceCard} mt-8 max-w-lg space-y-4 p-6`}
         onSubmit={(e) => {
@@ -190,6 +199,7 @@ export function AccountSettings() {
           {t('account.changePasswordAction')}
         </Button>
       </form>
+      )}
 
       <div className="mt-8 max-w-2xl">
         <h2 className="font-display text-lg font-semibold">{t('account.addresses')}</h2>

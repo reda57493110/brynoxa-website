@@ -42,6 +42,7 @@ const RULES: Rule[] = [
   { rx: /^admin\/emails/, action: 'Sent an email to a customer', kind: 'message' },
   { rx: /^admin\/(messages|contacts?)/, action: 'Handled a customer message', kind: 'message' },
   { rx: /^admin\/(profit|expenses|courier-costs|product-costs)/, action: 'Changed costs / expenses', kind: 'money' },
+  { rx: /^admin\/users\/([^/]+)\/password/, action: 'Set a staff password', kind: 'staff' },
   { rx: /^admin\/users\/([^/]+)\/verify-email/, action: 'Helped a staff member verify their email', kind: 'staff' },
   { rx: /^admin\/(users|roles|staff)/, action: 'Changed staff accounts', kind: 'staff' },
   { rx: /^(admin\/)?settings/, action: 'Changed store settings', kind: 'settings' },

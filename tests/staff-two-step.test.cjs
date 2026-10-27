@@ -8,17 +8,19 @@ setTestEnv();
 const policy = require(dist('utils/mfaPolicy'));
 const DAY = 86_400_000;
 
-test('staff without 2-step have 7 days, then staff pages are refused; customers never', () => {
+test('only the owner must turn on 2-step (7 days); other staff and customers never', () => {
   const now = Date.now();
-  const fresh = { role: 'orders', mfaEnabled: false, mfaGraceUntil: new Date(now + 3 * DAY) };
+  const fresh = { role: 'admin', mfaEnabled: false, mfaGraceUntil: new Date(now + 3 * DAY) };
   assert.equal(policy.mfaSetupOverdue(fresh, now), false);
   assert.equal(policy.mfaSetupOverdue({ ...fresh, mfaGraceUntil: new Date(now - DAY) }, now), true);
   assert.equal(policy.mfaSetupOverdue({ ...fresh, mfaEnabled: true, mfaGraceUntil: new Date(now - DAY) }, now), false, '2-step on');
+  // Staff accounts are managed by the owner: never asked
+  assert.equal(policy.mfaSetupOverdue({ role: 'orders', mfaEnabled: false, mfaGraceUntil: new Date(now - DAY) }, now), false);
+  assert.equal(policy.mfaSetupDeadline({ role: 'support', mfaEnabled: false }), null);
   assert.equal(policy.mfaSetupOverdue({ role: 'customer', mfaEnabled: false }, now), false, 'customers');
-  // Staff from before the rule: 7 days from the day it started
   const start = policy.MFA_RULE_START.getTime();
-  assert.equal(policy.mfaSetupOverdue({ role: 'support', mfaEnabled: false }, start + 6 * DAY), false);
-  assert.equal(policy.mfaSetupOverdue({ role: 'support', mfaEnabled: false }, start + 8 * DAY), true);
+  assert.equal(policy.mfaSetupOverdue({ role: 'admin', mfaEnabled: false }, start + 6 * DAY), false);
+  assert.equal(policy.mfaSetupOverdue({ role: 'admin', mfaEnabled: false }, start + 8 * DAY), true);
   assert.ok(Math.abs(policy.newMfaGraceUntil(now).getTime() - (now + 7 * DAY)) < 1000);
 });
 

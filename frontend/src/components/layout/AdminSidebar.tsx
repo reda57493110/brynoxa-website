@@ -65,7 +65,7 @@ export function AdminSidebar({
 
   const visible = items.filter((item) => {
     const permission = ADMIN_NAV_PERMISSION[item.to]
-    return item.to === '/admin/security' || Boolean(permission && hasPermission(role, permission))
+    return Boolean(permission && hasPermission(role, permission))
   })
 
   return (

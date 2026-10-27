@@ -277,6 +277,25 @@ export async function createStaffUser(input: {
 }
 
 /**
+ * Owner, Roles page: a new password for a staff member (they cannot change it themselves). Signs
+ * them out everywhere; they use the new password from now on.
+ */
+export async function setStaffPassword(targetId: string, password: string) {
+  if (!mongoose.isValidObjectId(targetId)) throw new ApiError(404, 'User not found');
+  const user = await User.findById(targetId);
+  if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff member not found');
+  if (user.role === 'admin') throw new ApiError(400, 'Change the owner password in Admin → Security');
+  if (isBlockedPassword(password)) throw new ApiError(400, BLOCKED_PASSWORD_MESSAGE);
+  user.password = password;
+  user.passwordChangedAt = new Date();
+  user.refreshToken = undefined;
+  user.failedLoginAttempts = 0;
+  user.lockedUntil = undefined;
+  await user.save();
+  return User.findById(user._id);
+}
+
+/**
  * Owner, Roles page: a staff member who cannot find the verification email. "resend" sends a new
  * link; "mark" confirms the address on the owner's word (the owner created the account).
  */

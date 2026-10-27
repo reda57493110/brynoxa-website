@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/Select'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Panel } from '@/components/admin/Panel'
+import { Modal } from '@/components/ui/Modal'
 import { TeamActivity } from '@/components/admin/TeamActivity'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -180,6 +181,20 @@ export function Roles() {
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
+  // Staff cannot change their own password: the owner sets it here
+  const [passwordFor, setPasswordFor] = useState<User | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const setPassword = useMutation({
+    mutationFn: (v: { id: string; password: string }) => adminApi.users.setPassword(v.id, v.password),
+    onSuccess: () => {
+      toast.success(`New password saved for ${passwordFor?.name || passwordFor?.email}. Give it to them; they are signed out everywhere.`)
+      setPasswordFor(null)
+      setNewPassword('')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+
   // A staff member who did not get the verification email
   const verifyEmail = useMutation({
     mutationFn: (v: { id: string; action: 'resend' | 'mark' }) => adminApi.users.verifyEmail(v.id, v.action),
@@ -264,6 +279,19 @@ export function Roles() {
           {isMe ? <span className="ms-1 text-xs font-normal text-[var(--fg-muted)]">(you)</span> : null}
         </p>
         <p className="truncate text-xs text-[var(--fg-muted)]">{u.email}</p>
+        {u.role !== 'admin' ? (
+          <button
+            type="button"
+            className="text-[11px] font-medium text-[var(--brand-text)] hover:underline"
+            onClick={() => {
+              setPasswordFor(u)
+              setNewPassword('')
+              setShowNewPassword(false)
+            }}
+          >
+            Set password
+          </button>
+        ) : null}
         {u.emailVerified === false ? (
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
             <span className="font-medium text-[var(--warning)]">Email not verified — cannot sign in yet</span>
@@ -540,6 +568,51 @@ export function Roles() {
         onConfirm={() => roleChange && changeRole.mutate({ id: roleChange.user._id, role: roleChange.role })}
       />
 
+      <Modal open={Boolean(passwordFor)} onClose={() => setPasswordFor(null)} title={`New password for ${passwordFor?.name || passwordFor?.email || ''}`} size="sm">
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (passwordFor && newPassword.length >= STAFF_PASSWORD_MIN) setPassword.mutate({ id: passwordFor._id, password: newPassword })
+          }}
+        >
+          <p className="text-sm text-[var(--fg-muted)]">
+            Staff cannot change their own password. Choose a new one (at least {STAFF_PASSWORD_MIN} characters) and give it to them; they are signed out and use it from their next sign-in.
+          </p>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">New password</span>
+            <span className="relative">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={STAFF_PASSWORD_MIN}
+                maxLength={100}
+                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] ps-3.5 pe-16 outline-none ring-brand"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((v) => !v)}
+                className="absolute end-2 top-1/2 -translate-y-1/2 px-2 text-xs text-[var(--fg-muted)] hover:text-[var(--fg)]"
+              >
+                {showNewPassword ? 'Hide' : 'Show'}
+              </button>
+            </span>
+            {newPassword && newPassword.length < STAFF_PASSWORD_MIN ? (
+              <span className="text-xs text-[var(--danger)]">{STAFF_PASSWORD_MIN - newPassword.length} more characters</span>
+            ) : null}
+          </label>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setPasswordFor(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={setPassword.isPending} disabled={newPassword.length < STAFF_PASSWORD_MIN}>
+              Save password
+            </Button>
+          </div>
+        </form>
+      </Modal>
       <ConfirmDialog
         open={Boolean(existingAccount)}
         title="This email already has an account"

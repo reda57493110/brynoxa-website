@@ -462,6 +462,7 @@ export const en = {
     profile: 'Profile',
     saveProfile: 'Save profile',
     changePassword: 'Change password',
+    passwordByOwner: "Your password is set by the shop owner. Ask them if you need a new one.",
     currentPassword: 'Current password',
     newPassword: 'New password',
     confirmPassword: 'Confirm new password',

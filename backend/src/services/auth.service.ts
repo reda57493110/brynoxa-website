@@ -94,6 +94,8 @@ export async function requestPasswordReset(email: string) {
     '+passwordResetTokenHash +passwordResetExpires'
   );
   if (!user) return;
+  // Staff passwords are set by the owner: no reset link (same quiet answer as an unknown email)
+  if (isStaffRole(user.role) && user.role !== 'admin') return;
   // A guest (ordered without an account) gets the same one-time link to choose a password
   await sendPasswordLink(user, user.isGuest ? accountClaimEmail : passwordResetEmail);
 }
@@ -145,6 +147,13 @@ export async function verifyEmail(token: string) {
 const CUSTOMER_PASSWORD_MIN = 6;
 const STAFF_PASSWORD_MIN = 12;
 
+/** Staff other than the owner: their password is set by the owner (Admin → Roles). */
+function assertOwnPasswordAllowed(role: string | undefined) {
+  if (isStaffRole(role) && role !== 'admin') {
+    throw new ApiError(403, 'Staff passwords are set by the owner — ask the owner to change yours');
+  }
+}
+
 function assertPasswordLength(role: string | undefined, password: string) {
   if (isBlockedPassword(password)) throw new ApiError(400, BLOCKED_PASSWORD_MESSAGE);
   const min = isStaffRole(role) ? STAFF_PASSWORD_MIN : CUSTOMER_PASSWORD_MIN;
@@ -164,6 +173,7 @@ export async function resetPassword(token: string, newPassword: string) {
     passwordResetExpires: { $gt: new Date() },
   }).select('+passwordResetTokenHash +passwordResetExpires');
   if (!user) throw new ApiError(400, 'Reset link is invalid or expired');
+  assertOwnPasswordAllowed(user.role);
   assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
   user.passwordChangedAt = new Date();
@@ -312,6 +322,7 @@ function sanitizeUser(user: InstanceType<typeof User>) {
 export async function setupMfa(userId: string, options?: { rotate?: boolean }) {
   const user = await User.findById(userId).select('+mfaPendingSecretEncrypted +mfaSecretEncrypted');
   if (!user || !isStaffRole(user.role)) throw new ApiError(404, 'Staff account not found');
+  if (user.role !== 'admin') throw new ApiError(403, '2-step sign-in is for the owner account');
   if (user.mfaEnabled) throw new ApiError(409, 'MFA is already enabled');
 
   // Keep the pending key unless a new QR code is asked for: opening setup again (another tab,
@@ -676,6 +687,7 @@ export async function changePassword(userId: string, currentPassword: string, ne
   if (!user || !(await user.comparePassword(currentPassword))) {
     throw new ApiError(401, 'Current password is incorrect');
   }
+  assertOwnPasswordAllowed(user.role);
   assertPasswordLength(user.role, newPassword);
   user.password = newPassword;
   user.passwordChangedAt = new Date();

@@ -467,6 +467,7 @@ export const fr: Messages = {
     profile: 'Profil',
     saveProfile: 'Enregistrer le profil',
     changePassword: 'Changer le mot de passe',
+    passwordByOwner: "Votre mot de passe est défini par le propriétaire de la boutique. Demandez-lui si vous en avez besoin d'un nouveau.",
     currentPassword: 'Mot de passe actuel',
     newPassword: 'Nouveau mot de passe',
     confirmPassword: 'Confirmer le nouveau mot de passe',

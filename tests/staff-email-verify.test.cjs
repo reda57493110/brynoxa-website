@@ -46,3 +46,25 @@ test('re-adding a removed staff member: the page is told it is an existing accou
   User.findOne = () => ({ select: async () => ({ email: 's@x.com', role: 'orders', isGuest: false }) });
   await assert.rejects(admin.createStaffUser({ email: 's@x.com', password: 'Long-Strong-Pass-2026', role: 'orders' }), /already a staff member/);
 });
+
+test('staff passwords are the owner\'s business: staff cannot change or reset their own', () => {
+  const svc = fs.readFileSync(dist('services/auth.service.js'), 'utf8');
+  // change-password and the reset link both refuse staff other than the owner
+  assert.equal((svc.match(/assertOwnPasswordAllowed\(user\.role\);/g) || []).length, 2);
+  assert.match(svc, /if \(\(0, permissions_1\.isStaffRole\)\(user\.role\) && user\.role !== 'admin'\)\s+return;/);
+  assert.match(svc, /2-step sign-in is for the owner account/);
+  const routes = fs.readFileSync(dist('routes/commerce.routes.js'), 'utf8');
+  assert.match(routes, /'\/admin\/users\/:id\/password', auth_1\.requireAuth, \(0, auth_1\.requirePermission\)\('users:manage'\), \(0, validate_1\.validate\)\(schemas_1\.staffPasswordSchema\)/);
+});
+
+test('the owner sets a staff password: signed out everywhere; never the owner account', async () => {
+  let saved = false;
+  target = { _id: ID, role: 'orders', save: async () => { saved = true; }, refreshToken: 'r' };
+  await admin.setStaffPassword(ID, 'Long-Strong-Pass-2026');
+  assert.equal(target.password, 'Long-Strong-Pass-2026');
+  assert.equal(target.refreshToken, undefined);
+  assert.ok(target.passwordChangedAt instanceof Date);
+  assert.ok(saved);
+  target = { _id: ID, role: 'admin', save: async () => {} };
+  await assert.rejects(admin.setStaffPassword(ID, 'Long-Strong-Pass-2026'), /owner password/);
+});

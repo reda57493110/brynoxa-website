@@ -464,6 +464,7 @@ export const ar: Messages = {
     profile: 'الملف',
     saveProfile: 'حفظ الملف',
     changePassword: 'تغيير كلمة المرور',
+    passwordByOwner: "كلمة المرور الخاصة بك يحددها صاحب المتجر. اطلبها منه إذا كنت بحاجة إلى كلمة جديدة.",
     currentPassword: 'كلمة المرور الحالية',
     newPassword: 'كلمة المرور الجديدة',
     confirmPassword: 'تأكيد كلمة المرور الجديدة',

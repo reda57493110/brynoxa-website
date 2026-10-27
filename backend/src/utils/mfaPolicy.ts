@@ -1,9 +1,9 @@
 /**
- * 2-step sign-in is required for every staff account. New staff (and staff who had none when this
- * rule started) get a grace period to set it up; after it, staff pages are refused until they do
- * (setting up 2-step itself stays open). Customers are never concerned.
+ * 2-step sign-in is required for the owner account only (the owner decided: staff accounts are
+ * created and managed by the owner, who also sets their passwords). The owner gets a grace period
+ * to set it up; after it, admin pages are refused until they do (the setup page stays open).
+ * Other staff and customers are never concerned.
  */
-import { isStaffRole } from '../permissions';
 
 export const MFA_GRACE_DAYS = 7;
 /** When the rule started: existing staff get their grace period from this day. */
@@ -25,7 +25,7 @@ export function newMfaGraceUntil(now = Date.now()) {
 
 /** Last day staff can work without 2-step (null when not concerned). */
 export function mfaSetupDeadline(user: MfaUser): Date | null {
-  if (!user || !isStaffRole(user.role ?? '') || user.mfaEnabled) return null;
+  if (!user || user.role !== 'admin' || user.mfaEnabled) return null;
   if (user.mfaGraceUntil) return new Date(user.mfaGraceUntil);
   return new Date(MFA_RULE_START.getTime() + MFA_GRACE_DAYS * DAY);
 }
@@ -36,4 +36,4 @@ export function mfaSetupOverdue(user: MfaUser, now = Date.now()) {
   return Boolean(deadline && now > deadline.getTime());
 }
 
-export const MFA_REQUIRED_MESSAGE = 'Turn on 2-step sign-in (Admin → Security) to keep using staff pages.';
+export const MFA_REQUIRED_MESSAGE = 'Turn on 2-step sign-in (Admin → Security) to keep using the admin pages.';

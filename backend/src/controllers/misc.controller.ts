@@ -146,6 +146,12 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, { ...user!.toJSON(), verificationSent }, 'User created', 201);
 });
 
+/** Owner: a new password for a staff member. */
+export const setStaffPassword = asyncHandler(async (req: Request, res: Response) => {
+  const user = await adminService.setStaffPassword(param(req, 'id'), req.body.password);
+  sendSuccess(res, user, 'Password changed');
+});
+
 /** Owner: resend the verification email of a staff member, or mark the address verified. */
 export const verifyStaffEmail = asyncHandler(async (req: Request, res: Response) => {
   const action = req.body?.action === 'mark' ? 'mark' : 'resend';

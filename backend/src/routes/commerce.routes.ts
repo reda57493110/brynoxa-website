@@ -30,6 +30,7 @@ import {
   pushSendSchema,
   setUserRoleSchema,
   createStaffUserSchema,
+  staffPasswordSchema,
 } from '../validators/schemas';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
@@ -213,6 +214,13 @@ router.post(
   requirePermission('users:manage'),
   validate(createStaffUserSchema),
   misc.createUser
+);
+router.post(
+  '/admin/users/:id/password',
+  requireAuth,
+  requirePermission('users:manage'),
+  validate(staffPasswordSchema),
+  misc.setStaffPassword
 );
 router.post(
   '/admin/users/:id/verify-email',
