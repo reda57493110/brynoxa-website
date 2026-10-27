@@ -27,6 +27,7 @@ Product.find = (q) => {
   return { select: async () => products.filter((p) => q._id.$in.includes(p._id)) };
 };
 settingsModel.getSettings = async () => ({ taxRate: 0 });
+settingsModel.getSettingsCached = async () => ({ taxRate: 0 });
 const created = [];
 Order.create = async (doc) => {
   created.push(doc);

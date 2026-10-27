@@ -349,6 +349,10 @@ orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ origin: 1, createdAt: -1 });
+// Staff activity (Admin → Roles): who made each step / call, and orders they added
+orderSchema.index({ 'timeline.by': 1, 'timeline.at': -1 });
+orderSchema.index({ 'contactAttempts.by': 1, 'contactAttempts.at': -1 });
+orderSchema.index({ createdBy: 1, createdAt: -1 }, { sparse: true });
 orderSchema.index({ receiptTokenHash: 1 }, { sparse: true });
 orderSchema.index({ user: 1, orderStatus: 1, 'items.product': 1 });
 // 'Bought together' lookups for Complete your setup

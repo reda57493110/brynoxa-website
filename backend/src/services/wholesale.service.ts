@@ -1,5 +1,5 @@
 import { waitUntil } from '@vercel/functions';
-import { getSettings } from '../models/Settings';
+import { getSettingsCached } from '../models/Settings';
 import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
 import type { WholesaleTerms } from '../utils/wholesale';
@@ -18,7 +18,7 @@ export async function getWholesaleTerms(userId?: string | null): Promise<Wholesa
   if (user.customerType === 'retail' || user.wholesale?.status !== 'approved' || !user.wholesale.tierId) {
     return null;
   }
-  const tier = (await getSettings()).wholesaleTiers?.find((t) => t.id === user.wholesale.tierId);
+  const tier = (await getSettingsCached()).wholesaleTiers?.find((t) => t.id === user.wholesale.tierId);
   if (!tier || !(tier.discountPercent > 0)) return null;
   return { tierId: tier.id, tierName: tier.name, discountPercent: tier.discountPercent };
 }
@@ -48,7 +48,7 @@ export async function reviewWholesale(
 ) {
   const user = await User.findOne({ _id: customerId, role: 'customer' }).select('+activity');
   if (!user) throw new ApiError(404, 'Customer not found');
-  const tiers = (await getSettings()).wholesaleTiers ?? [];
+  const tiers = (await getSettingsCached()).wholesaleTiers ?? [];
   const now = new Date();
   let note = '';
 

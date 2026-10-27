@@ -3,7 +3,7 @@ import { Product } from '../models/Product';
 import { IOrderDeposit, Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
-import { getSettings, type DepositMethod } from '../models/Settings';
+import { getSettingsCached, type DepositMethod } from '../models/Settings';
 import { resolveShippingFee } from '../utils/shipping';
 import { dueOnDelivery, feeCreditOf, lineDeposit, roundMoney } from '../utils/deposit';
 import { wholesaleUnitPrice, type WholesaleTerms } from '../utils/wholesale';
@@ -234,7 +234,7 @@ function productsDeposit(depositTotal: number, total: number): IOrderDeposit | u
 const formatDh = (amount: number) => `${amount.toLocaleString('en-US')} DH`;
 
 async function priceOrder(subtotal: number, couponCode?: string, city?: string, lines?: CouponLine[]) {
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   let discount = 0;
   let couponMeta: { code: string; couponId: Types.ObjectId; perCustomerLimit: number } | undefined;
 
@@ -421,7 +421,7 @@ export async function createManualOrder(
 ) {
   const origin = input.origin as OrderOrigin;
   const { orderItems, subtotal } = await buildOrderLines(input.items, null, { staff: true });
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   const discount = roundMoney(Math.min(Math.max(input.discount || 0, 0), subtotal));
   const shipping = roundMoney(Math.max(input.shipping || 0, 0));
   const taxable = Math.max(subtotal - discount, 0);
@@ -890,7 +890,7 @@ export async function setOrderDeposit(
   // Which of your payment options this customer sees
   if (input.methodIds !== undefined) {
     if (!order.deposit) throw new ApiError(400, 'Set a deposit amount first');
-    const known = new Set(((await getSettings()).depositMethods ?? []).map((m) => m.id));
+    const known = new Set(((await getSettingsCached()).depositMethods ?? []).map((m) => m.id));
     order.deposit.methodIds = [...new Set(input.methodIds)].filter((id) => known.has(id));
     notes.push('Payment options shown to the customer updated');
   }
@@ -898,7 +898,7 @@ export async function setOrderDeposit(
   // How it was paid (staff record): kept with the deposit, receipt photo from the customer kept too
   if (input.payment) {
     if (!order.deposit || !(order.deposit.amount > 0)) throw new ApiError(400, 'Set a deposit amount first');
-    const methods = (await getSettings()).depositMethods ?? [];
+    const methods = (await getSettingsCached()).depositMethods ?? [];
     const method = methods.find((m) => m.id === input.payment!.methodId);
     if (!method && input.payment.methodId !== 'other') throw new ApiError(400, 'Choose how it was paid');
     const methodName = method?.name || (method ? method.type : 'Other');
@@ -1167,6 +1167,8 @@ export async function listAllOrders(
   if (Object.keys(createdAt).length) filter.createdAt = createdAt;
   const [items, total] = await Promise.all([
     Order.find(filter)
+      // The list shows no history or calls (the order page loads them)
+      .select('-timeline -contactAttempts')
       .sort(order)
       .skip((page - 1) * limit)
       .limit(limit)
@@ -1266,7 +1268,7 @@ export async function customerOrderViewWithPayment<T>(order: T): Promise<T> {
     deposit?: { amount: number; status: string; methodIds?: string[] } & Record<string, unknown>;
   };
   if (!view?.deposit) return view as unknown as T;
-  const options = paymentOptionsFor(view, await getSettings());
+  const options = paymentOptionsFor(view, await getSettingsCached());
   const { methodIds: _ids, ...deposit } = view.deposit;
   return { ...view, deposit: options ? { ...deposit, paymentOptions: options } : deposit } as unknown as T;
 }

@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import mongoose from 'mongoose';
 import { env } from './env';
 import { attachDatabasePool } from '@vercel/functions';
@@ -15,6 +16,33 @@ declare global {
 const cached = global.__mongooseCache ?? { conn: null, promise: null };
 global.__mongooseCache = cached;
 
+/** Runs syncIndexes for these models when their declared indexes differ from the last sync. */
+async function syncIndexesWhenChanged() {
+  const [{ Product }, { Order }, { Review }, { Category }, { ContactMessage }, { User }] = await Promise.all([
+    import('../models/Product'),
+    import('../models/Order'),
+    import('../models/Review'),
+    import('../models/Category'),
+    import('../models/Contact'),
+    import('../models/User'),
+  ]);
+  const models = [Product, Order, Review, Category, ContactMessage, User] as unknown as {
+    modelName: string;
+    schema: { indexes: () => unknown };
+    syncIndexes: () => Promise<unknown>;
+  }[];
+  const signature = createHash('sha256')
+    .update(JSON.stringify(models.map((m) => [m.modelName, m.schema.indexes()])))
+    .digest('hex');
+  const meta = mongoose.connection.db!.collection<{ _id: string; signature: string; at: Date }>('app_meta');
+  const last = await meta.findOne({ _id: 'indexes' });
+  if (last?.signature === signature) return;
+  for (const m of models) {
+    await m.syncIndexes().catch((err) => console.error(`${m.modelName} index sync failed`, err));
+  }
+  await meta.updateOne({ _id: 'indexes' }, { $set: { signature, at: new Date() } }, { upsert: true });
+}
+
 export async function connectDB(): Promise<typeof mongoose> {
   if (cached.conn) {
     return cached.conn;
@@ -30,7 +58,8 @@ export async function connectDB(): Promise<typeof mongoose> {
         // allows 500 connections in total. Keep each pool small and close idle sockets quickly.
         maxPoolSize: 3,
         minPoolSize: 0,
-        maxIdleTimeMS: 5000,
+        // 20 s: a few requests in a row reuse the connection instead of reconnecting each time
+        maxIdleTimeMS: 20000,
       })
       .then((connection) => {
       // On Vercel, keep the instance alive long enough to close idle connections before it
@@ -50,22 +79,9 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
-    // Keep Atlas indexes aligned with schema (non-blocking).
-    void import('../models/Product')
-      .then(({ Product }) => Product.syncIndexes())
-      .catch((err) => console.error('Product index sync failed', err));
-    void import('../models/Order')
-      .then(({ Order }) => Order.syncIndexes())
-      .catch((err) => console.error('Order index sync failed', err));
-    void import('../models/Review')
-      .then(({ Review }) => Review.syncIndexes())
-      .catch((err) => console.error('Review index sync failed', err));
-    void import('../models/Category')
-      .then(({ Category }) => Category.syncIndexes())
-      .catch((err) => console.error('Category index sync failed', err));
-    void import('../models/Contact')
-      .then(({ ContactMessage }) => ContactMessage.syncIndexes())
-      .catch((err) => console.error('Contact index sync failed', err));
+    // Keep Atlas indexes aligned with the schemas, in the background — only when the index list
+    // changed since the last sync (not on every cold start, where it competed with real queries)
+    void syncIndexesWhenChanged().catch((err) => console.error('Index sync failed', err));
     return cached.conn;
   } catch (err) {
     cached.promise = null;

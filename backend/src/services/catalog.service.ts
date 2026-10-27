@@ -1,4 +1,4 @@
-import { getSettings } from '../models/Settings';
+import { getSettingsCached } from '../models/Settings';
 import mongoose from 'mongoose';
 import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
@@ -313,7 +313,7 @@ export async function listProducts(query: ProductQuery) {
   if (query.featured) filter.isFeatured = true;
   if (query.carousel) filter.isCarousel = true;
   if (query.admin && (query.placement === 'home' || query.placement === 'deals' || query.placement === 'none')) {
-    const dealIds = ((await getSettings()).homeDeals || []).map((id) => new mongoose.Types.ObjectId(id));
+    const dealIds = ((await getSettingsCached()).homeDeals || []).map((id) => new mongoose.Types.ObjectId(id));
     const placementFilter =
       query.placement === 'deals'
         ? { _id: { $in: dealIds } }
@@ -376,6 +376,8 @@ export async function listProducts(query: ProductQuery) {
   }
 
   const listQuery = Product.find(filter)
+    // Shop cards use the short description; the long one is loaded by the product page
+    .select(query.admin ? '' : '-description')
     .skip(skip)
     .limit(query.limit)
     .populate('category', 'name slug isActive specTemplate')
@@ -397,7 +399,7 @@ type RankedProduct = { _id: unknown; price: number; compareAtPrice?: number | nu
  * row 30+, Shop header 100. Products not listed here are ranked by the caller.
  */
 async function storefrontRanks(): Promise<Map<string, number>> {
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   const ranks = new Map<string, number>();
   const set = (id: unknown, rank: number) => {
     const key = String(id);

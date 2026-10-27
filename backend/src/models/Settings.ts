@@ -217,6 +217,11 @@ const settingsSchema = new Schema<ISettings>(
   { timestamps: true }
 );
 
+// Any save or update of the settings drops the cached copy (getSettingsCached)
+settingsSchema.post('save', () => clearSettingsCache());
+settingsSchema.post('findOneAndUpdate', () => clearSettingsCache());
+settingsSchema.post('updateOne', () => clearSettingsCache());
+
 export const Settings = mongoose.model<ISettings>('Settings', settingsSchema);
 
 const OBJECT_ID = /^[a-f0-9]{24}$/i;
@@ -386,6 +391,25 @@ export function publicSettings(settings: ISettings) {
     : { ...(settings as unknown as Record<string, unknown>) }) as Record<string, unknown>;
   for (const key of PRIVATE_SETTINGS) delete plain[key];
   return plain;
+}
+
+const SETTINGS_CACHE_MS = 15_000;
+let settingsCache: { doc: ISettings; at: number } | null = null;
+
+export function clearSettingsCache() {
+  settingsCache = null;
+}
+
+/**
+ * Settings for pages that only READ them (pricing, lists, reports): one database read every 15 s
+ * per server instance instead of several per request. Never change or save this copy — use
+ * getSettings() for that (saving clears the cache).
+ */
+export async function getSettingsCached(): Promise<ISettings> {
+  if (settingsCache && Date.now() - settingsCache.at < SETTINGS_CACHE_MS) return settingsCache.doc;
+  const doc = await getSettings();
+  settingsCache = { doc, at: Date.now() };
+  return doc;
 }
 
 export async function getSettings(): Promise<ISettings> {

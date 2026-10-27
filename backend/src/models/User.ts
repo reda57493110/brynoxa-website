@@ -216,4 +216,7 @@ userSchema.methods.comparePassword = async function (candidate: string) {
 userSchema.index({ role: 1, customerType: 1 });
 userSchema.index({ 'wholesale.status': 1 });
 
+// Customer lists and counts (role + newest first)
+userSchema.index({ role: 1, createdAt: -1 });
+
 export const User = mongoose.model<IUser>('User', userSchema);

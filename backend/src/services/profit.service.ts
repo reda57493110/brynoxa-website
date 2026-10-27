@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { Expense, EXPENSE_CATEGORIES, type ExpenseCategory } from '../models/Expense';
-import { getSettings } from '../models/Settings';
+import { getSettings, getSettingsCached } from '../models/Settings';
 import { ORDER_STATUS_GROUP, wasDelivered, type OrderStatus } from '../utils/orderStatus';
 import { feeCreditOf, roundMoney } from '../utils/deposit';
 import { ApiError } from '../utils/ApiError';
@@ -163,14 +163,15 @@ function totalsOf(rows: OrderFigures[], expenses: number) {
 }
 
 async function courierCosts(): Promise<CourierCosts> {
-  const s = await getSettings();
+  const s = await getSettingsCached();
   return { delivered: s.courierCosts?.delivered ?? 0, returned: s.courierCosts?.returned ?? 0 };
 }
 
 /** Orders placed in the last `days` × `periods` days (a little margin for the timezone). */
 async function ordersSince(daysBack: number) {
   return Order.find({ createdAt: { $gte: new Date(Date.now() - (daysBack + 2) * DAY_MS) } })
-    .select('+items.unitCost +costs')
+    // The money fields only: no history, calls or notes (most of an order's size)
+    .select('+items.unitCost +costs -timeline -contactAttempts -customerNote -adminNote -deliveryIssue')
     .sort({ createdAt: -1 })
     .lean<LeanOrder[]>();
 }

@@ -172,6 +172,8 @@ const productSchema = new Schema<IProduct>(
 );
 
 productSchema.index({ name: 'text', description: 'text', tags: 'text', shortDescription: 'text' });
+// Versions of a product (inventory pages look them up by their base product)
+productSchema.index({ baseProduct: 1 }, { sparse: true });
 productSchema.index({ category: 1, brand: 1, price: 1, isActive: 1 });
 productSchema.index({ isFeatured: 1, isActive: 1, featuredAt: -1 });
 productSchema.index({ isCarousel: 1, isActive: 1, carouselAt: -1 });

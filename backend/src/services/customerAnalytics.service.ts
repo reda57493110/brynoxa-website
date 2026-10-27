@@ -3,7 +3,7 @@ import { customerSourceFilter } from '../utils/orderOrigin';
 import { OPEN_STATUSES, closedWithoutSale, wasDelivered } from '../utils/orderStatus';
 import { Order, type OrderStatus } from '../models/Order';
 import { Product } from '../models/Product';
-import { DEFAULT_SEGMENT_SETTINGS, getSettings, type ICustomerSegmentSettings } from '../models/Settings';
+import { DEFAULT_SEGMENT_SETTINGS, getSettingsCached, type ICustomerSegmentSettings } from '../models/Settings';
 import { User } from '../models/User';
 import { ApiError } from '../utils/ApiError';
 import { feeCreditOf, roundMoney } from '../utils/deposit';
@@ -25,6 +25,8 @@ const OPEN: OrderStatus[] = OPEN_STATUSES;
 // Whole order plus the staff-only line cost. (Listing "items" and "+items.unitCost" together
 // would be a MongoDB path collision, so only the opt-in is given.)
 const ORDER_FIELDS = '+items.unitCost';
+// Lists and totals: the same without the order history, calls and addresses (the bulk of an order)
+const ORDER_FIELDS_LIGHT = '+items.unitCost -timeline -contactAttempts -shippingAddress -customerNote -adminNote -deliveryIssue';
 
 type LeanOrder = {
   _id: Types.ObjectId;
@@ -340,7 +342,7 @@ async function loadCustomers(query: CustomerListQuery) {
 
 async function ordersByUser(userIds: Types.ObjectId[]) {
   const orders = await Order.find(userIds.length ? { user: { $in: userIds } } : { _id: null })
-    .select(ORDER_FIELDS)
+    .select(ORDER_FIELDS_LIGHT)
     .lean<LeanOrder[]>();
   const map = new Map<string, LeanOrder[]>();
   for (const o of orders) {
@@ -368,7 +370,7 @@ function savedFilters(filters: Record<string, string | number>): Partial<Custome
 
 /** Customers with their metrics, filtered, sorted and paginated. Metrics follow the optional order period. */
 export async function listCustomerOverview(query: CustomerListQuery, canSeeProfit: boolean) {
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   const cfg = { ...DEFAULT_SEGMENT_SETTINGS, ...(settings.customerSegments || {}) };
   const tiers = settings.wholesaleTiers || [];
   // A saved custom segment is just a stored set of filters, applied to every step below
@@ -446,12 +448,12 @@ export async function listCustomerOverview(query: CustomerListQuery, canSeeProfi
 
 /** Dashboard cards: current account counts plus selected-period and lifetime sales. */
 export async function customerSummary(from: Date | undefined, to: Date | undefined, canSeeProfit: boolean) {
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   const segmentSettings = { ...DEFAULT_SEGMENT_SETTINGS, ...(settings.customerSegments || {}) };
   const users = await User.find({ role: 'customer' })
     .select('customerType wholesale isActive emailVerified createdAt')
     .lean<CustomerLean[]>();
-  const orders = await Order.find({ user: { $in: users.map((u) => u._id) } }).select(ORDER_FIELDS).lean<LeanOrder[]>();
+  const orders = await Order.find({ user: { $in: users.map((u) => u._id) } }).select(ORDER_FIELDS_LIGHT).lean<LeanOrder[]>();
   const lifetime = computeMetrics(orders);
   const period = from || to ? computeMetrics(orders.filter((o) => inPeriod(o, from, to))) : null;
   const pick = (m: CustomerMetrics) => {
@@ -497,7 +499,7 @@ export async function customerProfile(
     .lean();
   if (!user) throw new ApiError(404, 'Customer not found');
 
-  const settings = await getSettings();
+  const settings = await getSettingsCached();
   const cfg = { ...DEFAULT_SEGMENT_SETTINGS, ...(settings.customerSegments || {}) };
   const tiers = settings.wholesaleTiers || [];
   const orders = (await Order.find({ user: user._id }).select(ORDER_FIELDS).populate('timeline.by', 'name').sort({ createdAt: -1 }).lean<LeanOrder[]>()) || [];
