@@ -39,3 +39,10 @@ test('owner only; new staff are only asked to verify when emails can really be s
   const svc = fs.readFileSync(dist('services/admin.service.js'), 'utf8');
   assert.match(svc, /askToVerify = env_1\.isProd && \(0, env_1\.isEmailConfigured\)\(\)/);
 });
+
+test('re-adding a removed staff member: the page is told it is an existing account', async () => {
+  User.findOne = () => ({ select: async () => ({ email: 'old@x.com', role: 'customer', isGuest: false }) });
+  await assert.rejects(admin.createStaffUser({ email: 'old@x.com', password: 'Long-Strong-Pass-2026', role: 'orders' }), (err) => err.statusCode === 409 && err.code === 'EXISTING_ACCOUNT');
+  User.findOne = () => ({ select: async () => ({ email: 's@x.com', role: 'orders', isGuest: false }) });
+  await assert.rejects(admin.createStaffUser({ email: 's@x.com', password: 'Long-Strong-Pass-2026', role: 'orders' }), /already a staff member/);
+});

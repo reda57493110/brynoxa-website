@@ -121,6 +121,7 @@ export function Roles() {
     },
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
+      qc.invalidateQueries({ queryKey: ['team-activity'] })
       qc.invalidateQueries({ queryKey: ['admin-customers'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       const created = res.data.data
@@ -136,6 +137,35 @@ export function Roles() {
       }
       setForm({ name: '', email: '', password: '', role: 'orders' })
       setShowPassword(false)
+    },
+    onError: async (e) => {
+      // The email already has a customer account (e.g. staff that was removed): offer to give it the role
+      const code = (e as { response?: { data?: { code?: string } } }).response?.data?.code
+      if (code === 'EXISTING_ACCOUNT') {
+        const email = form.email.trim().toLowerCase()
+        try {
+          const found = (await adminApi.users.list({ q: email, role: 'all', limit: 5 })).data.data.find((u) => u.email.toLowerCase() === email)
+          if (found) {
+            setExistingAccount({ user: found, role: form.role })
+            return
+          }
+        } catch {
+          // fall back to the message below
+        }
+      }
+      toast.error(getErrorMessage(e))
+    },
+  })
+
+  const [existingAccount, setExistingAccount] = useState<{ user: User; role: AssignableRole } | null>(null)
+  const giveRole = useMutation({
+    mutationFn: (v: { user: User; role: AssignableRole }) => adminApi.users.setRole(v.user._id, v.role),
+    onSuccess: (_r, v) => {
+      qc.invalidateQueries({ queryKey: ['admin-users'] })
+      qc.invalidateQueries({ queryKey: ['team-activity'] })
+      setExistingAccount(null)
+      setForm({ name: '', email: '', password: '', role: 'orders' })
+      toast.success(`${v.user.email} is ${STAFF_ROLE_LABELS[v.role as StaffRole] ?? 'staff'} again. They sign in with their own password (or "Forgot password").`)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -164,6 +194,7 @@ export function Roles() {
     mutationFn: (id: string) => adminApi.users.setRole(id, 'customer'),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-users'] })
+      qc.invalidateQueries({ queryKey: ['team-activity'] })
       qc.invalidateQueries({ queryKey: ['admin-customers'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
       toast.success('Staff access removed')
@@ -510,9 +541,22 @@ export function Roles() {
       />
 
       <ConfirmDialog
+        open={Boolean(existingAccount)}
+        title="This email already has an account"
+        description={
+          existingAccount
+            ? `${existingAccount.user.name || existingAccount.user.email} already has an account (a customer, or staff you removed). Give it the ${STAFF_ROLE_LABELS[existingAccount.role as StaffRole] ?? existingAccount.role} role? They keep their own password; if they forgot it they can use "Forgot password" at sign-in.`
+            : ''
+        }
+        confirmLabel="Give the role"
+        loading={giveRole.isPending}
+        onClose={() => setExistingAccount(null)}
+        onConfirm={() => existingAccount && giveRole.mutate(existingAccount)}
+      />
+      <ConfirmDialog
         open={Boolean(removeTarget)}
         title="Remove staff access?"
-        description={removeTarget ? `${removeTarget.name || removeTarget.email} will become a storefront customer and lose admin access.` : ''}
+        description={removeTarget ? `${removeTarget.name || removeTarget.email} loses admin access. The account stays as a normal customer account; to bring them back, create the account again with the same email and you will be offered to give it the role.` : ''}
         confirmLabel="Remove access"
         loading={removeRole.isPending}
         onClose={() => setRemoveTarget(null)}

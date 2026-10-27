@@ -218,7 +218,14 @@ export async function createStaffUser(input: {
 
   const existing = await User.findOne({ email }).select('+password +refreshToken');
   if (existing && !existing.isGuest) {
-    throw new ApiError(409, 'Email already registered');
+    if (isStaffRole(existing.role)) throw new ApiError(409, 'This email is already a staff member');
+    // A customer account (or staff that was removed): the owner can give it the role instead
+    throw new ApiError(
+      409,
+      'This email already has a customer account (for example staff you removed). Give that account the role instead.',
+      undefined,
+      'EXISTING_ACCOUNT'
+    );
   }
 
   const name =
