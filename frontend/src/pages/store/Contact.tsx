@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -198,7 +198,7 @@ export function Contact() {
 
               <div className="mt-4 sm:mt-5">
                 {sent ? (
-                  <motion.div
+                  <m.div
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex items-start gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--success)_35%,var(--border))] bg-[color-mix(in_srgb,var(--success)_10%,var(--bg-elevated))] p-4 sm:p-5"
@@ -217,7 +217,7 @@ export function Contact() {
                         {t('contact.sendAnother')}
                       </Button>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ) : (
                   <form
                     className="space-y-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-soft sm:space-y-4 sm:rounded-[1.35rem] sm:p-6"
@@ -465,7 +465,7 @@ export function Contact() {
 
       <section aria-labelledby="newsletter-heading" className="pb-10 pt-4 sm:pb-12 sm:pt-5">
         <Container>
-          <motion.div
+          <m.div
             className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-6 shadow-soft sm:px-8 sm:py-8 lg:px-10"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -531,7 +531,7 @@ export function Contact() {
                 )}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </Container>
       </section>
     </>

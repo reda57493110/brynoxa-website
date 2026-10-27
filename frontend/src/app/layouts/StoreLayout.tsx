@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { Navbar } from '@/components/layout/Navbar'
 import { AccountBar } from '@/components/layout/AccountBar'
 import { Footer } from '@/components/layout/Footer'
@@ -100,7 +100,7 @@ export function StoreLayout() {
       {/* Account pages: no store menu or footer, just a way back to the store */}
       {isAccount ? <AccountBar /> : <Navbar />}
       {/* No exit fade — mode="wait" + opacity 0 made the page flash black between routes */}
-      <motion.main
+      <m.main
         key={location.pathname}
         initial={reduceMotion ? false : { opacity: 0.96, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
@@ -109,7 +109,7 @@ export function StoreLayout() {
         id="main-content"
       >
         <Outlet />
-      </motion.main>
+      </m.main>
       {isAccount ? null : <Footer />}
       <WhatsAppHost />
       <CartNotice />

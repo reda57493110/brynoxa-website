@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { AnimatePresence, m, useReducedMotion } from 'framer-motion'
 import type { ProductImage } from '@/types'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -35,7 +35,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
         )}
       >
         <AnimatePresence mode="sync" initial={false}>
-          <motion.div
+          <m.div
             key={current.url}
             initial={reduceMotion ? false : { opacity: 0.35 }}
             animate={{ opacity: 1 }}
@@ -58,7 +58,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
                 imageFit(current.url) === 'contain' ? 'object-contain p-3 sm:p-8' : 'object-cover'
               )}
             />
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         {list.length > 1 ? (

@@ -6,7 +6,7 @@ import { HeroBackdrop } from '@/components/home/HeroBackdrop'
 import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { Container } from '@/components/ui/Container'
@@ -17,7 +17,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
-import { categoryPhoto } from '@/lib/categoryPhoto'
+import { categoryPhoto, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
+import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -40,15 +41,6 @@ function categoryTileClass(index: number, count: number) {
   const smOdd = (count - 1) % 2 === 1 // tablets: tile 0 takes a row, the rest go two by two
   return cn('min-h-[12.5rem]', last && smOdd && 'sm:col-span-2', last && lgLeft === 1 && 'lg:col-span-3', last && lgLeft === 2 && 'lg:col-span-2', last && smOdd && lgLeft === 0 && 'lg:col-span-1')
 }
-
-const fadeUp = (reduce: boolean | null, delay = 0) =>
-  reduce
-    ? { initial: false as const, animate: { opacity: 1 }, transition: { duration: 0 } }
-    : {
-        initial: { opacity: 0, y: 18 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
-      }
 
 function useMediaQuery(query: string) {
   return useSyncExternalStore(
@@ -132,33 +124,33 @@ export function Home() {
           {/* Phones: headline → deals → buttons → trust chips. Tablet / desktop: normal order */}
           <div className="flex min-w-0 flex-col sm:block">
           {/* Hidden on phones (wrapper: .kicker sets its own display) */}
-          <motion.div {...fadeUp(reduceMotion, 0)} className="max-sm:hidden">
+          <div data-rise style={{ animationDelay: '0ms' }} className="max-sm:hidden">
             <p className="inline-flex items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--brand)_35%,transparent)] bg-[color-mix(in_srgb,var(--brand)_10%,var(--bg-elevated))] px-3.5 py-1.5 font-display text-sm font-semibold text-[var(--brand-text)] shadow-soft dark:bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] dark:text-[var(--brand)]">
               <span className="size-2 rounded-full bg-[var(--brand)] shadow-[0_0_0_4px_color-mix(in_srgb,var(--brand)_22%,transparent)]" />
               {t('home.kicker')}
             </p>
-          </motion.div>
+          </div>
 
-          <motion.h1
+          <h1
             id="home-hero-heading"
-            {...fadeUp(reduceMotion, 0.08)}
+            data-rise style={{ animationDelay: '80ms' }}
             className="order-1 max-w-2xl font-display text-[1.5rem] font-bold leading-[1.15] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-4xl md:text-[2.75rem] xl:text-5xl lg:[text-shadow:none] dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block w-fit bg-gradient-to-r [text-shadow:none] from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">
               {t('home.heroTitleAccent')}
             </span>
-          </motion.h1>
+          </h1>
 
-          <motion.p
-            {...fadeUp(reduceMotion, 0.16)}
+          <p
+            data-rise style={{ animationDelay: '160ms' }}
             className="mt-3 max-w-lg text-[13px] font-medium leading-relaxed text-[var(--fg)]/75 max-sm:hidden sm:mt-5 sm:text-lg dark:text-white/85"
           >
             {t('home.heroBody')}
-          </motion.p>
+          </p>
 
-          <motion.div
-            {...fadeUp(reduceMotion, 0.24)}
+          <div
+            data-rise style={{ animationDelay: '240ms' }}
             className="order-3 mt-3 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3"
           >
             <Link
@@ -174,11 +166,11 @@ export function Home() {
             >
               {t('home.heroCtaBrowse')}
             </a>
-          </motion.div>
+          </div>
 
           {/* Why buy here, at a glance */}
-          <motion.ul
-            {...fadeUp(reduceMotion, 0.3)}
+          <ul
+            data-rise style={{ animationDelay: '300ms' }}
             className="order-4 mt-3 grid grid-cols-2 gap-1.5 text-[11px] font-medium text-[var(--fg)] sm:mt-7 sm:flex sm:flex-wrap sm:gap-2 sm:text-sm dark:text-white/90"
           >
             {TRUST.map((item) => (
@@ -192,21 +184,21 @@ export function Home() {
                 {t(item.key)}
               </li>
             ))}
-          </motion.ul>
+          </ul>
 
           {/* Phones / tablets: the same deals showcase as desktop, under the headline */}
           {showDeals && !isDesktop ? (
-            <motion.div {...fadeUp(reduceMotion, 0.16)} className="order-2 mx-auto mt-4 w-full max-w-md sm:mt-6 lg:hidden">
+            <div data-rise style={{ animationDelay: '160ms' }} className="order-2 mx-auto mt-4 w-full max-w-md sm:mt-6 lg:hidden">
               {deals.products.length ? <HomeDealsShowcase products={deals.products} /> : <HomeSpotlightSkeleton />}
-            </motion.div>
+            </div>
           ) : null}
           </div>
 
           {/* Desktop: product card beside the headline */}
           {showDeals && isDesktop ? (
-            <motion.div {...fadeUp(reduceMotion, 0.2)} className="hidden lg:block">
+            <div data-rise style={{ animationDelay: '200ms' }} className="hidden lg:block">
               {deals.products.length ? <HomeDealsShowcase products={deals.products} /> : <HomeSpotlightSkeleton />}
-            </motion.div>
+            </div>
           ) : null}
         </Container>
       </section>
@@ -356,7 +348,7 @@ export function Home() {
                       c.description
                     )
                     return (
-                      <motion.div
+                      <m.div
                         key={c._id}
                         className={categoryTileClass(i, categoryList.length)}
                         initial={reduceMotion ? false : { opacity: 0, y: 14 }}
@@ -382,11 +374,13 @@ export function Home() {
                           >
                             {photo ? (
                               <LoadingImage
-                                src={photo}
+                                // Phone / computer sizes: the built-in copies, or resized when the photo's host allows it
+                                src={c.image ? sizedImageUrl(photo, 960) : photo}
+                                srcSet={categoryPhotoSrcSet(c) ?? (imageSrcSet(c.image, [480, 960]) || undefined)}
                                 alt=""
                                 width={800}
                                 height={500}
-                                sizes="(min-width: 1024px) 33vw, 100vw"
+                                sizes={featuredTile ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'}
                                 frameClassName="absolute inset-0"
                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                                 loading="lazy"
@@ -427,7 +421,7 @@ export function Home() {
                             </span>
                           </div>
                         </Link>
-                      </motion.div>
+                      </m.div>
                     )
                   })}
             </div>
@@ -441,7 +435,7 @@ export function Home() {
         className="pb-12 pt-8 sm:pb-14 sm:pt-10"
       >
         <Container>
-          <motion.div
+          <m.div
             className="relative overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[radial-gradient(90%_120%_at_100%_0%,color-mix(in_srgb,var(--brand)_14%,transparent),transparent_60%),radial-gradient(70%_90%_at_0%_100%,color-mix(in_srgb,var(--brand)_8%,transparent),transparent_60%)] bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft-lg sm:rounded-[2.5rem] dark:border-0 dark:bg-none dark:bg-[#05080b]"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -521,7 +515,7 @@ export function Home() {
                 ))}
               </ol>
             </div>
-          </motion.div>
+          </m.div>
         </Container>
       </section>
     </>

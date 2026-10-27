@@ -58,7 +58,6 @@ export default defineConfig({
           ) {
             return 'data'
           }
-          if (id.includes('node_modules/framer-motion')) return 'motion'
           return undefined
         },
       },

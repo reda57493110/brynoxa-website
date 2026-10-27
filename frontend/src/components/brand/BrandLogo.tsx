@@ -12,8 +12,8 @@ type BrandLogoProps = {
   onClick?: () => void
 }
 
-/** Glowing mark from brand pack — matches social profile art. */
-const MARK_SRC = '/brand/brynoxa-mark.png'
+/** Glowing mark from brand pack — matches social profile art. 128 px copy (shown at 32–40 px). */
+const MARK_SRC = '/brand/brynoxa-mark-128.webp'
 
 export function BrandLogo({
   to = '/',

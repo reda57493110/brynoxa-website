@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -90,7 +90,7 @@ export function Services() {
             {CUSTOMER_SERVICES.map((service, i) => {
               const item = copy.services.items[service.id]
               return (
-                <motion.li
+                <m.li
                   key={service.id}
                   initial={reduceMotion ? false : { opacity: 0, y: 14 }}
                   whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -129,7 +129,7 @@ export function Services() {
                       </span>
                     </div>
                   </Link>
-                </motion.li>
+                </m.li>
               )
             })}
           </ul>

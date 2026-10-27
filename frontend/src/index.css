@@ -484,3 +484,19 @@ html[lang="ar"] {
     .cart-notice { animation-name: cart-notice-down; }
   }
 }
+
+/* Home header: title and buttons rise in with CSS (no waiting for scripts); delay set inline */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+[data-rise] {
+  animation: hero-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-rise] {
+    animation: none;
+  }
+}

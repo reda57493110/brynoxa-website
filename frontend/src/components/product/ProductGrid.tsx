@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -90,7 +90,7 @@ export function ProductGrid({
   return (
     <div className={gridClass}>
       {products.map((p, i) => (
-        <motion.div
+        <m.div
           key={p._id}
           className="h-full"
           initial={reduceMotion ? false : { opacity: 0, y: 12 }}
@@ -102,7 +102,7 @@ export function ProductGrid({
           }}
         >
           <ProductCard product={p} />
-        </motion.div>
+        </m.div>
       ))}
     </div>
   )

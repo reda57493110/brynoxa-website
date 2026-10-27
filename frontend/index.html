@@ -28,6 +28,24 @@
     <link rel="preconnect" href="https://images.pexels.com" />
     <link rel="preconnect" href="https://res.cloudinary.com" />
     <title>Gaming PCs &amp; Laptops in Morocco — Cash on Delivery | Brynoxa</title>
+    <script>
+      // Home page: start the header photo now instead of after the scripts (same sizes as HeroBackdrop.tsx)
+      ;(function () {
+        if (!/^\/(fr\/?|ar\/?)?$/.test(location.pathname)) return
+        var photo = function (w) {
+          return 'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=' + w + '&h=' + Math.round((w * 1240) / 2200) + '&fit=crop'
+        }
+        ;[[1200, '(max-width: 1023px)'], [1920, '(min-width: 1024px)']].forEach(function (p) {
+          var l = document.createElement('link')
+          l.rel = 'preload'
+          l.as = 'image'
+          l.href = photo(p[0])
+          l.media = p[1]
+          l.setAttribute('fetchpriority', 'high')
+          document.head.appendChild(l)
+        })
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion, useReducedMotion } from 'framer-motion'
+import { m, useReducedMotion } from 'framer-motion'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
@@ -213,7 +213,7 @@ export function ProductDetail() {
   return (
     <>
       <Container className="pb-24 pt-3 sm:pb-10 sm:pt-6">
-        <motion.nav
+        <m.nav
           {...fade(0)}
           className="mb-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--fg-muted)] sm:mb-4 sm:text-sm"
         >
@@ -230,14 +230,14 @@ export function ProductDetail() {
           ) : null}
           <span aria-hidden="true">/</span>
           <span className="line-clamp-1 text-[var(--fg)]">{p.name}</span>
-        </motion.nav>
+        </m.nav>
 
         <div className="grid items-start gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10">
-          <motion.div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
+          <m.div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
             <ImageGallery images={p.images || []} name={p.name} />
-          </motion.div>
+          </m.div>
 
-          <motion.div {...fade(0.1)} className="flex min-w-0 flex-col">
+          <m.div {...fade(0.1)} className="flex min-w-0 flex-col">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:text-sm">
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
               {brand && category ? <span aria-hidden="true">·</span> : null}
@@ -346,11 +346,11 @@ export function ProductDetail() {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </m.div>
         </div>
 
         {p.description?.trim() ? (
-        <motion.div
+        <m.div
           {...fade(0.12)}
           className="mt-5 sm:mt-8"
         >
@@ -372,7 +372,7 @@ export function ProductDetail() {
               {p.description}
             </p>
           </section>
-        </motion.div>
+        </m.div>
         ) : null}
 
         <CompleteSetup productId={p._id} />

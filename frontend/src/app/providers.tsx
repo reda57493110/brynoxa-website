@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
+import { LazyMotion } from 'framer-motion'
 import { routerBasename } from '@/lib/localePath'
 import { useThemeStore } from '@/store/themeStore'
 import { useLocaleStore } from '@/store/localeStore'
@@ -8,6 +9,9 @@ import { useAuthStore } from '@/store/authStore'
 import { restoreSession } from '@/api/client'
 import { Toaster } from '@/components/ui/Toaster'
 import { AnalyticsListener } from '@/components/analytics/AnalyticsListener'
+
+// Animation code arrives after the first paint; elements show their final state until then
+const motionFeatures = () => import('@/lib/motionFeatures').then((mod) => mod.default)
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +59,7 @@ function BootstrapAuth({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
+      <LazyMotion features={motionFeatures} strict>
       <BrowserRouter basename={routerBasename()}>
         <BootstrapAuth>
           {children}
@@ -62,6 +67,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <Toaster />
         </BootstrapAuth>
       </BrowserRouter>
+      </LazyMotion>
     </QueryClientProvider>
   )
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useT } from '@/hooks/useT'
 
 /** Pages can hide the shop slogan under the card (e.g. the 2-step security check). */
@@ -13,7 +13,7 @@ export function AuthLayout() {
   const outlet = useMemo<AuthLayoutContext>(() => ({ setHideHint }), [])
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg)] px-4 py-10">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative z-10 w-full max-w-md"
@@ -28,7 +28,7 @@ export function AuthLayout() {
           <Outlet context={outlet} />
         </div>
         {!hideHint ? <p className="mt-6 text-center text-xs text-[var(--fg-muted)]">{t('auth.layoutHint')}</p> : null}
-      </motion.div>
+      </m.div>
     </div>
   )
 }
