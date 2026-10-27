@@ -29,6 +29,8 @@ import { useAdminStats } from '@/hooks/useAdminStats'
 import { toast } from '@/store/toastStore'
 import type { Order, OrderStatus, User } from '@/types'
 import { cn } from '@/lib/cn'
+import { customerWhatsAppHref, telHref } from '@/lib/customerContact'
+import { timeAgo } from '@/api/teamActivityApi'
 
 /** "YYYY-MM-DD" in Morocco time, `offset` days from today. */
 function moroccoDay(offset = 0) {
@@ -113,6 +115,122 @@ function PaymentBadge({ o }: { o: Order }) {
   )
 }
 
+/** The usual next step of an order, for the quick button on phones (null when it needs details). */
+function quickNext(o: Order): { status: OrderStatus; label: string } | null {
+  const depositDue = o.deposit?.status === 'pending' && (o.deposit.amount || 0) > 0
+  if ((o.orderStatus === 'pending' || o.orderStatus === 'no_answer') && !depositDue) return { status: 'confirmed', label: 'Confirm' }
+  if (o.orderStatus === 'confirmed') return { status: 'shipped', label: 'Mark shipped' }
+  if (['shipped', 'rescheduled', 'delivery_failed'].includes(o.orderStatus)) return { status: 'delivered', label: 'Mark delivered' }
+  return null
+}
+
+/** Status chips on phones (instead of the status list): only the ones with orders, plus the chosen one. */
+const PHONE_STATUS_CHIPS: { value: string; label: string; statuses?: OrderStatus[] }[] = [
+  { value: 'pending', label: 'New', statuses: ['pending'] },
+  { value: 'no_answer', label: 'No answer', statuses: ['no_answer'] },
+  { value: 'confirmed', label: 'Confirmed', statuses: ['confirmed'] },
+  { value: 'shipped', label: 'Shipped', statuses: ['shipped'] },
+  { value: 'rescheduled', label: 'Rescheduled', statuses: ['rescheduled'] },
+  { value: 'delivery_failed', label: 'Failed', statuses: ['delivery_failed'] },
+  { value: 'delivered', label: 'Delivered', statuses: ['delivered'] },
+  { value: 'group:returns', label: 'Returns', statuses: statusesInGroup('returns') },
+  { value: 'cancelled', label: 'Cancelled', statuses: ['cancelled'] },
+]
+
+const phoneAction =
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] px-3 text-xs font-medium text-[var(--fg)] active:bg-[var(--bg-muted)]'
+
+/** One order on a phone: who, where, how much, and the buttons to deal with it. */
+function PhoneOrderCard({
+  o,
+  selected,
+  onToggle,
+  onNext,
+  busy,
+}: {
+  o: Order
+  selected: boolean
+  onToggle: () => void
+  onNext: (status: OrderStatus) => void
+  busy: boolean
+}) {
+  const [armed, setArmed] = useState(false)
+  useEffect(() => {
+    if (!armed) return
+    const t = window.setTimeout(() => setArmed(false), 4000)
+    return () => window.clearTimeout(t)
+  }, [armed])
+  const next = quickNext(o)
+  const phone = o.shippingAddress?.phone
+  const tel = telHref(phone)
+  const wa = customerWhatsAppHref(phone, customerName(o), o.orderNumber)
+  return (
+    <li className={cn('min-w-0 px-3 py-3', selected && 'bg-[color-mix(in_srgb,var(--brand)_6%,transparent)]')}>
+      <div className="flex min-w-0 items-start gap-2.5">
+        <input
+          type="checkbox"
+          className="mt-3.5 h-4 w-4 shrink-0 accent-[var(--brand)]"
+          checked={selected}
+          onChange={onToggle}
+          aria-label={`Select order ${o.orderNumber}`}
+        />
+        <Link to={`/admin/orders/${o._id}`} className="flex min-w-0 flex-1 items-start gap-2.5">
+          {o.items?.[0] ? <OrderItemThumb item={o.items[0]} size="sm" className="h-11 w-11 shrink-0" /> : null}
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-baseline justify-between gap-2">
+              <span className="truncate text-[15px] font-semibold">{customerName(o)}</span>
+              <span className="shrink-0 text-[15px] font-semibold tabular-nums">{formatCurrency(o.pricing.total)}</span>
+            </div>
+            <p className="truncate text-xs text-[var(--fg-muted)]">
+              {[o.shippingAddress?.city, timeAgo(o.createdAt), `#${o.orderNumber.split('-').pop()}`].filter(Boolean).join(' · ')}
+              {o.items?.length > 1 ? ` · ${o.items.reduce((a, i) => a + i.qty, 0)} items` : ''}
+            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1">
+              <StatusBadge o={o} />
+              <PaymentBadge o={o} />
+              <OriginBadge o={o} />
+            </div>
+          </div>
+        </Link>
+      </div>
+      <div className="mt-2.5 flex gap-2 ps-[1.6rem]">
+        {tel ? (
+          <a href={tel} className={phoneAction} aria-label={`Call ${customerName(o)}`}>
+            <SiteIcon name="phone" size={14} /> Call
+          </a>
+        ) : null}
+        {wa ? (
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={phoneAction} aria-label={`WhatsApp ${customerName(o)}`}>
+            <SiteIcon name="chat" size={14} /> WhatsApp
+          </a>
+        ) : null}
+        {next ? (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              if (!armed) return setArmed(true)
+              setArmed(false)
+              onNext(next.status)
+            }}
+            className={cn(
+              'inline-flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-semibold disabled:opacity-60',
+              armed ? 'bg-[var(--warning)] text-black' : 'bg-[var(--brand)] text-[var(--brand-fg)]'
+            )}
+          >
+            {busy ? <Spinner size="sm" /> : <SiteIcon name="check" size={14} />}
+            <span className="truncate">{armed ? 'Tap again to confirm' : next.label}</span>
+          </button>
+        ) : (
+          <Link to={`/admin/orders/${o._id}`} className={cn(phoneAction, 'flex-1')}>
+            Open
+          </Link>
+        )}
+      </div>
+    </li>
+  )
+}
+
 /** Admin → Orders: the order list, or Deposits & payments (?view=deposits). */
 export function Orders() {
   const [params] = useSearchParams()
@@ -146,6 +264,8 @@ function OrdersList() {
   const page = Number(params.get('page') || 1)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  // Phones: date / source / sort are tucked behind a button
+  const [moreFilters, setMoreFilters] = useState(false)
   const [bulk, setBulk] = useState<(typeof BULK_ACTIONS)[number] | null>(null)
 
   const quickRange = !to ? RANGES.find((r) => r.from() === from)?.id : undefined
@@ -178,6 +298,16 @@ function OrdersList() {
     qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
     qc.invalidateQueries({ queryKey: ['admin-inventory'] })
   }
+
+  // Phones: the quick next-step button on each order
+  const quickStatus = useMutation({
+    mutationFn: (v: { id: string; status: OrderStatus }) => adminApi.orders.updateStatus(v.id, { orderStatus: v.status }),
+    onSuccess: (_r, v) => {
+      refresh()
+      toast.success(`Order ${orderStatusLabel(v.status).toLowerCase()}`)
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
 
   const remove = useMutation({
     mutationFn: (id: string) => adminApi.orders.remove(id),
@@ -277,9 +407,11 @@ function OrdersList() {
         <button
           type="button"
           onClick={() => setRecording(true)}
-          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
+          aria-label="Record deposit"
+          title="Record deposit"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 text-xs font-medium text-[var(--brand-text)] hover:border-[var(--brand)] sm:px-3"
         >
-          <SiteIcon name="banknote" size={13} /> Record deposit
+          <SiteIcon name="banknote" size={13} /> <span className="hidden sm:inline">Record deposit</span>
         </button>
         {attention ? (
           <button
@@ -293,13 +425,40 @@ function OrdersList() {
             )}
           >
             <SiteIcon name="alert" size={13} className="text-[var(--warning)]" />
-            {attention} need{attention === 1 ? 's' : ''} attention
+            {attention}
+            <span className="hidden sm:inline"> need{attention === 1 ? 's' : ''} attention</span>
           </button>
         ) : null}
         </div>
       </div>
       <OrdersTabs />
       <RecordDepositDialog open={recording} onClose={() => setRecording(false)} />
+
+      {/* Phones: status chips instead of the status list */}
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 md:hidden" role="tablist" aria-label="Status">
+        {[{ value: '', label: 'All', n: stats.data?.orderCount }, ...(attention ? [{ value: 'attention', label: 'To do', n: attention }] : []), ...PHONE_STATUS_CHIPS.map((c) => ({ value: c.value, label: c.label, n: (c.statuses ?? []).reduce((a, st) => a + count(st), 0) }))]
+          .filter((c) => c.value === '' || c.value === status || (c.n ?? 0) > 0)
+          .map((c) => (
+            <button
+              key={c.value || 'all'}
+              type="button"
+              role="tab"
+              aria-selected={status === c.value}
+              onClick={() => setFilter({ status: c.value || undefined })}
+              className={cn(
+                'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-medium',
+                status === c.value
+                  ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
+                  : c.value === 'attention'
+                    ? 'border-[color-mix(in_srgb,var(--warning)_50%,transparent)] text-[var(--warning)]'
+                    : 'border-[var(--border)] text-[var(--fg-muted)]'
+              )}
+            >
+              {c.label}
+              {c.n !== undefined ? <span className="tabular-nums opacity-80">{c.n}</span> : null}
+            </button>
+          ))}
+      </div>
 
       {/* Toolbar */}
       <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -317,14 +476,25 @@ function OrdersList() {
             placeholder="Order #, name or phone"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className={cn(control, 'w-full ps-8')}
+            className={cn(control, 'w-full ps-8 pe-24 md:pe-2.5')}
           />
+          <button
+            type="button"
+            onClick={() => setMoreFilters((v) => !v)}
+            aria-expanded={moreFilters}
+            className="absolute end-1 top-1/2 inline-flex h-7 -translate-y-1/2 items-center gap-1 rounded-md px-2 text-xs font-medium text-[var(--brand-text)] md:hidden"
+          >
+            <SiteIcon name="sliders" size={13} /> Filters
+            {[from || to, params.get('origin'), sort].filter(Boolean).length ? (
+              <span className="rounded-full bg-[var(--brand)] px-1.5 text-[10px] text-[var(--brand-fg)]">{[from || to, params.get('origin'), sort].filter(Boolean).length}</span>
+            ) : null}
+          </button>
         </form>
         <select
           aria-label="Status"
           value={status}
           onChange={(e) => setFilter({ status: e.target.value || undefined })}
-          className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}
+          className={cn(control, 'hidden flex-[1_1_9rem] sm:flex-none md:block')}
         >
           <option value="">All statuses ({stats.data?.orderCount ?? '—'})</option>
           <option value="attention">Needs attention ({attention})</option>
@@ -347,7 +517,7 @@ function OrdersList() {
           aria-label="Date"
           value={customDates ? 'custom' : (quickRange ?? '')}
           onChange={(e) => onRange(e.target.value)}
-          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none', !moreFilters && 'hidden md:block')}
         >
           <option value="">Any date</option>
           {RANGES.map((r) => (
@@ -382,7 +552,7 @@ function OrdersList() {
           aria-label="Source"
           value={origin}
           onChange={(e) => setFilter({ origin: e.target.value || undefined })}
-          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none', !moreFilters && 'hidden md:block')}
         >
           <option value="">All sources</option>
           <option value="website">Website</option>
@@ -397,7 +567,7 @@ function OrdersList() {
           aria-label="Sort"
           value={sort}
           onChange={(e) => setFilter({ sort: e.target.value || undefined })}
-          className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}
+          className={cn(control, 'flex-[1_1_8rem] sm:flex-none', !moreFilters && 'hidden md:block')}
         >
           {SORTS.map((s) => (
             <option key={s.id} value={s.id}>
@@ -442,32 +612,14 @@ function OrdersList() {
             </div>
             <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]">
               {items.map((o) => (
-                <li
+                <PhoneOrderCard
                   key={o._id}
-                  className={cn('flex min-w-0 items-start gap-2.5 px-3 py-2.5', selected.has(o._id) && 'bg-[color-mix(in_srgb,var(--brand)_6%,transparent)]')}
-                >
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0 accent-[var(--brand)]"
-                    checked={selected.has(o._id)}
-                    onChange={() => toggle(o._id)}
-                    aria-label={`Select order ${o.orderNumber}`}
-                  />
-                  <Link to={`/admin/orders/${o._id}`} className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-baseline justify-between gap-2">
-                      <span className="truncate text-sm font-medium">#{o.orderNumber}</span>
-                      <span className="shrink-0 text-sm font-semibold tabular-nums">{formatCurrency(o.pricing.total)}</span>
-                    </div>
-                    <p className="truncate text-xs text-[var(--fg-muted)]">
-                      {customerName(o)} · {formatDate(o.createdAt)}
-                    </p>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                      <StatusBadge o={o} />
-                      <PaymentBadge o={o} />
-                      <OriginBadge o={o} />
-                    </div>
-                  </Link>
-                </li>
+                  o={o}
+                  selected={selected.has(o._id)}
+                  onToggle={() => toggle(o._id)}
+                  busy={quickStatus.isPending && quickStatus.variables?.id === o._id}
+                  onNext={(st) => quickStatus.mutate({ id: o._id, status: st })}
+                />
               ))}
               {!items.length ? <li className="px-4 py-6 text-center text-sm text-[var(--fg-muted)]">No orders found.</li> : null}
             </ul>

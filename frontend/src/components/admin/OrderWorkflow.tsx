@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Panel } from '@/components/admin/Panel'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import {
@@ -129,6 +130,8 @@ export function OrderStatusActions({ order }: { order: Order }) {
   const [note, setNote] = useState('')
   const [staffNote, setStaffNote] = useState('')
   const [touched, setTouched] = useState(false)
+  // Phones: the map of every status is long, so it opens on demand
+  const [showMap, setShowMap] = useState(false)
 
   const awaitingDeposit = order.deposit?.status === 'pending'
   const blocked = (s: OrderStatus) => (s === 'confirmed' && awaitingDeposit ? 'Mark the deposit as received first' : '')
@@ -170,6 +173,8 @@ export function OrderStatusActions({ order }: { order: Order }) {
 
   return (
     <Panel
+      className="scroll-mt-20"
+      id="order-status"
       title="Status"
       description="Buttons = what you can do now. The map below shows every status and when it unlocks. Stock and payment follow automatically."
       compact
@@ -205,7 +210,18 @@ export function OrderStatusActions({ order }: { order: Order }) {
       {returnable && current !== 'return_in_transit' ? (
         <p className="mt-2 text-xs text-[var(--fg-muted)]">Parcel back in the shop? Register it under Returned items — the status updates itself.</p>
       ) : null}
-      <StatusMap current={current} next={next} blocked={blocked} onPick={(s) => open(s)} />
+      <button
+        type="button"
+        onClick={() => setShowMap((v) => !v)}
+        aria-expanded={showMap}
+        className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-text)] sm:hidden"
+      >
+        {showMap ? 'Hide all statuses' : 'Show all statuses'}
+        <SiteIcon name="chevron-down" size={13} className={cn('transition', showMap && 'rotate-180')} />
+      </button>
+      <div className={cn(!showMap && 'max-sm:hidden')}>
+        <StatusMap current={current} next={next} blocked={blocked} onPick={(s) => open(s)} />
+      </div>
 
       {awaitingDeposit && next.includes('confirmed') ? (
         <p className="mt-2 text-xs text-[var(--warning)]">Confirming needs the deposit marked as received.</p>

@@ -27,6 +27,8 @@ import {
   refundedTotal,
 } from '@/lib/orderStatus'
 import type { User } from '@/types'
+import { customerWhatsAppHref, telHref } from '@/lib/customerContact'
+import { cn } from '@/lib/cn'
 
 const PAYMENT_LABEL: Record<string, string> = { pending: 'Unpaid', paid: 'Paid', failed: 'Not collected', refunded: 'Refunded' }
 
@@ -73,106 +75,13 @@ export function OrderDetail() {
   const refund = refundState(o)
   const refunded = refundedTotal(o)
 
-  return (
-    <div className="min-w-0 space-y-4 sm:space-y-6">
-      <div className="min-w-0">
-        <div className="flex items-center justify-between gap-2">
-          <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
-            Back to orders
-          </Link>
-          <Link
-            to={`/admin-print/slips?ids=${o._id}`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-          >
-            <SiteIcon name="package" size={14} /> Delivery slip
-          </Link>
-        </div>
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-          <h1 className="min-w-0 break-all font-display text-lg font-semibold sm:text-2xl">
-            #{o.orderNumber}
-          </h1>
-          <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
-          <Badge variant={o.paymentStatus === 'paid' ? 'success' : o.paymentStatus === 'failed' ? 'muted' : 'default'} className="normal-case">
-            Payment: {PAYMENT_LABEL[o.paymentStatus] ?? o.paymentStatus}
-          </Badge>
-          {refund === 'due' ? (
-            <Badge variant="danger" className="normal-case">Refund pending</Badge>
-          ) : refund === 'partial' ? (
-            <Badge variant="warning" className="normal-case">Refunded {formatCurrency(refunded)}</Badge>
-          ) : refund === 'refunded' ? (
-            <Badge variant="muted" className="normal-case">Fully refunded</Badge>
-          ) : null}
-          {originOf(o) !== 'website' ? (
-            <Badge variant="brand" className="normal-case">
-              From {ORDER_ORIGIN_LABEL[originOf(o)]}
-            </Badge>
-          ) : null}
-          {o.channel === 'wholesale' ? (
-            <Badge variant="brand" className="normal-case">
-              Wholesale
-              {o.wholesaleTier
-                ? ` · ${o.wholesaleTier.name} −${o.wholesaleTier.discountPercent}%`
-                : ''}
-            </Badge>
-          ) : null}
-        </div>
-        <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
-          {user?._id ? (
-            <Link to={`/admin/customers/${user._id}`} className="block truncate font-medium text-[var(--fg)] hover:text-[var(--brand-text)]" title="Customer history">
-              {customerLabel(user)}
-            </Link>
-          ) : (
-            <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
-          )}
-          <p className="break-all">{shownEmail(user?.email)}</p>
-          <p>{user?.phone || 'No phone'} · COD</p>
-          {shownEmail(user?.email) ? (
-            <Link
-              to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
-              className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-[var(--brand-text)] hover:underline"
-            >
-              <SiteIcon name="mail" size={15} />
-              Email customer
-            </Link>
-          ) : null}
-          <p className="text-xs">{formatDateTime(o.createdAt)}</p>
-        </div>
-        {attention.length || o.rescheduledFor || o.deliveryIssue ? (
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            {attention.map((a) => (
-              <span key={a} className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--warning)]">
-                <SiteIcon name="alert" size={12} /> {a}
-              </span>
-            ))}
-            {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
-              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">Delivery on {formatDeliveryDay(o.rescheduledFor)}</span>
-            ) : null}
-            {o.deliveryIssue && ['delivery_failed', 'rescheduled', 'return_in_transit'].includes(o.orderStatus) ? (
-              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
-                Last failed attempt: {deliveryIssueLabel(o.deliveryIssue.reason)}
-                {o.deliveryIssue.note ? ` — ${o.deliveryIssue.note}` : ''}
-              </span>
-            ) : null}
-            {o.deliveryAttempts ? (
-              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
-                {o.deliveryAttempts} failed attempt{o.deliveryAttempts === 1 ? '' : 's'}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
+  const phone = o.shippingAddress?.phone || user?.phone
+  const tel = telHref(phone)
+  const wa = customerWhatsAppHref(phone, o.shippingAddress?.fullName || user?.name || '', o.orderNumber)
+  const contactBtn =
+    'inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] text-sm font-medium active:bg-[var(--bg-muted)] sm:h-9 sm:flex-none sm:px-3'
 
-      <OrderStatusActions key={`${o._id}-${o.orderStatus}`} order={o} />
-
-      <OrderContactLog order={o} />
-
-      <OrderDepositPanel order={o} />
-
-      <OrderRefundsPanel order={o} />
-
-      <OrderReturnPanel order={o} />
-
-      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+  const itemsCard = (
         <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
           <h2 className="font-semibold">Items</h2>
           <ul className="mt-3 space-y-3 text-sm">
@@ -241,7 +150,9 @@ export function OrderDetail() {
             </p>
           ) : null}
         </div>
-        <div className="min-w-0 space-y-4">
+  )
+
+  const shippingCard = (
           <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-sm sm:rounded-2xl sm:p-5">
             <h2 className="font-semibold">Shipping</h2>
             <p className="mt-2 break-words font-medium">{o.shippingAddress.fullName}</p>
@@ -258,6 +169,132 @@ export function OrderDetail() {
               </a>
             </p>
           </div>
+  )
+
+  return (
+    <div className="min-w-0 space-y-4 max-md:pb-20 sm:space-y-6">
+      <div className="min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
+            Back to orders
+          </Link>
+          <Link
+            to={`/admin-print/slips?ids=${o._id}`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+          >
+            <SiteIcon name="package" size={14} /> Delivery slip
+          </Link>
+        </div>
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+          <h1 className="min-w-0 break-all font-display text-base font-semibold sm:text-2xl">
+            #{o.orderNumber}
+          </h1>
+          <span className="font-display text-base font-semibold tabular-nums text-[var(--brand-text)] sm:text-xl">{formatCurrency(o.pricing.total)}</span>
+          <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
+          <Badge variant={o.paymentStatus === 'paid' ? 'success' : o.paymentStatus === 'failed' ? 'muted' : 'default'} className="normal-case">
+            Payment: {PAYMENT_LABEL[o.paymentStatus] ?? o.paymentStatus}
+          </Badge>
+          {refund === 'due' ? (
+            <Badge variant="danger" className="normal-case">Refund pending</Badge>
+          ) : refund === 'partial' ? (
+            <Badge variant="warning" className="normal-case">Refunded {formatCurrency(refunded)}</Badge>
+          ) : refund === 'refunded' ? (
+            <Badge variant="muted" className="normal-case">Fully refunded</Badge>
+          ) : null}
+          {originOf(o) !== 'website' ? (
+            <Badge variant="brand" className="normal-case">
+              From {ORDER_ORIGIN_LABEL[originOf(o)]}
+            </Badge>
+          ) : null}
+          {o.channel === 'wholesale' ? (
+            <Badge variant="brand" className="normal-case">
+              Wholesale
+              {o.wholesaleTier
+                ? ` · ${o.wholesaleTier.name} −${o.wholesaleTier.discountPercent}%`
+                : ''}
+            </Badge>
+          ) : null}
+        </div>
+        <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
+          {user?._id ? (
+            <Link to={`/admin/customers/${user._id}`} className="block truncate font-medium text-[var(--fg)] hover:text-[var(--brand-text)]" title="Customer history">
+              {customerLabel(user)}
+            </Link>
+          ) : (
+            <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
+          )}
+          <p className="break-all">{shownEmail(user?.email)}</p>
+          <p>{phone || 'No phone'} · COD</p>
+          {shownEmail(user?.email) ? (
+            <Link
+              to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
+              className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-[var(--brand-text)] hover:underline"
+            >
+              <SiteIcon name="mail" size={15} />
+              Email customer
+            </Link>
+          ) : null}
+          <p className="text-xs">{formatDateTime(o.createdAt)}</p>
+        </div>
+        {tel || wa ? (
+          <div className="mt-3 flex gap-2">
+            {tel ? (
+              <a href={tel} className={contactBtn}>
+                <SiteIcon name="phone" size={15} /> Call
+              </a>
+            ) : null}
+            {wa ? (
+              <a href={wa} target="_blank" rel="noopener noreferrer" className={contactBtn}>
+                <SiteIcon name="chat" size={15} /> WhatsApp
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+        {attention.length || o.rescheduledFor || o.deliveryIssue ? (
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {attention.map((a) => (
+              <span key={a} className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--warning)]">
+                <SiteIcon name="alert" size={12} /> {a}
+              </span>
+            ))}
+            {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">Delivery on {formatDeliveryDay(o.rescheduledFor)}</span>
+            ) : null}
+            {o.deliveryIssue && ['delivery_failed', 'rescheduled', 'return_in_transit'].includes(o.orderStatus) ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
+                Last failed attempt: {deliveryIssueLabel(o.deliveryIssue.reason)}
+                {o.deliveryIssue.note ? ` — ${o.deliveryIssue.note}` : ''}
+              </span>
+            ) : null}
+            {o.deliveryAttempts ? (
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
+                {o.deliveryAttempts} failed attempt{o.deliveryAttempts === 1 ? '' : 's'}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      {/* Phones: what was ordered and where it goes come first */}
+      <div className="space-y-4 lg:hidden">
+        {itemsCard}
+        {shippingCard}
+      </div>
+
+      <OrderStatusActions key={`${o._id}-${o.orderStatus}`} order={o} />
+
+      <OrderContactLog order={o} />
+
+      <OrderDepositPanel order={o} />
+
+      <OrderRefundsPanel order={o} />
+
+      <OrderReturnPanel order={o} />
+
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
+        <div className="hidden min-w-0 lg:block">{itemsCard}</div>
+        <div className="min-w-0 space-y-4">
+          <div className="hidden lg:block">{shippingCard}</div>
           <OrderHistory order={o} />
           <div className="space-y-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
             <OrderInternalNote key={o.adminNote || ''} order={o} />
@@ -266,6 +303,27 @@ export function OrderDetail() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Phones: the main actions stay at hand */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
+        {tel ? (
+          <a href={tel} className={contactBtn} aria-label="Call the customer">
+            <SiteIcon name="phone" size={15} /> Call
+          </a>
+        ) : null}
+        {wa ? (
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={contactBtn} aria-label="WhatsApp the customer">
+            <SiteIcon name="chat" size={15} /> WhatsApp
+          </a>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => document.getElementById('order-status')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className={cn(contactBtn, 'border-transparent bg-[var(--brand)] font-semibold text-[var(--brand-fg)]')}
+        >
+          <SiteIcon name="check" size={15} /> Next step
+        </button>
       </div>
 
       <ConfirmDialog
