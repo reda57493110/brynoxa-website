@@ -112,6 +112,14 @@ export const importOutsidePhotos = asyncHandler(async (req: Request, res: Respon
   sendSuccess(res, await copyCatalogOutsidePhotos({ dryRun: body.dryRun === true, skip }));
 });
 
+/** Admin → Products: move photos stored in MongoDB to Cloudinary (a few per call). */
+export const moveStoredPhotos = asyncHandler(async (req: Request, res: Response) => {
+  const body = (req.body ?? {}) as { dryRun?: unknown; skip?: unknown };
+  const skip = Array.isArray(body.skip) ? body.skip.map(String).filter((k) => /^(category:)?[a-f0-9]{24}$/i.test(k)).slice(0, 500) : [];
+  const { moveStoredPhotos: move } = await import('../services/photoMove.service');
+  sendSuccess(res, await move({ dryRun: body.dryRun === true, skip }));
+});
+
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.updateProduct(param(req, 'id'), req.body);
   sendSuccess(res, item, 'Product updated');

@@ -21,6 +21,7 @@ const RULES: Rule[] = [
   { rx: /^admin\/orders\/([^/]+)$/, methods: ['DELETE'], action: 'Deleted an order', kind: 'order' },
   { rx: /^admin\/orders\/([^/]+)/, action: 'Updated an order', kind: 'order' },
   { rx: /^admin\/(deposits|deposit-payments)/, action: 'Recorded a payment', kind: 'order' },
+  { rx: /^admin\/products\/move-photos/, action: 'Moved photos to Cloudinary', kind: 'catalog' },
   { rx: /^admin\/products\/([^/]+)\/variants/, action: 'Edited product versions', kind: 'product' },
   { rx: /^admin\/products\/([^/]+)\/(stock|inventory)/, action: 'Changed stock', kind: 'product' },
   { rx: /^admin\/products\/([^/]+)$/, action: crud('a product'), kind: 'product' },

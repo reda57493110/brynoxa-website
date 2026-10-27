@@ -94,6 +94,11 @@ export const adminApi = {
   },
 
   products: {
+    /** Move photos stored in the database to Cloudinary (dryRun: just count; cloudinary: keys set) */
+    movePhotos: (payload: { dryRun?: boolean; skip?: string[] }) =>
+      api.post<
+        ApiResponse<{ cloudinary: boolean; remaining: number; photos?: number; processed: { key: string; name: string; moved: number; failed: number }[] }>
+      >('/admin/products/move-photos', payload),
     /** Copy photos linked from other websites into our storage (dryRun: just count) */
     importPhotos: (payload: { dryRun?: boolean; skip?: string[] }) =>
       api.post<

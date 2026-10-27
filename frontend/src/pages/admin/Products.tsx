@@ -17,6 +17,7 @@ import { ProductPlacementDialog } from '@/components/admin/ProductPlacementDialo
 import { SectionManager, type ManagedSection } from '@/components/admin/SectionManager'
 import { HomeLayoutBoard } from '@/components/admin/HomeLayoutBoard'
 import { OutsidePhotosBanner } from '@/components/admin/OutsidePhotosBanner'
+import { StoredPhotosBanner } from '@/components/admin/StoredPhotosBanner'
 import { useStorefrontPlacements, type Placement } from '@/hooks/useStorefrontPlacements'
 import { optimizedImageUrl } from '@/lib/image'
 import { formatCurrency } from '@/lib/format'
@@ -193,6 +194,7 @@ export function Products() {
       </div>
 
       {canEditProducts ? <OutsidePhotosBanner /> : null}
+      {canEditProducts ? <StoredPhotosBanner /> : null}
 
       {/* The home page, section by section, exactly as customers see it */}
       <HomeLayoutBoard onManage={setManaging} onOpen={setPlacing} />

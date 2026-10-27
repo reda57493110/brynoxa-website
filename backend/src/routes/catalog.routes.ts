@@ -92,6 +92,7 @@ router.post(
   catalog.createProduct
 );
 router.post('/admin/products/import-photos', requireAuth, requirePermission('products:write'), catalog.importOutsidePhotos);
+router.post('/admin/products/move-photos', requireAuth, requirePermission('products:write'), catalog.moveStoredPhotos);
 router.patch(
   '/admin/products/:id',
   requireAuth,
