@@ -241,6 +241,7 @@ router.get('/admin/subscribers', requireAuth, requirePermission('messages'), mis
 
 router.get('/settings', misc.getStoreSettings);
 router.get('/admin/settings', requireAuth, requirePermission('settings'), misc.getAdminSettings);
+router.get('/admin/storage', requireAuth, requirePermission('settings'), misc.getStorage);
 router.patch(
   '/settings',
   requireAuth,

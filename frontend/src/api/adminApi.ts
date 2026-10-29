@@ -314,6 +314,20 @@ export const adminApi = {
   settings: {
     /** Full settings incl. private fields (tiers, segments, email config). */
     get: () => api.get<ApiResponse<StoreSettings>>('/admin/settings'),
+    /** Database size against the plan's limit, and how much of it is photos (Settings → General). */
+    storage: () =>
+      api.get<
+        ApiResponse<{
+          usedBytes: number
+          limitBytes: number
+          percent: number
+          level: 'ok' | 'watch' | 'high'
+          photos: { count: number; bytes: number; share: number }
+          counts: { products: number; orders: number; customers: number }
+          cloudinary: boolean
+          suggestCloudinary: boolean
+        }>
+      >('/admin/storage'),
     update: (payload: Partial<StoreSettings>) =>
       api.patch<ApiResponse<StoreSettings>>('/settings', payload),
   },

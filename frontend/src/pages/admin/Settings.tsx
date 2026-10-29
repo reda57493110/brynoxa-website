@@ -14,6 +14,7 @@ import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSetti
 import { InventorySettings } from '@/components/admin/InventorySettings'
 import { CategoriesSettings } from '@/components/admin/settings/CategoriesSettings'
 import { GeneralSettings } from '@/components/admin/settings/StoreSettings'
+import { StorageCard } from '@/components/admin/settings/StorageCard'
 import { SettingsCard } from '@/components/admin/settings/SettingsUi'
 import { DirtyContext } from '@/components/admin/settings/dirty'
 import { cn } from '@/lib/cn'
@@ -22,7 +23,7 @@ import type { StoreSettings } from '@/types'
 type SectionId = 'general' | 'orders' | 'storefront' | 'catalog' | 'inventory' | 'customers' | 'notifications' | 'security'
 
 const SECTIONS: { id: SectionId; label: string; icon: SiteIconName; description: string }[] = [
-  { id: 'general', label: 'General', icon: 'settings', description: 'Store identity' },
+  { id: 'general', label: 'General', icon: 'settings', description: 'Store identity and storage' },
   { id: 'orders', label: 'Orders & payments', icon: 'banknote', description: 'Cash on delivery and deposits' },
   { id: 'storefront', label: 'Storefront', icon: 'monitor', description: 'What customers see first' },
   { id: 'catalog', label: 'Catalog', icon: 'layers', description: 'Categories and spec types' },
@@ -35,7 +36,12 @@ const SECTIONS: { id: SectionId; label: string; icon: SiteIconName; description:
 function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings }): ReactNode {
   switch (id) {
     case 'general':
-      return <GeneralSettings settings={settings} />
+      return (
+        <div className="space-y-4">
+          <GeneralSettings settings={settings} />
+          <StorageCard />
+        </div>
+      )
     case 'orders':
       return (
         <SettingsCard

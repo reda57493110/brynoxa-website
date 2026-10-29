@@ -202,6 +202,12 @@ export const getAdminSettings = asyncHandler(async (_req: Request, res: Response
   sendSuccess(res, await getSettings());
 });
 
+/** Admin → Settings → General: database size and photos stored in it. */
+export const getStorage = asyncHandler(async (_req: Request, res: Response) => {
+  const { storageStats } = await import('../services/storage.service');
+  sendSuccess(res, await storageStats());
+});
+
 export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response) => {
   const result = await sendTestEmail(req.user!.userId, req.body.type);
   sendSuccess(res, result, `Test email sent to ${result.sentTo}`);
