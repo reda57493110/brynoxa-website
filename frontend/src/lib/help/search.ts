@@ -55,6 +55,7 @@ export function searchHelp(guide: HelpGuide, query: string): HelpSearchResult {
 /** Every link used in the guide (for checks). */
 export function helpLinks(guide: HelpGuide) {
   return [
+    ...guide.guides.map((q) => q.action),
     ...guide.sections.flatMap((s) => s.topics.flatMap((t) => t.links ?? [])),
     ...guide.faqs.flatMap((f) => f.links ?? []),
   ]

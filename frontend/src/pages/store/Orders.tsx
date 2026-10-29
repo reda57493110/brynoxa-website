@@ -82,7 +82,7 @@ export function Orders() {
         ) : (
           <div className="space-y-3">
             <DepositDueBanner className="mb-5" />
-            <HelpLink topic="statuses" label={t('help.ctxOrders')} />
+            <HelpLink guide="track" label={t('help.ctxTrack')} />
             {orders.data.map((order) => {
               const open = Boolean(expanded[order._id])
               const pending = order.orderStatus === 'pending'

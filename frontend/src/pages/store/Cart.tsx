@@ -187,7 +187,7 @@ export function Cart() {
             >
               {t('cart.continueShopping')}
             </Link>
-            <HelpLink topic="place-order" label={t('help.ctxCart')} className="mt-4 w-full justify-center" />
+            <HelpLink guide="order" label={t('help.ctxOrder')} className="mt-4 w-full justify-center" />
           </aside>
         </div>
       </Container>

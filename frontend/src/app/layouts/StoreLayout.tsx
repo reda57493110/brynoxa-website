@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/Footer'
 import { WhatsAppHost } from '@/components/contact/WhatsAppHost'
 import { PushPrompt } from '@/components/push/PushPrompt'
 import { CartNotice } from '@/components/cart/CartNotice'
+import { HelpWidget } from '@/components/help/HelpWidget'
 import { useT } from '@/hooks/useT'
 
 const scrollPositions = new Map<string, number>()
@@ -114,6 +115,7 @@ export function StoreLayout() {
       <WhatsAppHost />
       <CartNotice />
       <PushPrompt />
+      <HelpWidget />
     </div>
   )
 }

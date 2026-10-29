@@ -731,7 +731,7 @@ export function Checkout() {
                 </span>
                 <SiteIcon name="banknote" size={22} className="ms-auto shrink-0 text-[var(--brand-text)]" />
               </div>
-              <HelpLink topic="cod" label={t('help.ctxCheckout')} className="mt-3" />
+              <HelpLink guide="pay" label={t('help.ctxPay')} className="mt-3" />
             </section>
 
             <section className={cn(surfaceCard, 'p-4 sm:p-6')}>

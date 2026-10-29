@@ -1,6 +1,7 @@
-// Help Center (/help): the three languages have the same sections and topics (so /help#topic links
-// work everywhere), every link goes to a real store page or Terms section, every /help#… link used
-// on other pages exists, and the search finds topics in all three languages.
+// Help Center (/help) and the Help button: the three languages have the same guides, sections and
+// answers (so /help#… links work everywhere), every link goes to a real store page or Terms section,
+// every guide / help link used on other pages exists, the Help button picks the right guide for the
+// page, and the search finds answers in all three languages.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -15,20 +16,33 @@ const { en } = await load('lib/help/en.ts');
 const { fr } = await load('lib/help/fr.ts');
 const { ar } = await load('lib/help/ar.ts');
 const { searchHelp, helpLinks } = await load('lib/help/search.ts');
+const { guideForPath } = await load('lib/help/context.ts');
 const guides = { en, fr, ar };
 
 const shape = (g: any) => ({
+  guides: g.guides.map((q: any) => [q.id, q.icon, q.action.to, q.more, q.steps.map((s: any) => s.icon), Boolean(q.note)]),
   sections: g.sections.map((s: any) => [s.id, s.icon, s.topics.map((t: any) => [t.id, (t.links ?? []).map((l: any) => l.to)])]),
   faqs: g.faqs.map((f: any) => [f.id, (f.links ?? []).map((l: any) => l.to)]),
 });
+
+const guideIds = new Set(en.guides.map((g: any) => g.id));
+const topicIds = new Set(en.sections.flatMap((s: any) => s.topics.map((t: any) => t.id)));
+const anchorIds = new Set([...guideIds, ...topicIds, ...en.sections.map((s: any) => s.id), ...en.faqs.map((f: any) => f.id)]);
 
 test('French and Arabic match the English structure and links', () => {
   assert.deepEqual(shape(fr), shape(en));
   assert.deepEqual(shape(ar), shape(en));
 });
 
-test('ids are unique', () => {
-  const ids = [...en.sections.map((s: any) => s.id), ...en.sections.flatMap((s: any) => s.topics.map((t: any) => t.id)), ...en.faqs.map((f: any) => f.id), 'faq', 'topics'];
+test('the five guides exist, are short, and point to an existing answer; ids are unique', () => {
+  assert.deepEqual([...guideIds], ['order', 'pay', 'track', 'return', 'account']);
+  for (const g of Object.values(guides) as any[]) {
+    for (const q of g.guides) {
+      assert.ok(q.steps.length >= 3 && q.steps.length <= 4, `${q.id}: 3 or 4 steps`);
+      assert.ok(topicIds.has(q.more), `${q.id}: "more" points to a missing answer ${q.more}`);
+    }
+  }
+  const ids = [...guideIds, ...en.sections.map((s: any) => s.id), ...topicIds, ...en.faqs.map((f: any) => f.id), 'faq', 'guides'];
   assert.equal(new Set(ids).size, ids.length);
 });
 
@@ -58,41 +72,66 @@ test('every guide link goes to a real page', () => {
   assert.ok(staticRoutes.has('/help'), 'the /help route exists');
 });
 
-test('every /help#… link on other pages points to an existing topic or section', () => {
-  const ids = new Set([...en.sections.map((s: any) => s.id), ...en.sections.flatMap((s: any) => s.topics.map((t: any) => t.id)), ...en.faqs.map((f: any) => f.id)]);
+test('help links on other pages open existing guides or answers', () => {
   const files: string[] = [];
   const walk = (dir: string) => {
     for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
       const full = path.join(dir, e.name);
       if (e.isDirectory()) walk(full);
-      else if (/\.tsx?$/.test(e.name) && !full.includes(`${path.sep}help${path.sep}`)) files.push(full);
+      else if (/\.tsx?$/.test(e.name) && !full.includes(`${path.sep}help${path.sep}`) && !e.name.startsWith('Help.')) files.push(full);
     }
   };
   walk(src);
   let found = 0;
   for (const f of files) {
     const text = fs.readFileSync(f, 'utf8');
-    for (const m of text.matchAll(/(?:\/help#|<HelpLink topic=")([a-z-]+)/g)) {
+    const rel = path.relative(root, f);
+    for (const m of text.matchAll(/<HelpLink guide="([a-z-]+)"/g)) {
       found++;
-      assert.ok(ids.has(m[1]), `${path.relative(root, f)} links to missing help topic "${m[1]}"`);
+      assert.ok(guideIds.has(m[1]), `${rel}: no guide "${m[1]}"`);
     }
-    // ServiceDetail maps each service to a topic
-    for (const m of text.matchAll(/^\s+[a-z]+: '([a-z-]+)',$/gm)) {
-      if (text.includes('SERVICE_HELP_TOPIC')) assert.ok(ids.has(m[1]), `${path.relative(root, f)}: missing help topic "${m[1]}"`);
+    for (const m of text.matchAll(/\/help#([a-z-]+)/g)) {
+      found++;
+      assert.ok(anchorIds.has(m[1]), `${rel}: /help#${m[1]} does not exist`);
+    }
+    const map = text.match(/SERVICE_HELP_GUIDE[^=]*= \{([^}]+)\}/);
+    if (map) {
+      for (const m of map[1].matchAll(/([a-z]+): ('([a-z-]+)'|null)/g)) {
+        found++;
+        assert.ok(m[2] === 'null' || guideIds.has(m[3]), `${rel}: service ${m[1]} → missing guide ${m[3]}`);
+        assert.ok(serviceSlugs.length && site.includes(`id: '${m[1]}'`), `${rel}: unknown service ${m[1]}`);
+      }
     }
   }
-  assert.ok(found >= 6, 'contextual help links are in place');
+  assert.ok(found >= 10, 'contextual help links are in place');
 });
 
-test('search finds topics in every language, ignores accents, and has an empty result', () => {
+test('the Help button opens the guide that fits the page', () => {
+  assert.equal(guideForPath('/cart'), 'order');
+  assert.equal(guideForPath('/checkout'), 'order');
+  assert.equal(guideForPath('/product/rtx-4060'), 'order');
+  assert.equal(guideForPath('/track-order'), 'track');
+  assert.equal(guideForPath('/account/orders/BRX-20261029-ABC123'), 'track');
+  assert.equal(guideForPath('/order-confirmation/BRX-20261029-ABC123'), 'track');
+  assert.equal(guideForPath('/services/returns'), 'return');
+  assert.equal(guideForPath('/services/warranty'), 'return');
+  assert.equal(guideForPath('/services/cash-on-delivery'), 'pay');
+  assert.equal(guideForPath('/account/settings'), 'account');
+  assert.equal(guideForPath('/'), null);
+  assert.equal(guideForPath('/shop'), null);
+  assert.equal(guideForPath('/cart/'), 'order');
+});
+
+test('search finds answers in every language, ignores accents, and has an empty result', () => {
   const first = (g: any, q: string) => searchHelp(g, q).topics[0]?.topic.id;
   assert.equal(first(en, 'track my order'), 'track-order');
   assert.equal(first(fr, 'suivre commande'), 'track-order');
   assert.equal(first(ar, 'تتبع الطلب'), 'track-order');
-  assert.ok(searchHelp(fr, 'GARANTIE').topics.some((r: any) => r.topic.id === 'warranty'));
+  assert.ok(searchHelp(fr, 'GARANTIE').topics.some((r: any) => r.topic.id === 'warranty-claim'));
   assert.ok(searchHelp(fr, 'acompte').topics.some((r: any) => r.topic.id === 'deposit'));
   assert.ok(searchHelp(fr, 'remboursement').topics.some((r: any) => r.topic.id === 'refunds'));
   assert.ok(searchHelp(en, 'refund').topics.some((r: any) => r.topic.id === 'refunds'));
+  assert.ok(searchHelp(ar, 'عربون').topics.some((r: any) => r.topic.id === 'deposit'));
   assert.ok(searchHelp(en, 'card').faqs.some((f: any) => f.id === 'faq-card'));
   assert.deepEqual(searchHelp(en, 'zzqqxx'), { topics: [], faqs: [] });
   assert.deepEqual(searchHelp(en, '  '), { topics: [], faqs: [] });

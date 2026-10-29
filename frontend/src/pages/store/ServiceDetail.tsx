@@ -11,21 +11,23 @@ import { useWhatsAppStore } from '@/store/whatsappStore'
 import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { HelpLink } from '@/components/help/HelpLink'
+import type { HelpGuideId } from '@/lib/help/types'
 
 const pillPrimary =
   'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
 
 const sectionHeading = 'font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl'
 
-/** The Help Center topic that goes with each service page */
-const SERVICE_HELP_TOPIC: Record<CustomerService['id'], string> = {
-  warranty: 'warranty-claim',
-  returns: 'request-return',
-  cod: 'deposit',
-  delivery: 'delays',
-  support: 'prepare',
-  repair: 'repair-service',
+/** The step-by-step guide that goes with each service page (null: the list of guides) */
+const SERVICE_HELP_GUIDE: Record<CustomerService['id'], HelpGuideId | null> = {
+  warranty: 'return',
+  returns: 'return',
+  cod: 'pay',
+  delivery: 'track',
+  support: null,
+  repair: 'return',
 }
+const GUIDE_LABEL = { order: 'help.ctxOrder', pay: 'help.ctxPay', track: 'help.ctxTrack', return: 'help.ctxReturn', account: 'help.ctxAny' } as const
 
 export function ServiceDetail() {
   const { slug } = useParams<{ slug: string }>()
@@ -221,7 +223,11 @@ function ServiceDetailContent({ service }: { service: CustomerService }) {
         ) : null}
       </div>
 
-      <HelpLink topic={SERVICE_HELP_TOPIC[service.id]} label={t('help.ctxService')} className="mt-8" />
+      <HelpLink
+        guide={SERVICE_HELP_GUIDE[service.id]}
+        label={t(SERVICE_HELP_GUIDE[service.id] ? GUIDE_LABEL[SERVICE_HELP_GUIDE[service.id]!] : 'help.ctxAny')}
+        className="mt-8"
+      />
 
       <nav aria-labelledby="other-services" className="mt-12 border-t border-[var(--border)] pt-6 sm:mt-16">
         <h2 id="other-services" className="text-sm font-semibold text-[var(--fg-muted)]">

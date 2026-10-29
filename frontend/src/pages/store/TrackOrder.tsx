@@ -80,7 +80,7 @@ export function TrackOrder() {
               {t('orders.trackSubmit')}
             </Button>
             <p className="text-xs text-[var(--fg-muted)]">{t('orders.trackHint')}</p>
-            <HelpLink topic="statuses" label={t('help.ctxTrack')} />
+            <HelpLink guide="track" label={t('help.ctxTrack')} />
           </form>
 
           <div className={cn(surfaceCard, 'p-5 sm:p-6')}>

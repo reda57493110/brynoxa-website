@@ -333,7 +333,7 @@ export function ProductDetail() {
                   <WhatsAppIcon size={14} />
                   {t('contact.whatsapp')}
                 </button>
-                <HelpLink topic="product-details" label={t('help.ctxProduct')} className="text-xs sm:text-sm" />
+                <HelpLink guide="order" label={t('help.ctxOrder')} className="text-xs sm:text-sm" />
               </div>
             </div>
 
