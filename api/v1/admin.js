@@ -11,6 +11,22 @@ if (!module.paths.includes(backendNodeModules)) {
 
 const DASHBOARD_CACHE_MS = 45_000;
 let dashboardCache = { at: 0, data: null };
+/** Dashboard sales chart and net-profit card, per period: same 45 s copy as the summary above. */
+const dashboardParts = new Map();
+
+function resetDashboardCaches() {
+  dashboardCache = { at: 0, data: null };
+  dashboardParts.clear();
+}
+
+/** The cached value for `key`, or computes, keeps and returns it. */
+async function cachedPart(key, compute) {
+  const hit = dashboardParts.get(key);
+  if (hit && Date.now() - hit.at < DASHBOARD_CACHE_MS) return hit.data;
+  const data = await compute();
+  dashboardParts.set(key, { at: Date.now(), data });
+  return data;
+}
 
 function parseUrl(url = '') {
   const [pathname, queryString = ''] = url.split('?');
@@ -153,7 +169,7 @@ async function handleProductRoutes(req, res, route) {
     if (!user) return;
     const body = validated('productSchema', await readJsonBody(req));
     const item = await catalog.createProduct(body);
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     sendJson(res, 201, { success: true, message: 'Product created', data: item });
     return;
   }
@@ -179,7 +195,7 @@ async function handleProductRoutes(req, res, route) {
     if (!user) return;
     const body = validated('productSchema', await readJsonBody(req), true);
     const item = await catalog.updateProduct(id, body);
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     sendJson(res, 200, { success: true, message: 'Product updated', data: item });
     return;
   }
@@ -188,7 +204,7 @@ async function handleProductRoutes(req, res, route) {
     const user = await requireStaff(req, res, ['products:delete']);
     if (!user) return;
     await catalog.deleteProduct(id);
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     sendJson(res, 200, { success: true, message: 'Product deleted', data: null });
     return;
   }
@@ -301,7 +317,7 @@ async function handleOrderRoutes(req, res, route, query) {
       staffNote: body.staffNote,
       by: String(user._id),
     });
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     const fresh = await orderService.getOrderById(String(order._id));
     sendJson(res, 200, { success: true, message: 'Order updated', data: fresh });
     return;
@@ -318,7 +334,7 @@ async function handleOrderRoutes(req, res, route, query) {
       return;
     }
     const order = await orderService.setOrderDeposit(depositMatch[1], parsed.data);
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     sendJson(res, 200, { success: true, message: 'Deposit updated', data: order });
     return;
   }
@@ -336,7 +352,7 @@ async function handleOrderRoutes(req, res, route, query) {
     const user = await requireStaff(req, res, ['orders:write']);
     if (!user) return;
     await orderService.deleteOrder(match[1], { isOwner: user.role === 'admin' });
-    dashboardCache = { at: 0, data: null };
+    resetDashboardCaches();
     sendJson(res, 200, { success: true, message: 'Order deleted', data: null });
     return;
   }
@@ -556,7 +572,21 @@ module.exports = async (req, res) => {
       const { hasPermission } = require('../../backend/dist/permissions');
       const raw = Number(query.days);
       const range = SALES_RANGES.includes(raw) ? raw : 14;
-      const data = await salesAnalytics(range, hasPermission(user.role, 'reports'));
+      const withProfit = hasPermission(user.role, 'reports');
+      const data = await cachedPart(`sales:${range}:${withProfit}`, () => salesAnalytics(range, withProfit));
+      sendJson(res, 200, { success: true, message: 'Success', data });
+      return;
+    }
+
+    // Dashboard net-profit card (was handed to the full app: slow on a fresh start)
+    if (route === 'profit/summary' && req.method === 'GET') {
+      const user = await requireStaff(req, res, ['reports']);
+      if (!user) return;
+      const { profitSummary } = require('../../backend/dist/services/profit.service');
+      const { SALES_RANGES } = require('../../backend/dist/services/dashboard.service');
+      const raw = Number(query.days);
+      const range = SALES_RANGES.includes(raw) ? raw : 14;
+      const data = await cachedPart(`profit:${range}`, () => profitSummary(range));
       sendJson(res, 200, { success: true, message: 'Success', data });
       return;
     }

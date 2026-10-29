@@ -17,6 +17,7 @@ import { formatCurrency, formatCurrencyRounded, formatDate } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
 import { hasPermission, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
+import { savedPlaceholder, useKeepSavedCopy } from '@/lib/savedCopy'
 import { cn } from '@/lib/cn'
 import type { SalesRange, User } from '@/types'
 
@@ -42,8 +43,10 @@ export function Dashboard() {
     enabled: canDashboard,
     staleTime: 60_000,
     refetchInterval: 90_000,
-    placeholderData: (prev) => prev,
+    // the previous period, or the last numbers seen on this device, while fresh ones load
+    placeholderData: savedPlaceholder(`sales:${range}`),
   })
+  useKeepSavedCopy(`sales:${range}`, sales.data, sales.isPlaceholderData)
 
   // What the shop really earned (product cost, courier, fees, expenses taken off)
   const canSeeProfit = hasPermission(role, 'reports')
@@ -52,8 +55,9 @@ export function Dashboard() {
     queryFn: async () => (await adminApi.profit.summary(range)).data.data,
     enabled: canDashboard && canSeeProfit,
     staleTime: 60_000,
-    placeholderData: (prev) => prev,
+    placeholderData: savedPlaceholder(`net:${range}`),
   })
+  useKeepSavedCopy(`net:${range}`, net.data, net.isPlaceholderData)
 
   // Full dashboard is Owner-only; other roles go straight to their workspace
   if (!canDashboard) {

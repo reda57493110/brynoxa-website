@@ -31,19 +31,50 @@ let refreshPromise: Promise<string | null> | null = null
 let sessionChecked = false
 let csrfToken: string | null = null
 
-async function getCsrfToken() {
-  if (csrfToken) return csrfToken
+/**
+ * The CSRF token stays the same for the life of the sign-in cookie, so it is remembered on this
+ * device: opening the site then signs in again with one request instead of two (a round trip saved
+ * on every visit, most noticeable on phones). Any page script could fetch it anyway, so keeping it
+ * adds nothing for an attacker; if the server refuses it, a fresh one is fetched and tried once.
+ */
+const CSRF_KEY = 'brynoxa-csrf'
+
+function rememberCsrf(token: string | null) {
+  try {
+    if (token) localStorage.setItem(CSRF_KEY, token)
+    else localStorage.removeItem(CSRF_KEY)
+  } catch {
+    /* private mode: just keep it in memory */
+  }
+}
+
+async function getCsrfToken(fresh = false) {
+  if (!fresh) {
+    if (csrfToken) return csrfToken
+    try {
+      csrfToken = localStorage.getItem(CSRF_KEY)
+    } catch {
+      csrfToken = null
+    }
+    if (csrfToken) return csrfToken
+  }
   const response = await api.get<ApiResponse<{ csrfToken: string }>>('/auth/csrf')
   csrfToken = response.data.data.csrfToken
+  rememberCsrf(csrfToken)
   return csrfToken
 }
+
+const postRefresh = (token: string) =>
+  api.post<ApiResponse<SessionPayload>>('/auth/refresh', undefined, { headers: { 'X-CSRF-Token': token } })
 
 async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = getCsrfToken()
       .then((token) =>
-        api.post<ApiResponse<SessionPayload>>('/auth/refresh', undefined, {
-          headers: { 'X-CSRF-Token': token },
+        postRefresh(token).catch(async (err: AxiosError) => {
+          // A remembered token the server no longer matches: get the current one and try once more
+          if (err.response?.status !== 403) throw err
+          return postRefresh(await getCsrfToken(true))
         })
       )
       .then((res) => {
@@ -72,6 +103,7 @@ async function refreshAccessToken() {
 export function resetSessionCheck() {
   sessionChecked = false
   csrfToken = null
+  rememberCsrf(null)
 }
 
 /** True when this browser is known to be signed out (no refresh cookie worth trying). */

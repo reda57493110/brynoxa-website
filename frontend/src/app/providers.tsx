@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore'
 import { restoreSession } from '@/api/client'
 import { Toaster } from '@/components/ui/Toaster'
 import { AnalyticsListener } from '@/components/analytics/AnalyticsListener'
+import { clearSavedCopies } from '@/lib/savedCopy'
 
 // Animation code arrives after the first paint; elements show their final state until then
 const motionFeatures = () => import('@/lib/motionFeatures').then((mod) => mod.default)
@@ -29,7 +30,14 @@ const queryClient = new QueryClient({
 let lastUserId: string | null | undefined
 useAuthStore.subscribe((state) => {
   const id = state.user?._id ?? null
-  if (lastUserId !== undefined && id !== lastUserId) queryClient.clear()
+  if (lastUserId !== undefined && id !== lastUserId) {
+    queryClient.clear()
+    // and the admin figures kept on this device for the previous account (lib/savedCopy.ts)
+    clearSavedCopies(id)
+  } else if (id === null) {
+    // signed out (or the session ended) on the first check of this visit
+    clearSavedCopies(null)
+  }
   lastUserId = id
 })
 
