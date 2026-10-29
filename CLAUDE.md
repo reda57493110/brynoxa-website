@@ -51,4 +51,5 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 - Language is in the address: English has no prefix (`/shop`), French / Arabic live under `/fr` and `/ar` (router basename from `lib/localePath.ts`, set in `themeInit.ts`; switching language reloads the page). `useSeo` adds canonical + hreflang; `api/sitemap.js` lists all three. Links inside the app need no prefix.
 - `components/ui/` — design primitives; `components/product/` — catalog UI; `lib/` — helpers (format, image, analytics, site config, whatsapp).
 - `public/sw.js` — service worker for push notifications.
+- `public/preload.js` runs before the app: starts the landing page's code (file names written into index.html by the `routeChunks` plugin in `vite.config.ts`), its first API requests and its main photo. `api/client.ts` reuses those answers (same address, once, within 20 s). If a page changes what it requests first, update preload.js too (`tests/shop-speed.test.mts`).
 - Env: `VITE_API_URL`, optional `VITE_GA_MEASUREMENT_ID`, `VITE_SITE_URL`.

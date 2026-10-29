@@ -11,6 +11,28 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+/**
+ * Shop data public/preload.js started fetching before the app ran (the first requests of the page
+ * a shopper lands on). Each answer is used once, by the same address, within 20 s; anything that
+ * fails or doesn't match goes to the server as usual.
+ */
+type EarlyAnswers = Record<string, { at: number; response: Promise<unknown> } | undefined>
+const EARLY_MAX_AGE_MS = 20_000
+const networkAdapter = axios.getAdapter(axios.defaults.adapter)
+api.defaults.adapter = async (config) => {
+  const early = (window as Window & { __brynoxaEarly?: EarlyAnswers }).__brynoxaEarly
+  if (early && (config.method || 'get').toLowerCase() === 'get') {
+    const key = api.getUri(config)
+    const hit = early[key]
+    if (hit) {
+      delete early[key]
+      const data = Date.now() - hit.at < EARLY_MAX_AGE_MS ? await hit.response : null
+      if (data) return { data, status: 200, statusText: 'OK', headers: {}, config, request: null }
+    }
+  }
+  return networkAdapter(config)
+}
+
 /** Public shop data the edge keeps for 60 s (see api/_lib/http.js cachePublic). */
 const SHARED_CACHE_PATH = /^\/(products|categories|brands|settings)(\/|\?|$)/
 

@@ -34,10 +34,12 @@ export function usePush() {
         })
         .catch(() => undefined)
     }
-    refresh()
+    // Not needed for the first screen: asked a few seconds later so it doesn't slow the page down
+    const first = window.setTimeout(refresh, 3000)
     window.addEventListener(PUSH_STATUS_EVENT, refresh)
     return () => {
       active = false
+      window.clearTimeout(first)
       window.removeEventListener(PUSH_STATUS_EVENT, refresh)
     }
   }, [])

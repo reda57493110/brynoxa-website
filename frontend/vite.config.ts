@@ -27,8 +27,59 @@ window.__vite_plugin_react_preamble_installed__ = true;`,
   }
 }
 
+type BundleChunk = { type: 'chunk'; fileName: string; imports: string[]; isEntry: boolean; facadeModuleId: string | null }
+
+/**
+ * Writes the code files of the shop pages people land on into index.html as a JSON data block
+ * (not run, so the CSP allows it). public/preload.js reads it and starts downloading that page's
+ * code at once, instead of after the main code has run.
+ */
+function routeChunks() {
+  const pages = {
+    shop: 'src/pages/store/Shop.tsx',
+    category: 'src/pages/store/CategoryPage.tsx',
+    product: 'src/pages/store/ProductDetail.tsx',
+  }
+  return {
+    name: 'route-chunks',
+    apply: 'build' as const,
+    transformIndexHtml: {
+      order: 'post' as const,
+      handler(_html: string, ctx: { bundle?: Record<string, { type: string }> }) {
+        const bundle = ctx.bundle as Record<string, BundleChunk> | undefined
+        if (!bundle) return []
+        const chunks = Object.values(bundle).filter((c) => c.type === 'chunk')
+        const entry = chunks.find((c) => c.isEntry)
+        // Files the page already preloads (the main code and what it imports)
+        const preloaded = new Set([entry?.fileName, ...(entry?.imports ?? [])])
+        const map: Record<string, string[]> = {}
+        for (const [key, src] of Object.entries(pages)) {
+          const chunk = chunks.find((c) => c.facadeModuleId?.replace(/\\/g, '/').endsWith(src))
+          if (!chunk) continue
+          const files = new Set<string>()
+          const walk = (c: BundleChunk) => {
+            if (files.has(c.fileName) || preloaded.has(c.fileName)) return
+            files.add(c.fileName)
+            for (const name of c.imports) if (bundle[name]?.type === 'chunk') walk(bundle[name])
+          }
+          walk(chunk)
+          map[key] = [...files]
+        }
+        return [
+          {
+            tag: 'script',
+            attrs: { type: 'application/json', id: 'route-chunks' },
+            children: JSON.stringify(map).replace(/</g, '\\u003c'),
+            injectTo: 'head-prepend' as const,
+          },
+        ]
+      },
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [reactRefreshPreamble(), react(), tailwindcss()],
+  plugins: [reactRefreshPreamble(), react(), tailwindcss(), routeChunks()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

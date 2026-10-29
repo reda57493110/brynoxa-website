@@ -157,7 +157,8 @@ function S({ children }: { children: ReactNode }) {
   return <Suspense fallback={<DelayedLoader />}>{children}</Suspense>
 }
 
-// After the first page is shown, fetch the pages shoppers open next so they appear instantly
+// After the first page is shown, fetch the pages shoppers open next so they appear instantly —
+// a few seconds after load, so on a phone they don't compete with this page's data and photos
 if (typeof window !== 'undefined') {
   const preload = () => {
     void import('@/pages/store/Shop')
@@ -165,7 +166,7 @@ if (typeof window !== 'undefined') {
     void import('@/pages/store/CategoryPage')
   }
   const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback
-  window.addEventListener('load', () => (idle ? idle(preload) : window.setTimeout(preload, 1500)), { once: true })
+  window.addEventListener('load', () => window.setTimeout(() => (idle ? idle(preload) : preload()), 4000), { once: true })
 }
 
 export function AppRouter() {
