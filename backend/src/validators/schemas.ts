@@ -280,6 +280,11 @@ export const validateCouponSchema = z.object({
   items: z.array(z.object({ productId: z.string().max(40), qty: z.number().int().min(1).max(99) })).max(50).optional(),
 });
 
+/** Admin → Settings → Storage: the MongoDB plan size in MB (from 100 MB to 4 TB; 0 = back to the default). */
+export const storageLimitSchema = z.object({
+  limitMb: z.number().int().refine((n) => n === 0 || (n >= 100 && n <= 4_194_304), 'Enter a size between 100 MB and 4 TB'),
+});
+
 export const settingsSchema = z.object({
   storeName: z.string().optional(),
   currency: z.string().optional(),

@@ -116,6 +116,8 @@ export interface ISettings extends Document {
   homeDeals: string[];
   /** What the courier charges the shop per parcel: delivered, and sent back (refused / failed). */
   courierCosts: { delivered: number; returned: number };
+  /** Database size of the MongoDB plan, in MB (Admin → Settings → Storage); 0 = not set (STORAGE_LIMIT_MB or 512). */
+  storageLimitMb: number;
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -207,6 +209,7 @@ const settingsSchema = new Schema<ISettings>(
       delivered: { type: Number, default: 0, min: 0 },
       returned: { type: Number, default: 0, min: 0 },
     },
+    storageLimitMb: { type: Number, default: 0, min: 0 },
     pageHeroProducts: {
       home: { type: String, default: '' },
       shop: { type: String, default: '' },
@@ -382,7 +385,7 @@ export function isEmailEnabled(settings: Pick<ISettings, 'emailNotifications'>, 
 }
 
 /** Fields only staff may read (pricing tiers, segment rules, email configuration). */
-const PRIVATE_SETTINGS = ['courierCosts', 'depositMethods', 'depositInstructions', 'paymentDetailsChangedAt', 'paymentDetailsChangedBy', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail'] as const;
+const PRIVATE_SETTINGS = ['courierCosts', 'depositMethods', 'depositInstructions', 'paymentDetailsChangedAt', 'paymentDetailsChangedBy', 'wholesaleTiers', 'customerSegments', 'inventoryStatuses', 'inventoryLocations', 'requireInspection', 'emailNotifications', 'emailMessages', 'notifyStaffLoginEmail', 'storageLimitMb'] as const;
 
 /** Settings safe for the public storefront. */
 export function publicSettings(settings: ISettings) {

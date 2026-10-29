@@ -208,6 +208,12 @@ export const getStorage = asyncHandler(async (_req: Request, res: Response) => {
   sendSuccess(res, await storageStats());
 });
 
+/** Admin → Settings → Storage: the MongoDB plan size (MB). */
+export const setStorageLimit = asyncHandler(async (req: Request, res: Response) => {
+  const { setStorageLimit: save } = await import('../services/storage.service');
+  sendSuccess(res, await save(req.body.limitMb), 'Plan size saved');
+});
+
 export const sendEmailTest = asyncHandler(async (req: AuthRequest, res: Response) => {
   const result = await sendTestEmail(req.user!.userId, req.body.type);
   sendSuccess(res, result, `Test email sent to ${result.sentTo}`);

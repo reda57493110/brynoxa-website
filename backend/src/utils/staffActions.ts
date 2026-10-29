@@ -48,6 +48,7 @@ const RULES: Rule[] = [
   { rx: /^admin\/(users|roles|staff)/, action: 'Changed staff accounts', kind: 'staff' },
   { rx: /^(admin\/)?settings/, action: 'Changed store settings', kind: 'settings' },
   { rx: /^admin\/home/, action: 'Changed the home page', kind: 'settings' },
+  { rx: /^admin\/storage/, action: 'Changed the database plan size', kind: 'settings' },
 ];
 
 /** `path`: under /api/v1, without the query (e.g. "admin/orders/123/status"). */

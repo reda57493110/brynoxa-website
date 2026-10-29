@@ -44,8 +44,33 @@ function cleanParams<T extends object>(params?: T) {
   return Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
 }
 
+/** Admin → Settings → Storage: database size against the plan, and Cloudinary's usage when connected */
+export type StorageReport = {
+  usedBytes: number
+  limitBytes: number
+  limitMb: number
+  /** set = chosen in the Storage box; server = STORAGE_LIMIT_MB; default = free plan (512 MB) */
+  limitSource: 'set' | 'server' | 'default'
+  percent: number
+  level: 'ok' | 'watch' | 'high'
+  photos: { count: number; bytes: number; share: number }
+  counts: { products: number; orders: number; customers: number }
+  cloudinary: boolean
+  suggestCloudinary: boolean
+  cloudinaryUsage: {
+    plan: string | null
+    storageBytes: number | null
+    bandwidthBytes: number | null
+    creditsUsed: number | null
+    creditsLimit: number | null
+    creditsPercent: number | null
+    level: 'ok' | 'watch' | 'high'
+  } | null
+  checkedAt: string
+}
+
 /** Your payment details, with who changed them last */
-type PaymentDetails = { depositMethods: DepositMethod[]; depositInstructions: string; changedAt?: string | null; changedBy?: string | null }
+type PaymentDetails ={ depositMethods: DepositMethod[]; depositInstructions: string; changedAt?: string | null; changedBy?: string | null }
 
 export const adminApi = {
   dashboard: () => api.get<ApiResponse<DashboardStats>>('/admin/dashboard'),
@@ -315,19 +340,9 @@ export const adminApi = {
     /** Full settings incl. private fields (tiers, segments, email config). */
     get: () => api.get<ApiResponse<StoreSettings>>('/admin/settings'),
     /** Database size against the plan's limit, and how much of it is photos (Settings → General). */
-    storage: () =>
-      api.get<
-        ApiResponse<{
-          usedBytes: number
-          limitBytes: number
-          percent: number
-          level: 'ok' | 'watch' | 'high'
-          photos: { count: number; bytes: number; share: number }
-          counts: { products: number; orders: number; customers: number }
-          cloudinary: boolean
-          suggestCloudinary: boolean
-        }>
-      >('/admin/storage'),
+    storage: () => api.get<ApiResponse<StorageReport>>('/admin/storage'),
+    /** The MongoDB plan size in MB (0 = back to the default 512 MB) */
+    setStorageLimit: (limitMb: number) => api.patch<ApiResponse<StorageReport>>('/admin/storage', { limitMb }),
     update: (payload: Partial<StoreSettings>) =>
       api.patch<ApiResponse<StoreSettings>>('/settings', payload),
   },
