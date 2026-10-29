@@ -438,6 +438,7 @@ export function Contact() {
               </p>
               <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
                 {[
+                  { to: '/help', label: t('help.kicker') },
                   { to: '/account/orders', label: t('contact.trackOrder') },
                   { to: '/services/warranty', label: t('footer.warranty') },
                   { to: '/services/returns', label: t('footer.returns') },

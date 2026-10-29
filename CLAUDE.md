@@ -42,7 +42,8 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 ## Frontend (`frontend/src`)
 
 - `app/router.tsx` — lazy routes; layouts in `app/layouts/` (Store, Auth, Admin). Guards in `features/auth/` (`ProtectedRoute`, `AdminRoute`).
-- `pages/store/*` — Home, Shop, Category, ProductDetail, Search, Cart, Checkout, Wishlist, Compare, account pages, TrackOrder, Contact, Services, Legal, auth pages.
+- `pages/store/*` — Home, Shop, Category, ProductDetail, Search, Cart, Checkout, Wishlist, Compare, account pages, TrackOrder, Contact, Services, Legal, Help (Help Center at /help), auth pages.
+- Help Center content: `lib/help/{en,fr,ar}.ts` (same section/topic ids in all three; describe only what the site really does and link to Terms / service pages instead of copying them). Other pages link to a topic with `<HelpLink topic="…">` (`/help#topic`). `tests/help-guide.test.mts` checks the languages match and every link exists.
 - `pages/admin/*` — Dashboard, Analytics, Profit (+ printable `ProfitReport`), Products/ProductForm, CompleteSetupAdmin, Inventory (+ Inventory* sub-pages), Orders/OrderDetail, DeliverySlips, Customers/CustomerProfile, Roles, Messages, Emails, Coupons, PushNotifications, Settings, Security.
 - `api/*Api.ts` — axios wrappers on `api/client.ts` (bearer access token + CSRF-protected cookie refresh flow).
 - `store/*` — Zustand stores (auth, cart, compare, wishlist, locale, theme, toast, whatsapp).

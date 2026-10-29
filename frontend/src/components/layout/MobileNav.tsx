@@ -26,6 +26,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
     { to: '/shop', label: t('common.shop'), icon: 'search' },
     { to: '/services', label: t('common.services'), icon: 'shield' },
     { to: '/contact', label: t('common.contact'), icon: 'mail' },
+    { to: '/help', label: t('help.menuLabel'), icon: 'help' },
     { to: '/compare', label: t('compare.heading'), icon: 'layers', count: compareCount },
     { to: '/cart', label: t('common.cart'), icon: 'cart', count: cartCount },
     {

@@ -24,6 +24,7 @@ import { orderStatusVariant } from '@/lib/orderStatus'
 import type { Order } from '@/types'
 import { DepositDueBanner } from '@/components/order/DepositDueBanner'
 import { depositState } from '@/components/order/DepositNotice'
+import { HelpLink } from '@/components/help/HelpLink'
 
 
 export function Orders() {
@@ -81,6 +82,7 @@ export function Orders() {
         ) : (
           <div className="space-y-3">
             <DepositDueBanner className="mb-5" />
+            <HelpLink topic="statuses" label={t('help.ctxOrders')} />
             {orders.data.map((order) => {
               const open = Boolean(expanded[order._id])
               const pending = order.orderStatus === 'pending'

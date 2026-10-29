@@ -19,6 +19,7 @@ import { orderStatusKey } from '@/i18n'
 import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
+import { HelpLink } from '@/components/help/HelpLink'
 
 
 export function TrackOrder() {
@@ -79,6 +80,7 @@ export function TrackOrder() {
               {t('orders.trackSubmit')}
             </Button>
             <p className="text-xs text-[var(--fg-muted)]">{t('orders.trackHint')}</p>
+            <HelpLink topic="statuses" label={t('help.ctxTrack')} />
           </form>
 
           <div className={cn(surfaceCard, 'p-5 sm:p-6')}>

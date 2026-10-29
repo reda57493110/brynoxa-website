@@ -17,6 +17,7 @@ const explore = [
 ]
 
 const support = [
+  { to: '/help', key: 'help.kicker' as const },
   { to: '/track-order', key: 'orders.trackOrder' as const },
   { to: '/services/warranty', key: 'footer.warranty' as const },
   { to: '/services/returns', key: 'footer.returns' as const },

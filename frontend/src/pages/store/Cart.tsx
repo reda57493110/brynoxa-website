@@ -15,6 +15,7 @@ import { useT } from '@/hooks/useT'
 import { cn } from '@/lib/cn'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
+import { HelpLink } from '@/components/help/HelpLink'
 
 export function Cart() {
   const t = useT()
@@ -186,6 +187,7 @@ export function Cart() {
             >
               {t('cart.continueShopping')}
             </Link>
+            <HelpLink topic="place-order" label={t('help.ctxCart')} className="mt-4 w-full justify-center" />
           </aside>
         </div>
       </Container>

@@ -28,6 +28,7 @@ import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { HelpLink } from '@/components/help/HelpLink'
 import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
@@ -332,6 +333,7 @@ export function ProductDetail() {
                   <WhatsAppIcon size={14} />
                   {t('contact.whatsapp')}
                 </button>
+                <HelpLink topic="product-details" label={t('help.ctxProduct')} className="text-xs sm:text-sm" />
               </div>
             </div>
 

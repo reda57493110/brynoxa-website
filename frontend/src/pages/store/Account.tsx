@@ -22,6 +22,7 @@ export function Account() {
     { to: '/account/orders', label: t('account.orders'), desc: t('account.ordersDesc'), icon: 'package' },
     { to: '/account/notifications', label: t('notifications.heading'), desc: t('notifications.body'), icon: 'inbox' },
     { to: '/account/settings', label: t('account.settings'), desc: t('account.settingsDesc'), icon: 'settings' },
+    { to: '/help#account', label: t('help.kicker'), desc: t('help.accountDesc'), icon: 'help' },
   ]
 
   const signOut = async () => {

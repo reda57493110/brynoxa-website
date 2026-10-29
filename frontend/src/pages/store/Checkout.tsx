@@ -35,6 +35,7 @@ import { cn } from '@/lib/cn'
 import type { Address, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
+import { HelpLink } from '@/components/help/HelpLink'
 
 export function Checkout() {
   const t = useT()
@@ -730,6 +731,7 @@ export function Checkout() {
                 </span>
                 <SiteIcon name="banknote" size={22} className="ms-auto shrink-0 text-[var(--brand-text)]" />
               </div>
+              <HelpLink topic="cod" label={t('help.ctxCheckout')} className="mt-3" />
             </section>
 
             <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
