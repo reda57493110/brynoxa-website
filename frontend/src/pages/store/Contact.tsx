@@ -16,6 +16,7 @@ import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/cn'
 import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 
@@ -29,6 +30,8 @@ export function Contact() {
   const { contact } = useMessages()
   const t = useT()
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
+  // Signed in: their order list. Guests: look an order up with its number and phone.
+  const signedIn = useAuthStore((s) => Boolean(s.user))
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   const SUBJECT_PRESETS = [
@@ -439,7 +442,7 @@ export function Contact() {
               <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
                 {[
                   { to: '/help', label: t('help.kicker') },
-                  { to: '/account/orders', label: t('contact.trackOrder') },
+                  { to: signedIn ? '/account/orders' : '/track-order', label: t('contact.trackOrder') },
                   { to: '/services/warranty', label: t('footer.warranty') },
                   { to: '/services/returns', label: t('footer.returns') },
                   { to: '/shop', label: t('contact.browseShop') },

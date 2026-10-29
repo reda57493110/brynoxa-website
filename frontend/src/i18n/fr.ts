@@ -662,7 +662,7 @@ export const fr: Messages = {
     waLineHelp: 'Ce dont j’ai besoin : {value}',
     waLineNote: 'Plus de détails :',
     waOrderNumber: 'Numéro de commande (facultatif)',
-    waOrderNumberPh: 'ex. BX-1042',
+    waOrderNumberPh: 'ex. BRX-20261029-K7M2QX',
     waBudget: 'Budget (facultatif)',
     waBudgetPh: 'ex. 6 000 MAD',
     waUseCase: 'De quoi avez-vous besoin ? (facultatif)',

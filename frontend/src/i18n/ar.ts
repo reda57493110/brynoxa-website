@@ -659,7 +659,7 @@ export const ar: Messages = {
     waLineHelp: 'ما أحتاجه: {value}',
     waLineNote: 'تفاصيل إضافية:',
     waOrderNumber: 'رقم الطلب (اختياري)',
-    waOrderNumberPh: 'مثال BX-1042',
+    waOrderNumberPh: 'مثال BRX-20261029-K7M2QX',
     waBudget: 'الميزانية (اختياري)',
     waBudgetPh: 'مثال 6000 درهم',
     waUseCase: 'ماذا تحتاج؟ (اختياري)',

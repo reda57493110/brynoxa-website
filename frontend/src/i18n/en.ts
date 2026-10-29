@@ -657,7 +657,7 @@ export const en = {
     waLineHelp: 'What I need: {value}',
     waLineNote: 'More details:',
     waOrderNumber: 'Order number (optional)',
-    waOrderNumberPh: 'e.g. BX-1042',
+    waOrderNumberPh: 'e.g. BRX-20261029-K7M2QX',
     waBudget: 'Budget (optional)',
     waBudgetPh: 'e.g. 6 000 MAD',
     waUseCase: 'What do you need? (optional)',
