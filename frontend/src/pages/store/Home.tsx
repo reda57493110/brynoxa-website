@@ -113,10 +113,10 @@ export function Home() {
 
   return (
     <>
-      {/* The header always uses the dark design (the photo is made for it), in light mode too; a rounded card with a small gap around it */}
+      {/* The header follows the theme, with its own photo for each (HeroBackdrop); a rounded card with a small gap around it */}
       <section
         aria-labelledby="home-hero-heading"
-        className="dark relative mx-2 -mt-[calc(var(--nav-height)-0.5rem)] flex flex-col overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:mx-3 sm:-mt-[calc(var(--nav-height)-0.75rem)] sm:min-h-[calc(100svh-0.75rem)] sm:rounded-[3rem]"
+        className="relative mx-2 -mt-[calc(var(--nav-height)-0.5rem)] flex flex-col overflow-hidden rounded-[2rem] bg-[var(--bg)] text-[var(--fg)] sm:mx-3 sm:-mt-[calc(var(--nav-height)-0.75rem)] sm:min-h-[calc(100svh-0.75rem)] sm:rounded-[3rem]"
       >
         <HeroBackdrop />
 
@@ -134,7 +134,7 @@ export function Home() {
           <h1
             id="home-hero-heading"
             data-rise style={{ animationDelay: '80ms' }}
-            className="order-1 max-w-2xl font-display text-[1.5rem] font-bold leading-[1.15] tracking-tight [text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-4xl md:text-[2.75rem] xl:text-5xl lg:[text-shadow:none] dark:text-white"
+            className="order-1 max-w-2xl font-display text-[1.5rem] font-bold leading-[1.15] tracking-tight dark:[text-shadow:0_2px_18px_rgb(0_0_0/0.55)] sm:mt-5 sm:leading-snug text-balance text-[var(--fg)] sm:text-4xl md:text-[2.75rem] xl:text-5xl lg:[text-shadow:none] dark:text-white"
           >
             {t('home.heroTitleLead')}
             <span className="block w-fit bg-gradient-to-r [text-shadow:none] from-[#0077b6] via-[#0096d6] to-[#00b4ef] bg-clip-text text-transparent dark:from-[#00c2ff] dark:via-[#38d2ff] dark:to-[#9be8ff]">

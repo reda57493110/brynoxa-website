@@ -364,6 +364,10 @@ html[lang="ar"] {
 .hero-showroom {
   background-position: 62% 50%;
 }
+/* light mode photo: the monitors and the PC sit right of centre */
+:root:not(.dark) .hero-showroom {
+  background-position: 72% 50%;
+}
 [dir='rtl'] .hero-showroom {
   transform: scaleX(-1);
 }
@@ -375,6 +379,9 @@ html[lang="ar"] {
     bottom: auto;
     height: 27rem;
     background-position: 93% 30%;
+  }
+  :root:not(.dark) .hero-showroom {
+    background-position: 70% 60%;
   }
 }
 
