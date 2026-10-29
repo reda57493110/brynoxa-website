@@ -28,21 +28,21 @@ export function HeroBackdrop() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#eef2f5] dark:bg-[#05080b]" aria-hidden="true">
       <div
-        className={`${layer} hero-showroom inset-0 bg-cover [filter:contrast(1.08)_saturate(1.15)] dark:[filter:none] [background-image:var(--hero-light-sm)] lg:[background-image:var(--hero-light-lg)] dark:[background-image:var(--hero-sm)] dark:lg:[background-image:var(--hero-lg)]`}
+        className={`${layer} hero-showroom inset-0 bg-cover [filter:contrast(1.12)_saturate(1.15)] dark:[filter:none] [background-image:var(--hero-light-sm)] lg:[background-image:var(--hero-light-lg)] dark:[background-image:var(--hero-sm)] dark:lg:[background-image:var(--hero-lg)]`}
         style={HERO_PHOTOS}
       />
-      {/* Headline side: a fade so the text reads on the photo */}
+      {/* Headline side (dark mode): a fade so the text reads on the photo; light mode fades the photo itself out (index.css) */}
       <div
-        className={`${layer} inset-0 bg-[linear-gradient(95deg,rgb(245_247_249/0.94)_0%,rgb(245_247_249/0.8)_26%,rgb(245_247_249/0.25)_42%,transparent_52%)] max-lg:hidden rtl:-scale-x-100 dark:bg-[linear-gradient(95deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.85)_30%,rgb(5_8_11/0.35)_50%,transparent_64%)]`}
+        className={`${layer} inset-0 hidden rtl:-scale-x-100 dark:lg:block dark:bg-[linear-gradient(95deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.85)_30%,rgb(5_8_11/0.35)_50%,transparent_64%)]`}
       />
       {/* Phones / tablets: the photo is a clear band at the top; it fades toward the headline and the deals */}
       <div
-        className={`${layer} inset-x-0 top-0 h-[27rem] bg-[linear-gradient(180deg,rgb(245_247_249/0.2)_0%,rgb(245_247_249/0.05)_16%,rgb(245_247_249/0.65)_36%,rgb(245_247_249/0.85)_58%,var(--bg)_100%)] lg:hidden dark:bg-[linear-gradient(180deg,rgb(5_8_11/0.3)_0%,rgb(5_8_11/0)_22%,rgb(5_8_11/0.35)_50%,rgb(5_8_11/0.75)_72%,var(--bg)_100%)]`}
+        className={`${layer} hero-band inset-x-0 top-0 h-[27rem] bg-[linear-gradient(180deg,rgb(245_247_249/0.1)_0%,rgb(245_247_249/0)_20%,rgb(245_247_249/0.3)_42%,rgb(245_247_249/0.75)_68%,var(--bg)_100%)] lg:hidden dark:bg-[linear-gradient(180deg,rgb(5_8_11/0.3)_0%,rgb(5_8_11/0)_22%,rgb(5_8_11/0.35)_50%,rgb(5_8_11/0.75)_72%,var(--bg)_100%)]`}
       />
       {/* Top: keeps the navigation bar calm; bottom: blends into the section */}
-      <div className={`${layer} inset-x-0 top-0 h-28 bg-gradient-to-b from-[var(--bg)]/40 to-transparent dark:from-[var(--bg)]/70`} />
+      <div className={`${layer} inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent to-transparent dark:from-[var(--bg)]/70`} />
       <div
-        className={`${layer} inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--bg)] via-[color-mix(in_srgb,var(--bg)_55%,transparent)] to-transparent sm:h-40`}
+        className={`${layer} inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--bg)] via-[color-mix(in_srgb,var(--bg)_55%,transparent)] to-transparent sm:h-24 dark:h-28 dark:sm:h-40`}
       />
     </div>
   )

@@ -366,7 +366,12 @@ html[lang="ar"] {
 }
 /* light mode photo: the monitors and the PC sit right of centre */
 :root:not(.dark) .hero-showroom {
-  background-position: 72% 50%;
+  /* computers: the headline sits on the plain light background and the photo shows clear on the
+     right (no white wash over it), fading in over a short distance; zoomed a little so the
+     blurred chair and the window light at the edges are cropped */
+  background-size: 126% auto;
+  background-position: 38% 40%;
+  mask-image: linear-gradient(90deg, transparent 26%, #000 46%);
 }
 [dir='rtl'] .hero-showroom {
   transform: scaleX(-1);
@@ -381,7 +386,24 @@ html[lang="ar"] {
     background-position: 93% 30%;
   }
   :root:not(.dark) .hero-showroom {
-    background-position: 70% 60%;
+    background-size: cover;
+    background-position: 68% 55%;
+    mask-image: none;
+  }
+}
+
+/* Phones, light mode: the photo stays clear at the top with the headline in white on it (as in dark
+   mode), then blends into the light page behind the deals */
+@media (max-width: 639px) {
+  :root:not(.dark) .hero-band {
+    background-image: linear-gradient(180deg, rgb(5 8 11 / 0.12) 0%, rgb(5 8 11 / 0) 18%, rgb(5 8 11 / 0.32) 40%, rgb(5 8 11 / 0.15) 56%, rgb(245 247 249 / 0.85) 78%, var(--bg) 100%);
+  }
+  :root:not(.dark) .hero-title {
+    color: #fff;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 0.55);
+  }
+  :root:not(.dark) .hero-accent {
+    background-image: linear-gradient(90deg, #00c2ff, #38d2ff, #9be8ff);
   }
 }
 
