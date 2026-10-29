@@ -55,7 +55,28 @@ export function ProfileOrders({
       <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <Section title="Top products">
           {profile.topProducts.length ? (
-            <div className="-mx-4 overflow-x-auto sm:-mx-5">
+            <>
+              {/* Phones: one line per product */}
+              <ul className="-mx-4 divide-y divide-[var(--border)] text-sm sm:hidden">
+                {profile.topProducts.map((p) => (
+                  <li key={p.productId} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="min-w-0 flex-1">
+                      {p.slug ? (
+                        <Link to={`/product/${p.slug}`} className="block truncate hover:text-[var(--brand-text)]">
+                          {p.name}
+                        </Link>
+                      ) : (
+                        <span className="block truncate">{p.name}</span>
+                      )}
+                      <span className="text-xs text-[var(--fg-muted)]">
+                        {p.qty} units · {p.orders} {p.orders === 1 ? 'order' : 'orders'}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-medium tabular-nums">{money(p.spent)}</span>
+                  </li>
+                ))}
+              </ul>
+            <div className="-mx-4 hidden overflow-x-auto sm:-mx-5 sm:block">
               <table className="w-full min-w-[420px] text-left text-sm">
                 <thead className="text-xs text-[var(--fg-muted)]">
                   <tr>
@@ -85,6 +106,7 @@ export function ProfileOrders({
                 </tbody>
               </table>
             </div>
+            </>
           ) : (
             <p className="text-sm text-[var(--fg-muted)]">No purchases yet.</p>
           )}
@@ -92,7 +114,7 @@ export function ProfileOrders({
         <Section title="Categories">
           {profile.categories.length ? (
             <div className="-mx-4 overflow-x-auto sm:-mx-5">
-              <table className="w-full min-w-[320px] text-left text-sm">
+              <table className="w-full text-left text-sm">
                 <thead className="text-xs text-[var(--fg-muted)]">
                   <tr>
                     <th className={th}>Category</th>
@@ -119,7 +141,47 @@ export function ProfileOrders({
 
       <Section title={`Orders (${profile.orders.length})`}>
         {profile.orders.length ? (
-          <div className="-mx-4 overflow-x-auto sm:-mx-5">
+          <>
+            {/* Phones: one card per order with what matters most */}
+            <ul className="-mx-4 divide-y divide-[var(--border)] text-sm sm:hidden">
+              {profile.orders.map((ord) => (
+                <li key={ord._id}>
+                  <Link to={`/admin/orders/${ord._id}`} className="block px-4 py-3 transition hover:bg-[var(--bg-muted)]">
+                    <span className="flex items-start justify-between gap-2">
+                      <span className="min-w-0">
+                        <span className="block truncate font-medium">#{ord.orderNumber}</span>
+                        <span className="text-xs text-[var(--fg-muted)]">
+                          {formatDate(ord.createdAt)} · {ord.items} {ord.items === 1 ? 'item' : 'items'}
+                          {originOf(ord) !== 'website' ? ` · ${ORDER_ORIGIN_LABEL[originOf(ord)]}` : ''}
+                          {ord.channel === 'wholesale' ? ` · wholesale${ord.tierName ? ` (${ord.tierName})` : ''}` : ''}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-end">
+                        <span className="block font-semibold tabular-nums">{money(ord.total)}</span>
+                        <Badge variant={orderStatusVariant(ord.orderStatus)}>{orderStatusLabel(ord.orderStatus)}</Badge>
+                      </span>
+                    </span>
+                    {ord.discount || ord.deposit || ord.refunded ? (
+                      <span className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--fg-muted)]">
+                        {ord.discount ? <span>Discount {money(ord.discount)}</span> : null}
+                        {ord.deposit ? (
+                          <span>
+                            Deposit {money(ord.deposit.amount)} · {ord.deposit.status}
+                          </span>
+                        ) : null}
+                        {ord.refunded ? (
+                          <span className="text-[var(--danger)]">
+                            Refunded {money(ord.refunded)}
+                            {ord.fullyRefunded ? ' (full)' : ''}
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          <div className="-mx-4 hidden overflow-x-auto sm:-mx-5 sm:block">
             <table className="w-full min-w-[960px] text-left text-sm">
               <thead className="text-xs text-[var(--fg-muted)]">
                 <tr>
@@ -189,6 +251,7 @@ export function ProfileOrders({
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <p className="text-sm text-[var(--fg-muted)]">No orders yet.</p>
         )}

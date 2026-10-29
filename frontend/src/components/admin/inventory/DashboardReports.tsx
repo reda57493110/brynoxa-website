@@ -61,7 +61,27 @@ export function DashboardReports({ summary }: { summary: InventorySummary }) {
 
       <Section title="Suppliers">
         {reports.suppliers.length ? (
-          <div className={cn(cardClass, 'min-w-0 overflow-x-auto')}>
+          <>
+          {/* Phones: one card per supplier */}
+          <ul className={cn(cardClass, 'divide-y divide-[var(--border)] text-sm sm:hidden')}>
+            {reports.suppliers.map((s) => (
+              <li key={s.supplier} className="px-3 py-2.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="min-w-0 truncate font-medium">{s.supplier}</span>
+                  <span
+                    className={cn('shrink-0 text-xs', (s.defectRate ?? 0) >= 10 ? 'font-semibold text-[var(--danger)]' : 'text-[var(--fg-muted)]')}
+                  >
+                    {pctText(s.defectRate)} faulty
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
+                  {s.deliveries} deliveries · {s.units} units · {s.faulty} faulty
+                  {s.lastDelivery ? ` · last ${formatDate(s.lastDelivery)}` : ''}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <div className={cn(cardClass, 'hidden min-w-0 overflow-x-auto sm:block')}>
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-[var(--bg-muted)] text-xs text-[var(--fg-muted)]">
                 <tr>
@@ -94,6 +114,7 @@ export function DashboardReports({ summary }: { summary: InventorySummary }) {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <p className="text-sm text-[var(--fg-muted)]">No deliveries yet.</p>
         )}

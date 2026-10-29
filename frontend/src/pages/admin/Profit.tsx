@@ -262,7 +262,14 @@ function OrdersTab({ r }: { r: ProfitReport }) {
       {rows.length === 0 ? (
         <p className="py-6 text-center text-sm text-[var(--fg-muted)]">No orders in this period.</p>
       ) : (
-        <div className="-mx-3 overflow-x-auto sm:-mx-5">
+        <>
+        {/* Phones: one card per order */}
+        <ul className="-mx-3 divide-y divide-[var(--border)] sm:hidden">
+          {rows.map((o) => (
+            <OrderCard key={o.id} o={o} editing={editing === o.id} onEdit={() => setEditing(editing === o.id ? null : o.id)} onDone={() => setEditing(null)} />
+          ))}
+        </ul>
+        <div className="-mx-3 hidden overflow-x-auto sm:-mx-5 sm:block">
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--fg-muted)]">
@@ -283,8 +290,64 @@ function OrdersTab({ r }: { r: ProfitReport }) {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </Panel>
+  )
+}
+
+/** Phones: the same order as OrderRow, as a card (no sideways scrolling). */
+function OrderCard({ o, editing, onEdit, onDone }: { o: ProfitOrderRow; editing: boolean; onEdit: () => void; onDone: () => void }) {
+  const counted = o.kind !== 'open'
+  const costs: [string, number, boolean?][] = [
+    ['Products', o.productCost, o.missingCost],
+    ['Delivery', o.delivery],
+    ['Fees', o.fees],
+    ['Other', o.other],
+  ]
+  return (
+    <li className="px-3 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link to={`/admin/orders/${o.id}`} className="font-medium text-[var(--brand-text)] hover:underline">
+            {o.orderNumber}
+          </Link>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--fg-muted)]">
+            <span className={cn('rounded-full px-1.5 py-px font-medium', KIND_TONE[o.kind])}>{KIND_LABEL[o.kind]}</span>
+            <span>{dayLabel(o.day)}</span>
+            {o.customer ? <span className="max-w-[9rem] truncate">· {o.customer}</span> : null}
+          </div>
+        </div>
+        <div className="shrink-0 text-end">
+          <p className={cn('font-semibold tabular-nums', counted && (o.profit < 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'))}>
+            {counted ? signed(o.profit) : <span className="text-xs font-normal text-[var(--fg-muted)]">when delivered</span>}
+          </p>
+          <p className="text-[11px] text-[var(--fg-muted)] tabular-nums">in {money(counted ? o.moneyIn : o.total)}</p>
+        </div>
+      </div>
+      {o.note ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">“{o.note}”</p> : null}
+      <div className="mt-2 flex items-end justify-between gap-2">
+        <dl className="grid grid-cols-4 gap-1.5 text-[11px]">
+          {costs.map(([label, n, missing]) => (
+            <div key={label} className="min-w-0">
+              <dt className="text-[var(--fg-muted)]">{label}</dt>
+              <dd className={cn('tabular-nums', missing ? 'text-[var(--warning)]' : n ? 'text-[var(--danger)]' : 'text-[var(--fg-muted)]')}>
+                {missing ? 'no cost' : n ? `−${money(n)}` : '—'}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <button type="button" onClick={onEdit} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-[var(--border)] px-2.5 text-xs hover:border-[var(--brand)]">
+          <SiteIcon name="pencil" size={12} />
+          Costs
+        </button>
+      </div>
+      {editing ? (
+        <div className="mt-3 rounded-xl bg-[var(--bg-muted)]/40 p-3">
+          <OrderCostsEditor row={o} onDone={onDone} />
+        </div>
+      ) : null}
+    </li>
   )
 }
 
@@ -395,7 +458,43 @@ function ProductsTab({ r }: { r: ProfitReport }) {
         {r.products.length === 0 ? (
           <p className="py-6 text-center text-sm text-[var(--fg-muted)]">No delivered sales in this period.</p>
         ) : (
-          <div className="-mx-3 overflow-x-auto sm:-mx-5">
+          <>
+          {/* Phones: one line per product */}
+          <ul className="-mx-3 divide-y divide-[var(--border)] sm:hidden">
+            {r.products.map((p) => (
+              <li key={p.productId} className="px-3 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <ProductThumb image={p.image} name={p.name} />
+                  <div className="min-w-0 flex-1">
+                    {p.exists ? (
+                      <Link to={`/admin/products/${p.productId}/edit`} className="line-clamp-1 text-sm font-medium hover:text-[var(--brand-text)]">
+                        {p.name}
+                      </Link>
+                    ) : (
+                      <span className="line-clamp-1 text-sm font-medium">{p.name}</span>
+                    )}
+                    <p className="text-[11px] text-[var(--fg-muted)] tabular-nums">
+                      {p.units} sold · {money(p.revenue)}
+                      {!p.missingCost ? <span className="text-[var(--danger)]"> · −{money(p.cost)}</span> : null}
+                    </p>
+                  </div>
+                  {!p.missingCost ? (
+                    <div className="shrink-0 text-end">
+                      <p className={cn('text-sm font-semibold tabular-nums', p.profit < 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]')}>{signed(p.profit)}</p>
+                      {p.margin !== null ? <p className="text-[10px] text-[var(--fg-muted)]">{p.margin}% margin</p> : null}
+                    </div>
+                  ) : null}
+                </div>
+                {p.missingCost ? (
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-xs text-[var(--warning)]">No cost price</span>
+                    {p.exists ? <CostInput productId={p.productId} initial={p.costPrice} /> : null}
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <div className="-mx-3 hidden overflow-x-auto sm:-mx-5 sm:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-[var(--border)] text-left text-xs text-[var(--fg-muted)]">
@@ -449,6 +548,7 @@ function ProductsTab({ r }: { r: ProfitReport }) {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Panel>
 
