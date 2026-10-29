@@ -35,6 +35,16 @@ export function HelpWidget() {
     close()
   }, [pathname, close])
 
+  // Phones: the button shows at the top of a page and fades away once the customer scrolls into the
+  // content, so it never covers a button they want to tap (help stays in the menu and the page links)
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 160)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [pathname])
+
   // The Help Center page is the full version of this panel
   if (pathname === '/help') return null
 
@@ -51,9 +61,10 @@ export function HelpWidget() {
         aria-label={t('help.widgetOpen')}
         className={cn(
           // phones: a small round “?”; larger screens: “? Help”
-          'fixed end-3 z-40 inline-flex size-11 items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-sm font-semibold text-[var(--fg)] shadow-soft-lg transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:end-5 sm:bottom-5 sm:h-12 sm:w-auto sm:ps-3 sm:pe-3.5',
+          'fixed end-3 z-40 inline-flex size-11 items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-sm font-semibold text-[var(--fg)] shadow-soft-lg transition-all duration-200 hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:end-5 sm:bottom-5 sm:h-12 sm:w-auto sm:ps-3 sm:pe-3.5',
           lifted ? 'bottom-[calc(5.25rem+env(safe-area-inset-bottom))]' : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]',
-          isOpen && 'border-[var(--brand)] text-[var(--brand-text)]'
+          isOpen && 'border-[var(--brand)] text-[var(--brand-text)]',
+          scrolled && !isOpen && 'max-sm:invisible max-sm:translate-y-3 max-sm:opacity-0'
         )}
       >
         <SiteIcon name={isOpen ? 'close' : 'help'} size={20} className="text-[var(--brand-text)]" />
