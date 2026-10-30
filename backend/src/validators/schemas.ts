@@ -95,6 +95,21 @@ export const brandSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+/**
+ * The same form for an edit: every field optional and no default filled in, so a field that is
+ * not sent is left as it is (zod 4 would otherwise write e.g. an empty description, or the address
+ * name "Home", over the saved value). Use this, never `.partial()`, for schemas with defaults.
+ */
+export function forUpdate<T extends z.ZodObject>(schema: T): ReturnType<T['partial']> {
+  const shape = Object.fromEntries(
+    Object.entries(schema.shape).map(([key, field]) => {
+      const plain = field instanceof z.ZodDefault ? (field.unwrap() as z.ZodType) : (field as z.ZodType);
+      return [key, plain.optional()];
+    })
+  );
+  return z.object(shape) as unknown as ReturnType<T['partial']>;
+}
+
 export const productSchema = z.object({
   name: z.string().min(2),
   sku: z.string().min(2),

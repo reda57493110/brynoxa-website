@@ -326,6 +326,21 @@ const ORDER_STATUS_COPY: Partial<
     fr: { title: 'Livraison reprogrammée', body: 'La livraison de la commande {n} a été reprogrammée.' },
     ar: { title: 'تمت إعادة جدولة التسليم', body: 'تمت إعادة جدولة تسليم الطلب {n}.' },
   },
+  return_requested: {
+    en: { title: 'Return request received', body: 'We received your return request for order {n} and will contact you to arrange it.' },
+    fr: { title: 'Demande de retour reçue', body: 'Nous avons reçu votre demande de retour pour la commande {n} et vous contacterons pour l’organiser.' },
+    ar: { title: 'تم استلام طلب الإرجاع', body: 'استلمنا طلب الإرجاع للطلب {n} وسنتواصل معك لترتيبه.' },
+  },
+  partially_returned: {
+    en: { title: 'Returned items received', body: 'We received the items you sent back from order {n}. Any refund due will be arranged with you.' },
+    fr: { title: 'Articles retournés reçus', body: 'Nous avons reçu les articles renvoyés de la commande {n}. Un éventuel remboursement sera organisé avec vous.' },
+    ar: { title: 'تم استلام المنتجات المرجعة', body: 'استلمنا المنتجات التي أرجعتها من الطلب {n}. سنرتب معك أي استرجاع مستحق.' },
+  },
+  returned: {
+    en: { title: 'Return received', body: 'Order {n} came back to us. Any refund due will be arranged with you.' },
+    fr: { title: 'Retour reçu', body: 'La commande {n} nous est revenue. Un éventuel remboursement sera organisé avec vous.' },
+    ar: { title: 'تم استلام المرتجع', body: 'عاد إلينا الطلب {n}. سنرتب معك أي استرجاع مستحق.' },
+  },
 };
 
 /** Tells the customer's subscribed devices about a status change, in each device's language. */

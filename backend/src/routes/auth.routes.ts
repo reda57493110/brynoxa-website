@@ -14,6 +14,7 @@ import {
   verifyEmailSchema,
   resetPasswordSchema,
   addressSchema,
+  forUpdate,
 } from '../validators/schemas';
 
 const router = Router();
@@ -36,7 +37,7 @@ router.post('/mfa/disable', requireAuth, requireStaffRole, validate(mfaCodeSchem
 router.get('/me', requireAuth, auth.me);
 router.patch('/me', requireAuth, validate(updateProfileSchema), auth.updateProfile);
 router.post('/me/addresses', requireAuth, validate(addressSchema), auth.addAddress);
-router.patch('/me/addresses/:id', requireAuth, validate(addressSchema.partial()), auth.updateAddress);
+router.patch('/me/addresses/:id', requireAuth, validate(forUpdate(addressSchema)), auth.updateAddress);
 router.delete('/me/addresses/:id', requireAuth, auth.deleteAddress);
 
 export default router;

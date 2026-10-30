@@ -32,6 +32,7 @@ import {
   setUserRoleSchema,
   createStaffUserSchema,
   staffPasswordSchema,
+  forUpdate,
 } from '../validators/schemas';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
@@ -171,7 +172,7 @@ router.patch(
   '/admin/coupons/:id',
   requireAuth,
   requirePermission('coupons'),
-  validate(couponSchema.partial()),
+  validate(forUpdate(couponSchema)),
   misc.updateCoupon
 );
 router.delete('/admin/coupons/:id', requireAuth, requirePermission('coupons'), misc.deleteCoupon);

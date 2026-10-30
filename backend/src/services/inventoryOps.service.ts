@@ -4,7 +4,8 @@ import { Coupon } from '../models/Coupon';
 import { Notification } from '../models/Notification';
 import { RETURNABLE_STATUSES, wasDelivered } from '../utils/orderStatus';
 import { backfillDeliveredAt } from './order.service';
-import { statusNotificationCopy } from './orderNotify.service';
+import { resolveCustomer, statusNotificationCopy } from './orderNotify.service';
+import { notifyCustomerOrderStatus } from './push.service';
 import { invalidateDashboardCache } from './admin.service';
 import { Product, type ProductCondition } from '../models/Product';
 import { getSettings } from '../models/Settings';
@@ -491,6 +492,11 @@ export async function createReturn(
         link: `/account/orders/${result.order.orderNumber}`,
       }).catch((error) => console.error('Return notification failed', error));
     }
+    // And on the customer's phone, in the language it was set up with
+    const customer = await resolveCustomer(result.order).catch(() => null);
+    await notifyCustomerOrderStatus(result.order, result.next, { isGuest: Boolean(customer?.isGuest) }).catch((error) =>
+      console.error('Return push failed', error)
+    );
   }
   return result.ret;
 }

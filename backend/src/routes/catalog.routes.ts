@@ -11,6 +11,7 @@ import {
   inventorySchema,
   setupPreviewSchema,
   setupSaveSchema,
+  forUpdate,
 } from '../validators/schemas';
 
 const router = Router();
@@ -28,7 +29,7 @@ router.patch(
   '/admin/categories/:id',
   requireAuth,
   requirePermission('products:write'),
-  validate(categorySchema.partial()),
+  validate(forUpdate(categorySchema)),
   catalog.updateCategory
 );
 router.delete(
@@ -50,7 +51,7 @@ router.patch(
   '/admin/brands/:id',
   requireAuth,
   requirePermission('products:write'),
-  validate(brandSchema.partial()),
+  validate(forUpdate(brandSchema)),
   catalog.updateBrand
 );
 router.delete(
@@ -97,7 +98,7 @@ router.patch(
   '/admin/products/:id',
   requireAuth,
   requirePermission('products:write'),
-  validate(productSchema.partial()),
+  validate(forUpdate(productSchema)),
   catalog.updateProduct
 );
 router.delete(

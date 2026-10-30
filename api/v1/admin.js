@@ -76,7 +76,8 @@ function paginated(items, page, limit, total) {
  */
 function validated(schemaName, body, partial = false) {
   const schemas = require('../../backend/dist/validators/schemas');
-  const schema = partial ? schemas[schemaName].partial() : schemas[schemaName];
+  // forUpdate: fields not sent stay as they are (no default written over them)
+  const schema = partial ? schemas.forUpdate(schemas[schemaName]) : schemas[schemaName];
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     const issue = parsed.error.issues?.[0];
