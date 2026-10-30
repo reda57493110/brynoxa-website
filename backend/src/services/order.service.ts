@@ -851,6 +851,8 @@ export function customerOrderView<T>(order: T): T {
   delete o.adminNote;
   delete o.contactAttempts;
   delete o.receiptTokenHash;
+  // Which staff member entered the order is internal
+  delete o.createdBy;
   if (o.deposit && typeof o.deposit === 'object') {
     const dep = o.deposit as Record<string, unknown>;
     if (Array.isArray(dep.proofs)) {

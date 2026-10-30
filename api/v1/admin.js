@@ -296,7 +296,9 @@ async function handleOrderRoutes(req, res, route, query) {
     if (!user) return;
     const body = validated('manualOrderSchema', await readJsonBody(req));
     const order = await orderService.createManualOrder(body, String(user._id));
-    sendJson(res, 201, { success: true, message: 'Order added', data: order });
+    // The new order still holds purchase costs: only for staff allowed to see them
+    const { hideCostsFor } = require('../../backend/dist/utils/hideCosts');
+    sendJson(res, 201, { success: true, message: 'Order added', data: hideCostsFor(user.role, order) });
     return;
   }
 

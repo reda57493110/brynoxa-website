@@ -29,14 +29,29 @@ test('the right password signs in', async () => {
   assert.ok(r.body.data.accessToken);
 });
 
-test('5 wrong passwords lock the account for 15 minutes, then it works again', async () => {
-  for (let i = 0; i < 5; i++) assert.equal((await signIn('shop@x.com', 'wrong' + i, '2.2.2.' + i)).status, 401);
+test('5 wrong passwords block that visitor for 15 minutes — not the owner signing in elsewhere', async () => {
+  for (let i = 0; i < 5; i++) assert.equal((await signIn('shop@x.com', 'wrong' + i, '2.2.2.2')).status, 401);
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '2.2.2.2')).status, 429, 'that connection waits, even with the right password');
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '3.3.3.3')).status, 200, 'the owner on another connection is not locked out');
   const u = users()[0];
+  assert.equal(u.lockedUntil, undefined, 'the account itself is not locked');
+});
+
+test('an attack spread over many connections still locks the whole account', async () => {
+  const u = users()[0];
+  u.failedLoginAttempts = 99;
+  assert.equal((await signIn('shop@x.com', 'wrong', '7.7.7.7')).status, 401);
   assert.ok(u.lockedUntil > Date.now());
   assert.equal(u.failedLoginAttempts, 0, 'counter starts over after the lock');
-  assert.equal((await signIn('shop@x.com', 'RightPass123', '3.3.3.3')).status, 429, 'even the right password waits');
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '6.6.6.6')).status, 429);
   u.lockedUntil = new Date(Date.now() - 1000);
-  assert.equal((await signIn('shop@x.com', 'RightPass123', '3.3.3.3')).status, 200);
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '6.6.6.6')).status, 200);
+});
+
+test('typing the owner email from many places does not use up the owner sign-in limit', async () => {
+  for (let i = 0; i < 25; i++) await signIn('shop@x.com', 'wrong', '20.0.0.' + i);
+  users()[0].lockedUntil = undefined;
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '30.0.0.1')).status, 200);
 });
 
 test('an unknown email gets the same answer as a wrong password', async () => {

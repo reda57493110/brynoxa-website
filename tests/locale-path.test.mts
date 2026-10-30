@@ -23,3 +23,10 @@ test('stripping and adding the prefix', () => {
   assert.equal(lp.localizedPath('/fr/shop', 'en'), '/shop');
   assert.equal(lp.localizedPath('/ar/contact', 'fr'), '/fr/contact');
 });
+
+test('switching language always stays on this site (no "//other-site" address)', () => {
+  assert.equal(lp.localizedPath('/fr//evil.com', 'en'), '/evil.com');
+  assert.equal(lp.localizedPath('/fr/\\evil.com', 'en'), '/evil.com');
+  assert.equal(lp.localizedPath('//evil.com', 'ar'), '/ar/evil.com');
+  assert.equal(lp.localizedPath('/ar///x', 'fr'), '/fr/x');
+});

@@ -26,7 +26,8 @@ export function stripLocale(pathname: string): string {
 
 /** The same page in another language: ("/shop", "fr") → "/fr/shop"; ("/", "en") → "/". */
 export function localizedPath(path: string, locale: PathLocale): string {
-  const clean = stripLocale(path.startsWith('/') ? path : `/${path}`)
+  // Always a path on this site: "/fr//evil.com" must not become "//evil.com" (another website)
+  const clean = stripLocale(path.startsWith('/') ? path : `/${path}`).replace(/^[/\\]+/, '/')
   if (locale === 'en') return clean
   return clean === '/' ? `/${locale}` : `/${locale}${clean}`
 }

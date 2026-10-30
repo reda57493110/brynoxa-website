@@ -103,7 +103,8 @@ module.exports = async (req, res) => {
     const accessToken = jwt.sign(nextPayload, process.env.JWT_ACCESS_SECRET, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
     });
-    const refreshToken = jwt.sign(nextPayload, process.env.JWT_REFRESH_SECRET, {
+    // Marked as a session token: never accepted where a sign-in (access) token is expected
+    const refreshToken = jwt.sign({ ...nextPayload, purpose: 'refresh' }, process.env.JWT_REFRESH_SECRET, {
       expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d',
     });
 

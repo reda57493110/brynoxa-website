@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
 
   try {
     const header = req.headers.authorization || '';
+    let ended = false;
     if (header.startsWith('Bearer ')) {
       try {
         const payload = jwt.verify(header.slice(7), process.env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
@@ -32,8 +33,21 @@ module.exports = async (req, res) => {
         await connectMongo();
         const { logoutUser } = require('../../../backend/dist/services/auth.service');
         await logoutUser(payload.userId);
+        ended = true;
       } catch {
-        /* token may already be invalid — still clear cookies */
+        /* token may already be invalid — the session cookie below still names the session */
+      }
+    }
+    if (!ended) {
+      // Access token expired: end the session the cookie names, on the server too
+      const cookie = String(req.headers.cookie || '')
+        .split(';')
+        .map((part) => part.trim())
+        .find((part) => part.startsWith('brynoxa_refresh='));
+      const token = cookie ? decodeURIComponent(cookie.slice('brynoxa_refresh='.length)) : '';
+      if (token) {
+        await connectMongo();
+        await require('../../../backend/dist/services/auth.service').logoutByRefreshToken(token);
       }
     }
   } catch (err) {

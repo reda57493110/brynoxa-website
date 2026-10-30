@@ -104,6 +104,8 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {
   if (req.user?.userId) await authService.logoutUser(req.user.userId);
+  // Access token expired: end the session named by the cookie
+  else await authService.logoutByRefreshToken(req.cookies?.[authService.REFRESH_COOKIE]);
   authService.clearRefreshCookie(res);
   sendSuccess(res, null, 'Logged out');
 });
@@ -112,7 +114,8 @@ export const changePassword = asyncHandler(async (req: Request, res: Response) =
   await authService.changePassword(
     req.user!.userId,
     req.body.currentPassword,
-    req.body.newPassword
+    req.body.newPassword,
+    getRequestMeta(req)
   );
   authService.clearRefreshCookie(res);
   sendSuccess(res, null, 'Password changed; please sign in again');

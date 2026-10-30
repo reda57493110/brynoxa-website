@@ -7,6 +7,7 @@ const { sendJson, readJsonBody } = require('../http');
 const { rateLimit } = require('../rateLimit');
 const { isPublishedDefaultPassword } = require('../../../backend/dist/utils/blockedPasswords');
 const { checkPasswordEvenTime } = require('../../../backend/dist/utils/passwordTiming');
+const { getClientIp } = require('../../../backend/dist/utils/requestMeta');
 
 const backendNodeModules = path.join(__dirname, '../../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -15,9 +16,6 @@ if (!module.paths.includes(backendNodeModules)) {
 
 const STAFF_ROLES = new Set(['admin', 'orders', 'catalog', 'support', 'marketing']);
 
-// Same as backend auth.service: 5 wrong passwords lock the account for 15 minutes
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
 
 function hashRefreshToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -56,7 +54,8 @@ module.exports = async (req, res) => {
       return;
     }
 
-    if (!(await rateLimit(req, res, 'login', email))) return;
+    // Per connection only: a limit per email would let anyone block the owner by typing their email
+    if (!(await rateLimit(req, res, 'login'))) return;
 
     const conn = await connectMongo();
     const user = await conn.db.collection('users').findOne({ email });
@@ -65,7 +64,11 @@ module.exports = async (req, res) => {
     // so the time taken never tells whether an email has an account
     const passwordMatches = await checkPasswordEvenTime(password, user?.password);
 
-    if (user?.lockedUntil && new Date(user.lockedUntil).getTime() > Date.now()) {
+    // Wrong passwords block the visitor who typed them (and the account only after an attack from
+    // many places), so nobody can lock the owner out by trying their email
+    const guard = require('../../../backend/dist/services/loginGuard.service');
+    const ip = getClientIp(req);
+    if (user && (guard.accountLocked(user) || (await guard.visitorBlocked(user._id, ip, conn.db)))) {
       sendJson(res, 429, { success: false, message: 'Account temporarily locked. Try again later.' });
       return;
     }
@@ -73,18 +76,7 @@ module.exports = async (req, res) => {
     // The old published default never signs anyone in (counted as a wrong password)
     const passwordOk = passwordMatches && !isPublishedDefaultPassword(password);
     if (!user?.password || !passwordOk) {
-      if (user) {
-        // Count the failure; lock the account after too many
-        const updated = await conn.db
-          .collection('users')
-          .findOneAndUpdate({ _id: user._id }, { $inc: { failedLoginAttempts: 1 } }, { returnDocument: 'after' });
-        const after = updated && typeof updated.failedLoginAttempts === 'number' ? updated : updated?.value;
-        if ((after?.failedLoginAttempts || 0) >= MAX_LOGIN_ATTEMPTS) {
-          await conn.db
-            .collection('users')
-            .updateOne({ _id: user._id }, { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS), failedLoginAttempts: 0 } });
-        }
-      }
+      if (user) await guard.recordLoginFailure(user._id, ip, conn.db);
       sendJson(res, 401, { success: false, message: 'Invalid email or password' });
       return;
     }
@@ -118,7 +110,8 @@ module.exports = async (req, res) => {
     const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
       expiresIn: process.env.JWT_ACCESS_EXPIRES || '15m',
     });
-    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+    // Marked as a session token: never accepted where a sign-in (access) token is expected
+    const refreshToken = jwt.sign({ ...payload, purpose: 'refresh' }, process.env.JWT_REFRESH_SECRET, {
       expiresIn: process.env.JWT_REFRESH_EXPIRES || '7d',
     });
 
@@ -130,6 +123,7 @@ module.exports = async (req, res) => {
       }
     );
 
+    await guard.clearLoginFailures(user._id, ip, conn.db);
     setAuthCookies(res, refreshToken, crypto.randomBytes(32).toString('hex'));
 
     sendJson(res, 200, {

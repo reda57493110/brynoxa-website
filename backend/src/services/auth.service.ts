@@ -16,6 +16,7 @@ import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep,
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
 import { recordStaffSignIn } from './staffActivity.service';
+import { accountLocked, clearLoginFailures, recordLoginFailure, visitorBlocked } from './loginGuard.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
 
 function scheduleStaffLoginNotify(
@@ -215,27 +216,6 @@ async function consumeTotp(user: InstanceType<typeof User>, code: string) {
   return res.modifiedCount === 1;
 }
 
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
-
-/**
- * Counts a wrong password / code in one atomic step, so many attempts sent at the same moment all
- * count (a read-then-save would let a burst count as one). Locks the account at the limit.
- */
-async function recordFailedLogin(user: InstanceType<typeof User>) {
-  const after = await User.findOneAndUpdate(
-    { _id: user._id },
-    { $inc: { failedLoginAttempts: 1 } },
-    { new: true, projection: { failedLoginAttempts: 1 } }
-  ).select('+failedLoginAttempts');
-  if ((after?.failedLoginAttempts || 0) >= MAX_LOGIN_ATTEMPTS) {
-    // After the lock, a fresh set of attempts
-    await User.updateOne(
-      { _id: user._id },
-      { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS), failedLoginAttempts: 0 } }
-    );
-  }
-}
 
 export async function migrateRefreshTokens() {
   const users = await User.find({ refreshToken: { $exists: true } }).select('+refreshToken');
@@ -570,12 +550,13 @@ export async function loginUser(
   // The password is always checked (against a dummy when the email is unknown, and also while
   // locked), so the time taken never tells whether an email has an account
   const passwordOk = await checkPasswordEvenTime(password, user?.password);
-  if (user?.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+  // Blocked: this visitor after too many wrong tries, or the account after an attack from many places
+  if (user && (accountLocked(user) || (await visitorBlocked(user._id, meta.ip)))) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
   // The old published default never signs anyone in (counted as a wrong password)
   if (!user || isPublishedDefaultPassword(password) || !passwordOk) {
-    if (user) await recordFailedLogin(user);
+    if (user) await recordLoginFailure(user._id, meta.ip);
     throw new ApiError(401, 'Invalid email or password');
   }
   if (!user.isActive) throw new ApiError(403, 'Account is disabled');
@@ -588,6 +569,7 @@ export async function loginUser(
   }
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
+  await clearLoginFailures(user._id, meta.ip);
 
   const payload = { userId: user._id.toString(), role: user.role };
   const accessToken = signAccessToken(payload);
@@ -624,13 +606,13 @@ export async function completeMfaLogin(
   if (!user || !user.isActive || !user.mfaEnabled || !isStaffRole(user.role)) {
     throw new ApiError(401, 'MFA challenge is no longer valid');
   }
-  if (user.lockedUntil && user.lockedUntil.getTime() > Date.now()) {
+  if (accountLocked(user) || (await visitorBlocked(user._id, meta.ip))) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
 
   const valid = await consumeTotp(user, code);
   if (!valid) {
-    await recordFailedLogin(user);
+    await recordLoginFailure(user._id, meta.ip);
     throw new ApiError(401, 'Invalid authentication code');
   }
 
@@ -639,6 +621,7 @@ export async function completeMfaLogin(
   user.mfaRecoveryCodeHashes = [];
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
+  await clearLoginFailures(user._id, meta.ip);
   user.refreshToken = hashRefreshToken(refreshToken);
   await user.save({ validateBeforeSave: false });
 
@@ -682,9 +665,38 @@ export async function logoutUser(userId: string) {
   await User.findByIdAndUpdate(userId, { $unset: { refreshToken: 1 } });
 }
 
-export async function changePassword(userId: string, currentPassword: string, newPassword: string) {
+/**
+ * Sign-out after the short access token expired: the session cookie still names the session, so
+ * it is ended on the server too (not only forgotten by this browser). Only when the cookie is
+ * that account's current session.
+ */
+export async function logoutByRefreshToken(cookieToken?: string) {
+  if (!cookieToken) return;
+  let payload;
+  try {
+    payload = verifyRefreshToken(cookieToken);
+  } catch {
+    return;
+  }
+  await User.updateOne(
+    { _id: payload.userId, refreshToken: hashRefreshToken(cookieToken) },
+    { $unset: { refreshToken: 1 } }
+  );
+}
+
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+  meta: LoginRequestMeta = {}
+) {
+  // Guessing the current password from a signed-in browser is limited like sign-in
+  if (await visitorBlocked(userId, meta.ip)) {
+    throw new ApiError(429, 'Too many wrong passwords. Please wait 15 minutes and try again.');
+  }
   const user = await User.findById(userId).select('+password');
   if (!user || !(await user.comparePassword(currentPassword))) {
+    if (user) await recordLoginFailure(user._id, meta.ip);
     throw new ApiError(401, 'Current password is incorrect');
   }
   assertOwnPasswordAllowed(user.role);

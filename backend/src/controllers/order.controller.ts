@@ -1,3 +1,4 @@
+import { hideCostsFor } from '../utils/hideCosts';
 import { getSettings, sanitizeDepositMethods } from '../models/Settings';
 import { stampPaymentDetailsChange } from '../utils/paymentDetailsAudit';
 import { Response } from 'express';
@@ -115,7 +116,8 @@ export const adminOrders = asyncHandler(async (req: AuthRequest, res: Response) 
 /** An order from social media, the phone or the shop, entered by staff. */
 export const createManualOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const order = await orderService.createManualOrder(req.body, req.user!.userId);
-  sendSuccess(res, order, 'Order added', 201);
+  // The new order still holds purchase costs: only for staff allowed to see them
+  sendSuccess(res, hideCostsFor(req.user?.role, order), 'Order added', 201);
 });
 
 export const adminOrder = asyncHandler(async (req: AuthRequest, res: Response) => {

@@ -26,7 +26,9 @@ module.exports = async (req, res) => {
     }
 
     const { changePassword } = require('../../../backend/dist/services/auth.service');
-    await changePassword(user._id.toString(), currentPassword, newPassword);
+    const { getRequestMeta } = require('../../../backend/dist/utils/requestMeta');
+    // Wrong current passwords count like wrong sign-ins (5 per connection, then 15 minutes)
+    await changePassword(user._id.toString(), currentPassword, newPassword, getRequestMeta(req));
     sendJson(res, 200, { success: true, message: 'Password changed', data: null });
   } catch (err) {
     console.error('Fast change-password failed:', err);

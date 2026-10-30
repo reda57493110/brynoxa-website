@@ -43,12 +43,15 @@ test('new and promoted staff get their own grace period', () => {
 
 test('code guessing: wrong tries counted atomically; limits per account and per sign-in', () => {
   const svc = fs.readFileSync(dist('services/auth.service.js'), 'utf8');
-  assert.match(svc, /findOneAndUpdate\(\{ _id: user\._id \}, \{ \$inc: \{ failedLoginAttempts: 1 \} \}/);
+  assert.match(svc, /recordLoginFailure\)\(user\._id, meta\.ip\)/);
+  const guard = fs.readFileSync(dist('services/loginGuard.service.js'), 'utf8');
+  assert.match(guard, /findOneAndUpdate\(\{ _id: userId \}, \{ \$inc: \{ failedLoginAttempts: 1 \} \}/);
   const account = fs.readFileSync(api('_lib/auth-routes/account.js'), 'utf8');
   assert.match(account, /rateLimit\(req, res, 'mfaChallenge', challenge, \{ perIp: false \}\)/);
   assert.match(account, /perKey = claimed && typeof claimed\.userId === 'string'/);
   const login = fs.readFileSync(api('_lib/auth-routes/login.js'), 'utf8');
-  assert.match(login, /rateLimit\(req, res, 'login', email\)/);
+  // Per connection only: a per-email limit would let anyone block the owner
+  assert.match(login, /rateLimit\(req, res, 'login'\)/);
   const { LIMITS } = require(api('_lib/rateLimit.js'));
   assert.equal(LIMITS.mfaChallenge.max, 5);
 });

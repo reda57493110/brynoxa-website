@@ -20,8 +20,12 @@ export function signAccessToken(payload: TokenPayload): string {
   });
 }
 
+/**
+ * Marked as a session token (purpose "refresh"): access-token checks refuse any purpose, so it
+ * can never be used to sign in requests, even if both secrets were set to the same value.
+ */
 export function signRefreshToken(payload: TokenPayload): string {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
+  return jwt.sign({ ...payload, purpose: 'refresh' }, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRES as jwt.SignOptions['expiresIn'],
   });
 }

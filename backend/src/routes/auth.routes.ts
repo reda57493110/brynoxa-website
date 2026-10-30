@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as auth from '../controllers/auth.controller';
 import { validate } from '../middleware/validate';
-import { requireAuth, requireStaffRole } from '../middleware/auth';
+import { optionalAuth, requireAuth, requireStaffRole } from '../middleware/auth';
 import { authLimiter } from '../middleware/rateLimit';
 import {
   registerSchema,
@@ -27,7 +27,8 @@ router.post('/register', authLimiter, validate(registerSchema), auth.register);
 router.post('/login', authLimiter, validate(loginSchema), auth.login);
 router.post('/mfa/login', authLimiter, validate(mfaLoginSchema), auth.completeMfaLogin);
 router.post('/refresh', auth.refresh);
-router.post('/logout', requireAuth, auth.logout);
+// Signed in or not: an expired access token must not stop the session from being ended
+router.post('/logout', optionalAuth, auth.logout);
 router.post('/change-password', requireAuth, validate(changePasswordSchema), auth.changePassword);
 router.post('/mfa/setup', requireAuth, requireStaffRole, auth.setupMfa);
 router.post('/mfa/verify', requireAuth, requireStaffRole, validate(mfaCodeSchema), auth.verifyMfaSetup);

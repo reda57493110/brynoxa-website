@@ -59,6 +59,11 @@ if (parsed.data.NODE_ENV === 'production') {
   }
 }
 
+// The two signing keys must differ (session tokens are also marked, see utils/tokens.ts)
+if (parsed.data.JWT_ACCESS_SECRET === parsed.data.JWT_REFRESH_SECRET) {
+  console.error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET are the same: set two different values');
+}
+
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
 
