@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { isLocale, loadLocale, LOCALES, type Locale } from '@/i18n'
+import { currentPathLocale } from '@/lib/localePath'
 
 interface LocaleState {
   locale: Locale
@@ -19,7 +20,7 @@ export function applyLocale(locale: Locale) {
 export const useLocaleStore = create<LocaleState>()(
   persist(
     (set) => ({
-      locale: 'en',
+      locale: currentPathLocale(),
       setLocale: (locale) => {
         // Switch once the language file is here, so the page never shows missing text
         void loadLocale(locale)
@@ -35,6 +36,9 @@ export const useLocaleStore = create<LocaleState>()(
     }),
     {
       name: 'brynoxa-locale',
+      // The address decides the language (/fr/…, /ar/…): a language saved from an earlier visit
+      // never overrides it (this store can load before themeInit.ts has saved the new one)
+      merge: (saved, current) => ({ ...current, ...(saved as Partial<LocaleState>), locale: currentPathLocale() }),
       onRehydrateStorage: () => (state) => {
         if (state && isLocale(state.locale)) applyLocale(state.locale)
       },

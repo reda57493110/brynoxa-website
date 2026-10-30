@@ -1,6 +1,7 @@
 // Language in the address: /shop (English), /fr/shop, /ar/shop.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -22,6 +23,14 @@ test('stripping and adding the prefix', () => {
   assert.equal(lp.localizedPath('/', 'ar'), '/ar');
   assert.equal(lp.localizedPath('/fr/shop', 'en'), '/shop');
   assert.equal(lp.localizedPath('/ar/contact', 'fr'), '/fr/contact');
+});
+
+test('the address decides the language, never a language saved from an earlier visit', () => {
+  const read = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  const store = read('store/localeStore.ts');
+  assert.match(store, /locale: currentPathLocale\(\),/);
+  assert.match(store, /merge: \(saved, current\) => \(\{ \.\.\.current, \.\.\.\(saved as Partial<LocaleState>\), locale: currentPathLocale\(\) \}\)/);
+  assert.match(read('main.tsx'), /const locale = currentPathLocale\(\)/);
 });
 
 test('switching language always stays on this site (no "//other-site" address)', () => {
