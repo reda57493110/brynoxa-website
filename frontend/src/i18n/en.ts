@@ -242,6 +242,9 @@ export const en = {
     backToShop: 'Back to shop',
   },
   auth: {
+    resetByWhatsApp: 'Password reset by email isn’t available right now. Message us on WhatsApp with the email of your account and we’ll help you get back in.',
+    resetWhatsAppButton: 'Ask on WhatsApp',
+    resetWhatsAppMessage: 'Hello Brynoxa, I forgot my password. My account email: {email}',
     kicker: 'Account',
     signInTitle: 'Sign in',
     signInBody: 'Orders, wishlist, and cash on delivery.',
@@ -283,6 +286,7 @@ export const en = {
       'This area is for staff. Sign in with the admin account to open the back office.',
   },
   cart: {
+    pricesUpdated: 'Some prices changed since you added these products. Your cart now shows today’s prices.',
     viewCart: 'View cart',
     cartTotal: 'Cart total',
     itemsInCart: '{count} in cart',
@@ -307,6 +311,7 @@ export const en = {
     continueShopping: 'Continue shopping',
   },
   checkout: {
+    pricesChanged: 'A price changed just now. Check the updated total, then place your order.',
     stepCart: 'Cart',
     stepDetails: 'Details',
     stepDone: 'Confirmed',

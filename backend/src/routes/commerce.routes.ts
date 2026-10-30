@@ -3,7 +3,7 @@ import * as order from '../controllers/order.controller';
 import * as misc from '../controllers/misc.controller';
 import * as profit from '../controllers/profit.controller';
 import { validate } from '../middleware/validate';
-import { requireAuth, requirePermission, optionalAuth } from '../middleware/auth';
+import { requireAuth, requirePermission, optionalAuth, refuseExpiredSession } from '../middleware/auth';
 import { orderLimiter, couponLimiter } from '../middleware/rateLimit';
 import {
   createOrderSchema,
@@ -46,7 +46,7 @@ const contactLimiter = rateLimit({
 
 const router = Router();
 
-router.post('/orders', optionalAuth, orderLimiter, validate(createOrderSchema), order.createOrder);
+router.post('/orders', optionalAuth, orderLimiter, validate(createOrderSchema), refuseExpiredSession, order.createOrder);
 router.post('/orders/track', orderLimiter, validate(trackOrderSchema), order.trackGuestOrder);
 router.get('/orders', requireAuth, order.myOrders);
 router.post(

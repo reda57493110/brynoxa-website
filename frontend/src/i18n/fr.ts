@@ -244,6 +244,9 @@ export const fr: Messages = {
     backToShop: 'Retour à la boutique',
   },
   auth: {
+    resetByWhatsApp: 'La réinitialisation par email n’est pas disponible pour le moment. Écrivez-nous sur WhatsApp avec l’email de votre compte et nous vous aiderons à retrouver l’accès.',
+    resetWhatsAppButton: 'Demander sur WhatsApp',
+    resetWhatsAppMessage: 'Bonjour Brynoxa, j’ai oublié mon mot de passe. Email de mon compte : {email}',
     kicker: 'Compte',
     signInTitle: 'Connexion',
     signInBody: 'Commandes, favoris et paiement à la livraison.',
@@ -285,6 +288,7 @@ export const fr: Messages = {
       'Cet espace est réservé au personnel. Connectez-vous avec le compte admin pour ouvrir le back-office.',
   },
   cart: {
+    pricesUpdated: 'Certains prix ont changé depuis l’ajout de ces produits. Votre panier affiche maintenant les prix du jour.',
     viewCart: 'Voir le panier',
     cartTotal: 'Total du panier',
     itemsInCart: '{count} dans le panier',
@@ -309,6 +313,7 @@ export const fr: Messages = {
     continueShopping: 'Continuer les achats',
   },
   checkout: {
+    pricesChanged: 'Un prix vient de changer. Vérifiez le nouveau total, puis validez votre commande.',
     stepCart: 'Panier',
     stepDetails: 'Informations',
     stepDone: 'Confirmée',

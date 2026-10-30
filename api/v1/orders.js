@@ -111,6 +111,12 @@ module.exports = async (req, res) => {
       const body = parseBody(schemas.createOrderSchema, await readJsonBody(req));
       if (!(await rateLimit(req, res, 'order'))) return;
       const user = await optionalUser(req);
+      // A signed-in customer (no email in the form) whose sign-in expired: 401 so the shop renews the
+      // session and sends the order again, instead of treating it as a guest order without an email
+      if (!user && !body.email && String(req.headers.authorization || '').startsWith('Bearer ')) {
+        sendJson(res, 401, { success: false, message: 'Session expired' });
+        return;
+      }
       const shippingAddress = body.shippingAddress;
       // Per customer too: the email gets order and account emails, the phone identifies a guest
       const emailKey = body.email ? `email:${String(body.email).trim().toLowerCase()}` : user ? `user:${user._id}` : null;

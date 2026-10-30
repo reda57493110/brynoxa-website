@@ -427,6 +427,8 @@ export interface StoreSettings {
   shippingByCity?: { city: string; rate: number }[]
   taxRate: number
   supportEmail: string
+  /** Public settings only: false when the shop cannot send emails (no Resend key) */
+  emailEnabled?: boolean
   codEnabled: boolean
   depositInstructions?: string
   depositMethods?: DepositMethod[]

@@ -19,6 +19,8 @@ interface CartState {
   removeItem: (productId: string) => void
   updateQty: (productId: string, qty: number) => void
   clear: () => void
+  /** Today's price and stock from the shop; returns the names whose price changed */
+  syncLive: (live: { _id: string; price: number; stock: number }[]) => string[]
   subtotal: () => number
   itemCount: () => number
 }
@@ -69,6 +71,19 @@ export const useCartStore = create<CartState>()(
             .filter((i) => i.qty > 0),
         })),
       clear: () => set({ items: [] }),
+      syncLive: (live) => {
+        const changed: string[] = []
+        let touched = false
+        const items = get().items.map((i) => {
+          const p = live.find((l) => l._id === i.productId)
+          if (!p || (p.price === i.price && p.stock === i.stock)) return i
+          touched = true
+          if (p.price !== i.price) changed.push(i.name)
+          return { ...i, price: p.price, stock: p.stock }
+        })
+        if (touched) set({ items })
+        return changed
+      },
       subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.qty, 0),
       itemCount: () => get().items.reduce((sum, i) => sum + i.qty, 0),
     }),

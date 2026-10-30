@@ -67,6 +67,19 @@ export function requirePermission(...permissions: Permission[]) {
   };
 }
 
+/**
+ * After optionalAuth on order placement: a signed-in customer (the form sends no email) whose
+ * sign-in expired gets 401, so the shop renews the session and sends the order again instead of
+ * it failing as a guest order without an email.
+ */
+export function refuseExpiredSession(req: AuthRequest, _res: Response, next: NextFunction) {
+  const bearer = String(req.headers.authorization || '').startsWith('Bearer ');
+  if (bearer && !req.user && !(req.body as { email?: string } | undefined)?.email) {
+    return next(new ApiError(401, 'Session expired'));
+  }
+  next();
+}
+
 export async function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction) {
   try {
     const header = req.headers.authorization;

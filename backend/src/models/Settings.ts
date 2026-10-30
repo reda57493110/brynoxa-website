@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import type { WholesaleTier } from '../utils/wholesale';
+import { isEmailConfigured } from '../config/env';
 
 export interface IShippingCityRate {
   city: string;
@@ -393,6 +394,8 @@ export function publicSettings(settings: ISettings) {
     ? (settings as unknown as { toObject: () => Record<string, unknown> }).toObject()
     : { ...(settings as unknown as Record<string, unknown>) }) as Record<string, unknown>;
   for (const key of PRIVATE_SETTINGS) delete plain[key];
+  // Whether the shop can send emails (password reset…): the pages offer WhatsApp instead when not
+  plain.emailEnabled = isEmailConfigured();
   return plain;
 }
 

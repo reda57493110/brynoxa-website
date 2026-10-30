@@ -41,7 +41,16 @@ function primaryImage(product: Product) {
   return product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
 }
 
+/**
+ * A fresh page for each product: the quantity, chosen photo and other choices never carry over
+ * when moving to another product (similar products, versions, search).
+ */
 export function ProductDetail() {
+  const { slug = '' } = useParams()
+  return <ProductDetailPage key={slug} />
+}
+
+function ProductDetailPage() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const reduceMotion = useReducedMotion()

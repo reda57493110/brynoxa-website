@@ -16,12 +16,15 @@ import { cn } from '@/lib/cn'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { HelpLink } from '@/components/help/HelpLink'
+import { useCartLiveProducts } from '@/hooks/useCartLiveProducts'
 
 export function Cart() {
   const t = useT()
   usePageTitle(t('cart.title'), { noIndex: true })
   const navigate = useNavigate()
   const items = useCartStore((s) => s.items)
+  // Brings the saved prices up to date (they can be days old)
+  useCartLiveProducts()
   const updateQty = useCartStore((s) => s.updateQty)
   const removeItem = useCartStore((s) => s.removeItem)
   const subtotal = useCartStore((s) => s.subtotal())

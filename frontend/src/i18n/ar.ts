@@ -244,6 +244,9 @@ export const ar: Messages = {
     backToShop: 'العودة إلى المتجر',
   },
   auth: {
+    resetByWhatsApp: 'استرجاع كلمة المرور عبر البريد غير متاح حالياً. راسلنا على واتساب مع بريد حسابك وسنساعدك على الدخول من جديد.',
+    resetWhatsAppButton: 'اسأل على واتساب',
+    resetWhatsAppMessage: 'مرحباً Brynoxa، نسيت كلمة المرور. بريد حسابي: {email}',
     kicker: 'الحساب',
     signInTitle: 'تسجيل الدخول',
     signInBody: 'الطلبات والمفضلة والدفع عند الاستلام.',
@@ -285,6 +288,7 @@ export const ar: Messages = {
       'هذه المنطقة للموظفين. سجّل الدخول بحساب المدير لفتح لوحة التحكم.',
   },
   cart: {
+    pricesUpdated: 'تغيّرت بعض الأسعار منذ إضافة هذه المنتجات. سلتك تعرض الآن أسعار اليوم.',
     viewCart: 'عرض السلة',
     cartTotal: 'مجموع السلة',
     itemsInCart: '{count} في السلة',
@@ -309,6 +313,7 @@ export const ar: Messages = {
     continueShopping: 'متابعة التسوق',
   },
   checkout: {
+    pricesChanged: 'تغيّر سعر للتو. راجع المجموع الجديد ثم أكّد طلبك.',
     stepCart: 'السلة',
     stepDetails: 'المعلومات',
     stepDone: 'تم التأكيد',

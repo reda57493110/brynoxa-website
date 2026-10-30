@@ -6,7 +6,6 @@ import { SafeImage } from '@/components/ui/SafeImage'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { ordersApi } from '@/api/ordersApi'
 import { couponsApi } from '@/api/couponsApi'
-import { productsApi } from '@/api/productsApi'
 import { settingsApi } from '@/api/settingsApi'
 import { wholesaleApi } from '@/api/wholesaleApi'
 import { getErrorMessage } from '@/api/client'
@@ -19,6 +18,7 @@ import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { LegalConsent } from '@/components/legal/LegalConsent'
 import { useCartStore } from '@/store/cartStore'
+import { useCartLiveProducts } from '@/hooks/useCartLiveProducts'
 import { useAuthStore } from '@/store/authStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { toast } from '@/store/toastStore'
@@ -115,27 +115,18 @@ export function Checkout() {
         postalCode: nextDefault.postalCode || '00000',
       })
     }
-  }, [user])
+    // Only when someone else signs in: a background session refresh must not replace what was typed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?._id])
 
   const settings = useQuery({
     queryKey: ['settings'],
     queryFn: async () => (await settingsApi.get()).data.data,
   })
 
-  // Live product data: stock check on submit, and deposit rules shown before ordering
-  const productIds = items.map((item) => item.productId)
-  const currentProducts = useQuery({
-    queryKey: ['checkout-products', productIds.join(',')],
-    queryFn: async () =>
-      (
-        await Promise.all(
-          Array.from({ length: Math.ceil(productIds.length / 4) }, (_, index) =>
-            productsApi.compare(productIds.slice(index * 4, index * 4 + 4))
-          )
-        )
-      ).flatMap((response) => response.data.data),
-    enabled: productIds.length > 0,
-  })
+  // Today's product data: prices (the cart is brought up to date), stock check on submit, and
+  // deposit rules shown before ordering
+  const currentProducts = useCartLiveProducts()
 
   // Approved wholesale customers are charged their tier price by the server; mirror it here.
   // If the request fails we show retail totals (the server stays authoritative).
@@ -156,21 +147,13 @@ export function Checkout() {
         : list
       return { item, product, list, charged }
     })
-  const wholesaleLines = wholesaleTerms ? chargedLines(currentProducts.data ?? []) : []
-  const sumLines = (pick: (line: (typeof wholesaleLines)[number]) => number) =>
-    Math.round(wholesaleLines.reduce((acc, line) => acc + pick(line) * line.item.qty, 0) * 100) /
-    100
-  const listSubtotal = wholesaleTerms ? sumLines((l) => l.list) : cartSubtotal
-  const wholesaleDiscount = wholesaleTerms ? sumLines((l) => l.list - l.charged) : 0
-  const subtotal = wholesaleTerms ? sumLines((l) => l.charged) : cartSubtotal
-
-  // A coupon validated against another subtotal is stale once wholesale prices change it
-  const wholesaleSubtotalKey = wholesaleTerms ? subtotal : null
-  useEffect(() => {
-    if (wholesaleSubtotalKey === null) return
-    setDiscount(0)
-    setAppliedCoupon('')
-  }, [wholesaleSubtotalKey])
+  // Totals from today's prices (the server charges these), for retail and wholesale customers
+  const sumOf = (lines: ReturnType<typeof chargedLines>, pick: (line: ReturnType<typeof chargedLines>[number]) => number) =>
+    Math.round(lines.reduce((acc, line) => acc + pick(line) * line.item.qty, 0) * 100) / 100
+  const lines = chargedLines(currentProducts.data ?? [])
+  const listSubtotal = sumOf(lines, (l) => l.list)
+  const wholesaleDiscount = wholesaleTerms ? sumOf(lines, (l) => l.list - l.charged) : 0
+  const subtotal = sumOf(lines, (l) => l.charged)
 
   const taxRate = settings.data?.taxRate ?? 0
   const taxable = Math.max(0, subtotal - discount)
@@ -242,7 +225,7 @@ export function Checkout() {
           country: address.country || 'MA',
           phone: address.phone,
         },
-        couponCode: couponCode || undefined,
+        couponCode: appliedCoupon || undefined,
         customerNote: note || undefined,
         email: isAuth ? undefined : email.trim(),
         password: !isAuth && createAccount ? password : undefined,
@@ -284,22 +267,23 @@ export function Checkout() {
     },
   })
 
-  const validateCoupon = async () => {
-    if (!couponCode.trim()) {
+  const validateCoupon = async (code = couponCode, quiet = false) => {
+    if (!code.trim()) {
       setDiscount(0)
       setAppliedCoupon('')
       return
     }
     setValidating(true)
+    couponCheckedFor.current = subtotal
     try {
       const res = await couponsApi.validate(
-        couponCode.trim(),
+        code.trim(),
         subtotal,
         items.map((i) => ({ productId: i.productId, qty: i.qty }))
       )
       setDiscount(res.data.data.discount || 0)
-      setAppliedCoupon(couponCode.trim().toUpperCase())
-      toast.success(res.data.message || t('checkout.couponApplied'))
+      setAppliedCoupon(code.trim().toUpperCase())
+      if (!quiet) toast.success(t('checkout.couponApplied'))
     } catch (e) {
       setDiscount(0)
       setAppliedCoupon('')
@@ -308,6 +292,15 @@ export function Checkout() {
       setValidating(false)
     }
   }
+
+  // The discount was worked out for one subtotal: when the cart or its prices change, check the
+  // applied coupon again (quietly) so the summary always matches what the server will charge
+  const couponCheckedFor = useRef<number | null>(null)
+  useEffect(() => {
+    if (!appliedCoupon || validating || couponCheckedFor.current === subtotal) return
+    void validateCoupon(appliedCoupon, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal, appliedCoupon])
 
   if (!items.length) {
     return (
@@ -364,6 +357,12 @@ export function Checkout() {
       })
       if (stockIssue) {
         setFormError(t('checkout.stockChanged', { name: stockIssue.name }))
+        return
+      }
+      // Never place an order at other prices than the ones on screen
+      if (sumOf(chargedLines(latest), (l) => l.charged) !== subtotal) {
+        useCartStore.getState().syncLive(latest)
+        setFormError(t('checkout.pricesChanged'))
         return
       }
       // Never place an order with a different deposit than the one on screen
@@ -428,7 +427,7 @@ export function Checkout() {
             </span>
             <span className="shrink-0 text-sm font-medium tabular-nums">
               {formatCurrency(
-                (wholesaleLines.find((l) => l.item.productId === i.productId)?.list ?? i.price) *
+                (lines.find((l) => l.item.productId === i.productId)?.list ?? i.price) *
                   i.qty
               )}
             </span>
@@ -739,7 +738,15 @@ export function Checkout() {
               <div className="mt-4 flex gap-2">
                 <Input
                   value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  onChange={(e) => {
+                    const next = e.target.value.toUpperCase()
+                    setCouponCode(next)
+                    // A different code than the applied one: no discount until it is applied
+                    if (appliedCoupon && next.trim() !== appliedCoupon) {
+                      setAppliedCoupon('')
+                      setDiscount(0)
+                    }
+                  }}
                   placeholder={t('checkout.couponCode')}
                   aria-label={t('checkout.couponCode')}
                   className="uppercase placeholder:normal-case"
@@ -748,7 +755,7 @@ export function Checkout() {
                   type="button"
                   variant="outline"
                   loading={validating}
-                  onClick={validateCoupon}
+                  onClick={() => void validateCoupon()}
                   className="h-11 shrink-0 rounded-xl px-4"
                 >
                   {t('checkout.apply')}
