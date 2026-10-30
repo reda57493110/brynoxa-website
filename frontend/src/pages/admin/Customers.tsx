@@ -23,6 +23,8 @@ import {
   type Period,
 } from '@/components/admin/customers/utils'
 import { toast } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { hasPermission } from '@/lib/permissions'
 import { cn } from '@/lib/cn'
 import type { CustomerListParams, CustomerRow, SavedSegment, SegmentKey, SummaryBlock } from '@/types'
 
@@ -52,6 +54,10 @@ const BUILTIN_SEGMENTS: SegmentKey[] = [
 const PAGE_SIZE = 20
 
 export function Customers() {
+  // Order / support staff look customers up; changing them or saving segments is for other roles
+  const role = useAuthStore((s) => s.user?.role)
+  const canEdit = hasPermission(role, 'customers:write')
+  const canSaveSegments = hasPermission(role, 'settings')
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
   const get = (k: string) => params.get(k) || ''
@@ -334,15 +340,17 @@ export function Customers() {
               <button type="button" aria-pressed={segment === c.id} onClick={() => selectSaved(c.saved!)}>
                 {c.label}
               </button>
-              <button
-                type="button"
-                className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
-                aria-label={`Remove saved segment ${c.label}`}
-                disabled={saveSegments.isPending}
-                onClick={() => removeSegment(c.saved!)}
-              >
-                <SiteIcon name="close" size={12} />
-              </button>
+              {canSaveSegments ? (
+                <button
+                  type="button"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
+                  aria-label={`Remove saved segment ${c.label}`}
+                  disabled={saveSegments.isPending}
+                  onClick={() => removeSegment(c.saved!)}
+                >
+                  <SiteIcon name="close" size={12} />
+                </button>
+              ) : null}
             </span>
           ) : (
             <button
@@ -404,7 +412,7 @@ export function Customers() {
           update(saved.some((x) => x.id === segment) ? { ...patch, segment: undefined } : patch)
         }
         onClear={clearFilters}
-        onSave={onSaveSegment}
+        onSave={canSaveSegments ? onSaveSegment : undefined}
         saving={saveSegments.isPending}
         profitVisible={profitVisible}
       />
@@ -425,7 +433,7 @@ export function Customers() {
           <CustomerTable
             rows={items}
             profitVisible={profitVisible}
-            onToggle={(row) => setToggleRow(row)}
+            onToggle={canEdit ? (row) => setToggleRow(row) : undefined}
             togglingId={toggle.isPending ? (toggle.variables?._id ?? null) : null}
           />
           <Pagination

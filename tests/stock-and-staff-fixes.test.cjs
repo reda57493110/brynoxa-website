@@ -98,3 +98,20 @@ test('after a deploy the shop reloads once for the new version', () => {
   assert.match(src('main.tsx'), /isChunkLoadError\(error\) && reloadForNewVersion\(\)/);
   assert.match(src('components/ui/ErrorBoundary.tsx'), /isChunkLoadError\(error\) && reloadForNewVersion\(\)/);
 });
+
+test('catalog staff may change only where products show in the shop (home deals, shop header)', () => {
+  const { onlyStorefrontUnlessSettings } = require(dist('middleware/auth.js'));
+  const run = (role, body) => {
+    let out = 'next';
+    onlyStorefrontUnlessSettings({ user: { role }, body }, {}, (err) => (out = err ? err.statusCode : 'next'));
+    return out;
+  };
+  assert.equal(run('catalog', { homeDeals: ['a'] }), 'next');
+  assert.equal(run('catalog', { pageHeroProducts: { shop: 'a' } }), 'next');
+  assert.equal(run('catalog', { homeDeals: [], taxRate: 0 }), 403, 'nothing else');
+  assert.equal(run('catalog', {}), 403);
+  assert.equal(run('admin', { taxRate: 5 }), 'next');
+  const routes = fs.readFileSync(dist('routes/commerce.routes.js'), 'utf8');
+  assert.equal((routes.match(/requirePermission\)\('settings', 'products:write'\), auth_1\.onlyStorefrontUnlessSettings/g) || []).length, 2);
+  assert.match(fs.readFileSync(api('v1/settings.js'), 'utf8'), /keys\.every\(\(k\) => STOREFRONT_SETTINGS\.includes\(k\)\)/);
+});

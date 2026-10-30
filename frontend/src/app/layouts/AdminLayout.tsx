@@ -4,28 +4,10 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
 import { AdminTopbar } from '@/components/layout/AdminTopbar'
 import { Drawer } from '@/components/ui/Drawer'
-import {
-  ADMIN_NAV_PERMISSION,
-  hasPermission,
-  staffHomePath,
-} from '@/lib/permissions'
+import { hasPermission, requiredPermissionForPath, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
 
 const adminScrollPositions = new Map<string, number>()
-
-function requiredPermissionForPath(pathname: string) {
-  const entries = Object.entries(ADMIN_NAV_PERMISSION).sort(
-    (a, b) => b[0].length - a[0].length
-  )
-  for (const [path, permission] of entries) {
-    if (path === '/admin') {
-      if (pathname === '/admin' || pathname === '/admin/') return permission
-      continue
-    }
-    if (pathname === path || pathname.startsWith(`${path}/`)) return permission
-  }
-  return null
-}
 
 export function AdminLayout() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -119,7 +101,7 @@ export function AdminLayout() {
                     <strong>Turn on 2-step sign-in to keep using admin.</strong>
                   ) : (
                     <>
-                      <strong>2-step sign-in is required for staff.</strong> Turn it on within{' '}
+                      <strong>2-step sign-in is required for the owner account.</strong> Turn it on within{' '}
                       {mfaDaysLeft === 1 ? '1 day' : `${mfaDaysLeft} days`} — after that, admin pages stay closed until it is on.
                     </>
                   )}

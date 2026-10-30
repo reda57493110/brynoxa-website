@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { StaffLink } from '@/components/admin/StaffLink'
 import { ORDER_ORIGIN_LABEL, customerLabel, originOf, shownEmail } from '@/lib/orderOrigin'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -104,9 +105,13 @@ export function OrderDetail() {
                     </>
                   )
                   return productId ? (
-                    <Link to={`/admin/inventory/products/${productId}`} className="flex min-w-0 items-center gap-3 hover:text-[var(--brand-text)]">
+                    <StaffLink
+                      to={`/admin/inventory/products/${productId}`}
+                      className="flex min-w-0 items-center gap-3 hover:text-[var(--brand-text)]"
+                      fallbackClassName="flex min-w-0 items-center gap-3"
+                    >
                       {body}
-                    </Link>
+                    </StaffLink>
                   ) : (
                     <span className="flex min-w-0 items-center gap-3">{body}</span>
                   )
@@ -226,13 +231,14 @@ export function OrderDetail() {
           <p className="break-all">{shownEmail(user?.email)}</p>
           <p>{phone || 'No phone'} · COD</p>
           {shownEmail(user?.email) ? (
-            <Link
+            <StaffLink
               to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
               className="inline-flex items-center gap-1.5 pt-1 text-sm font-medium text-[var(--brand-text)] hover:underline"
+              fallback={null}
             >
               <SiteIcon name="mail" size={15} />
               Email customer
-            </Link>
+            </StaffLink>
           ) : null}
           <p className="text-xs">{formatDateTime(o.createdAt)}</p>
         </div>

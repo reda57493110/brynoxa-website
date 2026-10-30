@@ -149,6 +149,7 @@ export const en = {
     removeWishlist: 'Remove from wishlist',
   },
   ui: {
+    homeLink: 'Brynoxa home page',
     close: 'Close',
     closeDrawer: 'Close drawer backdrop',
     pagination: 'Pagination',
@@ -523,6 +524,7 @@ export const en = {
     count: '{count} / {max} products',
     add: 'Add to compare',
     remove: 'Remove from compare',
+    removed: 'Removed from compare',
     added: 'Added to compare',
     full: 'Compare up to {max} products',
     ourPick: 'Our pick',

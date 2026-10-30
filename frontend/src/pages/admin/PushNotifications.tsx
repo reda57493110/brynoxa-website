@@ -165,8 +165,8 @@ export function PushNotifications() {
 
       {!data?.configured ? (
         <p className="rounded-xl border border-[color-mix(in_srgb,var(--danger)_35%,var(--border))] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] px-4 py-3 text-sm">
-          Push is not configured on the server. Add <code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code> and{' '}
-          <code>VAPID_SUBJECT</code> in Vercel, then redeploy.
+          Push notifications are not switched on for the shop yet. The owner turns them on once, in Vercel (the three
+          “VAPID” settings), then redeploys.
         </p>
       ) : null}
 

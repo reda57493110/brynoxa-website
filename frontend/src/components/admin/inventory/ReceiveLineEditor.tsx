@@ -9,6 +9,8 @@ import { UNIT_RESULT_OPTIONS } from './ReceiveLine'
 import { nativeSelect } from './MovementLabels'
 import { ReceiveProductPicker } from './ReceiveProductPicker'
 
+const CONDITION_LABEL: Record<string, string> = { new: 'New', refurbished: 'Refurbished', used: 'Used' }
+
 export function ReceiveLineEditor({
   index,
   line,
@@ -56,7 +58,7 @@ export function ReceiveLineEditor({
             <span className="block truncate font-medium">{p.name}</span>
             <span className="block truncate text-xs text-[var(--fg-muted)]">{p.sku}</span>
           </span>
-          {p.condition ? <Badge variant={p.condition === 'new' ? 'muted' : 'warning'}>{p.condition}</Badge> : null}
+          {p.condition ? <Badge variant={p.condition === 'new' ? 'muted' : 'warning'}>{CONDITION_LABEL[p.condition] ?? p.condition}</Badge> : null}
           {p.serialTracking ? <Badge variant="brand">Serials required</Badge> : null}
           <Button type="button" variant="outline" size="sm" onClick={() => onChange({ product: null, unitResults: {} })}>
             Change

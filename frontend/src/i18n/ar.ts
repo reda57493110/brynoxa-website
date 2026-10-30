@@ -151,6 +151,7 @@ export const ar: Messages = {
     removeWishlist: 'إزالة من المفضلة',
   },
   ui: {
+    homeLink: 'الصفحة الرئيسية لـ Brynoxa',
     close: 'إغلاق',
     closeDrawer: 'إغلاق اللوحة',
     pagination: 'ترقيم الصفحات',
@@ -525,6 +526,7 @@ export const ar: Messages = {
     count: '{count} / {max} منتجات',
     add: 'إضافة للمقارنة',
     remove: 'إزالة من المقارنة',
+    removed: 'تمت الإزالة من المقارنة',
     added: 'تمت الإضافة للمقارنة',
     full: 'يمكن مقارنة {max} منتجات كحد أقصى',
     ourPick: 'اختيارنا',

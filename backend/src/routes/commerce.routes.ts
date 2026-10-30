@@ -3,7 +3,7 @@ import * as order from '../controllers/order.controller';
 import * as misc from '../controllers/misc.controller';
 import * as profit from '../controllers/profit.controller';
 import { validate } from '../middleware/validate';
-import { requireAuth, requirePermission, optionalAuth, refuseExpiredSession } from '../middleware/auth';
+import { requireAuth, requirePermission, optionalAuth, refuseExpiredSession, onlyStorefrontUnlessSettings } from '../middleware/auth';
 import { orderLimiter, couponLimiter } from '../middleware/rateLimit';
 import {
   createOrderSchema,
@@ -248,14 +248,18 @@ router.patch('/admin/storage', requireAuth, requirePermission('settings'), valid
 router.patch(
   '/settings',
   requireAuth,
-  requirePermission('settings'),
+  // Catalog staff: only where products show in the shop (onlyStorefrontUnlessSettings)
+  requirePermission('settings', 'products:write'),
+  onlyStorefrontUnlessSettings,
   validate(settingsUpdateSchema),
   misc.updateStoreSettings
 );
 router.patch(
   '/admin/settings',
   requireAuth,
-  requirePermission('settings'),
+  // Catalog staff: only where products show in the shop (onlyStorefrontUnlessSettings)
+  requirePermission('settings', 'products:write'),
+  onlyStorefrontUnlessSettings,
   validate(settingsUpdateSchema),
   misc.updateStoreSettings
 );

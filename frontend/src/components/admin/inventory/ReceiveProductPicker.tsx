@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
 import type { Product } from '@/types'
 
+const CONDITION_LABEL: Record<string, string> = { new: 'New', refurbished: 'Refurbished', used: 'Used' }
+
 /** Search box that lists matching products and returns the picked one. */
 export function ReceiveProductPicker({
   onPick,
@@ -75,7 +77,7 @@ export function ReceiveProductPicker({
                         {p.sku} · {p.stock} in stock
                       </span>
                     </span>
-                    {p.condition && p.condition !== 'new' ? <Badge variant="warning">{p.condition}</Badge> : null}
+                    {p.condition && p.condition !== 'new' ? <Badge variant="warning">{CONDITION_LABEL[p.condition] ?? p.condition}</Badge> : null}
                     {p.serialTracking ? <Badge variant="brand">Serials</Badge> : null}
                   </button>
                 </li>

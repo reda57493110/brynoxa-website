@@ -67,6 +67,20 @@ export function requirePermission(...permissions: Permission[]) {
   };
 }
 
+/** Where products show in the shop: the settings catalog staff may change (Products page, product form). */
+export const STOREFRONT_SETTINGS = ['homeDeals', 'pageHeroProducts'] as const;
+
+/**
+ * After requirePermission('settings', 'products:write'): the owner changes any setting; catalog
+ * staff only the storefront placements (home deals, shop page header product).
+ */
+export function onlyStorefrontUnlessSettings(req: AuthRequest, _res: Response, next: NextFunction) {
+  if (hasPermission(req.user?.role, 'settings')) return next();
+  const keys = Object.keys((req.body as Record<string, unknown> | undefined) ?? {});
+  if (keys.length && keys.every((k) => (STOREFRONT_SETTINGS as readonly string[]).includes(k))) return next();
+  next(new ApiError(403, 'You do not have permission for this action'));
+}
+
 /**
  * After optionalAuth on order placement: a signed-in customer (the form sends no email) whose
  * sign-in expired gets 401, so the shop renews the session and sends the order again instead of

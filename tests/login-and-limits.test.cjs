@@ -67,11 +67,20 @@ test('the old published admin password never signs in (and counts as a wrong try
 });
 
 test('one connection: 20 sign-in tries per 15 minutes, then blocked; others unaffected', async () => {
-  const statuses = [];
-  for (let i = 0; i < 21; i++) statuses.push((await signIn(`x${i}@x.com`, 'x', '9.9.9.9')).status);
-  assert.ok(statuses.slice(0, 20).every((s) => s === 401));
-  assert.equal(statuses[20], 429);
-  assert.equal((await signIn('shop@x.com', 'RightPass123', '8.8.8.8')).status, 200);
+  // The clock is held in the middle of a 15-minute window, so the run never crosses into the next one
+  const realNow = Date.now;
+  const window = 15 * 60 * 1000;
+  const middle = Math.floor(realNow() / window) * window + window / 2;
+  Date.now = () => middle;
+  try {
+    const statuses = [];
+    for (let i = 0; i < 21; i++) statuses.push((await signIn(`x${i}@x.com`, 'x', '9.9.9.9')).status);
+    assert.ok(statuses.slice(0, 20).every((s) => s === 401));
+    assert.equal(statuses[20], 429);
+    assert.equal((await signIn('shop@x.com', 'RightPass123', '8.8.8.8')).status, 200);
+  } finally {
+    Date.now = realNow;
+  }
 });
 
 test('emails are limited per address (5 per 15 min) even from different connections', async () => {

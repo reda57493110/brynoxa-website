@@ -9,6 +9,8 @@ import { RecordDepositFlow } from '@/components/admin/RecordDepositDialog'
 import { OrdersSettings } from '@/components/admin/settings/StoreSettings'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { useAuthStore } from '@/store/authStore'
+import { hasPermission } from '@/lib/permissions'
 import type { Order } from '@/types'
 
 /** Orders | Deposits & payments, at the top of Admin → Orders. */
@@ -152,6 +154,8 @@ function DepositsList() {
 export function DepositsView() {
   // Payment options are set once: folded away unless a link points to them
   const [showOptions, setShowOptions] = useState(() => typeof window !== 'undefined' && window.location.hash === '#payment-options')
+  // Where customers send money is changed by the owner only (order staff use these options)
+  const canEditOptions = hasPermission(useAuthStore((s) => s.user?.role), 'settings')
   return (
     <div className="min-w-0 space-y-3 sm:space-y-4">
       <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Orders</h1>
@@ -165,7 +169,7 @@ export function DepositsView() {
       </div>
 
       <div id="payment-options" className="scroll-mt-20">
-        {showOptions ? (
+        {!canEditOptions ? null : showOptions ? (
           <>
             <div className="mb-2 flex justify-end">
               <button type="button" onClick={() => setShowOptions(false)} className="text-xs font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">

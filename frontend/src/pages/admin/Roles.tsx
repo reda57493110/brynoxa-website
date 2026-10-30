@@ -44,7 +44,6 @@ const AREAS: { label: string; view: Permission; edit?: Permission; extra?: { per
   { label: 'Inventory', view: 'inventory:write', edit: 'inventory:write', extra: { perm: 'inventory:approve', text: 'approvals' } },
   { label: 'Inbox & emails', view: 'messages', edit: 'messages' },
   { label: 'Coupons', view: 'coupons', edit: 'coupons' },
-  { label: 'Reviews', view: 'reviews', edit: 'reviews' },
   { label: 'Push notifications', view: 'push', edit: 'push' },
 ]
 

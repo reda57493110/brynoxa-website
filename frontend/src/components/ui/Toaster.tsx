@@ -1,5 +1,6 @@
 import { useToastStore } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 
 const iconByType: Record<'success' | 'error' | 'info', SiteIconName> = {
@@ -10,6 +11,7 @@ const iconByType: Record<'success' | 'error' | 'info', SiteIconName> = {
 
 export function Toaster() {
   const { toasts, dismiss } = useToastStore()
+  const tr = useT()
 
   return (
     <div
@@ -46,7 +48,7 @@ export function Toaster() {
             type="button"
             onClick={() => dismiss(t.id)}
             className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--fg-muted)] transition hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
-            aria-label="Dismiss"
+            aria-label={tr('ui.close')}
           >
             <SiteIcon name="close" size={14} />
           </button>

@@ -88,3 +88,24 @@ export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin/notifications': 'push',
   '/admin/settings': 'settings',
 }
+
+/** The permission an admin page needs (the longest matching path in ADMIN_NAV_PERMISSION). */
+export function requiredPermissionForPath(pathname: string) {
+  const entries = Object.entries(ADMIN_NAV_PERMISSION).sort(
+    (a, b) => b[0].length - a[0].length
+  )
+  for (const [path, permission] of entries) {
+    if (path === '/admin') {
+      if (pathname === '/admin' || pathname === '/admin/') return permission
+      continue
+    }
+    if (pathname === path || pathname.startsWith(`${path}/`)) return permission
+  }
+  return null
+}
+
+/** This role can open that admin page (otherwise it is sent back to its home page). */
+export function canOpenAdminPath(role: string | undefined | null, to: string) {
+  const required = requiredPermissionForPath(to.split(/[?#]/)[0])
+  return !required || hasPermission(role, required)
+}

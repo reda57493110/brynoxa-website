@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { StaffLink } from '@/components/admin/StaffLink'
 import { Link } from 'react-router-dom'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Badge } from '@/components/ui/Badge'
@@ -98,9 +99,13 @@ function Bought({ order }: { order: CustomerProfileOrder }) {
             {l.image ? <SafeImage src={optimizedImageUrl(l.image, 96)} alt="" className="size-full object-cover" /> : null}
           </span>
           <div className="min-w-0 flex-1">
-            <Link to={`/admin/products/${l.productId}/edit`} className="line-clamp-2 text-sm font-medium hover:text-[var(--brand-text)]">
+            <StaffLink
+              to={`/admin/products/${l.productId}/edit`}
+              className="line-clamp-2 text-sm font-medium hover:text-[var(--brand-text)]"
+              fallbackClassName="line-clamp-2 text-sm font-medium"
+            >
               {l.name}
-            </Link>
+            </StaffLink>
             <p className="text-[11px] text-[var(--fg-muted)]">
               {l.qty} × {formatCurrency(l.price)}
               {l.returnedQty ? <span className="text-[var(--danger)]"> · {l.returnedQty} returned</span> : null}

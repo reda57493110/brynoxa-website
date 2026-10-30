@@ -23,6 +23,9 @@ import type { SalesRange, User } from '@/types'
 
 const RANGES: SalesRange[] = [7, 14, 30, 90]
 
+/** Same words as the order page */
+const PAYMENT_LABEL: Record<string, string> = { pending: 'Unpaid', paid: 'Paid', failed: 'Not collected', refunded: 'Refunded' }
+
 const PAYMENT_VARIANT: Record<string, BadgeVariant> = {
   paid: 'success',
   pending: 'warning',
@@ -113,7 +116,7 @@ export function Dashboard() {
                 value={formatCurrencyRounded(t.revenue)}
                 hint={<Change now={t.revenue} before={p.revenue} days={range} money />}
                 icon="banknote"
-                to="/admin/customers"
+                to="/admin/analytics"
               />
               <Kpi
                 label={`Orders · ${range} days`}
@@ -364,7 +367,7 @@ export function Dashboard() {
                         <td className="whitespace-nowrap py-2 pe-2 text-[var(--fg-muted)]">{formatDate(o.createdAt)}</td>
                         <td className="whitespace-nowrap py-2 text-end tabular-nums">{formatCurrency(o.pricing.total)}</td>
                         <td className="py-2 ps-3">
-                          <Badge variant={PAYMENT_VARIANT[o.paymentStatus] ?? 'muted'}>{o.paymentStatus}</Badge>
+                          <Badge variant={PAYMENT_VARIANT[o.paymentStatus] ?? 'muted'}>{PAYMENT_LABEL[o.paymentStatus] ?? o.paymentStatus}</Badge>
                         </td>
                         <td className="py-2">
                           <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>

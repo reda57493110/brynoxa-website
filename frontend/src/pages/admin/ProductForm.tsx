@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { hasPermission } from '@/lib/permissions'
+import { useAuthStore } from '@/store/authStore'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -147,9 +149,12 @@ export function ProductForm() {
     queryKey: ['categories', 'all'],
     queryFn: async () => (await categoriesApi.list(true)).data.data as Category[],
   })
+  // Store settings are the owner's: catalog staff get no storage-location suggestions and no Settings links
+  const canOpenSettings = hasPermission(useAuthStore((s) => s.user?.role), 'settings')
   const adminSettings = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => (await adminApi.settings.get()).data.data,
+    enabled: canOpenSettings,
   })
   const existing = useQuery({
     queryKey: ['admin-product', id],
@@ -1136,11 +1141,15 @@ export function ProductForm() {
                 Admin → Inventory
               </Link>{' '}
               → product → “Create refurbished/used listing”, so they stay linked to the new model.
-              Storage locations are managed in{' '}
-              <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
-                Settings
-              </Link>
-              .
+              {canOpenSettings ? (
+                <>
+                  {' '}Storage locations are managed in{' '}
+                  <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
+                    Settings
+                  </Link>
+                  .
+                </>
+              ) : null}
             </p>
             </div>
         </details>
@@ -1226,12 +1235,16 @@ export function ProductForm() {
                     ? 'This product is the big picture at the top of the Shop page.'
                     : shopHeroShown.product
                       ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
-                      : 'The big picture at the top of the Shop page. Only one product can be there.'}{' '}
-                You can also change it in{' '}
-                <Link to="/admin/settings?tab=storefront" className="text-[var(--brand-text)] hover:underline">
-                  Settings
-                </Link>
-                .
+                      : 'The big picture at the top of the Shop page. Only one product can be there.'}
+                {canOpenSettings ? (
+                  <>
+                    {' '}You can also change it in{' '}
+                    <Link to="/admin/settings?tab=storefront" className="text-[var(--brand-text)] hover:underline">
+                      Settings
+                    </Link>
+                    .
+                  </>
+                ) : null}
               </span>
               {isShownInShopHero && !shopHero ? (
                 <span className="mt-1 block text-xs text-[var(--fg-muted)]">

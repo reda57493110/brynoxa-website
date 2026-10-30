@@ -89,7 +89,7 @@ export function ProductCard({
   const onCompare = () => {
     if (compareHas) {
       removeCompare(product._id)
-      toast.info(t('compare.remove'))
+      toast.info(t('compare.removed'))
       return
     }
     if (addCompare(product)) {

@@ -30,7 +30,8 @@ export function CustomerFilters({
   values: FilterValues
   onChange: (patch: Partial<FilterValues>) => void
   onClear: () => void
-  onSave: (name: string) => void
+  /** Missing for staff who may not change settings: no "Save as segment" */
+  onSave?: (name: string) => void
   saving: boolean
   profitVisible: boolean
 }) {
@@ -136,13 +137,13 @@ export function CustomerFilters({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            {naming ? (
+            {!onSave ? null : naming ? (
               <form
                 className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto"
                 onSubmit={(e) => {
                   e.preventDefault()
                   if (!name.trim()) return
-                  onSave(name.trim())
+                  onSave?.(name.trim())
                   setName('')
                   setNaming(false)
                 }}

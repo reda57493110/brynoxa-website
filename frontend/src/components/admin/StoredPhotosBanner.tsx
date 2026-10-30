@@ -5,6 +5,8 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { toast } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { hasPermission } from '@/lib/permissions'
 
 /**
  * Admin → Products: photos uploaded before Cloudinary was set up are stored in the database and
@@ -13,6 +15,8 @@ import { toast } from '@/store/toastStore'
  */
 export function StoredPhotosBanner() {
   const qc = useQueryClient()
+  // Connecting Cloudinary is the owner's job (in Vercel); other staff are told to ask them
+  const isOwner = hasPermission(useAuthStore((s) => s.user?.role), 'settings')
   const [progress, setProgress] = useState<{ moved: number; failed: number } | null>(null)
   const count = useQuery({
     queryKey: ['admin-stored-photos'],
@@ -63,7 +67,9 @@ export function StoredPhotosBanner() {
         <span className="text-[var(--fg-muted)]">
           {ready
             ? 'Move them to Cloudinary: lighter, resized photos on phones and more room in your database.'
-            : 'To move them to Cloudinary (lighter photos on phones), add the Cloudinary keys in Vercel and redeploy first.'}
+            : isOwner
+              ? 'To move them to Cloudinary (lighter photos on phones), connect Cloudinary in Vercel first, then redeploy.'
+              : 'They can move to Cloudinary (lighter photos on phones) once the owner connects it.'}
         </span>
       </p>
       {ready ? (

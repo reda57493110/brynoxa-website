@@ -627,6 +627,137 @@ const YES_NO: Record<string, L> = {
   No: { en: 'No', fr: 'Non', ar: 'لا' },
 }
 
+/**
+ * Option values that are words (not model names or numbers): shown in French / Arabic.
+ * [French, Arabic]. Values not listed (e.g. "DDR5", "RTX 4060", "16:9") are the same everywhere.
+ */
+const VALUE_TEXT: Record<string, [string, string]> = {
+  // Warranty
+  'No warranty': ['Sans garantie', 'بدون ضمان'],
+  '1 month': ['1 mois', 'شهر واحد'],
+  '3 months': ['3 mois', '3 أشهر'],
+  '6 months': ['6 mois', '6 أشهر'],
+  '1 year': ['1 an', 'سنة واحدة'],
+  '2 years': ['2 ans', 'سنتان'],
+  '3 years': ['3 ans', '3 سنوات'],
+  // Processor, memory, storage
+  '10th Gen': ['10e génération', 'الجيل العاشر'],
+  '11th Gen': ['11e génération', 'الجيل الحادي عشر'],
+  '12th Gen': ['12e génération', 'الجيل الثاني عشر'],
+  '13th Gen': ['13e génération', 'الجيل الثالث عشر'],
+  '14th Gen': ['14e génération', 'الجيل الرابع عشر'],
+  None: ['Aucun', 'لا يوجد'],
+  'Unified memory': ['Mémoire unifiée', 'ذاكرة موحدة'],
+  'DIMM (desktop)': ['DIMM (PC fixe)', 'DIMM (حاسوب مكتبي)'],
+  'SO-DIMM (laptop)': ['SO-DIMM (portable)', 'SO-DIMM (حاسوب محمول)'],
+  External: ['Externe', 'خارجي'],
+  // Screen
+  Flat: ['Plat', 'مسطح'],
+  Curved: ['Incurvé', 'منحني'],
+  // System, keyboard
+  'No OS': ['Sans système', 'بدون نظام تشغيل'],
+  'AZERTY (French)': ['AZERTY (français)', 'AZERTY (فرنسي)'],
+  'QWERTY (US)': ['QWERTY (américain)', 'QWERTY (أمريكي)'],
+  'QWERTY (UK)': ['QWERTY (britannique)', 'QWERTY (بريطاني)'],
+  'Arabic / AZERTY': ['Arabe / AZERTY', 'عربي / AZERTY'],
+  'Arabic / QWERTY': ['Arabe / QWERTY', 'عربي / QWERTY'],
+  White: ['Blanc', 'أبيض'],
+  'Per-key RGB': ['RGB par touche', 'RGB لكل مفتاح'],
+  'Full size (100%)': ['Complet (100 %)', 'كامل (100%)'],
+  Numpad: ['Pavé numérique', 'لوحة أرقام'],
+  'Keyboard + mouse combo': ['Clavier + souris', 'لوحة مفاتيح + فأرة'],
+  Mechanical: ['Mécanique', 'ميكانيكي'],
+  Membrane: ['Membrane', 'غشائي'],
+  Optical: ['Optique', 'بصري'],
+  'Hall effect (magnetic)': ['Effet Hall (magnétique)', 'تأثير هول (مغناطيسي)'],
+  Scissor: ['Ciseaux', 'مقصّي'],
+  'Red (linear)': ['Rouge (linéaire)', 'أحمر (خطي)'],
+  'Brown (tactile)': ['Marron (tactile)', 'بني (لمسي)'],
+  'Blue (clicky)': ['Bleu (clic)', 'أزرق (نقري)'],
+  'Yellow (linear)': ['Jaune (linéaire)', 'أصفر (خطي)'],
+  'Silver (speed)': ['Argent (rapide)', 'فضي (سريع)'],
+  'Single color': ['Une couleur', 'لون واحد'],
+  // Cooling, connection
+  'Stock cooler': ['Ventirad d’origine', 'مبرد أصلي'],
+  'Air cooler': ['Ventirad', 'مبرد هوائي'],
+  'AIO liquid 240 mm': ['Watercooling AIO 240 mm', 'تبريد مائي AIO 240 مم'],
+  'AIO liquid 280 mm': ['Watercooling AIO 280 mm', 'تبريد مائي AIO 280 مم'],
+  'AIO liquid 360 mm': ['Watercooling AIO 360 mm', 'تبريد مائي AIO 360 مم'],
+  'USB wired': ['Filaire USB', 'سلكي USB'],
+  'USB-C wired': ['Filaire USB-C', 'سلكي USB-C'],
+  '2.4 GHz wireless': ['Sans fil 2,4 GHz', 'لاسلكي 2.4 GHz'],
+  '3.5 mm jack': ['Jack 3,5 mm', 'مقبس 3.5 مم'],
+  Laser: ['Laser', 'ليزر'],
+  // Audio
+  'Over-ear headphones': ['Casque circum-auriculaire', 'سماعات رأس حول الأذن'],
+  'On-ear headphones': ['Casque supra-auriculaire', 'سماعات رأس فوق الأذن'],
+  'In-ear / earbuds': ['Écouteurs intra-auriculaires', 'سماعات داخل الأذن'],
+  'Gaming headset': ['Casque gaming', 'سماعة ألعاب'],
+  Speakers: ['Enceintes', 'مكبرات صوت'],
+  Soundbar: ['Barre de son', 'مكبر صوت شريطي'],
+  Microphone: ['Microphone', 'ميكروفون'],
+  'Built-in': ['Intégré', 'مدمج'],
+  Detachable: ['Amovible', 'قابل للفصل'],
+  Retractable: ['Rétractable', 'قابل للسحب'],
+  'Active (ANC)': ['Active (ANC)', 'نشط (ANC)'],
+  Passive: ['Passive', 'عادي'],
+  Stereo: ['Stéréo', 'ستيريو'],
+  'Virtual 7.1': ['7.1 virtuel', '7.1 افتراضي'],
+  // Printers
+  Printer: ['Imprimante', 'طابعة'],
+  'All-in-one (print, scan, copy)': ['Multifonction (impression, scan, copie)', 'متعددة الوظائف (طباعة، مسح، نسخ)'],
+  Scanner: ['Scanner', 'ماسح ضوئي'],
+  'Photo printer': ['Imprimante photo', 'طابعة صور'],
+  'Label printer': ['Imprimante d’étiquettes', 'طابعة ملصقات'],
+  Inkjet: ['Jet d’encre', 'نافثة للحبر'],
+  'Ink tank': ['Réservoir d’encre', 'خزان حبر'],
+  Thermal: ['Thermique', 'حرارية'],
+  'Dot matrix': ['Matricielle', 'نقطية'],
+  Color: ['Couleur', 'ملونة'],
+  Monochrome: ['Monochrome', 'أحادية اللون'],
+  Envelopes: ['Enveloppes', 'أظرف'],
+  'Photo 10×15': ['Photo 10×15', 'صورة 10×15'],
+  Manual: ['Manuel', 'يدوي'],
+  Automatic: ['Automatique', 'تلقائي'],
+  'Mobile app printing': ['Impression depuis le téléphone', 'الطباعة من الهاتف'],
+  // Network
+  Router: ['Routeur', 'راوتر'],
+  'Mesh Wi-Fi system': ['Système Wi-Fi mesh', 'نظام Wi-Fi شبكي'],
+  'Access point': ['Point d’accès', 'نقطة وصول'],
+  'Range extender': ['Répéteur', 'مقوي إشارة'],
+  Switch: ['Switch', 'محوّل شبكة'],
+  'Network adapter (USB)': ['Adaptateur réseau (USB)', 'محول شبكة (USB)'],
+  'Network adapter (PCIe)': ['Adaptateur réseau (PCIe)', 'محول شبكة (PCIe)'],
+  '4G/5G router': ['Routeur 4G/5G', 'راوتر 4G/5G'],
+  Modem: ['Modem', 'مودم'],
+  'None (wired only)': ['Aucun (filaire uniquement)', 'لا يوجد (سلكي فقط)'],
+  Firewall: ['Pare-feu', 'جدار حماية'],
+  'Parental controls': ['Contrôle parental', 'رقابة أبوية'],
+  'Guest network': ['Réseau invité', 'شبكة الضيوف'],
+  // Materials
+  Aluminum: ['Aluminium', 'ألومنيوم'],
+  Plastic: ['Plastique', 'بلاستيك'],
+  Steel: ['Acier', 'فولاذ'],
+  Glass: ['Verre', 'زجاج'],
+  Fabric: ['Tissu', 'قماش'],
+  Leather: ['Cuir', 'جلد'],
+  Wood: ['Bois', 'خشب'],
+}
+
+/** Colours (only for the colour field: "Silver" / "Gold" are also power-supply ratings). */
+const COLOR_TEXT: Record<string, [string, string]> = {
+  Black: ['Noir', 'أسود'],
+  White: ['Blanc', 'أبيض'],
+  Silver: ['Argent', 'فضي'],
+  Gray: ['Gris', 'رمادي'],
+  'Space gray': ['Gris sidéral', 'رمادي داكن'],
+  Blue: ['Bleu', 'أزرق'],
+  Red: ['Rouge', 'أحمر'],
+  Green: ['Vert', 'أخضر'],
+  Pink: ['Rose', 'وردي'],
+  Gold: ['Or', 'ذهبي'],
+}
+
 export function specLabel(key: string, locale: Locale) {
   return SPEC_FIELDS[key]?.label[locale] ?? key
 }
@@ -636,6 +767,11 @@ export function formatSpecValue(key: string, value: string, locale: Locale) {
   const field = SPEC_FIELDS[key]
   if (!field) return value
   if (field.type === 'bool' || YES_NO[value]) return YES_NO[value]?.[locale] ?? value
+  // Words in French / Arabic (model names and numbers stay as typed)
+  if (locale !== 'en') {
+    const text = (key === 'color' ? COLOR_TEXT[value] : undefined) ?? VALUE_TEXT[value]
+    if (text) return text[locale === 'fr' ? 0 : 1]
+  }
   if (field.type === 'number' && field.unit && /^-?\d+(\.\d+)?$/.test(value)) {
     const shown = locale === 'fr' ? value.replace('.', ',') : value
     return field.unit === '"' || field.unit === '%' ? `${shown}${field.unit}` : `${shown} ${field.unit}`

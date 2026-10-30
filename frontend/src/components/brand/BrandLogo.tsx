@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 type BrandLogoProps = {
   to?: string
@@ -23,6 +24,7 @@ export function BrandLogo({
   markClassName,
   onClick,
 }: BrandLogoProps) {
+  const t = useT()
   const content = (
     <>
       <span
@@ -73,7 +75,7 @@ export function BrandLogo({
   }
 
   return (
-    <Link to={to} onClick={onClick} className={shared} aria-label="Brynoxa home">
+    <Link to={to} onClick={onClick} className={shared} aria-label={t('ui.homeLink')}>
       {content}
     </Link>
   )

@@ -18,7 +18,8 @@ export function CustomerTable({
 }: {
   rows: CustomerRow[]
   profitVisible: boolean
-  onToggle: (row: CustomerRow) => void
+  /** Missing for staff who may not change customers: no enable / disable buttons */
+  onToggle?: (row: CustomerRow) => void
   togglingId: string | null
 }) {
   if (!rows.length) {
@@ -76,11 +77,13 @@ export function CustomerTable({
                   </p>
                 ) : null}
               </Link>
-              <div className="flex justify-end px-3 pb-2">
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" loading={togglingId === c._id} onClick={() => onToggle(c)}>
-                  {isDisabled(c) ? 'Enable account' : 'Disable account'}
-                </Button>
-              </div>
+              {onToggle ? (
+                <div className="flex justify-end px-3 pb-2">
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" loading={togglingId === c._id} onClick={() => onToggle(c)}>
+                    {isDisabled(c) ? 'Enable account' : 'Disable account'}
+                  </Button>
+                </div>
+              ) : null}
             </li>
           )
         })}
@@ -153,15 +156,17 @@ export function CustomerTable({
                       >
                         View
                       </Link>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        loading={togglingId === c._id}
-                        onClick={() => onToggle(c)}
-                        aria-label={`${isDisabled(c) ? 'Enable' : 'Disable'} ${c.name}`}
-                      >
-                        {isDisabled(c) ? 'Enable' : 'Disable'}
-                      </Button>
+                      {onToggle ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          loading={togglingId === c._id}
+                          onClick={() => onToggle(c)}
+                          aria-label={`${isDisabled(c) ? 'Enable' : 'Disable'} ${c.name}`}
+                        >
+                          {isDisabled(c) ? 'Enable' : 'Disable'}
+                        </Button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>

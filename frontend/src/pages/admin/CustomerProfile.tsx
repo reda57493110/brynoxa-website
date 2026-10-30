@@ -311,7 +311,7 @@ export function CustomerProfile() {
       <ConfirmDialog
         open={confirm === 'delete'}
         title="Delete this customer account?"
-        description={`This permanently deletes ${c.name}'s account, wishlist and reviews. Orders and financial records are kept.`}
+        description={`This permanently deletes ${c.name}'s account and wishlist. Orders and financial records are kept.`}
         confirmLabel="Delete account"
         loading={removeMut.isPending}
         onClose={() => setConfirm(null)}

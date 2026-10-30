@@ -88,7 +88,7 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
       return <EmailNotificationsSettings settings={settings} />
     case 'security':
       return (
-        <SettingsCard title="Account security" description="Password, two-step sign-in and sessions.">
+        <SettingsCard title="Account security" description="Password and two-step sign-in.">
           <Link
             to="/admin/security"
             className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand-text)]"

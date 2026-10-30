@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { StaffLink } from '@/components/admin/StaffLink'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi } from '@/api/inventoryApi'
 import { getErrorMessage } from '@/api/client'
@@ -113,9 +113,13 @@ export function OrderReturnPanel({ order }: { order: Order }) {
       {created ? (
         <p className="mt-3 rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-sm">
           Return registered.{' '}
-          <Link to={`/admin/inventory/returns/${created._id}`} className="font-medium text-[var(--brand-text)] hover:underline">
+          <StaffLink
+            to={`/admin/inventory/returns/${created._id}`}
+            className="font-medium text-[var(--brand-text)] hover:underline"
+            fallback="Stock staff assess it in Inventory → Returns"
+          >
             Assess it
-          </Link>{' '}
+          </StaffLink>{' '}
           — units stay unsellable until then.
         </p>
       ) : null}
@@ -209,7 +213,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
             )
           })}
         </ul>
-        <p className="text-xs text-[var(--fg-muted)]">The server won't accept more than was shipped minus what was already returned.</p>
+        <p className="text-xs text-[var(--fg-muted)]">You can return at most what was sent, minus what already came back.</p>
         <Button type="submit" className="w-full sm:w-auto" loading={submit.isPending} disabled={!selected}>
           Register return
         </Button>

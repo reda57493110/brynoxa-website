@@ -42,10 +42,18 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'PATCH') {
-      const user = await requireStaff(req, res, ['settings']);
+      const user = await requireStaff(req, res, ['settings', 'products:write']);
       if (!user) return;
 
       const body = await readJsonBody(req);
+      // Catalog staff: only where products show in the shop (home deals, shop page header)
+      const { hasPermission } = require('../../backend/dist/permissions');
+      const { STOREFRONT_SETTINGS } = require('../../backend/dist/middleware/auth');
+      const keys = Object.keys(body && typeof body === 'object' ? body : {});
+      if (!hasPermission(user.role, 'settings') && !(keys.length && keys.every((k) => STOREFRONT_SETTINGS.includes(k)))) {
+        sendJson(res, 403, { success: false, message: 'You do not have permission for this action' });
+        return;
+      }
       // Same checks as the Express route: plain values (no negative tax or shipping, real email)
       // and every row (tiers, statuses, payment methods…). A bad row is refused, never dropped.
       const { settingsUpdateSchema, settingsScalarsSchema, settingsIssueMessage } = require('../../backend/dist/validators/schemas');

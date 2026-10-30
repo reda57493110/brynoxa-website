@@ -52,7 +52,9 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
         </div>
         <p className="hidden text-sm text-[var(--fg-muted)] md:block">
           {canOrders
-            ? `Live · ${stats.data?.todayOrders ?? 0} orders today`
+            ? stats.data
+              ? `Live · ${stats.data.todayOrders} order${stats.data.todayOrders === 1 ? '' : 's'} today`
+              : 'Live'
             : `${roleLabel} workspace`}
         </p>
       </div>

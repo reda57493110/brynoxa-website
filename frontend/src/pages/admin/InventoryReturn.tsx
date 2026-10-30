@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
+import { StaffLink } from '@/components/admin/StaffLink'
 import { useQuery } from '@tanstack/react-query'
 import { inventoryApi } from '@/api/inventoryApi'
 import { AdminHeader } from '@/components/admin/AdminHeader'
@@ -51,9 +52,9 @@ export function InventoryReturn() {
             <dt className="text-xs text-[var(--fg-muted)]">Customer</dt>
             <dd className="break-words">
               {customer?._id ? (
-                <Link to={`/admin/customers/${customer._id}`} className="hover:text-[var(--brand-text)]">
+                <StaffLink to={`/admin/customers/${customer._id}`} className="hover:text-[var(--brand-text)]">
                   {returnCustomerName(r.customer)}
-                </Link>
+                </StaffLink>
               ) : (
                 returnCustomerName(r.customer)
               )}
