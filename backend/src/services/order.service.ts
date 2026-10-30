@@ -81,14 +81,26 @@ export async function couponLinesFor(items?: { productId: string; qty: number }[
   return items.filter((i) => price.has(i.productId)).map((i) => ({ product: i.productId, price: price.get(i.productId)!, qty: i.qty }));
 }
 
-export async function validateCoupon(code: string, subtotal: number, lines?: CouponLine[]) {
-  const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+/**
+ * `alreadyGranted`: the order being edited already holds this coupon (its use is counted), so
+ * it stays valid even if it has expired, run out or been switched off since; the amount rules
+ * (minimum order, eligible products) still apply to the new items.
+ */
+export async function validateCoupon(
+  code: string,
+  subtotal: number,
+  lines?: CouponLine[],
+  { alreadyGranted = false }: { alreadyGranted?: boolean } = {}
+) {
+  const coupon = await Coupon.findOne({ code: code.toUpperCase(), ...(alreadyGranted ? {} : { isActive: true }) });
   if (!coupon) throw new ApiError(404, 'Invalid coupon');
   const now = new Date();
-  if (coupon.startsAt && coupon.startsAt > now) throw new ApiError(400, 'Coupon not active yet');
-  if (coupon.expiresAt && coupon.expiresAt < now) throw new ApiError(400, 'Coupon expired');
-  if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
-    throw new ApiError(400, 'Coupon usage limit reached');
+  if (!alreadyGranted) {
+    if (coupon.startsAt && coupon.startsAt > now) throw new ApiError(400, 'Coupon not active yet');
+    if (coupon.expiresAt && coupon.expiresAt < now) throw new ApiError(400, 'Coupon expired');
+    if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
+      throw new ApiError(400, 'Coupon usage limit reached');
+    }
   }
   if (subtotal < coupon.minOrder) {
     throw new ApiError(400, `Minimum order of ${coupon.minOrder} DH required`);
@@ -233,13 +245,19 @@ function productsDeposit(depositTotal: number, total: number): IOrderDeposit | u
 
 const formatDh = (amount: number) => `${amount.toLocaleString('en-US')} DH`;
 
-async function priceOrder(subtotal: number, couponCode?: string, city?: string, lines?: CouponLine[]) {
+async function priceOrder(
+  subtotal: number,
+  couponCode?: string,
+  city?: string,
+  lines?: CouponLine[],
+  couponOptions?: { alreadyGranted?: boolean }
+) {
   const settings = await getSettingsCached();
   let discount = 0;
   let couponMeta: { code: string; couponId: Types.ObjectId; perCustomerLimit: number } | undefined;
 
   if (couponCode) {
-    const { coupon, discount: d } = await validateCoupon(couponCode, subtotal, lines);
+    const { coupon, discount: d } = await validateCoupon(couponCode, subtotal, lines, couponOptions);
     discount = d;
     couponMeta = { code: coupon.code, couponId: coupon._id as Types.ObjectId, perCustomerLimit: coupon.perCustomerLimit || 0 };
   }
@@ -546,7 +564,8 @@ export async function updateUserOrderItems(
     subtotal,
     previousCouponCode,
     order.shippingAddress?.city,
-    orderItems
+    orderItems,
+    { alreadyGranted: true }
   );
   const pricing = { ...basePricing, wholesaleDiscount };
 
@@ -672,6 +691,9 @@ export async function updateOrderStatus(
   }
   if (prev !== orderStatus && !ORDER_TRANSITIONS[prev].includes(orderStatus)) {
     throw new ApiError(400, `Cannot move an order from ${prev.replace(/_/g, ' ')} to ${orderStatus.replace(/_/g, ' ')}`);
+  }
+  if (prev === 'partially_returned' && orderStatus === 'delivered' && wasDelivered(order)) {
+    throw new ApiError(400, 'This order was already delivered');
   }
   if (orderStatus === 'delivery_failed' && !(extra.reason && DELIVERY_ISSUES.includes(extra.reason))) {
     throw new ApiError(400, 'Choose why the delivery failed');

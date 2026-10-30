@@ -33,8 +33,20 @@ function sendError(res, err) {
     status = 400;
     message = 'Invalid id';
   }
+  // A value that must be unique is already taken (SKU, email, coupon code…): the person's input
+  const taken = require('../../backend/dist/utils/duplicateKey').duplicateKeyMessage(err);
+  if (!status && taken) {
+    status = 409;
+    message = taken;
+  }
   if (status >= 400 && status < 500) {
-    sendJson(res, status, { success: false, message: message || 'Request failed' });
+    sendJson(res, status, {
+      success: false,
+      message: message || 'Request failed',
+      // Same extras as the Express error handler (field errors, codes such as MFA_REQUIRED)
+      ...(err?.errors && err?.statusCode ? { errors: err.errors } : {}),
+      ...(err?.code && typeof err.code === 'string' ? { code: err.code } : {}),
+    });
     return;
   }
   sendJson(res, status >= 500 ? status : 500, { success: false, message: 'Something went wrong. Please try again.' });

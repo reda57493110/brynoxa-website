@@ -123,7 +123,11 @@ export function OrderStatusActions({ order }: { order: Order }) {
   const refresh = useInvalidateOrder(order._id)
   const current = order.orderStatus === 'processing' ? 'confirmed' : order.orderStatus
   // A rescheduled delivery can get a new date without changing status
-  const next: OrderStatus[] = [...(ORDER_TRANSITIONS[current] ?? []), ...(current === 'rescheduled' ? (['rescheduled'] as OrderStatus[]) : [])]
+  // A partly returned order offers "delivered" only if it was never delivered (cash not collected yet)
+  const next: OrderStatus[] = [
+    ...(ORDER_TRANSITIONS[current] ?? []).filter((s) => !(current === 'partially_returned' && s === 'delivered' && order.deliveredAt)),
+    ...(current === 'rescheduled' ? (['rescheduled'] as OrderStatus[]) : []),
+  ]
   const [target, setTarget] = useState<OrderStatus | null>(null)
   const [reason, setReason] = useState('')
   const [date, setDate] = useState('')

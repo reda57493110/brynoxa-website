@@ -54,6 +54,6 @@ test('the form: products and prices are checked; a special-price coupon needs a 
 
 test('orders and the checkout check use the cart lines', () => {
   const src = fs.readFileSync(dist('services/order.service.js'), 'utf8');
-  assert.equal((src.match(/priceOrder\(subtotal, (input\.couponCode|previousCouponCode), (input|order)\.shippingAddress\?\.city, orderItems\)/g) || []).length, 2);
+  assert.equal((src.match(/priceOrder\(subtotal, (input\.couponCode|previousCouponCode), (input|order)\.shippingAddress\?\.city, orderItems(, \{ alreadyGranted: true \})?\)/g) || []).length, 2);
   assert.match(fs.readFileSync(api('v1/orders.js'), 'utf8'), /validateCoupon\(body\.code, body\.subtotal, await orderService\.couponLinesFor\(body\.items\)\)/);
 });

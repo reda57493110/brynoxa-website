@@ -19,6 +19,8 @@ import { ProfileProfitability } from '@/components/admin/customers/ProfileProfit
 import { ProfilePayments } from '@/components/admin/customers/ProfilePayments'
 import { ProfileActivity } from '@/components/admin/customers/ProfileActivity'
 import { toast } from '@/store/toastStore'
+import { useAuthStore } from '@/store/authStore'
+import { hasPermission } from '@/lib/permissions'
 import { cn } from '@/lib/cn'
 import type { CustomerProfile as Profile, CustomerUpdatePayload, WholesaleReviewPayload } from '@/types'
 
@@ -41,6 +43,11 @@ export function CustomerProfile() {
   const tab: TabId = TABS.some((t) => t.id === tabParam) ? (tabParam as TabId) : 'overview'
   const [confirm, setConfirm] = useState<null | 'toggle' | 'delete'>(null)
   const [recording, setRecording] = useState(false)
+  // Order / support staff can look at customers; only some roles may change them
+  const role = useAuthStore((s) => s.user?.role)
+  const canEdit = hasPermission(role, 'customers:write')
+  const canEmail = hasPermission(role, 'messages')
+  const canRecordDeposit = hasPermission(role, 'orders:write')
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const setParam = (patch: Record<string, string | undefined>) =>
@@ -203,22 +210,32 @@ export function CustomerProfile() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
+          {canEmail ? (
           <Link
             to={`/admin/emails?to=${encodeURIComponent(c.email)}`}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
           >
             <SiteIcon name="mail" size={14} /> Email customer
           </Link>
-          <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
-            <SiteIcon name="banknote" size={14} /> Record deposit
-          </Button>
-          <RecordDepositDialog open={recording} onClose={() => setRecording(false)} customer={{ id, name: c.name, email: c.email }} />
-          <Button size="sm" variant="outline" onClick={() => setConfirm('toggle')}>
-            {c.isActive ? 'Disable' : 'Enable'}
-          </Button>
-          <Button size="sm" variant="outline" className="text-[var(--danger)]" onClick={() => setConfirm('delete')}>
-            <SiteIcon name="trash" size={14} /> Delete
-          </Button>
+          ) : null}
+          {canRecordDeposit ? (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
+                <SiteIcon name="banknote" size={14} /> Record deposit
+              </Button>
+              <RecordDepositDialog open={recording} onClose={() => setRecording(false)} customer={{ id, name: c.name, email: c.email }} />
+            </>
+          ) : null}
+          {canEdit ? (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setConfirm('toggle')}>
+                {c.isActive ? 'Disable' : 'Enable'}
+              </Button>
+              <Button size="sm" variant="outline" className="text-[var(--danger)]" onClick={() => setConfirm('delete')}>
+                <SiteIcon name="trash" size={14} /> Delete
+              </Button>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -263,7 +280,7 @@ export function CustomerProfile() {
         tabIndex={0}
         className="min-w-0 outline-none"
       >
-        {tab === 'overview' ? <ProfileOverview profile={data} save={save} review={review} busy={busy} /> : null}
+        {tab === 'overview' ? <ProfileOverview profile={data} save={save} review={review} busy={busy} canEdit={canEdit} /> : null}
         {tab === 'orders' ? (
           <ProfileOrders profile={data} metrics={metrics} lifetime={lifetimeForHints} />
         ) : null}

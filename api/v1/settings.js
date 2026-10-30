@@ -46,17 +46,17 @@ module.exports = async (req, res) => {
       if (!user) return;
 
       const body = await readJsonBody(req);
-      // Plain values must be valid (no negative tax or shipping, real email)
-      const { settingsScalarsSchema } = require('../../backend/dist/validators/schemas');
-      const scalars = settingsScalarsSchema.safeParse(
-        Object.fromEntries(Object.keys(settingsScalarsSchema.shape).filter((k) => body?.[k] !== undefined).map((k) => [k, body[k]]))
-      );
-      if (!scalars.success) {
-        const issue = scalars.error.issues?.[0];
-        sendJson(res, 400, { success: false, message: `${issue?.path?.join('.') || 'settings'}: ${issue?.message || 'Invalid value'}` });
+      // Same checks as the Express route: plain values (no negative tax or shipping, real email)
+      // and every row (tiers, statuses, payment methods…). A bad row is refused, never dropped.
+      const { settingsUpdateSchema, settingsScalarsSchema, settingsIssueMessage } = require('../../backend/dist/validators/schemas');
+      const checked = settingsUpdateSchema.safeParse(body ?? {});
+      if (!checked.success) {
+        sendJson(res, 400, { success: false, message: settingsIssueMessage(checked.error.issues?.[0]) });
         return;
       }
-      Object.assign(body, scalars.data);
+      for (const key of Object.keys(settingsScalarsSchema.shape)) {
+        if (checked.data[key] !== undefined) body[key] = checked.data[key];
+      }
       const {
         getSettings,
         sanitizePageHeroProducts,

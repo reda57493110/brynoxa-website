@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/ApiError';
+import { duplicateKeyMessage } from '../utils/duplicateKey';
 import { env, isProd } from '../config/env';
 
 export function errorHandler(err: unknown, _req: Request, res: Response, _next: NextFunction) {
@@ -20,10 +21,11 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     });
   }
 
-  if (err && typeof err === 'object' && 'code' in err && (err as { code: number }).code === 11000) {
+  const taken = duplicateKeyMessage(err);
+  if (taken) {
     return res.status(409).json({
       success: false,
-      message: 'Duplicate entry',
+      message: taken,
     });
   }
 

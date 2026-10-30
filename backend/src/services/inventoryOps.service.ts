@@ -384,10 +384,13 @@ export async function createReturn(
     const returnedQty = (productId: string) =>
       previous.reduce((sum, r) => sum + r.lines.filter((l) => String(l.product) === productId).reduce((a, l) => a + l.qty, 0), 0);
 
+    // The same product on two lines of one return counts once against what is left to return
+    const askedSoFar = new Map<string, number>();
     const lines = input.lines.map((line) => {
       const item = order.items.find((i) => String(i.product) === line.productId);
       if (!item) throw new ApiError(400, 'That product is not part of this order');
-      const left = item.qty - returnedQty(line.productId);
+      const left = item.qty - returnedQty(line.productId) - (askedSoFar.get(line.productId) || 0);
+      askedSoFar.set(line.productId, (askedSoFar.get(line.productId) || 0) + Math.max(0, Math.floor(line.qty)));
       const qty = Math.floor(line.qty);
       if (!(qty > 0) || qty > left) {
         throw new ApiError(400, left > 0 ? `You can return between 1 and ${left} unit${left === 1 ? '' : 's'} of ${item.name}` : `All units of ${item.name} are already registered as returned`);

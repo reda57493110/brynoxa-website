@@ -50,7 +50,7 @@ function billingText(b?: BillingAddress) {
 
 /* ---------- Personal info ---------- */
 
-function PersonalCard({ profile, save, busy }: { profile: CustomerProfile; save: Save; busy: boolean }) {
+function PersonalCard({ profile, save, busy, canEdit }: { profile: CustomerProfile; save: Save; busy: boolean; canEdit: boolean }) {
   const c = profile.customer
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(c.name)
@@ -76,7 +76,7 @@ function PersonalCard({ profile, save, busy }: { profile: CustomerProfile; save:
     <Section
       title="Personal information"
       actions={
-        editing ? null : (
+        editing || !canEdit ? null : (
           <Button size="sm" variant="outline" onClick={() => { reset(); setEditing(true) }}>
             Edit
           </Button>
@@ -159,12 +159,16 @@ function PersonalCard({ profile, save, busy }: { profile: CustomerProfile; save:
 
 /* ---------- Notes ---------- */
 
-function NotesCard({ profile, save, busy }: { profile: CustomerProfile; save: Save; busy: boolean }) {
+function NotesCard({ profile, save, busy, canEdit }: { profile: CustomerProfile; save: Save; busy: boolean; canEdit: boolean }) {
   const [notes, setNotes] = useState(profile.customer.adminNotes || '')
   useEffect(() => setNotes(profile.customer.adminNotes || ''), [profile.customer.adminNotes])
   const dirty = notes !== (profile.customer.adminNotes || '')
   return (
     <Section title="Internal notes">
+      {!canEdit ? (
+        <p className="whitespace-pre-wrap text-sm">{profile.customer.adminNotes || <span className="text-[var(--fg-muted)]">No notes.</span>}</p>
+      ) : (
+      <>
       <Textarea
         aria-label="Internal notes"
         placeholder="Only visible to staff"
@@ -177,18 +181,24 @@ function NotesCard({ profile, save, busy }: { profile: CustomerProfile; save: Sa
           Save notes
         </Button>
       </div>
+      </>
+      )}
     </Section>
   )
 }
 
 /* ---------- Customer type ---------- */
 
-function TypeCard({ profile, save, busy }: { profile: CustomerProfile; save: Save; busy: boolean }) {
+function TypeCard({ profile, save, busy, canEdit }: { profile: CustomerProfile; save: Save; busy: boolean; canEdit: boolean }) {
   const current = profile.customer.customerType || 'retail'
   const [type, setType] = useState<CustomerType>(current)
   useEffect(() => setType(current), [current])
   return (
     <Section title="Customer type">
+      {!canEdit ? (
+        <p className="text-sm">{TYPE_LABELS[current]}</p>
+      ) : (
+      <>
       <Select
         aria-label="Customer type"
         value={type}
@@ -209,13 +219,15 @@ function TypeCard({ profile, save, busy }: { profile: CustomerProfile; save: Sav
           Save type
         </Button>
       </div>
+      </>
+      )}
     </Section>
   )
 }
 
 /* ---------- Business info ---------- */
 
-function BusinessCard({ profile, save, busy }: { profile: CustomerProfile; save: Save; busy: boolean }) {
+function BusinessCard({ profile, save, busy, canEdit }: { profile: CustomerProfile; save: Save; busy: boolean; canEdit: boolean }) {
   const b = profile.customer.business || {}
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState<BusinessInfo>(b)
@@ -223,7 +235,7 @@ function BusinessCard({ profile, save, busy }: { profile: CustomerProfile; save:
     <Section
       title="Business information"
       actions={
-        editing ? null : (
+        editing || !canEdit ? null : (
           <Button size="sm" variant="outline" onClick={() => { setForm(profile.customer.business || {}); setEditing(true) }}>
             Edit
           </Button>
@@ -277,11 +289,13 @@ function WholesaleCard({
   save,
   review,
   busy,
+  canEdit,
 }: {
   profile: CustomerProfile
   save: Save
   review: Review
   busy: boolean
+  canEdit: boolean
 }) {
   const c = profile.customer
   const w = c.wholesale || { status: 'none' as const }
@@ -335,7 +349,7 @@ function WholesaleCard({
         </div>
       ) : null}
 
-      {w.status !== 'approved' ? (
+      {canEdit && w.status !== 'approved' ? (
         <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
           {w.status !== 'pending' ? (
             <p className="text-xs text-[var(--fg-muted)]">
@@ -427,7 +441,7 @@ function WholesaleCard({
         </div>
       ) : null}
 
-      {w.status === 'approved' ? (
+      {canEdit && w.status === 'approved' ? (
         <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
           {tiers.length ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -494,22 +508,25 @@ export function ProfileOverview({
   save,
   review,
   busy,
+  canEdit,
 }: {
   profile: CustomerProfile
   save: Save
   review: Review
   busy: boolean
+  /** Staff without 'customers:write' (orders, support) see the details without edit buttons */
+  canEdit: boolean
 }) {
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-2">
       <div className="min-w-0 space-y-4">
-        <PersonalCard profile={profile} save={save} busy={busy} />
-        <NotesCard profile={profile} save={save} busy={busy} />
+        <PersonalCard profile={profile} save={save} busy={busy} canEdit={canEdit} />
+        <NotesCard profile={profile} save={save} busy={busy} canEdit={canEdit} />
       </div>
       <div className="min-w-0 space-y-4">
-        <WholesaleCard profile={profile} save={save} review={review} busy={busy} />
-        <TypeCard profile={profile} save={save} busy={busy} />
-        <BusinessCard profile={profile} save={save} busy={busy} />
+        <WholesaleCard profile={profile} save={save} review={review} busy={busy} canEdit={canEdit} />
+        <TypeCard profile={profile} save={save} busy={busy} canEdit={canEdit} />
+        <BusinessCard profile={profile} save={save} busy={busy} canEdit={canEdit} />
       </div>
     </div>
   )

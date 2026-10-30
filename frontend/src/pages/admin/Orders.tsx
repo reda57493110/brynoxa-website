@@ -55,7 +55,10 @@ const SORTS = [
 
 /** Statuses that may move to `to` (from the shared transition table). */
 const sourcesOf = (to: OrderStatus) =>
-  (Object.keys(ORDER_TRANSITIONS) as OrderStatus[]).filter((s) => ORDER_TRANSITIONS[s].includes(to))
+  (Object.keys(ORDER_TRANSITIONS) as OrderStatus[]).filter(
+    // Partly returned orders are marked delivered one by one (only those never delivered can be)
+    (s) => ORDER_TRANSITIONS[s].includes(to) && !(s === 'partially_returned' && to === 'delivered')
+  )
 
 /**
  * Bulk status changes, each sent through the normal per-order update (stock, emails, deposit rules).

@@ -128,7 +128,8 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   delivered: ['return_requested', 'return_in_transit'],
   return_requested: ['return_in_transit', 'delivered'],
   return_in_transit: [],
-  partially_returned: ['return_requested', 'return_in_transit'],
+  // Part of the parcel came back before delivery: the customer kept the rest (delivered = cash collected)
+  partially_returned: ['delivered', 'return_requested', 'return_in_transit'],
   returned: [],
   cancelled: [],
 }

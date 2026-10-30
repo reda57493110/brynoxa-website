@@ -19,7 +19,7 @@ import {
   guestOrderReceiptSchema,
   trackOrderSchema,
   couponSchema,
-  settingsSchema,
+  settingsUpdateSchema,
   storageLimitSchema,
   emailTestSchema,
   manualEmailSchema,
@@ -248,14 +248,14 @@ router.patch(
   '/settings',
   requireAuth,
   requirePermission('settings'),
-  validate(settingsSchema),
+  validate(settingsUpdateSchema),
   misc.updateStoreSettings
 );
 router.patch(
   '/admin/settings',
   requireAuth,
   requirePermission('settings'),
-  validate(settingsSchema),
+  validate(settingsUpdateSchema),
   misc.updateStoreSettings
 );
 

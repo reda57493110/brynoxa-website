@@ -368,6 +368,22 @@ export const settingsScalarsSchema = z
   })
   .partial();
 
+/**
+ * A settings save, checked the same way locally (Express) and on the live site (serverless): a
+ * row that cannot be saved (tier without a name, discount over 90 %…) is refused with a message
+ * instead of being dropped without a word. Plain values use the stricter rules above.
+ */
+export const settingsUpdateSchema = settingsSchema.merge(settingsScalarsSchema);
+
+/** "wholesaleTiers.1.name: …" → "Wholesale tiers, row 2 — name: …" for the person saving. */
+export function settingsIssueMessage(issue?: { path?: (string | number)[]; message?: string }) {
+  const [field, row, ...rest] = issue?.path ?? [];
+  const name = String(field ?? 'settings').replace(/([A-Z])/g, ' $1').toLowerCase();
+  const where = typeof row === 'number' ? `${name[0].toUpperCase()}${name.slice(1)}, row ${row + 1}` : `${name[0].toUpperCase()}${name.slice(1)}`;
+  const what = [typeof row === 'number' ? undefined : row, ...rest].filter((p) => p !== undefined).join('.');
+  return `${where}${what ? ` — ${what}` : ''}: ${issue?.message || 'Invalid value'}`;
+}
+
 export const inventorySchema = z.object({
   stock: z.number().int().min(0).optional(),
   lowStockThreshold: z.number().int().min(0).optional(),
