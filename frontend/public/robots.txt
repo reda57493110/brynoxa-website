@@ -8,6 +8,7 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /login
 Disallow: /register
+Disallow: /admin-print
 Disallow: /fr/account
 Disallow: /fr/checkout
 Disallow: /fr/cart
@@ -18,5 +19,23 @@ Disallow: /ar/checkout
 Disallow: /ar/cart
 Disallow: /ar/login
 Disallow: /ar/register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /order-confirmation
+Disallow: /search
+Disallow: /compare
+Disallow: /fr/forgot-password
+Disallow: /fr/reset-password
+Disallow: /fr/verify-email
+Disallow: /fr/order-confirmation
+Disallow: /fr/search
+Disallow: /fr/compare
+Disallow: /ar/forgot-password
+Disallow: /ar/reset-password
+Disallow: /ar/verify-email
+Disallow: /ar/order-confirmation
+Disallow: /ar/search
+Disallow: /ar/compare
 
 Sitemap: https://brynoxa-website-lime.vercel.app/sitemap.xml

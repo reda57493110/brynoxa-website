@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -78,8 +79,27 @@ function routeChunks() {
   }
 }
 
+/**
+ * Vercel sends the app only for the shop's own addresses (vercel.json); any other address gets
+ * 404.html with a real "not found" status, so Google does not list made-up pages. It is the same
+ * app, which shows its own "page not found" screen.
+ */
+function notFoundPage() {
+  let outDir = 'dist'
+  return {
+    name: 'not-found-page',
+    apply: 'build' as const,
+    configResolved(config: { root: string; build: { outDir: string } }) {
+      outDir = path.resolve(config.root, config.build.outDir)
+    },
+    closeBundle() {
+      fs.copyFileSync(path.join(outDir, 'index.html'), path.join(outDir, '404.html'))
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [reactRefreshPreamble(), react(), tailwindcss(), routeChunks()],
+  plugins: [reactRefreshPreamble(), react(), tailwindcss(), routeChunks(), notFoundPage()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

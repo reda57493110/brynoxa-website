@@ -1,4 +1,5 @@
 import { getSettingsCached } from '../models/Settings';
+import { HIDE_PRIVATE_PRODUCT_FIELDS } from '../utils/publicProduct';
 import mongoose from 'mongoose';
 import { Category } from '../models/Category';
 import { Brand } from '../models/Brand';
@@ -377,7 +378,7 @@ export async function listProducts(query: ProductQuery) {
 
   const listQuery = Product.find(filter)
     // Shop cards use the short description; the long one is loaded by the product page
-    .select(query.admin ? '' : '-description')
+    .select(query.admin ? '' : `-description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
     .skip(skip)
     .limit(query.limit)
     .populate('category', 'name slug isActive specTemplate')
@@ -461,6 +462,7 @@ async function storefrontRanks(): Promise<Map<string, number>> {
 
 export async function getProductBySlug(slug: string) {
   const product = await Product.findOne({ slug, isActive: true })
+    .select(HIDE_PRIVATE_PRODUCT_FIELDS)
     .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug logo');
   if (!product) throw new ApiError(404, 'Product not found');
@@ -694,6 +696,7 @@ export async function getProductsByIds(ids: string[]) {
     isActive: true,
     category: { $in: activeIds },
   })
+    .select(HIDE_PRIVATE_PRODUCT_FIELDS)
     .populate('category', 'name slug isActive specTemplate')
     .populate('brand', 'name slug');
 }

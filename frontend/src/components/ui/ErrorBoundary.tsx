@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { SiteIcon } from './SiteIcon'
+import { translate, type MessageKey } from '@/i18n'
+import { useLocaleStore } from '@/store/localeStore'
 import { isChunkLoadError, reloadForNewVersion } from '@/lib/newVersion'
 
 interface ErrorBoundaryProps {
@@ -29,6 +31,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render() {
     if (!this.state.hasError) return this.props.children
+    // A class component (no hooks): the language is read from the store directly
+    const text = (key: MessageKey) => translate(useLocaleStore.getState().locale, key)
 
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4 py-10 text-[var(--fg)]">
@@ -39,9 +43,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--bg-muted)] text-[var(--danger)]">
             <SiteIcon name="alert" size={24} />
           </span>
-          <h1 className="mt-4 font-display text-xl font-semibold">Something went wrong</h1>
+          <h1 className="mt-4 font-display text-xl font-semibold">{text('errorPage.title')}</h1>
           <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-            The page could not be displayed. Refresh and try again.
+            {text('errorPage.body')}
           </p>
           <button
             type="button"
@@ -49,7 +53,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
           >
             <SiteIcon name="refresh" size={16} />
-            Refresh page
+            {text('errorPage.refresh')}
           </button>
         </section>
       </main>

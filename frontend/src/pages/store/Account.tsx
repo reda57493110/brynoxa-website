@@ -68,7 +68,7 @@ export function Account() {
               <SiteIcon
                 name="chevron-right"
                 size={16}
-                className="text-[var(--fg-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--brand-text)]"
+                className="text-[var(--fg-muted)] transition group-hover:translate-x-0.5 group-hover:text-[var(--brand-text)] rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
               />
             </Link>
           ))}

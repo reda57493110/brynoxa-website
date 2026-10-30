@@ -3,6 +3,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Spinner } from '@/components/ui/Spinner'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
+import { useT } from '@/hooks/useT'
 
 /**
  * Deposit photos are private (never public URLs): they are fetched with the signed-in session and
@@ -39,6 +40,7 @@ export function PhotoTile({
   deleting?: boolean
   className?: string
 }) {
+  const t = useT()
   const photo = usePrivatePhoto(photoKey, load)
   return (
     <div className={cn('group relative', className)}>
@@ -46,7 +48,7 @@ export function PhotoTile({
         type="button"
         onClick={() => photo.data && onOpen(photo.data)}
         className="block aspect-square w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-muted)] transition hover:border-[var(--brand)]"
-        aria-label={label ? `Open ${label}` : 'Open photo'}
+        aria-label={label ? t('photo.openNamed', { label }) : t('photo.open')}
       >
         {photo.data ? (
           <img src={photo.data} alt="" className="h-full w-full object-cover" />
@@ -71,7 +73,7 @@ export function PhotoTile({
           type="button"
           onClick={onDelete}
           disabled={deleting}
-          aria-label="Delete photo"
+          aria-label={t('photo.remove')}
           className="absolute end-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-[var(--danger)] disabled:opacity-50"
         >
           {deleting ? <Spinner size="sm" /> : <SiteIcon name="trash" size={13} />}
@@ -82,14 +84,15 @@ export function PhotoTile({
 }
 
 /** Full-size view of a photo, with "open in a new tab" to zoom or save it. */
-export function PhotoLightbox({ url, title, onClose, openLabel = 'Open full size' }: { url: string | null; title: string; onClose: () => void; openLabel?: string }) {
+export function PhotoLightbox({ url, title, onClose, openLabel }: { url: string | null; title: string; onClose: () => void; openLabel?: string }) {
+  const t = useT()
   return (
     <Modal open={Boolean(url)} onClose={onClose} title={title} size="md">
       {url ? (
         <div className="space-y-3">
           <img src={url} alt={title} className="max-h-[70vh] w-full rounded-lg bg-[var(--bg-muted)] object-contain" />
           <a href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)] hover:underline">
-            <SiteIcon name="external" size={13} /> {openLabel}
+            <SiteIcon name="external" size={13} /> {openLabel ?? t('photo.fullSize')}
           </a>
         </div>
       ) : null}

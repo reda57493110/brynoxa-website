@@ -177,7 +177,7 @@ export function FilterSidebar({
         >
           <SiteIcon name="package-check" size={compact ? 13 : 15} />
         </span>
-        <span className="min-w-0 flex-1 pr-1">
+        <span className="min-w-0 flex-1 pe-1">
           <span className={cn('block font-semibold leading-snug', compact ? 'text-[13px]' : 'text-sm')}>{t('shop.inStockOnly')}</span>
           <span className={cn('block leading-snug text-[var(--fg-muted)]', compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-xs')}>
             {values.inStock ? t('stock.inStock') : t('shop.any')}

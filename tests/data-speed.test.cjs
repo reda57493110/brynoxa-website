@@ -43,7 +43,7 @@ test('the leave-out field lists are accepted together with the hidden cost field
   assert.match(svc, /\.select\(ORDER_FIELDS\)\.populate\('timeline\.by'/, 'the customer page keeps the history');
   assert.match(fs.readFileSync(dist('services/profit.service.js'), 'utf8'), /-timeline -contactAttempts/);
   assert.match(fs.readFileSync(dist('services/order.service.js'), 'utf8'), /\.select\('-timeline -contactAttempts'\)/);
-  assert.match(fs.readFileSync(dist('services/catalog.service.js'), 'utf8'), /select\(query\.admin \? '' : '-description'\)/);
+  assert.match(fs.readFileSync(dist('services/catalog.service.js'), 'utf8'), /select\(query\.admin \? '' : `-description \$\{publicProduct_1\.HIDE_PRIVATE_PRODUCT_FIELDS\}`\)/);
 });
 
 test('indexes for staff activity and lookups are declared', () => {

@@ -1,4 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { translate } from '@/i18n'
+import { useLocaleStore } from '@/store/localeStore'
+import { localizeServerMessage } from '@/lib/serverMessages'
 import { API_URL } from '@/lib/constants'
 import { SESSION_HINT_KEY, useAuthStore } from '@/store/authStore'
 import { isStaffRole } from '@/lib/permissions'
@@ -182,10 +185,13 @@ api.interceptors.response.use(
 )
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong') {
+  // Shown in the visitor's language (server texts are English; see lib/serverMessages.ts)
+  const locale = useLocaleStore.getState().locale
+  const shown = (message: string) => localizeServerMessage(message, locale)
   if (axios.isAxiosError(error)) {
     if (!error.response) {
-      if (error.code === 'ECONNABORTED') return 'Request timed out — try again'
-      return 'Cannot reach the server — check that the API is running'
+      if (error.code === 'ECONNABORTED') return translate(locale, 'server.timeout')
+      return translate(locale, 'server.offline')
     }
     const data = error.response.data as
       | { message?: string; errors?: Record<string, string[] | undefined> }
@@ -194,12 +200,12 @@ export function getErrorMessage(error: unknown, fallback = 'Something went wrong
       const parts = Object.entries(data.errors)
         .flatMap(([field, msgs]) => (msgs || []).map((m) => `${field}: ${m}`))
         .filter(Boolean)
-      if (parts.length) return parts.join(' · ')
+      if (parts.length) return shown(parts.join(' · '))
     }
-    return data?.message || fallback
+    return shown(data?.message || fallback)
   }
-  if (error instanceof Error) return error.message
-  return fallback
+  if (error instanceof Error) return shown(error.message)
+  return shown(fallback)
 }
 
 export default api

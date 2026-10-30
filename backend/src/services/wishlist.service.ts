@@ -1,6 +1,7 @@
 import { Wishlist } from '../models/Wishlist';
 import { Product } from '../models/Product';
 import { ApiError } from '../utils/ApiError';
+import { HIDE_PRIVATE_PRODUCT_FIELDS } from '../utils/publicProduct';
 
 async function getOrCreate(userId: string) {
   let wishlist = await Wishlist.findOne({ user: userId });
@@ -13,6 +14,7 @@ export async function getWishlist(userId: string) {
   await wishlist.populate({
     path: 'products',
     match: { isActive: true },
+    select: HIDE_PRIVATE_PRODUCT_FIELDS,
     populate: [
       { path: 'category', select: 'name slug isActive' },
       { path: 'brand', select: 'name slug' },

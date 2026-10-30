@@ -111,11 +111,11 @@ export function Navbar() {
             <SearchBox
               inputRef={searchRef}
               showShortcut
-              className="hidden min-w-0 max-w-md flex-1 md:block md:ml-4"
+              className="hidden min-w-0 max-w-md flex-1 md:block md:ms-4"
               inputClassName="h-9 bg-[var(--bg-elevated)] pe-12 text-sm dark:bg-[var(--bg-input)]"
             />
 
-            <div className="ml-auto flex items-center gap-0 md:ml-1">
+            <div className="ms-auto flex items-center gap-0 md:ms-1">
               <button
                 type="button"
                 className={cn(iconBtn, 'md:hidden')}

@@ -456,7 +456,7 @@ export function Contact() {
                       <SiteIcon
                         name="arrow-right"
                         size={16}
-                        className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180"
+                        className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
                       />
                     </Link>
                   </li>

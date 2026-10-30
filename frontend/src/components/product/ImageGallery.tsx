@@ -69,7 +69,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               className="absolute start-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:start-3 sm:h-10 sm:w-10"
               aria-label={t('ui.previousPage')}
             >
-              <SiteIcon name="chevron-left" size={18} />
+              <SiteIcon name="chevron-left" size={18} className="rtl:rotate-180" />
             </button>
             <button
               type="button"
@@ -77,7 +77,7 @@ export function ImageGallery({ images, name }: { images: ProductImage[]; name: s
               className="absolute end-2 top-1/2 z-10 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)]/90 text-[var(--fg)] shadow-soft backdrop-blur-md transition hover:border-[var(--brand)] sm:end-3 sm:h-10 sm:w-10"
               aria-label={t('ui.nextPage')}
             >
-              <SiteIcon name="chevron-right" size={18} />
+              <SiteIcon name="chevron-right" size={18} className="rtl:rotate-180" />
             </button>
             <div className="absolute inset-x-0 bottom-2 z-10 flex justify-center gap-1.5 sm:hidden">
               {list.map((_, i) => (

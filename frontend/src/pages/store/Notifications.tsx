@@ -12,6 +12,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { localizeNotification } from '@/lib/notificationText'
 
 export function Notifications() {
   const t = useT()
@@ -96,13 +97,13 @@ export function Notifications() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-[var(--fg)]">{item.title}</span>
+                    <span className="font-semibold text-[var(--fg)]">{localizeNotification(item, t).title}</span>
                     <span className="text-xs text-[var(--fg-muted)]">
                       {formatDateTime(item.createdAt)}
                     </span>
                   </span>
                   <span className="mt-1 block text-sm leading-relaxed text-[var(--fg-muted)]">
-                    {item.message}
+                    {localizeNotification(item, t).message}
                   </span>
                 </span>
                 {!item.isRead ? (

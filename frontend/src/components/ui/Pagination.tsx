@@ -19,13 +19,13 @@ export function Pagination({
   return (
     <nav className="flex items-center justify-center gap-3 pt-10" aria-label={t('ui.pagination')}>
       <button type="button" className={btn} disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label={t('ui.previousPage')}>
-        <SiteIcon name="chevron-left" size={16} />
+        <SiteIcon name="chevron-left" size={16} className="rtl:rotate-180" />
       </button>
       <p className="min-w-[7rem] text-center text-sm text-[var(--fg-muted)]">
         {t('ui.pageOf', { page, pages })}
       </p>
       <button type="button" className={btn} disabled={page >= pages} onClick={() => onChange(page + 1)} aria-label={t('ui.nextPage')}>
-        <SiteIcon name="chevron-right" size={16} />
+        <SiteIcon name="chevron-right" size={16} className="rtl:rotate-180" />
       </button>
     </nav>
   )

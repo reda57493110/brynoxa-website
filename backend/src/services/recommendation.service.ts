@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { withoutPrivateFields } from '../utils/publicProduct';
 import { Category } from '../models/Category';
 import { Order } from '../models/Order';
 import { Product } from '../models/Product';
@@ -369,6 +370,8 @@ export async function getRecommendations(productId: string, limit = DEFAULT_LIMI
     items = [...picks, ...automatic.filter((doc) => !pickedSet.has(String(doc._id)))].slice(0, limit) as Recommended[];
   }
 
+  // Sales counts were needed for ranking; shoppers don't get them
+  items = items.map(withoutPrivateFields);
   if (resultCache.size > 500) resultCache.clear();
   resultCache.set(cacheKey, { at: Date.now(), items });
   return items;

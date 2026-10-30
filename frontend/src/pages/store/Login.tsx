@@ -82,13 +82,12 @@ export function Login() {
       navigate(resolvePostLoginPath(payload.user.role, from), { replace: true })
 
     } catch (err) {
+      // Already in the visitor's language (no connection, slow connection, wrong password…)
       const message = getErrorMessage(err, t('auth.loginFailed'))
-      const serverBusy =
-        message.includes('timed out') || message.includes('Cannot reach the server')
-      setFormError(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
+      setFormError(message)
       // Wrong code: empty the box so the next code can be typed straight away
       if (mfaToken) setMfaCode('')
-      toast.error(serverBusy ? 'Server is starting — wait 15 seconds and try again.' : message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
