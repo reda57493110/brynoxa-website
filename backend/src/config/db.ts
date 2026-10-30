@@ -16,17 +16,37 @@ declare global {
 const cached = global.__mongooseCache ?? { conn: null, promise: null };
 global.__mongooseCache = cached;
 
-/** Runs syncIndexes for these models when their declared indexes differ from the last sync. */
+/**
+ * Runs syncIndexes for every model when the declared indexes differ from the last sync (all
+ * models, so a new index or expiry rule on any collection reaches the database).
+ */
 async function syncIndexesWhenChanged() {
-  const [{ Product }, { Order }, { Review }, { Category }, { ContactMessage }, { User }] = await Promise.all([
-    import('../models/Product'),
-    import('../models/Order'),
-    import('../models/Review'),
+  // Loaded here so every model is registered (each file listed, so the deploy bundles them all)
+  await Promise.all([
+    import('../models/Brand'),
     import('../models/Category'),
     import('../models/Contact'),
+    import('../models/Coupon'),
+    import('../models/DepositProof'),
+    import('../models/DepositReceipt'),
+    import('../models/Expense'),
+    import('../models/Inventory'),
+    import('../models/Notification'),
+    import('../models/Order'),
+    import('../models/Product'),
+    import('../models/PushSubscription'),
+    import('../models/Review'),
+    import('../models/SentEmail'),
+    import('../models/Settings'),
+    import('../models/StaffAction'),
+    import('../models/StoredImage'),
     import('../models/User'),
+    import('../models/Wishlist'),
   ]);
-  const models = [Product, Order, Review, Category, ContactMessage, User] as unknown as {
+  const models = mongoose
+    .modelNames()
+    .sort()
+    .map((name) => mongoose.model(name)) as unknown as {
     modelName: string;
     schema: { indexes: () => unknown };
     syncIndexes: () => Promise<unknown>;

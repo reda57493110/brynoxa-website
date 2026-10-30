@@ -303,7 +303,7 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function loadCustomers(query: CustomerListQuery) {
+function customerFilter(query: CustomerListQuery) {
   const filter: Record<string, unknown> = { role: 'customer' };
   const and: Record<string, unknown>[] = [];
   const q = query.q?.trim();
@@ -335,9 +335,13 @@ async function loadCustomers(query: CustomerListQuery) {
     });
   }
   if (and.length) filter.$and = and;
-  return User.find(filter)
-    .select('name email phone customerType wholesale business isActive emailVerified isGuest source createdAt')
-    .lean<CustomerLean[]>();
+  return filter;
+}
+
+const CUSTOMER_FIELDS = 'name email phone customerType wholesale business isActive emailVerified isGuest source createdAt';
+
+async function loadCustomers(query: CustomerListQuery) {
+  return User.find(customerFilter(query)).select(CUSTOMER_FIELDS).lean<CustomerLean[]>();
 }
 
 async function ordersByUser(userIds: Types.ObjectId[]) {
@@ -368,19 +372,50 @@ function savedFilters(filters: Record<string, string | number>): Partial<Custome
   return out as Partial<CustomerListQuery>;
 }
 
-/** Customers with their metrics, filtered, sorted and paginated. Metrics follow the optional order period. */
-export async function listCustomerOverview(query: CustomerListQuery, canSeeProfit: boolean) {
+/**
+ * Customers with their metrics, filtered, sorted and paginated. Metrics follow the optional order period.
+ *
+ * The usual view (newest or by name, no filter on order figures) reads only the page shown from
+ * the database, with the orders of those customers. Filters and sorts on order figures (spent,
+ * segments…) need every customer's figures first. `everything`: the CSV export, all rows.
+ */
+export async function listCustomerOverview(query: CustomerListQuery, canSeeProfit: boolean, { everything = false } = {}) {
   const settings = await getSettingsCached();
   const cfg = { ...DEFAULT_SEGMENT_SETTINGS, ...(settings.customerSegments || {}) };
   const tiers = settings.wholesaleTiers || [];
   // A saved custom segment is just a stored set of filters, applied to every step below
   const saved = cfg.saved.find((s) => s.id === query.segment);
   const f: CustomerListQuery = saved ? { ...query, ...savedFilters(saved.filters), segment: undefined } : query;
-  const users = await loadCustomers(f);
-  const orders = await ordersByUser(users.map((u) => u._id));
   const now = Date.now();
   const periodSet = Boolean(query.from || query.to);
   const num = (v: unknown) => (v === undefined || v === '' || v === null ? undefined : Number(v));
+  const sort = query.sort === 'profit' && !canSeeProfit ? 'net' : query.sort || 'registered';
+  const dir = query.dir === 'asc' ? 1 : -1;
+  const limit = Math.min(Math.max(query.limit || 20, 1), 100);
+  const page = Math.max(query.page || 1, 1);
+
+  const byFigures =
+    Boolean(f.segment || f.activity) ||
+    [f.minOrders, f.maxOrders, f.minNet, f.maxNet, f.minProfit].some((v) => num(v) !== undefined) ||
+    !['registered', 'name'].includes(sort);
+  let users: CustomerLean[];
+  let pageTotal: number | undefined;
+  if (!everything && !byFigures) {
+    const filter = customerFilter(f);
+    [users, pageTotal] = await Promise.all([
+      User.find(filter)
+        .select(CUSTOMER_FIELDS)
+        .sort(sort === 'name' ? { name: dir, _id: dir } : { createdAt: dir, _id: dir })
+        .collation({ locale: 'en', strength: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean<CustomerLean[]>(),
+      User.countDocuments(filter),
+    ]);
+  } else {
+    users = await loadCustomers(f);
+  }
+  const orders = await ordersByUser(users.map((u) => u._id));
 
   let rows = users.map((u) => {
     const all = orders.get(String(u._id)) || [];
@@ -423,8 +458,9 @@ export async function listCustomerOverview(query: CustomerListQuery, canSeeProfi
     rows = rows.filter((r) => r.metrics.sales.grossProfit !== null && r.metrics.sales.grossProfit >= minProfit);
   }
 
-  const sort = query.sort === 'profit' && !canSeeProfit ? 'net' : query.sort || 'registered';
-  const dir = query.dir === 'asc' ? 1 : -1;
+  // Already one page, in order, from the database
+  if (pageTotal !== undefined) return { items: rows, total: pageTotal, page, limit, all: rows };
+
   const key = (r: (typeof rows)[number]): number | string => {
     switch (sort) {
       case 'spent': return r.metrics.payments.totalPaid;
@@ -441,8 +477,6 @@ export async function listCustomerOverview(query: CustomerListQuery, canSeeProfi
     return (ka < kb ? -1 : ka > kb ? 1 : 0) * dir;
   });
 
-  const limit = Math.min(Math.max(query.limit || 20, 1), 100);
-  const page = Math.max(query.page || 1, 1);
   return { items: rows.slice((page - 1) * limit, page * limit), total: rows.length, page, limit, all: rows };
 }
 
@@ -625,7 +659,7 @@ function orderHistory(o: LeanOrder) {
 
 /** CSV of the filtered customer list (one row per customer). */
 export async function exportCustomersCsv(query: CustomerListQuery, canSeeProfit: boolean) {
-  const { all } = await listCustomerOverview({ ...query, page: 1, limit: 100 }, canSeeProfit);
+  const { all } = await listCustomerOverview({ ...query, page: 1, limit: 100 }, canSeeProfit, { everything: true });
   const cell = (v: unknown) => {
     const s = v === null || v === undefined ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : String(v);
     // Quote, and neutralise spreadsheet formulas

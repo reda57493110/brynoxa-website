@@ -133,6 +133,7 @@ export interface IOrder extends Document {
   coupon?: {
     code: string;
     couponId?: Types.ObjectId;
+    phoneKey?: string;
   };
   shippingAddress: IAddress;
   paymentMethod: 'cod';
@@ -294,6 +295,8 @@ const orderSchema = new Schema<IOrder>(
     coupon: {
       code: { type: String },
       couponId: { type: Schema.Types.ObjectId, ref: 'Coupon' },
+      /** Last 9 digits of the delivery phone (per-customer coupon limits). */
+      phoneKey: { type: String },
     },
     shippingAddress: {
       label: String,
@@ -346,6 +349,9 @@ const orderSchema = new Schema<IOrder>(
 );
 
 orderSchema.index({ user: 1, createdAt: -1 });
+// Per-customer coupon limits (orders that used a coupon only)
+orderSchema.index({ 'coupon.couponId': 1, user: 1 }, { sparse: true });
+orderSchema.index({ 'coupon.couponId': 1, 'coupon.phoneKey': 1 }, { sparse: true });
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ origin: 1, createdAt: -1 });

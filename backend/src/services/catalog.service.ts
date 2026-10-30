@@ -11,7 +11,7 @@ import { sanitizeVariantLabel, syncVariantGroup, variantsOf } from './variants.s
 import { moveStock, withTransaction } from './inventoryLedger.service';
 import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
-import { deleteAbandonedUploads, deleteUnusedImages } from './upload.service';
+import { deleteAbandonedUploads, deleteReplacedImage, deleteUnusedImages } from './upload.service';
 import { copyOutsidePhotos } from './imageImport.service';
 
 function looksLikeObjectId(value: string) {
@@ -168,6 +168,7 @@ export async function updateCategory(id: string, data: Partial<{
     category.name = data.name;
   }
   if (data.description !== undefined) category.description = data.description;
+  const previousImage = category.image;
   if (data.image !== undefined) category.image = data.image;
   if (data.parent !== undefined) category.parent = data.parent as never;
   if (data.isActive !== undefined) category.isActive = data.isActive;
@@ -176,6 +177,9 @@ export async function updateCategory(id: string, data: Partial<{
   if (specTemplate !== undefined) category.specTemplate = specTemplate || undefined;
   await category.save();
   invalidateActiveCategoryCache();
+  // The old photo, when replaced or removed (unless something else shows it)
+  await deleteReplacedImage(previousImage, category.image);
+  await deleteAbandonedUploads();
   return category;
 }
 
@@ -202,6 +206,7 @@ export async function deleteCategory(id: string, { canDeleteProducts = false } =
   await Category.updateMany({ parent: id }, { $set: { parent: category.parent ?? null } });
   await Category.deleteOne({ _id: id });
   invalidateActiveCategoryCache();
+  await deleteReplacedImage(category.image);
   return category;
 }
 
@@ -231,9 +236,11 @@ export async function updateBrand(
     brand.name = data.name;
     brand.slug = slugify(data.name);
   }
+  const previousLogo = brand.logo;
   if (data.logo !== undefined) brand.logo = data.logo;
   if (data.isActive !== undefined) brand.isActive = data.isActive;
   await brand.save();
+  await deleteReplacedImage(previousLogo, brand.logo);
   return brand;
 }
 
@@ -242,6 +249,7 @@ export async function deleteBrand(id: string) {
   if (inUse) throw new ApiError(400, 'Brand has products; reassign them first');
   const brand = await Brand.findByIdAndDelete(id);
   if (!brand) throw new ApiError(404, 'Brand not found');
+  await deleteReplacedImage(brand.logo);
   return brand;
 }
 

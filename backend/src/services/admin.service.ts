@@ -53,31 +53,21 @@ async function buildDashboardStats() {
   }).format(new Date());
   const lowExpr = { $lte: ['$stock', { $ifNull: ['$lowStockThreshold', 5] }] };
 
-  const [orderStats, customerCount, productStats, reviewCount, unreadMessages, recentOrders] =
+  // Separate small queries, each served by an index (a $facet reads every order in full)
+  const [byStatus, attention, todayStats, customerCount, productStats, reviewCount, unreadMessages, recentOrders] =
     await Promise.all([
-      Order.aggregate([
-        {
-          $facet: {
-            counts: [
-              {
-                $group: {
-                  _id: null,
-                  orderCount: { $sum: 1 },
-                  pendingOrders: { $sum: { $cond: [{ $eq: ['$orderStatus', 'pending'] }, 1, 0] } },
-                },
-              },
-            ],
-            attention: [{ $match: attentionFilter() }, { $count: 'n' }],
-            byStatus: [{ $group: { _id: '$orderStatus', count: { $sum: 1 } } }],
-            // Orders placed today in the store's timezone (not the server's)
-            today: [
-              { $match: { createdAt: { $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }, orderStatus: { $ne: 'cancelled' } } },
-              { $addFields: { day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } } } },
-              { $match: { day: todayKey } },
-              { $group: { _id: null, orders: { $sum: 1 }, total: { $sum: '$pricing.total' } } },
-            ],
-          },
-        },
+      // Counts per status from the { orderStatus, createdAt } index alone
+      Order.aggregate<{ _id: string; count: number }>([
+        { $sort: { orderStatus: 1 } },
+        { $group: { _id: '$orderStatus', count: { $sum: 1 } } },
+      ]),
+      Order.countDocuments(attentionFilter()),
+      // Orders placed today in the store's timezone (not the server's); the last 2 days by index
+      Order.aggregate<{ orders: number; total: number }>([
+        { $match: { createdAt: { $gte: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) }, orderStatus: { $ne: 'cancelled' } } },
+        { $addFields: { day: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } } } },
+        { $match: { day: todayKey } },
+        { $group: { _id: null, orders: { $sum: 1 }, total: { $sum: '$pricing.total' } } },
       ]),
       User.countDocuments({ role: 'customer' }),
       Product.aggregate([
@@ -107,21 +97,20 @@ async function buildDashboardStats() {
         .lean(),
     ]);
 
-  const facet = orderStats[0] || { counts: [], byStatus: [], today: [] };
   const productsFacet = productStats[0] || {};
   const n = (rows?: { n: number }[]) => rows?.[0]?.n || 0;
 
   const statusMap: Record<string, number> = {};
-  for (const row of facet.byStatus || []) {
+  for (const row of byStatus) {
     statusMap[row._id] = row.count;
   }
 
   return {
-    todayOrders: facet.today[0]?.orders || 0,
-    todayOrderValue: facet.today[0]?.total || 0,
-    orderCount: facet.counts[0]?.orderCount || 0,
-    pendingOrders: facet.counts[0]?.pendingOrders || 0,
-    attentionOrders: facet.attention?.[0]?.n || 0,
+    todayOrders: todayStats[0]?.orders || 0,
+    todayOrderValue: todayStats[0]?.total || 0,
+    orderCount: byStatus.reduce((sum, row) => sum + row.count, 0),
+    pendingOrders: statusMap.pending || 0,
+    attentionOrders: attention,
     customerCount,
     productCount: n(productsFacet.productCount),
     activeProducts: n(productsFacet.activeProducts),

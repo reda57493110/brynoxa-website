@@ -159,8 +159,9 @@ export function Checkout() {
   const taxable = Math.max(0, subtotal - discount)
   // Same as the server: free shipping is checked after the coupon
   const shipping = resolveShippingFee(settings.data, address.city, taxable)
-  const tax = (taxable * taxRate) / 100
-  const total = taxable + shipping + tax
+  // Rounded to the centime, exactly as the server charges (backend order.service.ts priceOrder)
+  const tax = Math.round(((taxable * taxRate) / 100) * 100) / 100
+  const total = Math.round((taxable + shipping + tax) * 100) / 100
   const cityRateOptions = settings.data?.shippingByCity ?? []
   const freeShippingMin = settings.data?.freeShippingMin ?? 0
   const qualifiesFreeShipping = freeShippingMin > 0 && taxable >= freeShippingMin

@@ -23,5 +23,11 @@ const notificationSchema = new Schema<INotification>(
 );
 
 notificationSchema.index({ user: 1, isRead: 1, createdAt: -1 });
+// Read notifications are removed by MongoDB after 6 months (unread ones stay until read)
+export const READ_NOTIFICATION_DAYS = 180;
+notificationSchema.index(
+  { createdAt: 1 },
+  { expireAfterSeconds: READ_NOTIFICATION_DAYS * 24 * 60 * 60, partialFilterExpression: { isRead: true } }
+);
 
 export const Notification = mongoose.model<INotification>('Notification', notificationSchema);

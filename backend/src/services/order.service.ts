@@ -1,4 +1,4 @@
-import { Types } from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 import { Product } from '../models/Product';
 import { IOrderDeposit, Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
@@ -115,7 +115,8 @@ export async function validateCoupon(
   } else {
     discount = coupon.value;
   }
-  discount = Math.min(discount, subtotal);
+  // In whole centimes, the same amount the shop shows
+  discount = roundMoney(Math.min(discount, subtotal));
 
   return { coupon, discount };
 }
@@ -125,25 +126,47 @@ export function phoneKey(phone?: string) {
   return String(phone || '').replace(/\D/g, '').slice(-9);
 }
 
+const COUPON_LOCK_MS = 2 * 60 * 1000;
+const couponLocks = () => mongoose.connection.db?.collection<{ _id: string; expiresAt: Date }>('rate_limits');
+
 /**
  * A coupon limited per customer: counts this person's orders that used it (not cancelled), by
  * account or by phone number — a guest giving a new email each time still has the same phone.
+ * Counted in the database (index on coupon.couponId), so any number of orders is fine.
+ *
+ * Two orders sent at the same moment would both see the same count: each one also takes a short
+ * lock named after that count (shared `rate_limits` collection, removed after 2 minutes), so the
+ * second one is refused. Returns the locks to release if the order is not created.
  */
-async function assertCouponPerCustomer(couponId: Types.ObjectId, limit: number, userId: string, phone?: string) {
-  if (!limit || limit <= 0) return;
+export async function assertCouponPerCustomer(couponId: Types.ObjectId, limit: number, userId: string, phone?: string) {
+  if (!limit || limit <= 0) return [] as string[];
   const key = phoneKey(phone);
-  const used = await Order.find(
-    { 'coupon.couponId': couponId, orderStatus: { $ne: 'cancelled' } },
-    { user: 1, 'shippingAddress.phone': 1 }
-  )
-    .limit(5000)
-    .lean();
-  const mine = used.filter(
-    (o) => String(o.user) === String(userId) || (key.length >= 8 && phoneKey(o.shippingAddress?.phone) === key)
-  ).length;
-  if (mine >= limit) {
-    throw new ApiError(400, limit === 1 ? 'You have already used this coupon' : `This coupon can be used ${limit} times per customer`);
+  const who: Record<string, unknown>[] = [{ user: userId }];
+  if (key.length >= 8) who.push({ 'coupon.phoneKey': key });
+  const used = await Order.countDocuments({ 'coupon.couponId': couponId, orderStatus: { $ne: 'cancelled' }, $or: who });
+  const refuse = () =>
+    new ApiError(400, limit === 1 ? 'You have already used this coupon' : `This coupon can be used ${limit} times per customer`);
+  if (used >= limit) throw refuse();
+
+  const locks = couponLocks();
+  if (!locks) return [];
+  const ids = [`couponUse:${couponId}:user:${userId}:${used}`, ...(key.length >= 8 ? [`couponUse:${couponId}:phone:${key}:${used}`] : [])];
+  const taken: string[] = [];
+  try {
+    for (const _id of ids) {
+      await locks.insertOne({ _id, expiresAt: new Date(Date.now() + COUPON_LOCK_MS) });
+      taken.push(_id);
+    }
+  } catch (err) {
+    await releaseCouponLocks(taken);
+    if ((err as { code?: number })?.code === 11000) throw refuse();
+    throw err;
   }
+  return taken;
+}
+
+export async function releaseCouponLocks(ids: string[]) {
+  if (ids.length) await couponLocks()?.deleteMany({ _id: { $in: ids } });
 }
 
 async function claimCoupon(couponId: Types.ObjectId) {
@@ -265,8 +288,9 @@ async function priceOrder(
   const taxable = Math.max(subtotal - discount, 0);
   // Free-shipping minimum is checked on what the customer pays for the items, after the coupon
   const shipping = resolveShippingFee(settings, city, taxable);
-  const tax = (taxable * settings.taxRate) / 100;
-  const total = taxable + shipping + tax;
+  // Rounded to the centime, exactly as the checkout page shows it (frontend Checkout.tsx)
+  const tax = roundMoney((taxable * settings.taxRate) / 100);
+  const total = roundMoney(taxable + shipping + tax);
 
   return {
     pricing: { subtotal, discount, shipping, tax, total },
@@ -293,9 +317,15 @@ export async function createCodOrder(input: {
   const deposit = productsDeposit(depositTotal, pricing.total);
 
   let couponClaimed = false;
+  let couponLocksTaken: string[] = [];
   if (couponMeta) {
-    await assertCouponPerCustomer(couponMeta.couponId, couponMeta.perCustomerLimit, input.userId, input.shippingAddress?.phone);
-    await claimCoupon(couponMeta.couponId);
+    couponLocksTaken = await assertCouponPerCustomer(couponMeta.couponId, couponMeta.perCustomerLimit, input.userId, input.shippingAddress?.phone);
+    try {
+      await claimCoupon(couponMeta.couponId);
+    } catch (error) {
+      await releaseCouponLocks(couponLocksTaken);
+      throw error;
+    }
     couponClaimed = true;
   }
 
@@ -317,6 +347,7 @@ export async function createCodOrder(input: {
     if (couponClaimed && couponMeta) {
       await Coupon.updateOne({ _id: couponMeta.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
     }
+    await releaseCouponLocks(couponLocksTaken);
     throw error;
   }
 
@@ -329,7 +360,10 @@ export async function createCodOrder(input: {
       pricing: { ...pricing, wholesaleDiscount },
       channel: terms ? 'wholesale' : 'retail',
       wholesaleTier: terms ? { id: terms.tierId, name: terms.tierName, discountPercent: terms.discountPercent } : undefined,
-      coupon: couponMeta ? { code: couponMeta.code, couponId: couponMeta.couponId } : undefined,
+      // The phone, written one way, so the per-customer coupon check can find it quickly
+      coupon: couponMeta
+        ? { code: couponMeta.code, couponId: couponMeta.couponId, phoneKey: phoneKey(input.shippingAddress?.phone) || undefined }
+        : undefined,
       shippingAddress: input.shippingAddress,
       paymentMethod: 'cod',
       paymentStatus: 'pending',
@@ -600,7 +634,8 @@ export async function updateUserOrderItems(
   if (deposit) order.deposit = deposit;
   else order.set('deposit', undefined);
   if (couponMeta) {
-    order.coupon = couponMeta;
+    // Same coupon, kept with the phone it was used for (per-customer limits)
+    order.coupon = { code: couponMeta.code, couponId: couponMeta.couponId, phoneKey: order.coupon?.phoneKey };
   } else {
     order.set('coupon', undefined);
   }
@@ -953,7 +988,9 @@ export async function setOrderDeposit(
         customerMessage = 'No deposit is needed for this order anymore';
       }
     } else if (amount !== order.deposit?.amount) {
-      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs, methodIds: order.deposit?.methodIds, feeCredit: order.deposit?.feeCredit };
+      order.deposit = { amount, source: 'admin', status: 'pending', payment: order.deposit?.payment, proofs: order.deposit?.proofs, methodIds: order.deposit?.methodIds,
+        // Covered fees stay within what is left after the new deposit
+        feeCredit: order.deposit?.feeCredit === undefined ? undefined : roundMoney(Math.min(order.deposit.feeCredit, Math.max(0, order.pricing.total - amount))) };
       notes.push(`Deposit of ${formatDh(amount)} requested`);
       customerMessage = `A deposit of ${formatDh(amount)} is needed to confirm this order`;
       email = 'requested';
@@ -1016,8 +1053,13 @@ export function amountPaidOnOrder(order: {
   pricing: { total: number };
   deposit?: { amount: number; status: string; feeCredit?: number } | null;
 }) {
-  // Delivered: the deposit plus what the courier collected (fees the shop covered are not paid)
-  if (wasDelivered(order)) return roundMoney(order.pricing.total - feeCreditOf(order.deposit));
+  // Delivered: the deposit plus what the courier collected (fees the shop covered are not paid,
+  // and never more than what was left after the deposit)
+  if (wasDelivered(order)) {
+    const deposit = order.deposit && order.deposit.amount > 0 ? order.deposit.amount : 0;
+    const fees = Math.min(feeCreditOf(order.deposit), Math.max(0, order.pricing.total - deposit));
+    return roundMoney(order.pricing.total - fees);
+  }
   return order.deposit?.status === 'received' ? order.deposit.amount : 0;
 }
 
