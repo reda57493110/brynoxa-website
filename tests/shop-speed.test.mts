@@ -110,3 +110,10 @@ test('the app uses an early answer once, by address, within 20 s', () => {
   const html = fs.readFileSync(path.join(root, 'frontend/index.html'), 'utf8');
   assert.match(html, /<script src="\/preload\.js"><\/script>/);
 });
+
+test('Cloudinary photos are never enlarged past the original (smaller downloads for small photos)', () => {
+  assert.equal(
+    image.sizedImageUrl(cloud, 768),
+    'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,c_limit,w_768/v1/brynoxa/p.jpg'
+  );
+});

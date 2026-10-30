@@ -110,7 +110,7 @@
         return url
       }
     }
-    return url.indexOf('res.cloudinary.com') >= 0 ? url.replace('/upload/', '/upload/f_auto,q_auto,w_' + w + '/') : url
+    return url.indexOf('res.cloudinary.com') >= 0 ? url.replace('/upload/', '/upload/f_auto,q_auto,c_limit,w_' + w + '/') : url
   }
   function photo(url, width, widths, sizes) {
     if (!url) return
