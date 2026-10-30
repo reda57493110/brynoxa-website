@@ -96,7 +96,8 @@ module.exports = async (req, res) => {
     const { page, limit } = paging(raw, 12);
     const isAdmin = raw.admin === 'true';
     if (isAdmin) {
-      const user = await requireStaff(req, res, ['products:read']);
+      // Any staff member, as on the Express route: orders staff search products in Admin → Orders → New order
+      const user = await requireStaff(req, res);
       if (!user) return;
     }
 

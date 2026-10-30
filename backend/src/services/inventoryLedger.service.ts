@@ -201,8 +201,26 @@ export async function moveStock(input: MoveInput, session?: ClientSession) {
   if (serials.length) {
     if (serials.length !== qty) throw new ApiError(400, `Give exactly ${qty} serial number${qty === 1 ? '' : 's'}`);
     if (input.from === 'external') {
-      await InventoryUnit.create(
-        serials.map((serial) => ({
+      // A customer return brings back units the shop sold: the same records come back in stock
+      // (serial numbers are unique, so a new record for them would be refused)
+      const comingBack =
+        input.type === 'customer-return'
+          ? await InventoryUnit.find({ product: before._id, serial: { $in: serials }, status: 'sold' })
+              .select('serial')
+              .session(session ?? null)
+              .lean<{ serial: string }[]>()
+          : [];
+      const known = new Set(comingBack.map((unit) => unit.serial));
+      if (known.size) {
+        await InventoryUnit.updateMany(
+          { product: before._id, serial: { $in: [...known] }, status: 'sold' },
+          { $set: { status: unitStatusFor(input.to) } },
+          { session }
+        );
+      }
+      const fresh = serials.filter((serial) => !known.has(serial));
+      if (fresh.length) await InventoryUnit.create(
+        fresh.map((serial) => ({
           product: before._id,
           serial,
           status: unitStatusFor(input.to),

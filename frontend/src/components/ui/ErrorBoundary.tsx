@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { SiteIcon } from './SiteIcon'
+import { isChunkLoadError, reloadForNewVersion } from '@/lib/newVersion'
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -17,6 +18,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // A page's code from the previous version is gone after a deploy: load the new version
+    if (isChunkLoadError(error) && reloadForNewVersion()) return
     console.error('Unhandled application error', error, info)
   }
 
