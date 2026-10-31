@@ -6,12 +6,18 @@ import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { CONTACT } from '@/lib/site'
-import { formatCurrency, formatDateTime } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { feesCovered, toCollect } from '@/lib/deposit'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
 
 type Lang = 'fr' | 'ar' | 'en'
+
+/** "20 oct. 2026, 22:11" in the slip's language, Morocco time, Western digits. */
+function slipDate(iso: string, lang: Lang) {
+  const locale = lang === 'fr' ? 'fr-FR' : lang === 'ar' ? 'ar-MA-u-nu-latn' : 'en-GB'
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Africa/Casablanca' }).format(new Date(iso))
+}
 
 /** Customer copy texts (the shop copy stays in English like the rest of admin). */
 const T: Record<Lang, Record<string, string>> = {
@@ -25,7 +31,7 @@ const T: Record<Lang, Record<string, string>> = {
     price: 'Prix',
     subtotal: 'Sous-total',
     shipping: 'Livraison',
-    free: 'Offerte',
+    free: 'Incluse',
     discount: 'Remise',
     total: 'Total',
     deposit: 'Acompte payé',
@@ -38,6 +44,7 @@ const T: Record<Lang, Record<string, string>> = {
     help: 'Une question ? WhatsApp',
     thanks: 'Merci pour votre confiance !',
     items: 'articles',
+    itemOne: 'article',
   },
   ar: {
     copy: 'نسخة الزبون',
@@ -49,7 +56,7 @@ const T: Record<Lang, Record<string, string>> = {
     price: 'الثمن',
     subtotal: 'المجموع الفرعي',
     shipping: 'التوصيل',
-    free: 'مجاني',
+    free: 'مشمول',
     discount: 'تخفيض',
     total: 'المجموع',
     deposit: 'العربون المدفوع',
@@ -62,6 +69,7 @@ const T: Record<Lang, Record<string, string>> = {
     help: 'سؤال؟ واتساب',
     thanks: 'شكرا لثقتكم!',
     items: 'منتجات',
+    itemOne: 'منتج',
   },
   en: {
     copy: 'Customer copy',
@@ -73,7 +81,7 @@ const T: Record<Lang, Record<string, string>> = {
     price: 'Price',
     subtotal: 'Subtotal',
     shipping: 'Shipping',
-    free: 'Free',
+    free: 'Included',
     discount: 'Discount',
     total: 'Total',
     deposit: 'Deposit paid',
@@ -86,6 +94,7 @@ const T: Record<Lang, Record<string, string>> = {
     help: 'Questions? WhatsApp',
     thanks: 'Thank you for your trust!',
     items: 'items',
+    itemOne: 'item',
   },
 }
 
@@ -134,7 +143,7 @@ function Money({ order: o, labels, strongLabel }: { order: Order; labels: Record
 
 function Items({ order: o, labels, sku = false }: { order: Order; labels: Record<string, string>; sku?: boolean }) {
   return (
-    <table className="w-full border-collapse text-[11px]">
+    <table className="w-full table-fixed border-collapse text-[11px]">
       <thead>
         <tr className="border-b border-black/40 text-start text-[9px] uppercase tracking-wide text-black/60">
           <th className="py-1 text-start font-semibold">{labels.item}</th>
@@ -145,7 +154,7 @@ function Items({ order: o, labels, sku = false }: { order: Order; labels: Record
       <tbody>
         {o.items.map((i, idx) => (
           <tr key={idx} className="border-b border-black/10 align-top">
-            <td className="py-1 pe-2">
+            <td className="break-words py-1 pe-2">
               <span className="font-medium">{i.name}</span>
               {sku ? <span className="block text-[9px] text-black/60">{i.sku}</span> : null}
             </td>
@@ -185,23 +194,23 @@ function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
   const trackUrl = `${window.location.origin}/track-order`
   return (
     <section dir={lang === 'ar' ? 'rtl' : 'ltr'} className="flex flex-col gap-2">
-      <header className="flex items-start justify-between gap-3 border-b-2 border-black pb-2">
+      <header className="flex flex-col gap-2 border-b-2 border-black pb-2 min-[480px]:flex-row min-[480px]:items-start min-[480px]:justify-between min-[480px]:gap-3 print:flex-row print:items-start print:justify-between print:gap-3">
         <Brand />
-        <div className="text-end">
+        <div className="min-[480px]:text-end print:text-end">
           <p className="inline-block rounded bg-black px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">{t.copy}</p>
           <p className="mt-1 text-[10px] uppercase tracking-wide text-black/60">{t.slip}</p>
-          <p className="text-sm font-extrabold" dir="ltr">
+          <p className="whitespace-nowrap text-sm font-extrabold" dir="ltr">
             #{o.orderNumber}
           </p>
           <p className="text-[10px] text-black/70" dir="ltr">
-            {formatDateTime(o.createdAt)}
+            {slipDate(o.createdAt, lang)}
           </p>
         </div>
       </header>
 
-      <div className="grid grid-cols-[1fr_auto] gap-4">
+      <div className="grid gap-3 min-[480px]:grid-cols-[1fr_auto] min-[480px]:gap-4 print:grid-cols-[1fr_auto] print:gap-4">
         <Address order={o} title={t.deliverTo} />
-        <div className="w-60">
+        <div className="w-full min-[480px]:w-60 print:w-60">
           <Money order={o} labels={t} strongLabel={t.toPay} />
         </div>
       </div>
@@ -209,18 +218,18 @@ function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
       <div>
         <Items order={o} labels={t} />
         <p className="mt-1 text-[10px] text-black/60">
-          {count} {t.items}
+          {count} {count === 1 ? t.itemOne : t.items}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 border-t border-black/20 pt-2 text-[10px] leading-snug">
+      <div className="grid gap-3 border-t border-black/20 pt-2 text-[10px] leading-snug min-[480px]:grid-cols-2 print:grid-cols-2">
         <div>
           <p className="font-bold">✓ {t.warrantyTitle}</p>
           <p className="text-black/70">{t.warranty}</p>
         </div>
-        <div className="text-end">
+        <div className="min-[480px]:text-end print:text-end">
           <p className="font-bold">{t.track}</p>
-          <p className="text-black/70" dir="ltr">
+          <p className="break-words text-black/70" dir="ltr">
             {trackUrl.replace(/^https?:\/\//, '')} · #{o.orderNumber}
           </p>
           <p className="mt-0.5 text-black/70">
@@ -237,7 +246,7 @@ function CustomerCopy({ order: o, lang }: { order: Order; lang: Lang }) {
 function Sheet({ order, lang }: { order: Order; lang: Lang }) {
   return (
     <article className="sheet mx-auto w-full max-w-[148mm] bg-white text-black shadow-sm print:shadow-none">
-      <div className="p-[7mm] print:p-[6mm]">
+      <div className="p-4 min-[480px]:p-[7mm] print:p-[6mm]">
         <CustomerCopy order={order} lang={lang} />
       </div>
     </article>
@@ -282,9 +291,9 @@ export function DeliverySlips() {
   }
 
   return (
-    <div className="min-h-dvh bg-[var(--bg-muted)] p-4 print:bg-white print:p-0">
+    <div className="min-h-dvh bg-[var(--bg-muted)] px-2 py-3 sm:p-4 print:bg-white print:p-0">
       <style>{'@page { size: A5; margin: 0 } @media print { .sheet { break-after: page; break-inside: avoid } .sheet:last-child { break-after: auto } }'}</style>
-      <div className="mx-auto mb-4 flex max-w-[148mm] flex-wrap items-center justify-between gap-2 print:hidden">
+      <div className="mx-auto mb-3 flex max-w-[148mm] flex-wrap items-center justify-between gap-2 px-1 sm:mb-4 sm:px-0 print:hidden">
         <Link to="/admin/orders" className="text-sm text-[var(--brand-text)] hover:underline">
           ← Back to orders
         </Link>

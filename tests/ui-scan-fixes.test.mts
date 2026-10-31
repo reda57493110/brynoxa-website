@@ -83,3 +83,14 @@ test('home top product: while it loads, a loading copy of the card (spinner, lin
   assert.doesNotMatch(skeleton.slice(skeleton.indexOf('return (')), /border-white\/10 bg-white\/10 \[@media/, 'not the see-through box any more');
   assert.equal((src('pages/store/Home.tsx').match(/<HomeSpotlightSkeleton \/>/g) || []).length, 2, 'phones and desktop');
 });
+
+test('delivery slip: fits a phone screen, prints unchanged on A5, French plural and date', () => {
+  const slip = src('pages/admin/DeliverySlips.tsx');
+  // One column on phones; the print keeps its two columns
+  assert.match(slip, /grid gap-3 min-\[480px\]:grid-cols-\[1fr_auto\] min-\[480px\]:gap-4 print:grid-cols-\[1fr_auto\]/);
+  assert.match(slip, /w-full min-\[480px\]:w-60 print:w-60/);
+  assert.match(slip, /whitespace-nowrap text-sm font-extrabold/, 'order number on one line');
+  assert.match(slip, /count === 1 \? t\.itemOne : t\.items/, '"1 article", not "1 articles"');
+  assert.match(slip, /slipDate\(o\.createdAt, lang\)/, 'the date in the slip language');
+  assert.match(slip, /free: 'Incluse'/, 'delivery included, like the cart');
+});
