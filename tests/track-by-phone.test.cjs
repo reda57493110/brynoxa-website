@@ -79,5 +79,24 @@ test('the page: order number optional, explains the lost-number option and what 
   assert.match(page, /trackOptional/);
   assert.match(page, /t\('orders\.trackLostNumber'\)/);
   assert.match(page, /t\('orders\.trackPhonePrivacy'\)/);
-  assert.doesNotMatch(page.slice(page.indexOf('{matches ? ('), page.indexOf(') : !order ? (')), /fullName|line1/);
+  const short = page.slice(page.indexOf('function PhoneMatches'), page.indexOf('export function TrackOrder'));
+  assert.ok(short.length > 200);
+  assert.doesNotMatch(short, /fullName|line1|DepositNotice/, 'no name, address or payment details');
+  assert.match(short, /<OrderProgress status=\{m\.orderStatus\} timeline=\{m\.timeline\} notes=\{false\} \/>/, 'no step notes');
+  // Phone first (required), order number second (optional)
+  assert.ok(page.indexOf("label={t('orders.trackPhone')}") < page.indexOf("t('orders.trackOrderNumber')"));
+});
+
+test('progress: detailed statuses sit on the 4 customer steps', async () => {
+  const { orderStepIndex } = await import('../frontend/src/lib/orderProgress.ts').catch(() => ({}));
+  const src = fs.readFileSync(path.join(ROOT, 'frontend/src/lib/orderProgress.ts'), 'utf8');
+  if (!orderStepIndex) {
+    // Plain Node cannot load the .ts file: check the rules in the source
+    assert.match(src, /status === 'shipped' \|\| status === 'rescheduled' \|\| status === 'delivery_failed'\) return 2/);
+    assert.match(src, /status === 'delivered' \|\| \/return\/\.test\(status\)\) return 3/);
+    return;
+  }
+  assert.equal(orderStepIndex('no_answer'), 0);
+  assert.equal(orderStepIndex('rescheduled'), 2);
+  assert.equal(orderStepIndex('returned'), 3);
 });

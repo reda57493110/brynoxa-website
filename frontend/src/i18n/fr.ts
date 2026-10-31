@@ -453,14 +453,17 @@ export const fr: Messages = {
     trackDescription:
       'Retrouvez une commande Brynoxa contre remboursement avec le numéro et le téléphone de livraison.',
     trackHeading: 'Suivre la commande',
-    trackBody:
-      'Saisissez le numéro reçu à la confirmation et le téléphone utilisé pour la livraison.',
+    trackBody: 'Saisissez le téléphone de livraison, avec le numéro de commande reçu à la confirmation pour tout voir.',
     trackOrderNumber: 'Numéro de commande',
     trackPhone: 'Téléphone de livraison',
     trackOptional: '(facultatif)',
     trackLostNumber: 'Numéro de commande perdu ? Laissez-le vide : nous affichons les commandes livrées à ce téléphone.',
     trackPhoneResults: 'Commandes pour ce téléphone',
     trackPhonePrivacy: 'Pour protéger votre vie privée, le nom, l’adresse et les détails de paiement ne s’affichent qu’avec le numéro de commande complet. Besoin de ces infos ? Écrivez-nous sur WhatsApp.',
+    trackWhatsApp: 'Une question sur cette commande ? Écrivez-nous sur WhatsApp',
+    trackWhatsAppMessage: 'Bonjour Brynoxa, j’ai une question sur ma commande {number}.',
+    trackPlaced: 'Passée le {date}',
+    trackFound: '{count} commande(s)',
     trackSubmit: 'Trouver la commande',
     trackHint:
       'Utilisez le même téléphone qu’au paiement. Les invités peuvent suivre sans compte.',

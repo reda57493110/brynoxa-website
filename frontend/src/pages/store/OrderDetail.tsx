@@ -26,10 +26,8 @@ import { orderStatusKey } from '@/i18n'
 import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import type { OrderItem, Product, ProductCondition } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
-import { cn } from '@/lib/cn'
+import { OrderProgress } from '@/components/order/OrderProgress'
 
-/** The simple progress shown to customers (detailed statuses map onto these). */
-const STEPS = ['pending', 'confirmed', 'shipped', 'delivered'] as const
 
 
 function productIdOf(item: OrderItem) {
@@ -207,8 +205,6 @@ export function OrderDetail() {
 
   const o = order.data
   const previewTotal = draft.reduce((sum, item) => sum + item.price * item.qty, 0)
-  const stepIndex = Math.max(0, STEPS.indexOf((o.orderStatus === 'no_answer' ? 'pending' : o.orderStatus) as (typeof STEPS)[number]))
-  const latest = o.timeline[o.timeline.length - 1]
 
   return (
     <>
@@ -327,61 +323,7 @@ export function OrderDetail() {
             {/* Progress: 4 steps + latest update; full history folded */}
             <section className={`${surfaceCard} p-3 sm:p-4`}>
               <h2 className="font-display text-sm font-semibold sm:text-base">{t('orders.tracking')}</h2>
-              {o.orderStatus === 'cancelled' ? (
-                <p className="mt-2 text-sm text-[var(--danger)]">{t(orderStatusKey('cancelled'))}</p>
-              ) : (
-                <ol className="mt-3 flex items-start">
-                  {STEPS.map((step, i) => {
-                    const done = i <= stepIndex
-                    return (
-                      <li key={step} className="flex flex-1 flex-col items-center text-center">
-                        <div className="flex w-full items-center">
-                          <span className={cn('h-0.5 flex-1', i === 0 ? 'invisible' : done ? 'bg-[var(--brand)]' : 'bg-[var(--border)]')} />
-                          <span
-                            className={cn(
-                              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                              done ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'border border-[var(--border)] text-[var(--fg-muted)]'
-                            )}
-                          >
-                            {done ? <SiteIcon name="check" size={11} /> : i + 1}
-                          </span>
-                          <span
-                            className={cn(
-                              'h-0.5 flex-1',
-                              i === STEPS.length - 1 ? 'invisible' : i < stepIndex ? 'bg-[var(--brand)]' : 'bg-[var(--border)]'
-                            )}
-                          />
-                        </div>
-                        <span className={cn('mt-1 text-[10px] capitalize sm:text-xs', done ? 'font-medium text-[var(--fg)]' : 'text-[var(--fg-muted)]')}>
-                          {t(orderStatusKey(step))}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ol>
-              )}
-              {latest ? (
-                <p className="mt-3 text-xs text-[var(--fg-muted)]">
-                  {latest.note || t(orderStatusKey(latest.status))} · {formatDateTime(latest.at)}
-                </p>
-              ) : null}
-              {o.timeline.length > 1 ? (
-                <details className="mt-2">
-                  <summary className="cursor-pointer text-xs font-medium text-[var(--brand-text)]">{t('orders.history')}</summary>
-                  <ol className="mt-2 space-y-2">
-                    {[...o.timeline].reverse().map((entry, i) => (
-                      <li key={i} className="flex gap-2 text-xs">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]" />
-                        <span>
-                          <span className="font-medium capitalize">{t(orderStatusKey(entry.status))}</span>
-                          {entry.note ? <span className="text-[var(--fg-muted)]"> — {entry.note}</span> : null}
-                          <span className="block text-[var(--fg-muted)]">{formatDateTime(entry.at)}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </details>
-              ) : null}
+              <OrderProgress status={o.orderStatus} timeline={o.timeline} className="mt-3" />
             </section>
           </div>
 
