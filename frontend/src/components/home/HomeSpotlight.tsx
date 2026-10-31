@@ -307,15 +307,67 @@ export function HomeSpotlightCard({ product, products, active = 0 }: { product?:
   )
 }
 
-/** Same footprint as the card while the product loads, so the hero does not jump. */
+/** A shimmering bar standing in for a line of text in the dark card. */
+function Bar({ className }: { className?: string }) {
+  return (
+    <span className={cn('relative block overflow-hidden rounded-full bg-white/10', className)} aria-hidden="true">
+      <span className="absolute inset-y-0 start-0 w-2/3 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent motion-safe:animate-[image-shimmer_1.6s_ease-in-out_infinite] rtl:translate-x-full" />
+    </span>
+  )
+}
+
+/**
+ * While the home deals load: the same card as the real one (frame, dark card, photo with the
+ * loading spinner the other products use, name / price / button lines) and the row of deal
+ * thumbnails, so the top of the home page never looks empty and nothing jumps when they arrive.
+ */
 export function HomeSpotlightSkeleton({ strip }: { strip?: boolean }) {
-  return strip ? (
-    <div className="relative aspect-[4/4.1] w-[70%] max-w-[16.5rem] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-muted)] dark:border-white/10 dark:bg-white/10">
-      <ImageSpinner size="sm" tone="dark" />
-    </div>
-  ) : (
-    <div className="relative aspect-square overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/10 [@media(max-height:820px)]:aspect-[5/4]">
-      <ImageSpinner size="lg" tone="dark" />
+  if (strip) {
+    return (
+      <div className="relative aspect-[4/4.1] w-[70%] max-w-[16.5rem] overflow-hidden rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-muted)] dark:border-white/10 dark:bg-white/10">
+        <ImageSpinner size="sm" tone="dark" />
+      </div>
+    )
+  }
+  return (
+    <div>
+      <div className="relative">
+        <div
+          className="pointer-events-none absolute -inset-4 hidden rounded-[3rem] sm:-inset-8 dark:block dark:bg-[radial-gradient(closest-side,rgb(0_194_255/0.22),transparent)]"
+          aria-hidden="true"
+        />
+        <div className="relative overflow-hidden rounded-[1.6rem] bg-[#dfe5ec] p-px shadow-[0_24px_50px_-28px_rgb(15_23_42/0.35)] dark:bg-[linear-gradient(160deg,rgb(0_194_255/0.45),rgb(255_255_255/0.08)_45%,rgb(0_194_255/0.25))] dark:shadow-[0_30px_80px_-24px_rgb(0_0_0/0.8)]">
+          <div className="relative flex flex-col overflow-hidden rounded-[1.5rem] bg-[#0b1116] text-white">
+            <div className="relative aspect-[16/10] overflow-hidden sm:aspect-[4/3] sm:[@media(max-height:820px)]:aspect-[16/10]">
+              <ImageSpinner size="lg" tone="dark" />
+            </div>
+            <div className="space-y-3 p-3.5 pt-1 sm:p-5 sm:pt-1">
+              <Bar className="h-2.5 w-16" />
+              <Bar className="h-5 w-4/5 sm:h-6" />
+              <div className="flex gap-1.5">
+                <Bar className="h-6 w-20" />
+                <Bar className="h-6 w-14" />
+                <Bar className="h-6 w-16" />
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <Bar className="h-7 w-28" />
+                <Bar className="h-10 w-32 bg-[color-mix(in_srgb,var(--brand)_35%,transparent)]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* The row of deals under the card */}
+      <div className="mt-3 grid grid-cols-4 gap-1.5 sm:mt-4 sm:gap-2" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="overflow-hidden rounded-xl bg-[#0b1116] shadow-[0_8px_20px_-12px_rgb(15_23_42/0.45)] dark:border dark:border-white/10 dark:shadow-none">
+            <Bar className="h-12 w-full rounded-none sm:h-16" />
+            <div className="px-1.5 py-1.5 sm:px-2">
+              <Bar className="h-2.5 w-3/5" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
