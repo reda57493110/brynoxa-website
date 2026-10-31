@@ -1120,6 +1120,20 @@ export const en = {
     remove: 'Delete photo',
     fullSize: 'Open full size',
   },
+  // Category names and descriptions by address (slug); English shows the name set in admin
+  catalog: {
+    categories: {
+      laptops: { name: 'Laptops', description: 'Work, study, and creator laptops with clear specs.' },
+      'gaming-pcs': { name: 'Gaming PCs', description: 'Ready-to-play desktops, from mid-range to 4K.' },
+      'desktop-pcs': { name: 'Desktop PCs', description: 'Office desktop towers like the HP EliteDesk: reliable for work and study.' },
+      monitors: { name: 'Monitors', description: 'Office, design, and gaming screens.' },
+      keyboards: { name: 'Keyboards', description: 'Office and gaming keyboards.' },
+      mice: { name: 'Mice', description: 'Wireless and gaming mice.' },
+      headphones: { name: 'Headphones', description: 'Headsets for games, calls, and music.' },
+      components: { name: 'Components', description: 'GPUs, storage, and memory upgrades.' },
+      accessories: { name: 'Accessories', description: 'Hubs, stands, and desk extras.' },
+    },
+  },
 } as const
 
 type DeepString<T> = T extends string

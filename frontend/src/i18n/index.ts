@@ -63,8 +63,12 @@ export function getMessages(locale: Locale): Messages {
   return dictionary(locale)
 }
 
-/** Localized category name by slug; falls back to API name. */
+/**
+ * Category name in the visitor's language, by its address (slug). English (and any category
+ * without a translation) shows the name set in Admin → Categories.
+ */
 export function categoryDisplayName(locale: Locale, slug: string, fallback: string) {
+  if (locale === 'en' && fallback) return fallback
   const key = `catalog.categories.${slug}.name`
   const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   return typeof raw === 'string' ? raw : fallback
@@ -76,6 +80,7 @@ export function categoryDisplayDescription(
   slug: string,
   fallback?: string
 ) {
+  if (locale === 'en' && fallback) return fallback
   const key = `catalog.categories.${slug}.description`
   const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   if (typeof raw === 'string') return raw

@@ -1122,4 +1122,18 @@ export const ar: Messages = {
     remove: 'حذف الصورة',
     fullSize: 'عرض بالحجم الكامل',
   },
+  // Category names and descriptions by address (slug); English shows the name set in admin
+  catalog: {
+    categories: {
+      laptops: { name: 'حواسيب محمولة', description: 'حواسيب للعمل والدراسة والإبداع بمواصفات واضحة.' },
+      'gaming-pcs': { name: 'حواسيب الألعاب', description: 'حواسيب جاهزة للعب، من الفئة المتوسطة إلى 4K.' },
+      'desktop-pcs': { name: 'وحدات مركزية', description: 'وحدات مركزية مكتبية مثل HP EliteDesk: موثوقة للعمل والدراسة.' },
+      monitors: { name: 'شاشات', description: 'شاشات للمكتب والتصميم والألعاب.' },
+      keyboards: { name: 'لوحات مفاتيح', description: 'لوحات مفاتيح مكتبية وللألعاب.' },
+      mice: { name: 'فأرات', description: 'فأرات لاسلكية وللألعاب.' },
+      headphones: { name: 'سماعات', description: 'سماعات للألعاب والمكالمات والموسيقى.' },
+      components: { name: 'مكونات', description: 'بطاقات رسومية وتخزين وذاكرة.' },
+      accessories: { name: 'إكسسوارات', description: 'موزعات وحوامل وإضافات للمكتب.' },
+    },
+  },
 }

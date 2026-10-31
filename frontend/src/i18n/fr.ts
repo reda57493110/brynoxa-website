@@ -1124,4 +1124,18 @@ export const fr: Messages = {
     remove: 'Supprimer la photo',
     fullSize: 'Voir en grand',
   },
+  // Category names and descriptions by address (slug); English shows the name set in admin
+  catalog: {
+    categories: {
+      laptops: { name: 'Ordinateurs portables', description: 'Portables pour le travail, les études et la création, avec des caractéristiques claires.' },
+      'gaming-pcs': { name: 'PC Gamer', description: 'PC prêts à jouer, du milieu de gamme à la 4K.' },
+      'desktop-pcs': { name: 'Unités centrales', description: 'Unités centrales de bureau comme les HP EliteDesk : fiables pour le travail et les études.' },
+      monitors: { name: 'Écrans', description: 'Écrans pour le bureau, le design et le jeu.' },
+      keyboards: { name: 'Claviers', description: 'Claviers de bureau et gaming.' },
+      mice: { name: 'Souris', description: 'Souris sans fil et gaming.' },
+      headphones: { name: 'Casques', description: 'Casques pour le jeu, les appels et la musique.' },
+      components: { name: 'Composants', description: 'Cartes graphiques, stockage et mémoire.' },
+      accessories: { name: 'Accessoires', description: 'Hubs, supports et accessoires de bureau.' },
+    },
+  },
 }
