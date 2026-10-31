@@ -5,17 +5,45 @@ import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Spinner } from '@/components/ui/Spinner'
-import { ADMIN_PAGES, matchPages, searchText } from '@/lib/adminSearch'
+import { ADMIN_PAGES, dataQuery, matchPages, searchText } from '@/lib/adminSearch'
+import { optimizedImageUrl } from '@/lib/image'
 import { canOpenAdminPath } from '@/lib/permissions'
 import { formatCurrency } from '@/lib/format'
 import { orderStatusLabel } from '@/lib/admin'
 import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/store/authStore'
 
-type Hit = { key: string; icon: SiteIconName; title: string; detail?: string; to: string }
+type Hit = { key: string; icon: SiteIconName; title: string; detail?: string; to: string; image?: string; more?: boolean }
 type Group = { id: string; label: string; hits: Hit[]; loading?: boolean }
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+const RECENT_KEY = 'brynoxa-admin-search-recent'
+type Recent = Pick<Hit, 'key' | 'icon' | 'title' | 'detail' | 'to' | 'image'>
+
+function readRecent(userId?: string): Recent[] {
+  try {
+    const all = JSON.parse(localStorage.getItem(RECENT_KEY) || '{}') as Record<string, Recent[]>
+    return (userId && all[userId]) || []
+  } catch {
+    return []
+  }
+}
+
+function rememberRecent(userId: string | undefined, hit: Hit) {
+  if (!userId || hit.more) return
+  try {
+    const all = JSON.parse(localStorage.getItem(RECENT_KEY) || '{}') as Record<string, Recent[]>
+    const { key, icon, title, detail, to, image } = hit
+    all[userId] = [{ key, icon, title, detail, to, image }, ...(all[userId] || []).filter((r) => r.key !== key)].slice(0, 6)
+    localStorage.setItem(RECENT_KEY, JSON.stringify(all))
+  } catch {
+    /* storage unavailable: no recent list */
+  }
+}
+
+/** The quick actions shown when nothing is typed yet (each only if the role can open it). */
+const QUICK = ['Add an order', 'Add a product', 'Return & refund', 'Record a deposit', 'Receive stock', 'Add an expense']
 
 /** The words typed, after a short pause (no request per key press). */
 function useSettled(value: string, ms = 250) {
@@ -79,13 +107,17 @@ export function AdminSearch() {
 function SearchPanel({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate()
   const role = useAuthStore((s) => s.user?.role)
+  const userId = useAuthStore((s) => s.user?._id)
   const can = (to: string) => canOpenAdminPath(role, to)
+  const [recent] = useState(() => readRecent(userId))
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
   const input = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const query = useSettled(q.trim())
-  const ready = query.length >= 2
+  // Orders, customers and products get the meaningful words only: "edit hp" looks up "hp"
+  const lookup = dataQuery(query)
+  const ready = lookup.length >= 2
 
   useEffect(() => {
     input.current?.focus()
@@ -97,26 +129,26 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   }, [])
 
   const orders = useQuery({
-    queryKey: ['admin-search', 'orders', query],
-    queryFn: async () => (await adminApi.orders.list({ q: query, limit: 5 })).data.data,
+    queryKey: ['admin-search', 'orders', lookup],
+    queryFn: async () => (await adminApi.orders.list({ q: lookup, limit: 5 })).data.data,
     enabled: ready && can('/admin/orders'),
     staleTime: 30_000,
   })
   const customers = useQuery({
-    queryKey: ['admin-search', 'customers', query],
-    queryFn: async () => (await adminApi.customers.list({ q: query, limit: 5 })).data.data,
+    queryKey: ['admin-search', 'customers', lookup],
+    queryFn: async () => (await adminApi.customers.list({ q: lookup, limit: 5 })).data.data,
     enabled: ready && can('/admin/customers'),
     staleTime: 30_000,
   })
   const products = useQuery({
-    queryKey: ['admin-search', 'products', query],
-    queryFn: async () => (await adminApi.products.list({ q: query, limit: 5 })).data.data,
+    queryKey: ['admin-search', 'products', lookup],
+    queryFn: async () => (await adminApi.products.list({ q: lookup, limit: 5 })).data.data,
     enabled: ready && can('/admin/products'),
     staleTime: 30_000,
   })
   const staff = useQuery({
-    queryKey: ['admin-search', 'staff', query],
-    queryFn: async () => (await adminApi.users.list({ q: query, role: 'staff', limit: 5 })).data.data,
+    queryKey: ['admin-search', 'staff', lookup],
+    queryFn: async () => (await adminApi.users.list({ q: lookup, role: 'staff', limit: 5 })).data.data,
     enabled: ready && can('/admin/roles'),
     staleTime: 30_000,
   })
@@ -135,22 +167,30 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   })
 
   const groups: Group[] = useMemo(() => {
-    const words = searchText(query)
-    const pages = (query ? matchPages(query) : ADMIN_PAGES.slice(0, 6)).filter((p) => can(p.to)).slice(0, query ? 6 : 6)
-    const out: Group[] = [
-      {
-        id: 'pages',
-        label: query ? 'Pages & settings' : 'Go to',
-        hits: pages.map((p) => ({ key: `page-${p.to}`, icon: p.icon, title: p.label, detail: p.hint, to: p.to })),
-      },
-    ]
+    const words = searchText(lookup)
+    const pageHit = (p: (typeof ADMIN_PAGES)[number]) => ({ key: `page-${p.label}`, icon: p.icon, title: p.label, detail: p.hint, to: p.to })
+    const out: Group[] = []
+    if (!query) {
+      // Nothing typed yet: where you went last, and the usual jobs
+      const mine = recent.filter((r) => can(r.to))
+      if (mine.length) out.push({ id: 'recent', label: 'Recent', hits: mine.map((r) => ({ ...r, key: `recent-${r.key}` })) })
+      out.push({
+        id: 'quick',
+        label: 'Quick actions',
+        hits: ADMIN_PAGES.filter((p) => QUICK.includes(p.label) && can(p.to)).map(pageHit),
+      })
+      return out
+    }
+    const pages = matchPages(query).filter((p) => can(p.to)).slice(0, 5)
+    if (pages.length) out.push({ id: 'pages', label: 'Pages, settings & actions', hits: pages.map(pageHit) })
     if (!ready) return out
+    const seeAll = (label: string, to: string): Hit => ({ key: `more-${to}`, icon: 'search', title: label, to, more: true })
     if (can('/admin/orders'))
       out.push({
         id: 'orders',
         label: 'Orders',
         loading: orders.isFetching && !orders.data,
-        hits: (orders.data ?? []).map((o) => ({
+        hits: (orders.data ?? []).map((o): Hit => ({
           key: `order-${o._id}`,
           icon: 'cart',
           title: `#${o.orderNumber}`,
@@ -162,33 +202,34 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
             .filter(Boolean)
             .join(' · '),
           to: `/admin/orders/${o._id}`,
-        })),
+        })).concat(orders.data && orders.data.length >= 5 ? [seeAll(`See all orders matching “${lookup}”`, `/admin/orders?q=${encodeURIComponent(lookup)}`)] : []),
       })
     if (can('/admin/customers'))
       out.push({
         id: 'customers',
         label: 'Customers',
         loading: customers.isFetching && !customers.data,
-        hits: (customers.data ?? []).map((c) => ({
+        hits: (customers.data ?? []).map((c): Hit => ({
           key: `customer-${c._id}`,
           icon: 'user',
           title: c.name,
           detail: [c.phone, c.email, c.companyName].filter(Boolean).join(' · '),
           to: `/admin/customers/${c._id}`,
-        })),
+        })).concat(customers.data && customers.data.length >= 5 ? [seeAll(`See all customers matching “${lookup}”`, `/admin/customers?q=${encodeURIComponent(lookup)}`)] : []),
       })
     if (can('/admin/products'))
       out.push({
         id: 'products',
         label: 'Products',
         loading: products.isFetching && !products.data,
-        hits: (products.data ?? []).map((p) => ({
+        hits: (products.data ?? []).map((p): Hit => ({
           key: `product-${p._id}`,
           icon: 'package',
           title: p.name,
           detail: [p.sku, formatCurrency(p.price), `${p.stock} in stock`].filter(Boolean).join(' · '),
           to: `/admin/products/${p._id}/edit`,
-        })),
+          image: (p.images?.find((i) => i.isPrimary) ?? p.images?.[0])?.url,
+        })).concat(products.data && products.data.length >= 5 ? [seeAll(`See all products matching “${lookup}”`, `/admin/products?q=${encodeURIComponent(lookup)}`)] : []),
       })
     if (can('/admin/coupons'))
       out.push({
@@ -225,7 +266,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
       })
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, ready, role, orders.data, orders.isFetching, customers.data, customers.isFetching, products.data, products.isFetching, coupons.data, coupons.isFetching, messages.data, messages.isFetching, staff.data, staff.isFetching])
+  }, [query, lookup, ready, role, recent, orders.data, orders.isFetching, customers.data, customers.isFetching, products.data, products.isFetching, coupons.data, coupons.isFetching, messages.data, messages.isFetching, staff.data, staff.isFetching])
 
   const shown = groups.filter((g) => g.hits.length || g.loading)
   const flat = shown.flatMap((g) => g.hits)
@@ -238,6 +279,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
 
   const go = (hit: Hit | undefined) => {
     if (!hit) return
+    rememberRecent(userId, hit)
     onClose()
     navigate(hit.to)
   }
@@ -270,7 +312,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                 go(flat[active])
               }
             }}
-            placeholder="Order number, customer, phone, product, SKU, coupon, setting…"
+            placeholder="Search or type what you want to do (e.g. edit product, refund, 06…)"
             aria-label="Search"
             className="h-14 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-[var(--fg-muted)]"
           />
@@ -291,7 +333,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
                   index += 1
                   const i = index
                   return (
-                    <Row key={hit.key} hit={hit} index={i} active={i === active} onHover={() => setActive(i)} onPick={() => go(hit)} />
+                    <Row key={hit.key} hit={hit} words={q} index={i} active={i === active} onHover={() => setActive(i)} onPick={() => go(hit)} />
                   )
                 })
               )}
@@ -299,7 +341,11 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
           ))}
           {q.trim().length >= 2 && !searching && !flat.length ? (
             <Empty>
-              Nothing found for “{q.trim()}”. Try an order number (BRX-…), a phone number, a name or a SKU.
+              Nothing found for “{q.trim()}”.
+              <span className="mt-1 block text-xs">
+                Try an order number (BRX-…), a phone number, a customer’s name, a product name or SKU — or what you want to do, like
+                “add order”, “refund”, “delivery fee”.
+              </span>
             </Empty>
           ) : null}
           {q.trim().length === 1 ? <Empty>Type at least 2 letters to search orders, customers and products.</Empty> : null}
@@ -313,7 +359,31 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
   )
 }
 
-function Row({ hit, index, active, onHover, onPick }: { hit: Hit; index: number; active: boolean; onHover: () => void; onPick: () => void }) {
+/** The typed words in bold inside a result. */
+function Marked({ text, words }: { text: string; words: string }) {
+  const parts = words
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length >= 2)
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\function Row({ hit, index, active, onHover, onPick }: { hit: Hit; index: number; active: boolean; onHover: () => void; onPick: () => void }) {'))
+  if (!parts.length) return <>{text}</>
+  const rx = new RegExp(`(${parts.join('|')})`, 'ig')
+  return (
+    <>
+      {text.split(rx).map((piece, i) =>
+        i % 2 ? (
+          <mark key={i} className="rounded-sm bg-[color-mix(in_srgb,var(--brand)_28%,transparent)] px-px text-inherit">
+            {piece}
+          </mark>
+        ) : (
+          piece
+        )
+      )}
+    </>
+  )
+}
+
+function Row({ hit, words, index, active, onHover, onPick }: { hit: Hit; words: string; index: number; active: boolean; onHover: () => void; onPick: () => void }) {
   return (
     <button
       type="button"
@@ -322,12 +392,22 @@ function Row({ hit, index, active, onHover, onPick }: { hit: Hit; index: number;
       onClick={onPick}
       className={cn('flex w-full items-center gap-3 rounded-xl px-2 py-2 text-start', active ? 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)]' : 'hover:bg-[var(--bg-muted)]')}
     >
-      <span className={cn('grid size-8 shrink-0 place-items-center rounded-lg', active ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]')}>
-        <SiteIcon name={hit.icon} size={15} />
-      </span>
+      {hit.image ? (
+        <img src={optimizedImageUrl(hit.image, 96)} alt="" className="size-8 shrink-0 rounded-lg bg-white object-contain" loading="lazy" />
+      ) : (
+        <span className={cn('grid size-8 shrink-0 place-items-center rounded-lg', active ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]')}>
+          <SiteIcon name={hit.icon} size={15} />
+        </span>
+      )}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-medium">{hit.title}</span>
-        {hit.detail ? <span className="block truncate text-xs text-[var(--fg-muted)]">{hit.detail}</span> : null}
+        <span className={cn('block truncate text-sm', hit.more ? 'font-medium text-[var(--brand-text)]' : 'font-medium')}>
+          {hit.more ? hit.title : <Marked text={hit.title} words={words} />}
+        </span>
+        {hit.detail ? (
+          <span className="block truncate text-xs text-[var(--fg-muted)]">
+            <Marked text={hit.detail} words={words} />
+          </span>
+        ) : null}
       </span>
       {active ? <SiteIcon name="arrow-right" size={14} className="shrink-0 text-[var(--brand-text)]" /> : null}
     </button>

@@ -19,9 +19,20 @@ test('pages and settings are found by the words people type', async () => {
   assert.equal(first('wafacash'), '/admin/orders?view=deposits');
   assert.equal(first('retour'), '/admin/inventory/returns');
   assert.equal(first('instagram'), '/admin/orders/new');
-  assert.equal(first('mot de passe'), undefined, 'every word must match');
+  assert.equal(first('mot de passe'), '/admin/security', 'French words too');
   assert.equal(first('password'), '/admin/security');
   assert.deepEqual(matchPages(''), []);
+  // What people type to do something, small typos, and the meaningful words for the data search
+  const { dataQuery } = await load('frontend/src/lib/adminSearch.ts');
+  assert.equal(matchPages('product edit')[0].label, 'Edit a product');
+  assert.equal(matchPages('modifier produit')[0].label, 'Edit a product');
+  assert.equal(matchPages('add coupon')[0].label, 'Add a coupon');
+  assert.equal(matchPages('rembourser')[0].label, 'Return & refund');
+  assert.equal(matchPages('invetory')[0].label, 'Inventory', 'one letter missing');
+  assert.equal(matchPages('edit hp').length, 0, 'no page called hp');
+  assert.equal(dataQuery('edit hp'), 'hp', 'orders / customers / products get the meaningful words');
+  assert.equal(dataQuery('product edit'), '');
+  assert.equal(dataQuery('Ahmed Benali'), 'Ahmed Benali');
   // Every page in the list exists in the admin router
   const router = src('app/router.tsx');
   for (const p of ADMIN_PAGES) {

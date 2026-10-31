@@ -97,7 +97,8 @@ function groupOf(placements: Placement[]): Group {
 export function Products() {
   const role = useAuthStore((s) => s.user?.role)
   const qc = useQueryClient()
-  const [q, setQ] = useState('')
+  // ?q= from the admin search ("See all products matching…")
+  const [q, setQ] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '')
   const [page, setPage] = useState(1)
   const [category, setCategory] = useState('')
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
