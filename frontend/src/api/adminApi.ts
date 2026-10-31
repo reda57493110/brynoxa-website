@@ -264,9 +264,12 @@ export const adminApi = {
       api.get<ApiResponse<CustomerRow[]>>('/admin/customers', { params: cleanParams(params) }),
     summary: (params?: { from?: string; to?: string }) =>
       api.get<ApiResponse<CustomerSummary>>('/admin/customers/summary', { params: cleanParams(params) }),
-    /** CSV of the filtered list (downloaded with the staff session). */
-    exportCsv: (params?: CustomerListParams) =>
-      api.get<Blob>('/admin/customers/export', { params: cleanParams(params), responseType: 'blob' }),
+    /** The filtered list as a file (downloaded with the staff session): Excel by default, or CSV. */
+    exportFile: (params?: CustomerListParams, format: 'xlsx' | 'csv' = 'xlsx') =>
+      api.get<Blob>('/admin/customers/export', { params: { ...cleanParams(params), format }, responseType: 'blob' }),
+    /** The same list as a table, for the printable page (Export → PDF / print). */
+    exportTable: (params?: CustomerListParams) =>
+      api.get<ApiResponse<CustomerExportTable>>('/admin/customers/export', { params: { ...cleanParams(params), format: 'json' } }),
     profile: (id: string, params?: { from?: string; to?: string }) =>
       api.get<ApiResponse<CustomerProfile>>(`/admin/customers/${id}`, { params: cleanParams(params) }),
     update: (id: string, payload: CustomerUpdatePayload) =>
@@ -360,4 +363,10 @@ export type ReturnRefundPayload = {
   amount: number
   method: 'cash' | 'transfer' | 'other'
   outcome: 'inspect' | 'restock' | 'write-off'
+}
+
+/** Customers → Export: the columns (with their kind) and one row per customer. */
+export type CustomerExportTable = {
+  columns: { header: string; type?: 'text' | 'number' | 'money' | 'percent' | 'date'; width?: number }[]
+  rows: (string | number | null)[][]
 }

@@ -9,7 +9,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { Input } from '@/components/ui/Input'
 import { Pagination } from '@/components/ui/Pagination'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { AdminHeader } from '@/components/admin/AdminHeader'
 import { CustomerFilters } from '@/components/admin/customers/CustomerFilters'
 import { CustomerTable } from '@/components/admin/customers/CustomerTable'
@@ -52,6 +52,12 @@ const BUILTIN_SEGMENTS: SegmentKey[] = [
 ]
 
 const PAGE_SIZE = 20
+
+const EXPORT_CHOICES: { id: 'xlsx' | 'pdf' | 'csv'; icon: SiteIconName; title: string; text: string }[] = [
+  { id: 'xlsx', icon: 'layers', title: 'Excel file (.xlsx)', text: 'A table for Excel, Google Sheets or LibreOffice' },
+  { id: 'pdf', icon: 'package', title: 'PDF / print', text: 'A clean list to print or save as PDF — opens anywhere' },
+  { id: 'csv', icon: 'sliders', title: 'CSV', text: 'Plain text, only to import into other software' },
+]
 
 export function Customers() {
   // Order / support staff look customers up; changing them or saving segments is for other roles
@@ -230,16 +236,19 @@ export function Customers() {
     update(patch)
   }
 
-  const exportCsv = useMutation({
-    mutationFn: async () => {
+  // Export: an Excel file, a printable list (PDF), or CSV for other software
+  const [exportOpen, setExportOpen] = useState(false)
+  const exportFile = useMutation({
+    mutationFn: async (format: 'xlsx' | 'csv') => {
       const rest: CustomerListParams = { ...listParams, page: undefined, limit: undefined }
-      return (await adminApi.customers.exportCsv(rest)).data
+      return { blob: (await adminApi.customers.exportFile(rest, format)).data, format }
     },
-    onSuccess: (blob) => {
+    onSuccess: ({ blob, format }) => {
+      setExportOpen(false)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `customers-${new Date().toISOString().slice(0, 10)}.csv`
+      a.download = `brynoxa-customers-${new Date().toISOString().slice(0, 10)}.${format}`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -272,9 +281,43 @@ export function Customers() {
         title="Customers"
         description="Accounts, spending, profitability and wholesale status."
         actions={
-          <Button variant="outline" size="sm" loading={exportCsv.isPending} onClick={() => exportCsv.mutate()}>
-            <SiteIcon name="arrow-up" size={14} className="rotate-180" /> Export CSV
-          </Button>
+          <div className="relative">
+            <Button variant="outline" size="sm" loading={exportFile.isPending} onClick={() => setExportOpen((v) => !v)} aria-expanded={exportOpen}>
+              <SiteIcon name="arrow-up" size={14} className="rotate-180" /> Export
+              <SiteIcon name="chevron-down" size={14} />
+            </Button>
+            {exportOpen ? (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setExportOpen(false)} aria-hidden="true" />
+                <div role="menu" className="absolute end-0 z-40 mt-2 w-72 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-1 shadow-soft-lg">
+                  {EXPORT_CHOICES.map((o) => (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        if (o.id === 'pdf') {
+                          // The printable list opens in a new tab with the same filters
+                          const rest = Object.entries({ ...listParams, page: undefined, limit: undefined }).filter(
+                            ([, v]) => v !== undefined && v !== ''
+                          )
+                          window.open(`/admin-print/customers?${new URLSearchParams(rest.map(([k, v]) => [k, String(v)])).toString()}`, '_blank')
+                          setExportOpen(false)
+                        } else exportFile.mutate(o.id)
+                      }}
+                      className="flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-start hover:bg-[var(--bg-muted)]"
+                    >
+                      <SiteIcon name={o.icon} size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
+                      <span>
+                        <span className="block text-sm font-medium">{o.title}</span>
+                        <span className="block text-xs text-[var(--fg-muted)]">{o.text}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </div>
         }
       />
 

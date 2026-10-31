@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { buildXlsx, type XlsxCell, type XlsxColumn } from '../utils/xlsx';
 import { phoneSearchRegex } from '../utils/phoneSearch';
 import { customerSourceFilter } from '../utils/orderOrigin';
 import { OPEN_STATUSES, closedWithoutSale, wasDelivered } from '../utils/orderStatus';
@@ -659,29 +660,76 @@ function orderHistory(o: LeanOrder) {
 }
 
 /** CSV of the filtered customer list (one row per customer). */
-export async function exportCustomersCsv(query: CustomerListQuery, canSeeProfit: boolean) {
+const TYPE_TEXT: Record<string, string> = { retail: 'Retail', wholesale: 'Wholesale', business: 'Business' };
+const STATUS_TEXT: Record<string, string> = { active: 'Active', disabled: 'Disabled', unverified: 'Email not confirmed', guest: 'Guest' };
+
+/**
+ * The customer list for Customers → Export (Excel, PDF / print, CSV): the filtered customers, one
+ * row each, with readable words ("Retail", "Active") and real numbers / days for spreadsheets.
+ */
+export async function customerExportTable(query: CustomerListQuery, canSeeProfit: boolean) {
   const { all } = await listCustomerOverview({ ...query, page: 1, limit: 100 }, canSeeProfit, { everything: true });
+  const columns: XlsxColumn[] = [
+    { header: 'Customer ID', width: 12 },
+    { header: 'Name', width: 24 },
+    { header: 'Email', width: 30 },
+    { header: 'Phone', width: 16 },
+    { header: 'Company', width: 20 },
+    { header: 'Type', width: 11 },
+    { header: 'Status', width: 18 },
+    { header: 'Wholesale tier', width: 15 },
+    { header: 'Registered', type: 'date', width: 12 },
+    { header: 'Orders', type: 'number', width: 9 },
+    { header: 'Completed orders', type: 'number', width: 11 },
+    { header: 'Amount paid', type: 'money', width: 14 },
+    { header: 'Net sales', type: 'money', width: 14 },
+    { header: 'Avg order value', type: 'money', width: 14 },
+    { header: 'First order', type: 'date', width: 12 },
+    { header: 'Last order', type: 'date', width: 12 },
+    { header: 'To collect', type: 'money', width: 13 },
+    ...(canSeeProfit
+      ? ([
+          { header: 'Gross profit', type: 'money', width: 14 },
+          { header: 'Margin', type: 'percent', width: 9 },
+        ] as XlsxColumn[])
+      : []),
+  ];
+  const rows: XlsxCell[][] = all.map((r) => [
+    r.customerId,
+    r.name,
+    r.email,
+    r.phone,
+    r.companyName,
+    TYPE_TEXT[r.customerType] ?? r.customerType,
+    STATUS_TEXT[r.status] ?? r.status,
+    r.tierName,
+    r.registeredAt,
+    r.metrics.orders.total,
+    r.metrics.orders.completed,
+    r.metrics.payments.totalPaid,
+    r.metrics.sales.netSales,
+    r.metrics.sales.averageOrderValue,
+    r.metrics.dates.firstOrder,
+    r.metrics.dates.lastOrder,
+    r.metrics.payments.toCollect,
+    ...(canSeeProfit ? [r.metrics.sales.grossProfit ?? 'cost needed', r.metrics.sales.margin ?? null] : []),
+  ]);
+  return { columns, rows };
+}
+
+/** CSV (for importing into other software). */
+export async function exportCustomersCsv(query: CustomerListQuery, canSeeProfit: boolean) {
+  const { columns, rows } = await customerExportTable(query, canSeeProfit);
   const cell = (v: unknown) => {
     const s = v === null || v === undefined ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : String(v);
     // Quote, and neutralise spreadsheet formulas
     return `"${(/^[=+\-@\t\r]/.test(s) ? `'${s}` : s).replace(/"/g, '""')}"`;
   };
-  const headers = [
-    'Customer ID', 'Name', 'Email', 'Phone', 'Company', 'Type', 'Status', 'Wholesale tier', 'Registered',
-    'Orders', 'Completed orders', 'Amount paid', 'Net sales', 'Avg order value', 'First order', 'Last order', 'To collect',
-    ...(canSeeProfit ? ['Gross profit', 'Margin %'] : []),
-  ];
-  const lines = all.map((r) =>
-    [
-      r.customerId, r.name, r.email, r.phone, r.companyName, r.customerType, r.status, r.tierName, r.registeredAt,
-      r.metrics.orders.total, r.metrics.orders.completed, r.metrics.payments.totalPaid, r.metrics.sales.netSales,
-      r.metrics.sales.averageOrderValue, r.metrics.dates.firstOrder, r.metrics.dates.lastOrder, r.metrics.payments.toCollect,
-      ...(canSeeProfit
-        ? [r.metrics.sales.grossProfit ?? 'cost data needed', r.metrics.sales.margin ?? '']
-        : []),
-    ]
-      .map(cell)
-      .join(',')
-  );
-  return [headers.map(cell).join(','), ...lines].join('\r\n');
+  return [columns.map((c) => cell(c.header)).join(','), ...rows.map((r) => r.map(cell).join(','))].join('\r\n');
+}
+
+/** Excel (.xlsx): a real table that opens in Excel, Google Sheets or LibreOffice. */
+export async function exportCustomersXlsx(query: CustomerListQuery, canSeeProfit: boolean) {
+  const { columns, rows } = await customerExportTable(query, canSeeProfit);
+  return buildXlsx('Customers', columns, rows);
 }

@@ -61,6 +61,9 @@ const ServiceDetail = lazy(() =>
 const Help = lazy(() => import('@/pages/store/Help').then((m) => ({ default: m.Help })))
 const Legal = lazy(() => import('@/pages/store/Legal').then((m) => ({ default: m.Legal })))
 
+const AdminCustomersPrint = lazy(() =>
+  import('@/pages/admin/CustomersPrint').then((m) => ({ default: m.CustomersPrint }))
+)
 const AdminDeliverySlips = lazy(() =>
   import('@/pages/admin/DeliverySlips').then((m) => ({ default: m.DeliverySlips }))
 )
@@ -248,6 +251,16 @@ export function AppRouter() {
           <AdminRoute>
             <S>
               <AdminProfitReport />
+            </S>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="admin-print/customers"
+        element={
+          <AdminRoute>
+            <S>
+              <AdminCustomersPrint />
             </S>
           </AdminRoute>
         }

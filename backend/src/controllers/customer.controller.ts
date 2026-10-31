@@ -8,7 +8,9 @@ import { hasPermission } from '../permissions';
 import {
   customerProfile,
   customerSummary,
+  customerExportTable,
   exportCustomersCsv,
+  exportCustomersXlsx,
   listCustomerOverview,
   type CustomerListQuery,
 } from '../services/customerAnalytics.service';
@@ -72,12 +74,26 @@ export const summary = asyncHandler(async (req: AuthRequest, res: Response) => {
   sendSuccess(res, await customerSummary(date(req.query.from), date(req.query.to, true), canSeeProfit(req)));
 });
 
+/** Customers → Export: Excel (default), the table for the printable list (json), or CSV. */
 export const exportCsv = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const csv = await exportCustomersCsv(parseCustomerQuery(req.query), canSeeProfit(req));
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="brynoxa-customers-${new Date().toISOString().slice(0, 10)}.csv"`);
+  const query = parseCustomerQuery(req.query);
+  const day = new Date().toISOString().slice(0, 10);
   res.setHeader('Cache-Control', 'no-store');
-  res.send(`﻿${csv}`);
+  if (req.query.format === 'json') {
+    sendSuccess(res, await customerExportTable(query, canSeeProfit(req)));
+    return;
+  }
+  if (req.query.format === 'csv') {
+    const csv = await exportCustomersCsv(query, canSeeProfit(req));
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="brynoxa-customers-${day}.csv"`);
+    res.send(`\uFEFF${csv}`);
+    return;
+  }
+  const file = await exportCustomersXlsx(query, canSeeProfit(req));
+  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition', `attachment; filename="brynoxa-customers-${day}.xlsx"`);
+  res.send(file);
 });
 
 export const profile = asyncHandler(async (req: AuthRequest, res: Response) => {
