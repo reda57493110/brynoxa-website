@@ -574,6 +574,49 @@ export async function trackGuestOrder(orderNumber: string, phone: string) {
   return order;
 }
 
+/** "BRX-20261020-K7M2QX" → "BRX-20261020-••••QX" (enough to tell orders apart, not to open them). */
+export function maskOrderNumber(orderNumber: string) {
+  const i = orderNumber.lastIndexOf('-');
+  const tail = i >= 0 ? orderNumber.slice(i + 1) : orderNumber;
+  return `${i >= 0 ? orderNumber.slice(0, i + 1) : ''}${'•'.repeat(Math.max(tail.length - 2, 0))}${tail.slice(-2)}`;
+}
+
+/**
+ * Track order with the phone only (a guest lost the order number): the last orders delivered to
+ * this phone, in a short form. Anyone can type someone's phone, so no name, street address,
+ * notes, payment details or full order number — the order number still opens the full view.
+ */
+export async function trackOrdersByPhone(phone: string) {
+  const digits = normalizePhoneDigits(phone);
+  if (digits.length < 8) throw new ApiError(400, 'Enter the phone used for delivery');
+  const rx = new RegExp(`${digits.slice(-9).split('').join('\\D*')}\\D*$`);
+  const orders = await Order.find({ 'shippingAddress.phone': rx }).sort({ createdAt: -1 }).limit(10);
+  const mine = orders.filter((o) => phonesMatch(o.shippingAddress?.phone || '', phone));
+  if (!mine.length) throw new ApiError(404, 'We could not find an order with this phone');
+  return mine.map((order) => {
+    const view = customerOrderView(order) as unknown as {
+      orderNumber: string;
+      orderStatus: string;
+      createdAt: Date;
+      rescheduledFor?: Date;
+      pricing: { total: number };
+      shippingAddress?: { city?: string };
+      items: { name: string; qty: number; price: number }[];
+      timeline?: { status: string; at: Date }[];
+    };
+    return {
+      orderRef: maskOrderNumber(view.orderNumber),
+      orderStatus: view.orderStatus,
+      createdAt: view.createdAt,
+      rescheduledFor: view.rescheduledFor,
+      total: view.pricing.total,
+      city: view.shippingAddress?.city || '',
+      items: view.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+      timeline: (view.timeline || []).map((s) => ({ status: s.status, at: s.at })),
+    };
+  });
+}
+
 export async function updateUserOrderItems(
   userId: string,
   orderNumber: string,

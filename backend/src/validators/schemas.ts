@@ -221,7 +221,8 @@ export const guestOrderReceiptSchema = z.object({
 });
 
 export const trackOrderSchema = z.object({
-  orderNumber: z.string().trim().min(6).max(40),
+  /** Empty: lost order number → the orders made with this phone (short view) */
+  orderNumber: z.union([z.string().trim().min(6).max(40), z.literal('')]).optional(),
   phone: z.string().trim().min(8).max(30),
 });
 

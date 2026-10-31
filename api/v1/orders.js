@@ -101,6 +101,11 @@ module.exports = async (req, res) => {
       const body = parseBody(schemas.trackOrderSchema, await readJsonBody(req));
       // Per connection and per phone number, so order numbers cannot be swept for one customer
       if (!(await rateLimit(req, res, 'track', String(body.phone).replace(/\D/g, '').slice(-8)))) return;
+      // No order number (lost): the short list of orders made with this phone
+      if (!body.orderNumber) {
+        sendJson(res, 200, { success: true, message: 'Success', data: { phoneMatches: await orderService.trackOrdersByPhone(body.phone) } });
+        return;
+      }
       const order = await orderService.trackGuestOrder(body.orderNumber, body.phone);
       sendJson(res, 200, { success: true, message: 'Success', data: await orderService.customerOrderViewWithPayment(order) });
       return;

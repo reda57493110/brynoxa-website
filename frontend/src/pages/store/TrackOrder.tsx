@@ -18,7 +18,7 @@ import { useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
 import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
-import type { Order } from '@/types'
+import type { Order, PhoneOrderMatch } from '@/types'
 import { HelpLink } from '@/components/help/HelpLink'
 
 
@@ -27,6 +27,8 @@ export function TrackOrder() {
   const [orderNumber, setOrderNumber] = useState('')
   const [phone, setPhone] = useState('')
   const [order, setOrder] = useState<Order | null>(null)
+  // Lost order number: the orders made with this phone, in a short form
+  const [matches, setMatches] = useState<PhoneOrderMatch[] | null>(null)
 
   useSeo({
     title: t('orders.trackTitle'),
@@ -36,8 +38,20 @@ export function TrackOrder() {
 
   const lookup = useMutation({
     mutationFn: () => ordersApi.track(orderNumber.trim(), phone.trim()),
-    onSuccess: (res) => setOrder(res.data.data),
-    onError: () => setOrder(null),
+    onSuccess: (res) => {
+      const data = res.data.data
+      if ('phoneMatches' in data) {
+        setOrder(null)
+        setMatches(data.phoneMatches)
+      } else {
+        setMatches(null)
+        setOrder(data)
+      }
+    },
+    onError: () => {
+      setOrder(null)
+      setMatches(null)
+    },
   })
 
   const onSubmit = (e: FormEvent) => {
@@ -55,14 +69,16 @@ export function TrackOrder() {
       <Container className="py-5 sm:py-10">
         <div className="mx-auto grid max-w-3xl gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-8">
           <form className={cn(surfaceCard, 'space-y-4 p-5 sm:p-6')} onSubmit={onSubmit}>
-            <Input
-              label={t('orders.trackOrderNumber')}
-              value={orderNumber}
-              onChange={(e) => setOrderNumber(e.target.value)}
-              placeholder="BRX-20260323-K7M2QX"
-              required
-              autoComplete="off"
-            />
+            <div>
+              <Input
+                label={`${t('orders.trackOrderNumber')} ${t('orders.trackOptional')}`}
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                placeholder="BRX-20260323-K7M2QX"
+                autoComplete="off"
+              />
+              <p className="mt-1.5 text-xs text-[var(--fg-muted)]">{t('orders.trackLostNumber')}</p>
+            </div>
             <Input
               label={t('orders.trackPhone')}
               value={phone}
@@ -84,7 +100,57 @@ export function TrackOrder() {
           </form>
 
           <div className={cn(surfaceCard, 'p-5 sm:p-6')}>
-            {!order ? (
+            {matches ? (
+              <div className="space-y-4">
+                <p className="font-display text-lg font-semibold">{t('orders.trackPhoneResults')}</p>
+                <ul className="space-y-3">
+                  {matches.map((m) => (
+                    <li key={m.orderRef + m.createdAt} className="rounded-xl border border-[var(--border)] p-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium tabular-nums" dir="ltr">#{m.orderRef}</p>
+                          <p className="text-xs text-[var(--fg-muted)]">
+                            {formatDateTime(m.createdAt)} · {m.city}
+                          </p>
+                        </div>
+                        <Badge variant={orderStatusVariant(m.orderStatus)}>{t(orderStatusKey(m.orderStatus))}</Badge>
+                      </div>
+                      {m.orderStatus === 'rescheduled' && m.rescheduledFor ? (
+                        <p className="mt-2 text-sm font-medium">
+                          {t('orders.rescheduledFor', { date: formatDeliveryDay(m.rescheduledFor) })}
+                        </p>
+                      ) : null}
+                      <ul className="mt-2 space-y-1 text-sm">
+                        {m.items.map((item, i) => (
+                          <li key={i} className="flex justify-between gap-3">
+                            <span className="min-w-0">
+                              {item.name} <span className="text-[var(--fg-muted)]">×{item.qty}</span>
+                            </span>
+                            <span className="shrink-0">{formatCurrency(item.price * item.qty)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 border-t border-[var(--border)] pt-2 text-sm font-semibold">
+                        {t('checkout.totalCod')}: {formatCurrency(m.total)}
+                      </p>
+                      {m.timeline.length ? (
+                        <ol className="mt-2 space-y-1">
+                          {m.timeline.map((step, i) => (
+                            <li key={i} className="flex gap-2 text-xs text-[var(--fg-muted)]">
+                              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--brand)]" />
+                              <span>
+                                <span className="font-medium text-[var(--fg)]">{t(orderStatusKey(step.status))}</span> · {formatDateTime(step.at)}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs leading-relaxed text-[var(--fg-muted)]">{t('orders.trackPhonePrivacy')}</p>
+              </div>
+            ) : !order ? (
               <div className="flex h-full min-h-[12rem] flex-col items-center justify-center text-center text-sm text-[var(--fg-muted)]">
                 <SiteIcon name="package" size={28} className="mb-3 text-[var(--brand)]" />
                 <p>{t('orders.trackEmpty')}</p>

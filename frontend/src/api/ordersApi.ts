@@ -1,5 +1,5 @@
 import api from './client'
-import type { ApiResponse, CreateOrderPayload, CreateOrderResult, Order } from '@/types'
+import type { ApiResponse, CreateOrderPayload, CreateOrderResult, Order, PhoneOrderMatch } from '@/types'
 
 export const ordersApi = {
   create: (payload: CreateOrderPayload) =>
@@ -14,8 +14,9 @@ export const ordersApi = {
   getGuestReceipt: (orderNumber: string, token: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/receipt`, { token }),
 
+  /** Empty order number (lost): the short list of orders made with this phone */
   track: (orderNumber: string, phone: string) =>
-    api.post<ApiResponse<Order>>('/orders/track', { orderNumber, phone }),
+    api.post<ApiResponse<Order | { phoneMatches: PhoneOrderMatch[] }>>('/orders/track', { orderNumber, phone }),
 
   cancel: (orderNumber: string) =>
     api.post<ApiResponse<Order>>(`/orders/${orderNumber}/cancel`),

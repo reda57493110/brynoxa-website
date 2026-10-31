@@ -66,6 +66,11 @@ export const guestOrderReceipt = asyncHandler(async (req: AuthRequest, res: Resp
 });
 
 export const trackGuestOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
+  // No order number (lost): the short list of orders made with this phone
+  if (!req.body.orderNumber) {
+    sendSuccess(res, { phoneMatches: await orderService.trackOrdersByPhone(req.body.phone) });
+    return;
+  }
   const order = await orderService.trackGuestOrder(req.body.orderNumber, req.body.phone);
   sendSuccess(res, await orderService.customerOrderViewWithPayment(order));
 });

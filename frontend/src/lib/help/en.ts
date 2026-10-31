@@ -39,7 +39,7 @@ export const en: HelpGuide = {
       intro: 'See where your order is at any time.',
       steps: [
         { icon: 'package', title: 'Find your order number', text: 'It starts with BRX- and is on the confirmation page.' },
-        { icon: 'search', title: 'Open Track order', text: 'Enter the number and the phone used for delivery.' },
+        { icon: 'search', title: 'Open Track order', text: 'Enter the number and the phone used for delivery. Lost the number? Leave it empty: the phone alone shows your orders.' },
         { icon: 'package-check', title: 'Read the status', text: 'Pending, Confirmed, Shipped, Delivered… each step is shown.' },
       ],
       note: 'With an account, your orders are in Account → Orders. While an order is Pending, you can change or cancel it there.',
@@ -181,7 +181,7 @@ export const en: HelpGuide = {
         {
           id: 'track-order',
           title: 'How do I track my order?',
-          summary: 'Open Track order and enter your order number (BRX-…) and delivery phone. With an account, see Account → Orders.',
+          summary: 'Open Track order and enter your order number (BRX-…) and delivery phone. Lost the number? Enter only the phone. With an account, see Account → Orders.',
           keywords: 'track tracking where is my order status',
           links: [
             { to: '/track-order', label: 'Track my order' },

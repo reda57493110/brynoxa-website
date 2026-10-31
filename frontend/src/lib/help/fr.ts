@@ -39,7 +39,7 @@ export const fr: HelpGuide = {
       intro: 'Voyez à tout moment où en est votre commande.',
       steps: [
         { icon: 'package', title: 'Trouvez votre numéro', text: 'Il commence par BRX- et figure sur la page de confirmation.' },
-        { icon: 'search', title: 'Ouvrez Suivre ma commande', text: 'Saisissez le numéro et le téléphone de livraison.' },
+        { icon: 'search', title: 'Ouvrez Suivre ma commande', text: 'Saisissez le numéro et le téléphone de livraison. Numéro perdu ? Laissez-le vide : le téléphone seul affiche vos commandes.' },
         { icon: 'package-check', title: 'Lisez le statut', text: 'En attente, Confirmée, Expédiée, Livrée… chaque étape s’affiche.' },
       ],
       note: 'Avec un compte, vos commandes sont dans Compte → Commandes. Tant qu’une commande est En attente, vous pouvez la modifier ou l’annuler.',
@@ -181,7 +181,7 @@ export const fr: HelpGuide = {
         {
           id: 'track-order',
           title: 'Comment suivre ma commande ?',
-          summary: 'Ouvrez Suivre ma commande et saisissez votre numéro (BRX-…) et le téléphone de livraison. Avec un compte, voyez Compte → Commandes.',
+          summary: 'Ouvrez Suivre ma commande et saisissez votre numéro (BRX-…) et le téléphone de livraison. Numéro perdu ? Saisissez seulement le téléphone. Avec un compte, voyez Compte → Commandes.',
           keywords: 'suivre suivi ou est ma commande statut',
           links: [
             { to: '/track-order', label: 'Suivre ma commande' },

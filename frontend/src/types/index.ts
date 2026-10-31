@@ -332,6 +332,18 @@ export interface OrderPricing {
   total: number
 }
 
+/** Track order with the phone only: a short view (no name, address, payment details) */
+export interface PhoneOrderMatch {
+  orderRef: string
+  orderStatus: OrderStatus
+  createdAt: string
+  rescheduledFor?: string
+  total: number
+  city: string
+  items: { name: string; qty: number; price: number }[]
+  timeline: { status: OrderStatus; at: string }[]
+}
+
 export interface Order {
   _id: string
   orderNumber: string

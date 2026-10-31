@@ -457,6 +457,10 @@ export const fr: Messages = {
       'Saisissez le numéro reçu à la confirmation et le téléphone utilisé pour la livraison.',
     trackOrderNumber: 'Numéro de commande',
     trackPhone: 'Téléphone de livraison',
+    trackOptional: '(facultatif)',
+    trackLostNumber: 'Numéro de commande perdu ? Laissez-le vide : nous affichons les commandes livrées à ce téléphone.',
+    trackPhoneResults: 'Commandes pour ce téléphone',
+    trackPhonePrivacy: 'Pour protéger votre vie privée, le nom, l’adresse et les détails de paiement ne s’affichent qu’avec le numéro de commande complet. Besoin de ces infos ? Écrivez-nous sur WhatsApp.',
     trackSubmit: 'Trouver la commande',
     trackHint:
       'Utilisez le même téléphone qu’au paiement. Les invités peuvent suivre sans compte.',
