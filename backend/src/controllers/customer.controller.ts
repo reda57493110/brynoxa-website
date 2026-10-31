@@ -14,7 +14,8 @@ import {
 } from '../services/customerAnalytics.service';
 import { updateCustomer } from '../services/customerAdmin.service';
 import { getMyWholesale, getWholesaleTerms, reviewWholesale } from '../services/wholesale.service';
-import { recordRefund } from '../services/order.service';
+import { getOrderById, recordRefund } from '../services/order.service';
+import { returnAndRefund } from '../services/returnRefund.service';
 
 /** Cost and profit figures need the "reports" permission (owner/admin by default). */
 const canSeeProfit = (req: AuthRequest) => hasPermission(req.user?.role, 'reports');
@@ -91,6 +92,16 @@ export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
 export const review = asyncHandler(async (req: AuthRequest, res: Response) => {
   await reviewWholesale(param(req, 'id'), req.body, req.user!.userId);
   sendSuccess(res, await customerProfile(param(req, 'id'), canSeeProfit(req)), 'Wholesale account updated');
+});
+
+/** Admin → order → "Return & refund" */
+export const returnRefund = asyncHandler(async (req: AuthRequest, res: Response) => {
+  await returnAndRefund(param(req, 'id'), req.body, {
+    id: req.user!.userId,
+    canApprove: hasPermission(req.user!.role, 'inventory:approve'),
+  });
+  const order = await getOrderById(param(req, 'id'));
+  sendSuccess(res, hideCostsFor(req.user?.role, order), 'Return and refund recorded');
 });
 
 export const refund = asyncHandler(async (req: AuthRequest, res: Response) => {

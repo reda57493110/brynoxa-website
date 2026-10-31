@@ -1069,7 +1069,7 @@ export function amountPaidOnOrder(order: {
  */
 export async function recordRefund(
   orderId: string,
-  input: { amount: number; reason: string; itemsReturned?: boolean },
+  input: { amount: number; reason: string; itemsReturned?: boolean; method?: 'cash' | 'transfer' | 'other' },
   actorId: string
 ) {
   const order = await Order.findById(orderId).select('+items.unitCost');
@@ -1089,6 +1089,7 @@ export async function recordRefund(
     amount,
     reason: input.reason.trim(),
     itemsReturned: Boolean(input.itemsReturned),
+    ...(input.method ? { method: input.method } : {}),
     at: new Date(),
     by: actorId as never,
   });

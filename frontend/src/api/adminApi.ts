@@ -251,6 +251,9 @@ export const adminApi = {
       }
     ) =>
       api.patch<ApiResponse<Order>>(`/admin/orders/${id}/deposit`, payload),
+    /** A delivered sale undone in one step: products back, money back, where the product goes */
+    returnRefund: (id: string, payload: ReturnRefundPayload) =>
+      api.post<ApiResponse<Order>>(`/admin/orders/${id}/return-refund`, payload),
     recordRefund: (id: string, payload: { amount: number; reason: string; itemsReturned?: boolean }) =>
       api.post<ApiResponse<Order>>(`/admin/orders/${id}/refunds`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/orders/${id}`),
@@ -348,4 +351,13 @@ export const adminApi = {
   },
   emailTest: (type: EmailMessageEvent) =>
     api.post<ApiResponse<{ sentTo: string }>>('/admin/email-test', { type }),
+}
+
+export type ReturnRefundPayload = {
+  lines: { productId: string; qty: number; serials?: string[] }[]
+  reason: 'defective' | 'wrong-item' | 'changed-mind'
+  note?: string
+  amount: number
+  method: 'cash' | 'transfer' | 'other'
+  outcome: 'inspect' | 'restock' | 'write-off'
 }

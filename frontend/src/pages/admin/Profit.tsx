@@ -111,7 +111,7 @@ function Breakdown({ r }: { r: ProfitReport }) {
       <dl className="divide-y divide-[var(--border)] text-sm">
         {line(
           'Money received',
-          t.moneyIn,
+          t.moneyIn + (t.refundsAfterSale ?? 0),
           <>
             {t.sales} delivered sale{t.sales === 1 ? '' : 's'}
             {t.shippingCharged > 0 ? ` · incl. ${money(t.shippingCharged)} shipping paid by customers` : ''}
@@ -119,7 +119,16 @@ function Breakdown({ r }: { r: ProfitReport }) {
           </>,
           false
         )}
-        {line('Product cost', t.productCost, 'What the products sold cost you')}
+        {line('Product cost', t.productCost + (t.stockBack ?? 0), 'What the products sold cost you')}
+        {t.refundsAfterSale > 0
+          ? line('Money given back', t.refundsAfterSale, 'Refunds after a delivery, counted on the day you paid them')
+          : null}
+        {t.stockBack > 0
+          ? line('Products that came back', t.stockBack, 'Their cost is back in your stock (on the day they came back)', false)
+          : null}
+        {t.writeOffs > 0
+          ? line('Written off (lost stock)', t.writeOffs, 'Broken or lost products, at what they cost you')
+          : null}
         {line(
           'Delivery (courier)',
           t.delivery,
@@ -145,6 +154,55 @@ function Breakdown({ r }: { r: ProfitReport }) {
       ) : null}
       </div>
       ) : null}
+    </section>
+  )
+}
+
+const ADJUSTMENT_LABEL: Record<'refund' | 'returned' | 'write-off', string> = {
+  refund: 'Money given back',
+  returned: 'Came back to stock',
+  'write-off': 'Written off',
+}
+
+/** What happened after deliveries in the period (each on its own day): refunds, returns, write-offs. */
+function AfterDelivery({ r }: { r: ProfitReport }) {
+  const rows = r.adjustments ?? []
+  if (!rows.length) return null
+  return (
+    <section className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-3 sm:rounded-2xl sm:px-5">
+      <p className="text-sm font-semibold">After delivery: refunds, returns, write-offs</p>
+      <p className="text-xs text-[var(--fg-muted)]">Counted on the day they happened (the sale itself stays on its own day)</p>
+      <ul className="mt-2 divide-y divide-[var(--border)] text-sm">
+        {rows.slice(0, 12).map((a, i) => (
+          <li key={`${a.type}-${a.orderId ?? ''}-${i}`} className="flex items-baseline justify-between gap-3 py-2">
+            <span className="min-w-0">
+              <span className="block truncate">
+                {ADJUSTMENT_LABEL[a.type]}
+                {a.orderNumber ? (
+                  <>
+                    {' · '}
+                    {a.orderId ? (
+                      <Link to={`/admin/orders/${a.orderId}`} className="text-[var(--brand-text)] hover:underline">
+                        #{a.orderNumber}
+                      </Link>
+                    ) : (
+                      `#${a.orderNumber}`
+                    )}
+                  </>
+                ) : null}
+              </span>
+              <span className="block truncate text-[11px] text-[var(--fg-muted)]">
+                {dayLabel(a.day)} · {a.label}
+                {a.missingCost ? ' · cost not set' : ''}
+              </span>
+            </span>
+            <span className={cn('shrink-0 tabular-nums', a.type === 'returned' ? 'text-[var(--success)]' : 'text-[var(--danger)]')}>
+              {a.type === 'returned' ? '+' : '−'}
+              {money(a.amount)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
@@ -836,6 +894,7 @@ export function Profit() {
           ) : null}
 
           <Breakdown r={r} />
+          <AfterDelivery r={r} />
           <SalesBySource r={r} />
 
           <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-[var(--border)]">

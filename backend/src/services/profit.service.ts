@@ -3,26 +3,30 @@ import { Order } from '../models/Order';
 import { Product } from '../models/Product';
 import { Expense, EXPENSE_CATEGORIES, type ExpenseCategory } from '../models/Expense';
 import { getSettings, getSettingsCached } from '../models/Settings';
-import { ORDER_STATUS_GROUP, wasDelivered, type OrderStatus } from '../utils/orderStatus';
+import { ORDER_STATUS_GROUP, deliveredFilter, wasDelivered, type OrderStatus } from '../utils/orderStatus';
+import { CustomerReturn, StockMovement } from '../models/Inventory';
 import { feeCreditOf, roundMoney } from '../utils/deposit';
 import { ApiError } from '../utils/ApiError';
 import { ORDER_ORIGINS, type OrderOrigin } from '../utils/orderOrigin';
 import { STORE_TIMEZONE, dayKeys, localDay, type SalesRange } from './dashboard.service';
 
 /**
- * Admin → Profit: what the shop really earned. Per order:
- *   money in   = what the customer paid (total − refunds − transfer fees the shop covered);
- *                on a parcel that was not delivered, a deposit the shop kept
- *   − product cost  (unit cost × units not returned)
+ * Admin → Profit: what the shop really earned. Per order, on the day it was placed:
+ *   money in   = what the customer paid (total − transfer fees the shop covered);
+ *                on a parcel that was not delivered, a deposit the shop kept (minus its refunds)
+ *   − product cost  (unit cost × units sent)
  *   − delivery cost (per-order amount, else the default courier price: delivered / returned)
  *   − other costs   (per order, e.g. packaging, a gift)
+ * What happens after a delivery is counted on the day it happens, so past months never change:
+ *   − money given back (refunds on a delivered order)
+ *   + products that came back (their cost returns to stock)
+ *   − products written off (lost stock, from a return or not)
  * Then the expenses that are not tied to one order (ads, rent…) come off the total.
  * Orders still being prepared or on the way are listed but not counted until they finish.
- * Days are the day each order was placed (store timezone), like the dashboard.
+ * Days are in the store timezone, like the dashboard.
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DONE_EPSILON = 0.005;
 
 export type ProfitOrderKind = 'sale' | 'failed' | 'open' | 'cancelled';
 
@@ -43,10 +47,11 @@ type LeanOrder = {
 
 type CourierCosts = { delivered: number; returned: number };
 
-function kindOf(o: LeanOrder, refunded: number): ProfitOrderKind {
+function kindOf(o: LeanOrder): ProfitOrderKind {
   const group = ORDER_STATUS_GROUP[o.orderStatus];
   if (o.orderStatus === 'cancelled') return 'cancelled';
-  if (wasDelivered(o)) return refunded < o.pricing.total - DONE_EPSILON ? 'sale' : 'failed';
+  // Delivered = a sale on its day; refunds and returns after it count on their own day
+  if (wasDelivered(o)) return 'sale';
   // Sent back without being delivered (refused, failed): finished, nothing sold
   if (group === 'returns') return 'failed';
   return 'open';
@@ -54,24 +59,24 @@ function kindOf(o: LeanOrder, refunded: number): ProfitOrderKind {
 
 type UnitCosts = Map<string, { delivery?: number; other?: number }>;
 
-function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts) {
+export function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts) {
   const refunded = roundMoney((o.refunds ?? []).reduce((a, r) => a + r.amount, 0));
-  const kind = kindOf(o, refunded);
+  const kind = kindOf(o);
   const fees = kind === 'sale' ? feeCreditOf(o.deposit) : 0;
   const depositKept = o.deposit?.status === 'received' ? o.deposit.amount : 0;
   const moneyIn =
     kind === 'sale'
-      ? roundMoney(o.pricing.total - refunded - fees)
+      ? roundMoney(o.pricing.total - fees)
       : kind === 'failed' || kind === 'cancelled'
         ? roundMoney(Math.max(0, depositKept - refunded))
         : 0;
 
   let productCost = 0;
   let missingCost = false;
+  // Every unit sent: units that come back later return their cost on that day (adjustments)
   for (const i of o.items) {
-    const kept = Math.max(0, i.qty - (i.returnedQty ?? 0));
-    if (!kept) continue;
-    if (typeof i.unitCost === 'number') productCost += i.unitCost * kept;
+    if (!i.qty) continue;
+    if (typeof i.unitCost === 'number') productCost += i.unitCost * i.qty;
     else missingCost = true;
   }
   // Nothing left the shop on a cancelled order; a parcel that came back is back in stock
@@ -88,7 +93,7 @@ function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts)
     const u = unitCosts.get(String(i.product));
     if (!u) continue;
     if (typeof u.delivery === 'number') productDelivery = Math.max(productDelivery ?? 0, u.delivery);
-    productOther += (u.other ?? 0) * Math.max(0, i.qty - (i.returnedQty ?? 0));
+    productOther += (u.other ?? 0) * i.qty;
   }
 
   const customDelivery = typeof o.costs?.delivery === 'number';
@@ -131,24 +136,34 @@ function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: UnitCosts)
 
 type OrderFigures = ReturnType<typeof orderFigures>;
 
-function totalsOf(rows: OrderFigures[], expenses: number) {
+export function totalsOf(rows: OrderFigures[], expenses: number, adjustments: Adjustment[] = []) {
   const counted = rows.filter((r) => r.kind !== 'open');
   const sum = (pick: (r: OrderFigures) => number, list = counted) => roundMoney(list.reduce((a, r) => a + pick(r), 0));
+  const adj = (type: Adjustment['type']) => roundMoney(adjustments.filter((a) => a.type === type).reduce((a, x) => a + x.amount, 0));
   const sales = counted.filter((r) => r.kind === 'sale');
   const failed = counted.filter((r) => r.kind === 'failed');
-  const moneyIn = sum((r) => r.moneyIn);
-  const orderProfit = sum((r) => r.profit);
-  const net = roundMoney(orderProfit - expenses);
+  // After a delivery, on the day they happen
+  const refundsAfterSale = adj('refund');
+  const stockBack = adj('returned');
+  const writeOffs = adj('write-off');
+  const moneyIn = roundMoney(sum((r) => r.moneyIn) - refundsAfterSale);
+  const orderProfit = roundMoney(sum((r) => r.profit) - refundsAfterSale + stockBack);
+  const net = roundMoney(orderProfit - writeOffs - expenses);
   return {
     moneyIn,
     sales: sales.length,
     salesValue: sum((r) => r.moneyIn, sales),
-    productCost: sum((r) => r.productCost),
+    refundsAfterSale,
+    stockBack,
+    writeOffs,
+    adjustmentsMissingCost: adjustments.filter((a) => a.missingCost).length,
+    productCost: roundMoney(sum((r) => r.productCost) - stockBack),
     delivery: sum((r) => r.delivery),
     fees: sum((r) => r.fees),
     other: sum((r) => r.other),
     shippingCharged: sum((r) => r.shippingCharged, sales),
-    refunds: sum((r) => r.refunded),
+    /** All money given back in the period: after deliveries, plus deposits of orders not delivered */
+    refunds: roundMoney(refundsAfterSale + sum((r) => r.refunded, counted.filter((r) => r.kind !== 'sale'))),
     failed: failed.length,
     /** What failed deliveries cost (courier, other) minus deposits kept */
     failedLoss: roundMoney(-sum((r) => r.profit, failed)),
@@ -160,6 +175,78 @@ function totalsOf(rows: OrderFigures[], expenses: number) {
     open: rows.filter((r) => r.kind === 'open').length,
     openValue: sum((r) => r.total, rows.filter((r) => r.kind === 'open')),
   };
+}
+
+/** Something that happened after a delivery (or to stock), counted on its own day. */
+export type Adjustment = {
+  day: string;
+  at: Date;
+  type: 'refund' | 'returned' | 'write-off';
+  amount: number;
+  orderId?: string;
+  orderNumber?: string;
+  label: string;
+  missingCost?: boolean;
+};
+
+/**
+ * Refunds on delivered orders, products that came back from delivered orders (their cost returns
+ * to stock) and stock written off, since a date — whenever the order itself was placed.
+ */
+export async function adjustmentsSince(daysBack: number): Promise<Adjustment[]> {
+  const since = new Date(Date.now() - (daysBack + 2) * DAY_MS);
+  const [refundOrders, returns, writeOffs] = await Promise.all([
+    Order.find({ ...deliveredFilter, 'refunds.at': { $gte: since } })
+      .select('orderNumber refunds')
+      .lean<{ _id: unknown; orderNumber: string; refunds: { amount: number; at: Date; reason?: string }[] }[]>(),
+    CustomerReturn.find({ returnedAt: { $gte: since } })
+      .select('order orderNumber returnedAt lines.qty lines.unitCost lines.name')
+      .lean<{ _id: unknown; order: unknown; orderNumber: string; returnedAt: Date; lines: { qty: number; unitCost?: number; name?: string }[] }[]>(),
+    StockMovement.find({ type: 'write-off', createdAt: { $gte: since } })
+      .select('qty unitCost orderNumber order createdAt product')
+      .populate('product', 'name')
+      .lean<{ qty: number; unitCost?: number; orderNumber?: string; order?: unknown; createdAt: Date; product?: { name?: string } | null }[]>(),
+  ]);
+  // Returns count only on orders that were delivered (a parcel refused at the door never was a sale)
+  const returnOrderIds = [...new Set(returns.map((r) => String(r.order)))];
+  const delivered = new Set(
+    returnOrderIds.length
+      ? (await Order.find({ _id: { $in: returnOrderIds }, ...deliveredFilter }).select('_id').lean<{ _id: unknown }[]>()).map((o) => String(o._id))
+      : []
+  );
+  const out: Adjustment[] = [];
+  for (const o of refundOrders) {
+    for (const r of o.refunds) {
+      if (!r.at || r.at < since) continue;
+      out.push({ day: localDay(r.at), at: r.at, type: 'refund', amount: roundMoney(r.amount), orderId: String(o._id), orderNumber: o.orderNumber, label: r.reason || 'Refund' });
+    }
+  }
+  for (const ret of returns) {
+    if (!delivered.has(String(ret.order))) continue;
+    out.push({
+      day: localDay(ret.returnedAt),
+      at: ret.returnedAt,
+      type: 'returned',
+      amount: roundMoney(ret.lines.reduce((a, l) => a + (l.unitCost ?? 0) * l.qty, 0)),
+      orderId: String(ret.order),
+      orderNumber: ret.orderNumber,
+      label: ret.lines.map((l) => `${l.qty} × ${l.name ?? 'product'}`).join(', '),
+      missingCost: ret.lines.some((l) => typeof l.unitCost !== 'number'),
+    });
+  }
+  for (const m of writeOffs) {
+    out.push({
+      day: localDay(m.createdAt),
+      at: m.createdAt,
+      type: 'write-off',
+      amount: roundMoney((m.unitCost ?? 0) * m.qty),
+      orderId: m.order ? String(m.order) : undefined,
+      orderNumber: m.orderNumber,
+      label: `${m.qty} × ${m.product?.name ?? 'product'}`,
+      missingCost: typeof m.unitCost !== 'number',
+    });
+  }
+  return out.sort((a, b) => b.at.getTime() - a.at.getTime());
 }
 
 async function courierCosts(): Promise<CourierCosts> {
@@ -194,13 +281,18 @@ async function unitCostsFor(orders: LeanOrder[]): Promise<UnitCosts> {
 
 /** Net profit of the period and the one before (dashboard card). */
 export async function profitSummary(range: SalesRange) {
-  const [orders, expenses, courier] = await Promise.all([ordersSince(range * 2), expensesSince(range * 2), courierCosts()]);
+  const [orders, expenses, courier, adjustments] = await Promise.all([
+    ordersSince(range * 2),
+    expensesSince(range * 2),
+    courierCosts(),
+    adjustmentsSince(range * 2),
+  ]);
   const unitCosts = await unitCostsFor(orders);
   const rows = orders.map((o) => orderFigures(o, courier, unitCosts));
   const period = (keys: string[]) => {
     const days = new Set(keys);
     const spent = expenses.filter((e) => days.has(localDay(e.date))).reduce((a, e) => a + e.amount, 0);
-    return totalsOf(rows.filter((r) => days.has(r.day)), spent);
+    return totalsOf(rows.filter((r) => days.has(r.day)), spent, adjustments.filter((a) => days.has(a.day)));
   };
   return { range, current: period(dayKeys(range)), previous: period(dayKeys(range, range)) };
 }
@@ -209,7 +301,7 @@ export async function profitSummary(range: SalesRange) {
 export async function profitReport(range: SalesRange) {
   const keys = dayKeys(range);
   const days = new Set(keys);
-  const [orders, expenseDocs, courier, uncosted] = await Promise.all([
+  const [orders, expenseDocs, courier, uncosted, allAdjustments] = await Promise.all([
     ordersSince(range),
     expensesSince(range),
     courierCosts(),
@@ -218,7 +310,9 @@ export async function profitReport(range: SalesRange) {
       .sort({ updatedAt: -1 })
       .limit(50)
       .lean<{ _id: unknown; name: string; slug: string; price: number; sku?: string; images?: { url: string; isPrimary?: boolean }[] }[]>(),
+    adjustmentsSince(range),
   ]);
+  const adjustments = allAdjustments.filter((a) => days.has(a.day));
 
   const unitCosts = await unitCostsFor(orders);
   const rows = orders.map((o) => orderFigures(o, courier, unitCosts)).filter((r) => days.has(r.day));
@@ -290,8 +384,10 @@ export async function profitReport(range: SalesRange) {
     from: keys[0],
     to: keys[keys.length - 1],
     courierCosts: courier,
-    totals: totalsOf(rows, spent),
+    totals: totalsOf(rows, spent, adjustments),
     orders: rows,
+    /** Refunds, products back and write-offs of the period (after deliveries), newest first */
+    adjustments: adjustments.map(({ at: _at, ...a }) => a),
     products,
     bySource,
     expenses: expenses.map((e) => ({

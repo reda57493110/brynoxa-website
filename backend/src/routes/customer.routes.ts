@@ -4,6 +4,7 @@ import { requireAuth, requirePermission } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
   refundSchema,
+  returnRefundSchema,
   updateCustomerSchema,
   wholesaleReviewSchema,
 } from '../validators/schemas';
@@ -28,6 +29,13 @@ router.post(
   requirePermission('customers:write'),
   validate(wholesaleReviewSchema),
   customer.review
+);
+router.post(
+  '/admin/orders/:id/return-refund',
+  requireAuth,
+  requirePermission('orders:write'),
+  validate(returnRefundSchema),
+  customer.returnRefund
 );
 router.post(
   '/admin/orders/:id/refunds',

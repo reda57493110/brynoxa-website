@@ -592,6 +592,25 @@ export const refundSchema = z.object({
   itemsReturned: z.boolean().optional(),
 });
 
+/** Admin → order → "Return & refund" (a delivered sale undone in one step). */
+export const returnRefundSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        productId: z.string().regex(/^[a-f0-9]{24}$/i),
+        qty: z.number().int().min(1),
+        serials: z.array(z.string().trim().min(1).max(80)).max(500).optional(),
+      })
+    )
+    .min(1)
+    .max(50),
+  reason: z.enum(['defective', 'wrong-item', 'changed-mind']),
+  note: z.string().trim().max(250).optional(),
+  amount: z.number().min(0).max(10_000_000),
+  method: z.enum(['cash', 'transfer', 'other']),
+  outcome: z.enum(['inspect', 'restock', 'write-off']),
+});
+
 /* ---------------- Inventory ---------------- */
 
 const objectId = z.string().regex(/^[a-f0-9]{24}$/i);

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ReturnRefundButton } from '@/components/admin/ReturnRefundButton'
 import { StaffLink } from '@/components/admin/StaffLink'
 import { ORDER_ORIGIN_LABEL, customerLabel, originOf, shownEmail } from '@/lib/orderOrigin'
 import { Link, useNavigate, useParams } from 'react-router-dom'
@@ -183,12 +184,16 @@ export function OrderDetail() {
           <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
             Back to orders
           </Link>
-          <Link
-            to={`/admin-print/slips?ids=${o._id}`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-          >
-            <SiteIcon name="package" size={14} /> Delivery slip
-          </Link>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Delivered sale undone in one step (products back, money back, stock) */}
+            <ReturnRefundButton order={o} className="h-8 rounded-full" />
+            <Link
+              to={`/admin-print/slips?ids=${o._id}`}
+              className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+            >
+              <SiteIcon name="package" size={14} /> Delivery slip
+            </Link>
+          </div>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <h1 className="min-w-0 break-all font-display text-base font-semibold sm:text-2xl">

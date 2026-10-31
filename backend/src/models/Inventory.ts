@@ -264,6 +264,8 @@ const returnSchema = new Schema<ICustomerReturn>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 returnSchema.index({ order: 1 });
+// Profit: products back counted on the day they came back
+returnSchema.index({ returnedAt: -1 });
 returnSchema.index({ status: 1, createdAt: -1 });
 returnSchema.index({ 'lines.product': 1 });
 

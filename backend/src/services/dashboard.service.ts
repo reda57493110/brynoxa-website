@@ -4,12 +4,16 @@ import { Product } from '../models/Product';
 import { Category } from '../models/Category';
 import { User } from '../models/User';
 import { roundMoney } from '../utils/deposit';
+// Called inside functions only, so the two services can import each other
+import { adjustmentsSince } from './profit.service';
 
 /**
- * Dashboard sales analytics. Same rules as the Customers reports (customerAnalytics.service):
- * - a sale is a delivered order that is not fully refunded (cash on delivery = paid on delivery);
- * - revenue = net sales = items charged − coupon discount − refunds (shipping excluded);
- * - orders are dated by when they were placed, in the store's timezone (Morocco);
+ * Dashboard sales analytics, same dating as Admin → Profit (profit.service):
+ * - a sale is a delivered order (cash on delivery = paid on delivery);
+ * - revenue = net sales = items charged − coupon discount (shipping excluded), on the day the
+ *   order was placed; money given back after a delivery comes off on the day it is paid, and the
+ *   cost of products that came back comes off the cost of sales on the day they came back;
+ * - days are in the store's timezone (Morocco);
  * - cancelled orders never count.
  * Daily buckets are computed in MongoDB and the totals are summed from the same buckets, so the
  * chart and the totals always reconcile.
@@ -45,8 +49,25 @@ type DayRow = {
   missingCost: number;
 };
 
-/** Per-day figures for every order placed since `since` (bucketed by local day). */
+/**
+ * Per-day figures since `since`: orders by the day they were placed, then refunds and products
+ * back after a delivery on their own day (Admin → Profit's adjustments).
+ */
 async function dailyRows(since: Date): Promise<DayRow[]> {
+  const [placed, adjustments] = await Promise.all([placedRows(since), adjustmentsSince(Math.ceil((Date.now() - since.getTime()) / DAY_MS))]);
+  const byDay = new Map(placed.map((r) => [r._id, { ...r }]));
+  for (const a of adjustments) {
+    if (a.type === 'write-off') continue;
+    const row = byDay.get(a.day) ?? { _id: a.day, orders: 0, orderValue: 0, completedOrders: 0, revenue: 0, cogs: 0, missingCost: 0 };
+    if (a.type === 'refund') row.revenue -= a.amount;
+    else row.cogs -= a.amount;
+    byDay.set(a.day, row);
+  }
+  return [...byDay.values()];
+}
+
+/** Per-day figures for every order placed since `since` (bucketed by local day). */
+async function placedRows(since: Date): Promise<DayRow[]> {
   return Order.aggregate<DayRow>([
     { $match: { createdAt: { $gte: since }, ...placedFilter } },
     {
@@ -65,7 +86,7 @@ async function dailyRows(since: Date): Promise<DayRow[]> {
     },
     {
       $addFields: {
-        completed: { $and: ['$delivered', { $lt: ['$refunded', { $subtract: ['$total', 0.005] }] }] },
+        completed: '$delivered',
       },
     },
     {
@@ -74,7 +95,7 @@ async function dailyRows(since: Date): Promise<DayRow[]> {
         orders: { $sum: 1 },
         orderValue: { $sum: '$total' },
         completedOrders: { $sum: { $cond: ['$completed', 1, 0] } },
-        revenue: { $sum: { $cond: ['$completed', { $subtract: [{ $subtract: ['$charged', '$discount'] }, '$refunded'] }, 0] } },
+        revenue: { $sum: { $cond: ['$completed', { $subtract: ['$charged', '$discount'] }, 0] } },
         cogs: { $sum: { $cond: ['$completed', '$cogs', 0] } },
         missingCost: { $sum: { $cond: [{ $and: ['$completed', '$missingCost'] }, 1, 0] } },
       },
@@ -210,9 +231,8 @@ export async function analyticsReport(range: SalesRange, canSeeProfit: boolean) 
   const since = new Date(Date.now() - (range + 2) * DAY_MS);
   const dayExpr = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt', timezone: STORE_TIMEZONE } };
   const refundedExpr = { $sum: { $map: { input: { $ifNull: ['$refunds', []] }, as: 'r', in: '$$r.amount' } } };
-  const completedExpr = {
-    $and: [deliveredExpr, { $lt: ['$refunded', { $subtract: ['$pricing.total', 0.005] }] }],
-  };
+  // A sale = delivered, as in the totals (money given back later is counted on its own day)
+  const completedExpr = deliveredExpr;
   const notCancelled = placedFilter;
   const completedOnly = { $expr: completedExpr };
   const lineRevenue = { $multiply: ['$items.price', '$items.qty'] };
@@ -231,7 +251,7 @@ export async function analyticsReport(range: SalesRange, canSeeProfit: boolean) 
             $group: {
               _id: { $ifNull: ['$channel', 'retail'] },
               sales: { $sum: 1 },
-              revenue: { $sum: { $subtract: [{ $subtract: [chargedExpr, { $ifNull: ['$pricing.discount', 0] }] }, '$refunded'] } },
+              revenue: { $sum: { $subtract: [chargedExpr, { $ifNull: ['$pricing.discount', 0] }] } },
             },
           },
         ],

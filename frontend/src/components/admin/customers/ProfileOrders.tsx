@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ReturnRefundButton } from '@/components/admin/ReturnRefundButton'
 import { ORDER_ORIGIN_LABEL, originOf } from '@/lib/orderOrigin'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/format'
@@ -13,6 +14,10 @@ const td = 'px-3 py-2.5'
 function dateOr(v: string | null) {
   return v ? formatDate(v) : '—'
 }
+
+/** Delivered orders not fully refunded yet can be returned and refunded from here. */
+const canReturn = (ord: { orderStatus: string; fullyRefunded?: boolean; completed?: unknown }) =>
+  ['delivered', 'partially_returned', 'return_requested'].includes(ord.orderStatus) && !ord.fullyRefunded
 
 export function ProfileOrders({
   profile,
@@ -178,6 +183,11 @@ export function ProfileOrders({
                       </span>
                     ) : null}
                   </Link>
+                  {canReturn(ord) ? (
+                    <div className="px-4 pb-3">
+                      <ReturnRefundButton orderId={ord._id} />
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -195,6 +205,9 @@ export function ProfileOrders({
                   <th className={th}>Deposit</th>
                   <th className={`${th} text-right`}>Refunded</th>
                   <th className={th}>Completed</th>
+                  <th className={th}>
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -245,6 +258,9 @@ export function ProfileOrders({
                     </td>
                     <td className={td}>
                       <Badge variant={ord.completed ? 'success' : 'muted'}>{ord.completed ? 'Yes' : 'No'}</Badge>
+                    </td>
+                    <td className={`${td} whitespace-nowrap`}>
+                      {canReturn(ord) ? <ReturnRefundButton orderId={ord._id} /> : null}
                     </td>
                   </tr>
                 ))}

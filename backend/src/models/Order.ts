@@ -32,6 +32,8 @@ export interface IOrderRefund {
   amount: number;
   reason: string;
   itemsReturned: boolean;
+  /** How the money was given back (Return & refund) */
+  method?: 'cash' | 'transfer' | 'other';
   at: Date;
   by?: Types.ObjectId;
 }
@@ -284,6 +286,7 @@ const orderSchema = new Schema<IOrder>(
             amount: { type: Number, required: true, min: 0.01 },
             reason: { type: String, required: true, maxlength: 300 },
             itemsReturned: { type: Boolean, default: false },
+            method: { type: String, enum: ['cash', 'transfer', 'other'] },
             at: { type: Date, default: Date.now },
             by: { type: Schema.Types.ObjectId, ref: 'User' },
           },
@@ -349,6 +352,8 @@ const orderSchema = new Schema<IOrder>(
 );
 
 orderSchema.index({ user: 1, createdAt: -1 });
+// Profit: refunds counted on the day they are paid
+orderSchema.index({ 'refunds.at': -1 }, { sparse: true });
 // Per-customer coupon limits (orders that used a coupon only)
 orderSchema.index({ 'coupon.couponId': 1, user: 1 }, { sparse: true });
 orderSchema.index({ 'coupon.couponId': 1, 'coupon.phoneKey': 1 }, { sparse: true });

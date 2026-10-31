@@ -541,9 +541,15 @@ export type ProfitOrderKind = 'sale' | 'failed' | 'open' | 'cancelled'
 export type ExpenseCategory = 'ads' | 'packaging' | 'delivery' | 'rent' | 'salaries' | 'tools' | 'other'
 
 export interface ProfitTotals {
+  /** Money received minus money given back after deliveries */
   moneyIn: number
   sales: number
   salesValue: number
+  /** After a delivery, on the day it happened: money given back, products back in stock, stock written off */
+  refundsAfterSale: number
+  stockBack: number
+  writeOffs: number
+  adjustmentsMissingCost: number
   productCost: number
   delivery: number
   fees: number
@@ -586,6 +592,16 @@ export interface ProfitOrderRow {
 }
 
 /** Admin → Profit */
+export interface ProfitAdjustment {
+  day: string
+  type: 'refund' | 'returned' | 'write-off'
+  amount: number
+  orderId?: string
+  orderNumber?: string
+  label: string
+  missingCost?: boolean
+}
+
 export interface ProfitReport {
   range: SalesRange
   timezone: string
@@ -594,6 +610,8 @@ export interface ProfitReport {
   courierCosts: { delivered: number; returned: number }
   totals: ProfitTotals
   orders: ProfitOrderRow[]
+  /** Refunds, products back and write-offs of the period, newest first */
+  adjustments?: ProfitAdjustment[]
   products: {
     productId: string
     name: string
