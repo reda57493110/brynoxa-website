@@ -24,6 +24,7 @@ const ACCOUNT_ACTIONS = new Set([
   'register',
   'password-reset/request',
   'password-reset/confirm',
+  'password-reset/verify-code',
   'verification/resend',
   'verification/confirm',
   'mfa/login',

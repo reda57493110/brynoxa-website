@@ -27,6 +27,10 @@ export const verifyEmail = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, null, 'Email verified');
 });
 
+export const verifyResetCode = asyncHandler(async (req: Request, res: Response) => {
+  sendSuccess(res, await authService.verifyPasswordResetCode(req.body.email, req.body.code), 'Code accepted');
+});
+
 export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
   await authService.resetPassword(req.body.token, req.body.newPassword);
   authService.clearRefreshCookie(res);

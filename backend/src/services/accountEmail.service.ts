@@ -10,6 +10,12 @@ function hello(user: AccountUser) {
   return `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;">Hi ${escapeHtml(first || 'there')},</p>`;
 }
 
+/** The 6-digit reset code, large and spaced so it is easy to read and type. */
+function codeBox(code: string) {
+  return `<p style="margin:18px 0 6px;font-size:13px;color:#5b6472;">Your code</p>
+<p style="margin:0 0 6px;font-size:32px;font-weight:800;letter-spacing:8px;font-family:Consolas,Menlo,monospace;color:#0b1220;">${escapeHtml(code)}</p>`;
+}
+
 function build(heading: string, preheader: string, body: string) {
   const html = renderEmail({ heading, preheader, body });
   return { html, text: toPlainText(html) };
@@ -32,7 +38,7 @@ export function verificationEmail(user: AccountUser, link: string) {
 }
 
 /** A guest customer (ordered without an account) choosing a password: proves they own the email. */
-export function accountClaimEmail(user: AccountUser, link: string) {
+export function accountClaimEmail(user: AccountUser, link: string, code?: string) {
   return {
     subject: 'Finish creating your account — Brynoxa',
     ...build(
@@ -41,6 +47,8 @@ export function accountClaimEmail(user: AccountUser, link: string) {
       [
         hello(user),
         paragraphs('Someone asked to create a Brynoxa account with this email. You already ordered with us, so choose a password to open your account and follow your orders.'),
+        code ? codeBox(code) : '',
+        code ? paragraphs('Type this code on the Brynoxa page that asked for it (valid 15 minutes), or use the button:') : '',
         button('Choose my password', link),
         paragraphs('This link expires in one hour and can be used once. If you did not ask for it, ignore this email — nothing changes.'),
       ].join('')
@@ -48,7 +56,7 @@ export function accountClaimEmail(user: AccountUser, link: string) {
   };
 }
 
-export function passwordResetEmail(user: AccountUser, link: string) {
+export function passwordResetEmail(user: AccountUser, link: string, code?: string) {
   return {
     subject: 'Reset your password — Brynoxa',
     ...build(
@@ -57,8 +65,10 @@ export function passwordResetEmail(user: AccountUser, link: string) {
       [
         hello(user),
         paragraphs('We received a request to reset the password of your Brynoxa account.'),
+        code ? codeBox(code) : '',
+        code ? paragraphs('Type this code on the Brynoxa "Reset password" page (valid 15 minutes). Or use the button:') : '',
         button('Choose a new password', link),
-        paragraphs('This link expires in one hour and can be used once. If you did not ask for it, ignore this email — your password stays the same.'),
+        paragraphs('The code and the link work once. The link expires in one hour. If you did not ask for this, ignore this email — your password stays the same. Never share this code: Brynoxa will never ask you for it.'),
       ].join('')
     ),
   };
@@ -73,7 +83,7 @@ const SECURITY_COPY = {
   'password-reset': {
     subject: 'Your Brynoxa password was reset',
     heading: 'Your password was reset',
-    line: 'The password of your Brynoxa account was just reset with an email link, and other devices were signed out.',
+    line: 'The password of your Brynoxa account was just reset with an email code or link, and other devices were signed out.',
   },
   'mfa-enabled': {
     subject: 'Two-step sign-in turned on — Brynoxa',

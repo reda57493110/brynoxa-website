@@ -10,6 +10,7 @@ const ACTION_LIMITS = {
   'password-reset/request': 'emailSend',
   'verification/resend': 'emailSend',
   'password-reset/confirm': 'emailLink',
+  'password-reset/verify-code': 'emailLink',
   'verification/confirm': 'emailLink',
   'mfa/login': 'mfa',
 };
@@ -38,7 +39,7 @@ module.exports = async (req, res) => {
 
     const limit = ACTION_LIMITS[action];
     // Actions that send an email to an address are also limited per address
-    let perKey = (limit === 'emailSend' || action === 'register') && typeof body?.email === 'string' ? body.email : undefined;
+    let perKey = (limit === 'emailSend' || action === 'register' || action === 'password-reset/verify-code') && typeof body?.email === 'string' ? body.email : undefined;
     if (action === 'mfa/login' && typeof body?.mfaToken === 'string') {
       // Count code tries per account (from any address) and per sign-in challenge; the token is
       // checked properly afterwards, here it only names the account / the challenge
@@ -79,6 +80,13 @@ module.exports = async (req, res) => {
         message: 'If that account exists, a reset email has been sent',
         data: null,
       });
+      return;
+    }
+
+    if (action === 'password-reset/verify-code') {
+      const data = parseBody(schemas.resetCodeSchema, body);
+      const result = await authService.verifyPasswordResetCode(data.email, data.code);
+      sendJson(res, 200, { success: true, message: 'Code accepted', data: result });
       return;
     }
 

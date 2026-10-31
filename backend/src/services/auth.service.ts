@@ -6,7 +6,7 @@ import { ApiError } from '../utils/ApiError';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/tokens';
 import { env, isProd, isEmailConfigured } from '../config/env';
 import { getCookieSameSite } from '../config/cookies';
-import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'crypto';
 import { createCipheriv, createDecipheriv } from 'crypto';
 import QRCode from 'qrcode';
 import { isStaffRole } from '../permissions';
@@ -105,14 +105,64 @@ export async function requestPasswordReset(email: string) {
 /** One-time "choose a password" link; whoever uses it proves they own the email. */
 async function sendPasswordLink(
   user: InstanceType<typeof User>,
-  template: (user: InstanceType<typeof User>, link: string) => { subject: string; html: string; text: string }
+  template: (user: InstanceType<typeof User>, link: string, code: string) => { subject: string; html: string; text: string }
 ) {
   const token = randomBytes(32).toString('hex');
   user.passwordResetTokenHash = hashOneTimeToken(token);
   user.passwordResetExpires = new Date(Date.now() + ONE_TIME_TOKEN_TTL_MS);
+  // The same email carries a 6-digit code, for people who type it on the site instead
+  const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+  user.passwordResetCodeHash = resetCodeHash(user._id, code);
+  user.passwordResetCodeExpires = new Date(Date.now() + RESET_CODE_TTL_MS);
+  user.passwordResetCodeTries = 0;
   await user.save({ validateBeforeSave: false });
   const link = `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`;
-  await sendSecurityEmail(user.email, template(user, link));
+  await sendSecurityEmail(user.email, template(user, link, code));
+}
+
+/** The emailed reset code: valid 15 minutes, 5 wrong tries cancel it (a new email sends a new one). */
+export const RESET_CODE_TTL_MS = 15 * 60 * 1000;
+export const RESET_CODE_MAX_TRIES = 5;
+
+function resetCodeHash(userId: unknown, code: string) {
+  return hashOneTimeToken(`reset-code:${String(userId)}:${code}`);
+}
+
+/**
+ * Forgot password → the customer types the 6-digit code from the email. A right code is swapped
+ * for a one-time key (15 min) that opens the "choose a new password" step; the code is used up.
+ * Unknown email, no code, expired or wrong code all get the same answer.
+ */
+export async function verifyPasswordResetCode(email: string, code: string) {
+  const wrong = () => new ApiError(400, 'This code is wrong or has expired');
+  const user = await User.findOne({ email: email.trim().toLowerCase() }).select(
+    '+passwordResetTokenHash +passwordResetExpires +passwordResetCodeHash +passwordResetCodeExpires +passwordResetCodeTries'
+  );
+  if (!user || !user.passwordResetCodeHash || !user.passwordResetCodeExpires || user.passwordResetCodeExpires.getTime() <= Date.now()) {
+    throw wrong();
+  }
+  const expected = Buffer.from(user.passwordResetCodeHash, 'hex');
+  const given = Buffer.from(resetCodeHash(user._id, code.replace(/\s/g, '')), 'hex');
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) {
+    const tries = (user.passwordResetCodeTries || 0) + 1;
+    if (tries >= RESET_CODE_MAX_TRIES) {
+      user.passwordResetCodeHash = undefined;
+      user.passwordResetCodeExpires = undefined;
+      user.passwordResetCodeTries = undefined;
+    } else {
+      user.passwordResetCodeTries = tries;
+    }
+    await user.save({ validateBeforeSave: false });
+    throw wrong();
+  }
+  const token = randomBytes(32).toString('hex');
+  user.passwordResetTokenHash = hashOneTimeToken(token);
+  user.passwordResetExpires = new Date(Date.now() + RESET_CODE_TTL_MS);
+  user.passwordResetCodeHash = undefined;
+  user.passwordResetCodeExpires = undefined;
+  user.passwordResetCodeTries = undefined;
+  await user.save({ validateBeforeSave: false });
+  return { token };
 }
 
 /** How long a reset link made by the owner (sent on WhatsApp) stays valid. */
@@ -209,6 +259,9 @@ export async function resetPassword(token: string, newPassword: string) {
   user.refreshToken = undefined;
   user.passwordResetTokenHash = undefined;
   user.passwordResetExpires = undefined;
+  user.passwordResetCodeHash = undefined;
+  user.passwordResetCodeExpires = undefined;
+  user.passwordResetCodeTries = undefined;
   user.failedLoginAttempts = 0;
   user.lockedUntil = undefined;
   // Using the emailed link proves the email: a guest record becomes a real account

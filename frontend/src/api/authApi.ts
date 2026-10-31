@@ -11,6 +11,10 @@ export const authApi = {
   requestPasswordReset: (email: string) =>
     api.post<ApiResponse<null>>('/auth/password-reset/request', { email }),
 
+  /** Forgot password: the 6-digit code from the email → a one-time key for the new-password step */
+  verifyResetCode: (email: string, code: string) =>
+    api.post<ApiResponse<{ token: string }>>('/auth/password-reset/verify-code', { email, code }),
+
   verifyEmail: (token: string) =>
     api.post<ApiResponse<null>>('/auth/verification/confirm', { token }),
 

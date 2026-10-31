@@ -13,6 +13,7 @@ import {
   emailSchema,
   verifyEmailSchema,
   resetPasswordSchema,
+  resetCodeSchema,
   addressSchema,
   forUpdate,
 } from '../validators/schemas';
@@ -23,6 +24,7 @@ router.get('/csrf', auth.csrf);
 router.post('/password-reset/request', authLimiter, validate(emailSchema), auth.requestPasswordReset);
 router.post('/verification/resend', authLimiter, validate(emailSchema), auth.resendVerification);
 router.post('/verification/confirm', authLimiter, validate(verifyEmailSchema), auth.verifyEmail);
+router.post('/password-reset/verify-code', authLimiter, validate(resetCodeSchema), auth.verifyResetCode);
 router.post('/password-reset/confirm', authLimiter, validate(resetPasswordSchema), auth.resetPassword);
 router.post('/register', authLimiter, validate(registerSchema), auth.register);
 router.post('/login', authLimiter, validate(loginSchema), auth.login);

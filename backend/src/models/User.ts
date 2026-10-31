@@ -76,6 +76,9 @@ export interface IUser extends Document {
   emailVerificationExpires?: Date;
   passwordResetTokenHash?: string;
   passwordResetExpires?: Date;
+  passwordResetCodeHash?: string;
+  passwordResetCodeExpires?: Date;
+  passwordResetCodeTries?: number;
   refreshToken?: string;
   mfaEnabled: boolean;
   /** Staff without 2-step must turn it on before this date (see utils/mfaPolicy). */
@@ -186,6 +189,10 @@ const userSchema = new Schema<IUser>(
     emailVerificationExpires: { type: Date, select: false },
     passwordResetTokenHash: { type: String, select: false },
     passwordResetExpires: { type: Date, select: false },
+    // The 6-digit code in the reset email (typed on the site instead of clicking the link)
+    passwordResetCodeHash: { type: String, select: false },
+    passwordResetCodeExpires: { type: Date, select: false },
+    passwordResetCodeTries: { type: Number, select: false },
     refreshToken: { type: String, select: false },
     mfaEnabled: { type: Boolean, default: false },
     mfaGraceUntil: { type: Date },

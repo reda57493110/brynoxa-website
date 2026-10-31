@@ -54,6 +54,12 @@ export const verifyEmailSchema = z.object({
   token: oneTimeToken,
 });
 
+/** Forgot password: the 6-digit code from the email (spaces allowed: "482 913") */
+export const resetCodeSchema = z.object({
+  email: z.string().trim().email(),
+  code: z.string().max(20).transform((v) => v.replace(/\s/g, '')).pipe(z.string().regex(/^\d{6}$/, 'Enter the 6-digit code')),
+});
+
 export const resetPasswordSchema = z.object({
   token: oneTimeToken,
   newPassword: customerPassword,

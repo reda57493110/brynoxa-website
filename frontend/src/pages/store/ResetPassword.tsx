@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
@@ -12,10 +12,14 @@ export function ResetPassword() {
   usePageTitle(`${t('auth.resetPassword')} — Brynoxa`)
   const navigate = useNavigate()
   const [params] = useSearchParams()
-  // The reset key is read once and removed from the address (history, analytics, screenshots)
-  const [token] = useState(() => params.get('token') || '')
+  // The reset key is read once and removed from the address (history, analytics, screenshots).
+  // After the emailed code was typed (Forgot password), it comes in the page state instead.
+  const location = useLocation()
+  const [token] = useState(() => params.get('token') || (location.state as { resetToken?: string } | null)?.resetToken || '')
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has('token')) window.history.replaceState(window.history.state, '', window.location.pathname)
+    else if ((location.state as { resetToken?: string } | null)?.resetToken) window.history.replaceState({ ...window.history.state, usr: null }, '', window.location.pathname)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
