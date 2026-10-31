@@ -113,3 +113,23 @@ test('route, activity log, dashboard dating, buttons', () => {
   assert.match(src('components/admin/ReturnRefundDialog.tsx'), /past the \{RETURN_DAYS\}-day return period/);
   assert.ok(fs.existsSync(api('v1/admin.js')));
 });
+
+test('on the live site the request reaches the server code (not "Method not allowed")', async () => {
+  const { fakeModule, callHandler } = require('./_helpers.cjs');
+  const handled = [];
+  fakeModule(dist('app.js'), {
+    getApp: () => (req, res) => {
+      handled.push(req.url);
+      res.statusCode = 200;
+      res.end('{"success":true}');
+    },
+  });
+  fakeModule(api('_lib/mongo.js'), { connectMongo: async () => ({}) });
+  const admin = require(api('v1/admin.js'));
+  const listeners = {};
+  const res = { statusCode: 0, headers: {}, setHeader() {}, on(ev, fn) { listeners[ev] = fn; }, end(b) { this.body = b; listeners.finish && listeners.finish(); } };
+  await admin({ method: 'POST', url: '/api/v1/admin?__route=orders/abc/return-refund', query: { __route: 'orders/abc/return-refund' }, headers: {}, socket: {} }, res);
+  assert.deepEqual(handled, ['/api/v1/admin/orders/abc/return-refund']);
+  assert.equal(res.statusCode, 200);
+  void callHandler;
+});
