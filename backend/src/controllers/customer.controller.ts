@@ -1,4 +1,5 @@
 import { hideCostsFor } from '../utils/hideCosts';
+import { createPasswordLinkForCustomer } from '../services/auth.service';
 import { Response } from 'express';
 import { AuthRequest } from '../types/express';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -108,6 +109,11 @@ export const update = asyncHandler(async (req: AuthRequest, res: Response) => {
 export const review = asyncHandler(async (req: AuthRequest, res: Response) => {
   await reviewWholesale(param(req, 'id'), req.body, req.user!.userId);
   sendSuccess(res, await customerProfile(param(req, 'id'), canSeeProfit(req)), 'Wholesale account updated');
+});
+
+/** Admin → customer → "Password reset link" (sent on WhatsApp by the owner) */
+export const passwordLink = asyncHandler(async (req: AuthRequest, res: Response) => {
+  sendSuccess(res, await createPasswordLinkForCustomer(param(req, 'id')), 'Reset link created');
 });
 
 /** Admin → order → "Return & refund" */

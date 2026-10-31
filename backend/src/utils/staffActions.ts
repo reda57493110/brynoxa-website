@@ -14,6 +14,7 @@ const RULES: Rule[] = [
   { rx: /^admin\/orders\/([^/]+)\/status$/, action: 'Changed an order status', kind: 'order-status' },
   { rx: /^admin\/orders\/([^/]+)\/contacts$/, action: 'Logged a call / message', kind: 'order-contact' },
   { rx: /^admin\/orders\/([^/]+)\/(deposit|deposit-proofs)/, action: 'Updated a deposit', kind: 'order' },
+  { rx: /^admin\/customers\/([^/]+)\/password-link/, action: 'Made a password reset link for a customer', kind: 'customer' },
   { rx: /^admin\/orders\/([^/]+)\/return-refund/, action: 'Returned a sale and refunded it', kind: 'order' },
   { rx: /^admin\/orders\/([^/]+)\/refunds/, action: 'Recorded a refund', kind: 'order' },
   { rx: /^admin\/orders\/([^/]+)\/returns?/, action: 'Registered returned items', kind: 'order' },

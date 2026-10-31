@@ -65,7 +65,9 @@ test('11: duplicate values are a 409 with a clear message on the live site and l
 test('12: customer profile shows edit buttons only to staff who may change customers', () => {
   const page = src('frontend/src/pages/admin/CustomerProfile.tsx');
   assert.match(page, /const canEdit = hasPermission\(role, 'customers:write'\)/);
-  assert.match(page, /\{canEdit \? \(\n\s+<>\n\s+<Button size="sm" variant="outline" onClick=\{\(\) => setConfirm\('toggle'\)\}>/);
+  const editBlock = page.slice(page.indexOf('{canEdit ? ('), page.indexOf("setConfirm('delete')"));
+  assert.match(editBlock, /^\{canEdit \? \(\n\s+<>\n/);
+  assert.match(editBlock, /setPasswordLink\(true\)[\s\S]*<Button size="sm" variant="outline" onClick=\{\(\) => setConfirm\('toggle'\)\}>/);
   assert.match(page, /canEdit=\{canEdit\}/);
   const cards = src('frontend/src/components/admin/customers/ProfileOverview.tsx');
   assert.equal((cards.match(/canEdit=\{canEdit\}/g) || []).length, 5, 'every card gets it');

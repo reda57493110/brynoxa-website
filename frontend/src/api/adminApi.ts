@@ -276,6 +276,9 @@ export const adminApi = {
     reviewWholesale: (id: string, payload: WholesaleReviewPayload) =>
       api.post<ApiResponse<CustomerProfile>>(`/admin/customers/${id}/wholesale`, payload),
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/customers/${id}`),
+    /** One-time link (24 h) to choose a new password, for the owner to send on WhatsApp */
+    passwordLink: (id: string) =>
+      api.post<ApiResponse<{ link: string; expiresAt: string; name: string; phone?: string }>>(`/admin/customers/${id}/password-link`),
   },
 
   users: {

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import { User } from '../models/User';
 import { mfaSetupDeadline } from '../utils/mfaPolicy';
 import { ApiError } from '../utils/ApiError';
@@ -112,6 +113,33 @@ async function sendPasswordLink(
   await user.save({ validateBeforeSave: false });
   const link = `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`;
   await sendSecurityEmail(user.email, template(user, link));
+}
+
+/** How long a reset link made by the owner (sent on WhatsApp) stays valid. */
+export const STAFF_RESET_LINK_TTL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Admin → customer → "Password reset link": a customer who forgot their password asks on
+ * WhatsApp (emails are off). The owner gets the same one-time link the email would carry and
+ * sends it; the customer chooses the new password themselves (the owner never knows it). Valid
+ * 24 hours, once; a new link replaces the previous one. Customer accounts only.
+ */
+export async function createPasswordLinkForCustomer(customerId: string) {
+  if (!mongoose.isValidObjectId(customerId)) throw new ApiError(404, 'Customer not found');
+  const user = await User.findById(customerId).select('+passwordResetTokenHash +passwordResetExpires');
+  if (!user || user.role !== 'customer') throw new ApiError(404, 'Customer not found');
+  if (!user.isActive) throw new ApiError(400, 'This account is disabled: enable it first');
+  const token = randomBytes(32).toString('hex');
+  const expiresAt = new Date(Date.now() + STAFF_RESET_LINK_TTL_MS);
+  user.passwordResetTokenHash = hashOneTimeToken(token);
+  user.passwordResetExpires = expiresAt;
+  await user.save({ validateBeforeSave: false });
+  return {
+    link: `${env.CLIENT_URL}/reset-password?token=${encodeURIComponent(token)}`,
+    expiresAt,
+    name: user.name,
+    phone: user.phone,
+  };
 }
 
 /**

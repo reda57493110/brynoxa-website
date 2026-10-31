@@ -23,6 +23,8 @@ router.patch(
   validate(updateCustomerSchema),
   customer.update
 );
+// A one-time link to choose a new password, for the owner to send on WhatsApp
+router.post('/admin/customers/:id/password-link', requireAuth, requirePermission('customers:write'), customer.passwordLink);
 router.post(
   '/admin/customers/:id/wholesale',
   requireAuth,

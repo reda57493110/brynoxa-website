@@ -1,6 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { customerLabel, shownEmail } from '@/lib/orderOrigin'
 import { RecordDepositDialog } from '@/components/admin/RecordDepositDialog'
+import { PasswordLinkDialog } from '@/components/admin/customers/PasswordLinkDialog'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -43,6 +44,7 @@ export function CustomerProfile() {
   const tab: TabId = TABS.some((t) => t.id === tabParam) ? (tabParam as TabId) : 'overview'
   const [confirm, setConfirm] = useState<null | 'toggle' | 'delete'>(null)
   const [recording, setRecording] = useState(false)
+  const [passwordLink, setPasswordLink] = useState(false)
   // Order / support staff can look at customers; only some roles may change them
   const role = useAuthStore((s) => s.user?.role)
   const canEdit = hasPermission(role, 'customers:write')
@@ -228,6 +230,18 @@ export function CustomerProfile() {
           ) : null}
           {canEdit ? (
             <>
+              {c.isActive ? (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => setPasswordLink(true)}>
+                    <SiteIcon name="shield" size={14} /> Password reset link
+                  </Button>
+                  <PasswordLinkDialog
+                    open={passwordLink}
+                    onClose={() => setPasswordLink(false)}
+                    customer={{ id, name: c.name, phone: c.phone }}
+                  />
+                </>
+              ) : null}
               <Button size="sm" variant="outline" onClick={() => setConfirm('toggle')}>
                 {c.isActive ? 'Disable' : 'Enable'}
               </Button>
