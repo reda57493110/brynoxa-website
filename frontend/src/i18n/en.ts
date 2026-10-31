@@ -861,6 +861,12 @@ export const en = {
     usedNotice: 'This item is used, not new.',
   },
   help: {
+    youAreHere: 'You are here',
+    stepDone: 'done',
+    goToCheckoutOne: 'Go to checkout · 1 item',
+    goToCheckout: 'Go to checkout · {n} items',
+    backToProduct: 'Back to the product',
+    continueOrder: 'Continue my order',
     title: "Help Center — Brynoxa",
     description: "How to order, pay cash on delivery, track your order, return a product or use the warranty at Brynoxa.",
     kicker: "Help Center",

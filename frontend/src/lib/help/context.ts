@@ -15,3 +15,14 @@ export function guideForPath(pathname: string): HelpGuideId | null {
   if (p === '/account' || p === '/account/settings') return 'account'
   return null
 }
+
+/**
+ * Where the shopper is in "How to order" (steps: find, add to cart, details, place the order):
+ * products in the cart → details next; a product page → add it; the shop → find one.
+ */
+export function orderStepFor(pathname: string, itemsInCart: number): number | undefined {
+  if (pathname.startsWith('/checkout') || itemsInCart > 0) return 2
+  if (pathname.startsWith('/product/')) return 1
+  if (/^\/(shop|category|search)(\/|$)/.test(pathname) || pathname === '/') return 0
+  return undefined
+}

@@ -863,6 +863,12 @@ export const ar: Messages = {
     usedNotice: 'هذا المنتج مستعمل وليس جديدًا.',
   },
   help: {
+    youAreHere: 'أنت هنا',
+    stepDone: 'تم',
+    goToCheckoutOne: 'إتمام الطلب · منتج واحد',
+    goToCheckout: 'إتمام الطلب · {n} منتجات',
+    backToProduct: 'العودة إلى المنتج',
+    continueOrder: 'متابعة طلبي',
     title: "مركز المساعدة — Brynoxa",
     description: "كيف تطلب، تدفع عند الاستلام، تتبع طلبك، ترجع منتجاً أو تستعمل الضمان في Brynoxa.",
     kicker: "مركز المساعدة",

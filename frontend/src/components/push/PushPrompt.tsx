@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useHelpStore } from '@/store/helpStore'
 import { useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -50,6 +51,7 @@ export function PushPrompt() {
   const { status, ready, busy, enable } = usePush()
   const [engaged, setEngaged] = useState(hasEngagedEnough)
   const [visible, setVisible] = useState(false)
+  const helpOpen = useHelpStore((s) => s.isOpen)
 
   const orderNumber = orderNumberFromPath(pathname)
 
@@ -76,7 +78,8 @@ export function PushPrompt() {
   }, [ready, engaged, status, orderNumber])
 
   const onCheckout = pathname.startsWith('/checkout')
-  if (!visible || onCheckout) return null
+  // Not on checkout, and not on top of the open Help card
+  if (!visible || onCheckout || helpOpen) return null
 
   const aboveStickyBar = pathname.startsWith('/product/') || pathname === '/cart'
 

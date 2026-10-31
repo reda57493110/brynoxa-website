@@ -136,3 +136,17 @@ test('search finds answers in every language, ignores accents, and has an empty 
   assert.deepEqual(searchHelp(en, 'zzqqxx'), { topics: [], faqs: [] });
   assert.deepEqual(searchHelp(en, '  '), { topics: [], faqs: [] });
 });
+
+test('"How to order" follows the shopper: done steps ticked, the next move as the button', async () => {
+  const { orderStepFor } = await load('lib/help/context.ts');
+  assert.equal(orderStepFor('/shop', 0), 0, 'in the shop: find a product');
+  assert.equal(orderStepFor('/product/hp-elite-book', 0), 1, 'on a product: add it');
+  assert.equal(orderStepFor('/product/hp-elite-book', 1), 2, 'something in the cart: your details');
+  assert.equal(orderStepFor('/checkout', 1), 2);
+  assert.equal(orderStepFor('/contact', 0), undefined, 'elsewhere: no progress shown');
+  // The steps the progress points at are the same in the three languages
+  for (const g of [en, fr, ar]) assert.equal(g.guides.find((x: { id: string }) => x.id === 'order').steps.length, 4);
+  const panel = fs.readFileSync(path.join(src, 'components/help/HelpPanel.tsx'), 'utf8');
+  assert.match(panel, /to: '\/checkout'/);
+  assert.match(fs.readFileSync(path.join(src, 'components/push/PushPrompt.tsx'), 'utf8'), /\|\| helpOpen\) return null/);
+});

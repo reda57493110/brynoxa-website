@@ -866,6 +866,12 @@ export const fr: Messages = {
     usedNotice: 'Cet article est d’occasion, il n’est pas neuf.',
   },
   help: {
+    youAreHere: 'Vous êtes ici',
+    stepDone: 'fait',
+    goToCheckoutOne: 'Finaliser · 1 article',
+    goToCheckout: 'Finaliser · {n} articles',
+    backToProduct: 'Retour au produit',
+    continueOrder: 'Continuer ma commande',
     title: "Centre d’aide — Brynoxa",
     description: "Comment commander, payer à la livraison, suivre votre commande, retourner un produit ou utiliser la garantie chez Brynoxa.",
     kicker: "Centre d’aide",

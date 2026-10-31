@@ -1,14 +1,16 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Spinner } from '@/components/ui/Spinner'
-import { QuickGuide } from '@/components/help/QuickGuide'
+import { QuickGuide, type GuideAction } from '@/components/help/QuickGuide'
 import { useT } from '@/hooks/useT'
 import { useHelpStore } from '@/store/helpStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { useCartStore } from '@/store/cartStore'
 import { helpGuideQuery } from '@/lib/help'
+import { orderStepFor } from '@/lib/help/context'
 import { cn } from '@/lib/cn'
 
 /**
@@ -29,6 +31,21 @@ export function HelpPanel({ returnFocusTo }: { returnFocusTo: RefObject<HTMLButt
 
   const content = useQuery({ ...helpGuideQuery(locale), enabled: isOpen })
   const guide = content.data?.guides.find((g) => g.id === guideId) ?? null
+  const { pathname } = useLocation()
+  const itemsInCart = useCartStore((s) => s.items.reduce((sum, item) => sum + item.qty, 0))
+
+  // "How to order" follows the shopper: the steps already done are ticked, the button is the next move
+  const orderStep = guide?.id === 'order' ? orderStepFor(pathname, itemsInCart) : undefined
+  let orderAction: GuideAction | undefined
+  if (guide?.id === 'order') {
+    if (pathname.startsWith('/checkout')) orderAction = { label: t('help.continueOrder'), onClick: close }
+    else if (itemsInCart > 0)
+      orderAction = {
+        label: itemsInCart === 1 ? t('help.goToCheckoutOne') : t('help.goToCheckout', { n: itemsInCart }),
+        to: '/checkout',
+      }
+    else if (pathname.startsWith('/product/')) orderAction = { label: t('help.backToProduct'), onClick: close }
+  }
 
   // Focus the title when opening or switching guides; give focus back to the Help button when closing
   useEffect(() => {
@@ -78,14 +95,18 @@ export function HelpPanel({ returnFocusTo }: { returnFocusTo: RefObject<HTMLButt
           ) : (
             <SiteIcon name="help" size={20} className="text-[var(--brand-text)]" />
           )}
-          <h2
-            id="help-panel-title"
-            ref={headingRef}
-            tabIndex={-1}
-            className="min-w-0 flex-1 truncate font-display text-base font-semibold outline-none"
-          >
-            {guide ? guide.title : t('help.heading')}
-          </h2>
+          <div className="min-w-0 flex-1">
+            <h2
+              id="help-panel-title"
+              ref={headingRef}
+              tabIndex={-1}
+              className="truncate font-display text-base font-semibold outline-none"
+            >
+              {guide ? guide.title : t('help.heading')}
+            </h2>
+            {/* The guide's one-line intro stays in view while the steps scroll */}
+            {guide ? <p className="line-clamp-2 text-xs leading-snug text-[var(--fg-muted)]">{guide.intro}</p> : null}
+          </div>
           <button
             type="button"
             onClick={close}
@@ -109,7 +130,14 @@ export function HelpPanel({ returnFocusTo }: { returnFocusTo: RefObject<HTMLButt
               </button>
             </div>
           ) : guide ? (
-            <QuickGuide guide={guide} onNavigate={close} moreHref={`/help#${guide.more}`} />
+            <QuickGuide
+              guide={guide}
+              onNavigate={close}
+              moreHref={`/help#${guide.more}`}
+              current={orderStep}
+              action={orderAction}
+              hideIntro
+            />
           ) : (
             <>
               <p className="text-sm text-[var(--fg-muted)]">{t('help.widgetPick')}</p>
