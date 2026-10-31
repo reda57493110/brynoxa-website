@@ -175,8 +175,8 @@ export const createOrderSchema = z.object({
   shippingAddress: addressSchema,
   couponCode: z.string().max(64).optional(),
   customerNote: z.string().max(500).optional(),
-  /** Guest checkout — required when not logged in */
-  email: z.string().trim().email().optional(),
+  /** Creating an account at checkout; a guest orders with the phone only ('' = none) */
+  email: z.union([z.string().trim().email(), z.literal('')]).optional(),
   /** Optional: create / upgrade account at checkout */
   password: customerPassword.optional(),
 });

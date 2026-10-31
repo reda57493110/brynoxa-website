@@ -48,7 +48,7 @@ export function parseCustomerQuery(q: Record<string, unknown>): CustomerListQuer
     limit: numberParam(q.limit),
     q: str(q.q),
     type: pick(q.type, ['retail', 'wholesale', 'business'] as const),
-    status: pick(q.status, ['active', 'disabled', 'unverified', 'wholesale-pending'] as const),
+    status: pick(q.status, ['active', 'disabled', 'unverified', 'wholesale-pending', 'guest', 'account'] as const),
     registeredFrom: date(q.registeredFrom),
     registeredTo: date(q.registeredTo, true),
     from: date(q.from),

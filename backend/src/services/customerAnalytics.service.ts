@@ -326,6 +326,9 @@ function customerFilter(query: CustomerListQuery) {
   if (query.status === 'disabled') and.push({ isActive: false });
   if (query.status === 'unverified') and.push({ emailVerified: false });
   if (query.status === 'wholesale-pending') and.push({ 'wholesale.status': 'pending' });
+  // Guests ordered without an account (often with the phone only); accounts signed up
+  if (query.status === 'guest') and.push({ isGuest: true });
+  if (query.status === 'account') and.push({ isGuest: { $ne: true } });
   const fromSource = customerSourceFilter(query.source);
   if (fromSource) and.push(fromSource);
   if (query.registeredFrom || query.registeredTo) {

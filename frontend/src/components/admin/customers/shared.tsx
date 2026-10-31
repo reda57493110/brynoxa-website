@@ -20,6 +20,11 @@ const WHOLESALE_META: Record<WholesaleStatus, { label: string; variant: BadgeVar
   rejected: { label: 'Rejected', variant: 'danger' },
 }
 
+/** Ordered without an account (often with the phone only, no email) */
+export function GuestBadge() {
+  return <Badge variant="muted">Guest</Badge>
+}
+
 export function TypeBadge({ type, tierName }: { type?: CustomerType; tierName?: string }) {
   const t = type || 'retail'
   return (

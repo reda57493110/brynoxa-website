@@ -836,7 +836,8 @@ export interface CustomerListParams {
   limit?: number
   q?: string
   type?: CustomerType | ''
-  status?: CustomerAccountStatus | ''
+  /** Also 'guest' (ordered without an account) or 'account' (signed up) */
+  status?: CustomerAccountStatus | 'guest' | 'account' | ''
   registeredFrom?: string
   registeredTo?: string
   from?: string

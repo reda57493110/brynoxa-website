@@ -179,6 +179,8 @@ export async function createPasswordLinkForCustomer(customerId: string) {
   const user = await User.findById(customerId).select('+passwordResetTokenHash +passwordResetExpires');
   if (!user || user.role !== 'customer') throw new ApiError(404, 'Customer not found');
   if (!user.isActive) throw new ApiError(400, 'This account is disabled: enable it first');
+  // A guest who ordered with the phone only has no email to sign in with
+  if (/\.invalid$/i.test(user.email)) throw new ApiError(400, 'This guest has no email: they can create an account when they order next time');
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + STAFF_RESET_LINK_TTL_MS);
   user.passwordResetTokenHash = hashOneTimeToken(token);
@@ -466,10 +468,57 @@ function issueTokens(user: InstanceType<typeof User>) {
   return { accessToken, refreshToken };
 }
 
+/** Last 9 digits of a phone number written any way ("06 12-34 56 78", "+212 612…"). */
+function phoneDigits(phone?: string) {
+  return String(phone || '').replace(/\D/g, '').slice(-9);
+}
+
+/**
+ * Guest checkout without an email: only name, phone, address and city. The same phone finds the
+ * same guest again, so their orders stay together in Admin → Customers. Only other guests are
+ * matched — never a real account (typing someone's phone must not put orders in their account).
+ * The guest gets a stand-in address on the reserved ".invalid" domain, which is never emailed.
+ */
+async function guestByPhone(input: {
+  name: string;
+  phone?: string;
+  shippingAddress?: { label?: string; fullName: string; line1: string; line2?: string; city: string; phone: string };
+}) {
+  const digits = phoneDigits(input.phone || input.shippingAddress?.phone);
+  if (digits.length < 9) throw new ApiError(400, 'Enter a valid phone number');
+  const rx = new RegExp(`${digits.split('').join('\\D*')}\\D*$`);
+  let user = await User.findOne({ role: 'customer', isGuest: true, phone: rx }).sort({ createdAt: 1 });
+  if (!user) {
+    user = await User.create({
+      name: input.name,
+      email: `phone-${digits}-${randomBytes(4).toString('hex')}@no-email.invalid`,
+      password: randomBytes(24).toString('hex'),
+      phone: input.phone || input.shippingAddress?.phone,
+      isGuest: true,
+    });
+  }
+  if (input.shippingAddress && user.addresses.length === 0) {
+    user.addresses.push({
+      label: input.shippingAddress.label || 'Home',
+      fullName: input.shippingAddress.fullName,
+      line1: input.shippingAddress.line1,
+      line2: input.shippingAddress.line2,
+      city: input.shippingAddress.city,
+      postalCode: '00000',
+      country: 'MA',
+      phone: input.shippingAddress.phone,
+      isDefault: true,
+    });
+    await user.save();
+  }
+  return user._id;
+}
+
 /**
  * Resolve who owns a checkout order.
  * Logged-in users keep their account.
- * Guests provide email; optional password creates / upgrades a real account.
+ * Guests give an email (optional password creates / upgrades a real account), or only their
+ * phone: then they stay a guest, found again by phone.
  */
 export async function resolveCheckoutCustomer(input: {
   authenticatedUserId?: string;
@@ -494,7 +543,10 @@ export async function resolveCheckoutCustomer(input: {
   }
 
   const email = input.email?.trim().toLowerCase();
-  if (!email) throw new ApiError(400, 'Email is required to place an order');
+  if (!email) {
+    if (input.password) throw new ApiError(400, 'Enter your email to create an account');
+    return { userId: (await guestByPhone(input)).toString(), auth: null as null };
+  }
 
   const existing = await User.findOne({ email }).select('+password +refreshToken');
 

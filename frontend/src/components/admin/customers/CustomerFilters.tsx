@@ -102,6 +102,8 @@ export function CustomerFilters({
                 <option value="disabled">Disabled</option>
                 <option value="unverified">Unverified</option>
                 <option value="wholesale-pending">Wholesale pending</option>
+                <option value="guest">Guests (no account)</option>
+                <option value="account">With an account</option>
               </select>
             </Field>
             <Field label="Registered from">

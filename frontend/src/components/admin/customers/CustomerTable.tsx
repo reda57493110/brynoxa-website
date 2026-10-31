@@ -3,7 +3,7 @@ import { customerLabel, shownEmail } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
 import type { CustomerRow } from '@/types'
-import { ProfitText, StatusBadge, TypeBadge, cardClass } from './shared'
+import { GuestBadge, ProfitText, StatusBadge, TypeBadge, cardClass } from './shared'
 import { money } from './utils'
 
 function dateOr(v: string | null | undefined) {
@@ -50,6 +50,7 @@ export function CustomerTable({
                     <p className="truncate text-[11px] text-[var(--fg-muted)]">{shownEmail(c.email)}</p>
                   </div>
                   <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                    {c.isGuest ? <GuestBadge /> : null}
                     <StatusBadge status={c.status} />
                     {c.customerType && c.customerType !== 'retail' ? <TypeBadge type={c.customerType} tierName={c.tierName} /> : null}
                   </div>
@@ -131,7 +132,10 @@ export function CustomerTable({
                     <TypeBadge type={c.customerType} tierName={c.tierName} />
                   </td>
                   <td className="px-3 py-3">
-                    <StatusBadge status={c.status} />
+                    <div className="flex flex-wrap gap-1">
+                      {c.isGuest ? <GuestBadge /> : null}
+                      <StatusBadge status={c.status} />
+                    </div>
                   </td>
                   <td className="px-3 py-3 text-right whitespace-nowrap">
                     {m.orders.completed}/{m.orders.total}

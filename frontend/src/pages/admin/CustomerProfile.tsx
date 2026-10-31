@@ -212,7 +212,7 @@ export function CustomerProfile() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          {canEmail ? (
+          {canEmail && shownEmail(c.email) ? (
           <Link
             to={`/admin/emails?to=${encodeURIComponent(c.email)}`}
             className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
@@ -230,7 +230,7 @@ export function CustomerProfile() {
           ) : null}
           {canEdit ? (
             <>
-              {c.isActive ? (
+              {c.isActive && shownEmail(c.email) ? (
                 <>
                   <Button size="sm" variant="outline" onClick={() => setPasswordLink(true)}>
                     <SiteIcon name="shield" size={14} /> Password reset link

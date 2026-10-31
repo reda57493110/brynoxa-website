@@ -91,7 +91,9 @@ export function Checkout() {
   })
   const [selectedAddressId, setSelectedAddressId] = useState(defaultAddr?._id || '')
   const [email, setEmail] = useState(user?.email || '')
-  const [createAccount, setCreateAccount] = useState(false)
+  // Not signed in: a guest gives only name, phone, address and city; an email only to create an account
+  const [mode, setMode] = useState<'guest' | 'account'>('guest')
+  const createAccount = mode === 'account'
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [couponCode, setCouponCode] = useState('')
@@ -230,7 +232,7 @@ export function Checkout() {
         },
         couponCode: appliedCoupon || undefined,
         customerNote: note || undefined,
-        email: isAuth ? undefined : email.trim(),
+        email: !isAuth && createAccount ? email.trim() : undefined,
         password: !isAuth && createAccount ? password : undefined,
       }),
     onSuccess: (res) => {
@@ -332,20 +334,23 @@ export function Checkout() {
     e.preventDefault()
     setFormError('')
 
-    if (!isAuth) {
+    // The phone is how we confirm and deliver: a full Moroccan / international number
+    if (address.phone.replace(/\D/g, '').length < 9) {
+      setFormError(t('checkout.phoneInvalid'))
+      return
+    }
+    if (!isAuth && createAccount) {
       if (!email.trim() || !email.includes('@')) {
         setFormError(t('checkout.emailRequired'))
         return
       }
-      if (createAccount) {
-        if (password.length < 6) {
-          setFormError(t('checkout.passwordMin'))
-          return
-        }
-        if (password !== confirmPassword) {
-          setFormError(t('checkout.passwordMismatch'))
-          return
-        }
+      if (password.length < 6) {
+        setFormError(t('checkout.passwordMin'))
+        return
+      }
+      if (password !== confirmPassword) {
+        setFormError(t('checkout.passwordMismatch'))
+        return
       }
     }
 
@@ -384,7 +389,6 @@ export function Checkout() {
 
   const itemCount = items.reduce((n, i) => n + i.qty, 0)
   const busy = placeOrder.isPending || stockChecking || settings.isLoading || currentProducts.isLoading
-  const step = (n: number) => (isAuth ? n - 1 : n)
 
   const summaryItems = (
     <ul className="space-y-3">
@@ -476,17 +480,18 @@ export function Checkout() {
     </div>
   )
 
-  const trust = (
-    <ul className="grid grid-cols-2 gap-2 text-[11px] text-[var(--fg-muted)] sm:text-xs">
-      <li className="flex items-center gap-1.5 rounded-xl bg-[var(--bg-muted)] px-2.5 py-2">
-        <SiteIcon name="banknote" size={14} className="shrink-0 text-[var(--brand-text)]" />
-        {t('checkout.payOnArrival')}
-      </li>
-      <li className="flex items-center gap-1.5 rounded-xl bg-[var(--bg-muted)] px-2.5 py-2">
-        <SiteIcon name="shield" size={14} className="shrink-0 text-[var(--brand-text)]" />
-        {t('checkout.warranty6')}
-      </li>
-    </ul>
+  // How payment works, said once (next to the total) instead of in its own section and badges
+  const paymentNote = (
+    <div className="rounded-xl bg-[var(--bg-muted)] px-3 py-2.5 text-xs leading-relaxed text-[var(--fg-muted)]">
+      <p className="flex items-start gap-2">
+        <SiteIcon name="banknote" size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
+        <span>
+          <span className="font-semibold text-[var(--fg)]">{t('checkout.heroKicker')}</span> · {t('checkout.paymentBody')}{' '}
+          <span className="whitespace-nowrap">· {t('checkout.warranty6')}</span>
+        </span>
+      </p>
+      <HelpLink guide="pay" label={t('help.ctxPay')} className="mt-1.5 ps-6" />
+    </div>
   )
 
   return (
@@ -531,108 +536,47 @@ export function Checkout() {
           </ol>
         </div>
 
-        {/* Phones: the products, folded under a one-line summary */}
-        <details className={cn(surfaceCard, 'group mt-4 overflow-hidden lg:hidden')}>
-          <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
-            <span className="flex -space-x-2 rtl:space-x-reverse">
-              {items.slice(0, 3).map((i) => (
-                <span
-                  key={i.productId}
-                  className={cn(
-                    'h-8 w-8 overflow-hidden rounded-lg border-2 border-[var(--bg-elevated)]',
-                    imageFit(i.image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
-                  )}
-                >
-                  {i.image ? (
-                    <SafeImage src={sizedImageUrl(i.image, 80)} alt="" loading="eager" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-                  ) : null}
-                </span>
-              ))}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold">{t('checkout.orderSummary')}</span>
-              <span className="block text-xs text-[var(--fg-muted)]">{t('cart.itemsInCart', { count: itemCount })}</span>
-            </span>
-            <span className="shrink-0 font-display text-base font-semibold tabular-nums">{formatCurrency(total)}</span>
-            <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)] transition group-open:rotate-180" />
-          </summary>
-          <div className="border-t border-[var(--border)] px-4 py-4">{summaryItems}</div>
-        </details>
-
         <form
           id="checkout-form"
           className="mt-4 grid gap-4 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-8"
           onSubmit={onSubmit}
         >
           <div className="space-y-4 sm:space-y-5">
-            {!isAuth ? (
-              <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-                <SectionTitle n={1} icon="user" title={t('checkout.yourInfo')} />
-                <p className="mt-2 text-sm text-[var(--fg-muted)]">
-                  {t('checkout.haveAccount')}{' '}
-                  <Link
-                    to="/login"
-                    state={{ from: '/checkout' }}
-                    className="font-medium text-[var(--brand-text)] underline-offset-2 hover:underline"
-                  >
-                    {t('checkout.signIn')}
-                  </Link>
-                </p>
-                <div className="mt-4 grid gap-3">
-                  <Input
-                    label={t('ui.email')}
-                    type="email"
-                    autoComplete="email"
-                    inputMode="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-3 transition has-[:checked]:border-[var(--brand)]">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 accent-[var(--brand)]"
-                      checked={createAccount}
-                      onChange={(e) => setCreateAccount(e.target.checked)}
-                    />
-                    <span>
-                      <span className="block text-sm font-medium text-[var(--fg)]">
-                        {t('checkout.createAccount')}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                        {t('checkout.createAccountHint')}
-                      </span>
-                    </span>
-                  </label>
-                  {createAccount ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Input
-                        label={t('ui.password')}
-                        type="password"
-                        autoComplete="new-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        minLength={6}
-                      />
-                      <Input
-                        label={t('checkout.confirmPassword')}
-                        type="password"
-                        autoComplete="new-password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        minLength={6}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-              </section>
-            ) : null}
-
+            {/* 1. Who and where: a guest needs only name, phone, address and city */}
             <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-              <SectionTitle n={step(2)} icon="truck" title={t('checkout.shippingTitle')} />
-              <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('checkout.shippingBody')}</p>
+              <SectionTitle n={1} icon="truck" title={t('checkout.yourInfo')} />
+              {!isAuth ? (
+                <>
+                  <div role="radiogroup" aria-label={t('checkout.yourInfo')} className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-[var(--bg-muted)] p-1">
+                    {(['guest', 'account'] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        role="radio"
+                        aria-checked={mode === m}
+                        onClick={() => setMode(m)}
+                        className={cn(
+                          'h-9 rounded-full px-2 text-xs font-semibold transition sm:text-sm',
+                          mode === m ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-soft' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                        )}
+                      >
+                        {m === 'guest' ? t('checkout.asGuest') : t('checkout.withAccount')}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-[var(--fg-muted)]">
+                    {createAccount ? t('checkout.createAccountHint') : t('checkout.asGuestHint')}{' '}
+                    {t('checkout.haveAccount')}{' '}
+                    <Link
+                      to="/login"
+                      state={{ from: '/checkout' }}
+                      className="font-medium text-[var(--brand-text)] underline-offset-2 hover:underline"
+                    >
+                      {t('checkout.signIn')}
+                    </Link>
+                  </p>
+                </>
+              ) : null}
               {isAuth && user?.addresses?.length ? (
                 <label className="mt-4 flex flex-col gap-1.5 text-sm">
                   <span className="font-medium">{t('account.addresses')}</span>
@@ -708,80 +652,106 @@ export function Checkout() {
                     ))}
                   </datalist>
                 ) : null}
-                {address.city.trim() ? (
+                {address.city.trim() && !deliveryIncluded ? (
                   <p className="flex items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:col-span-2">
                     <SiteIcon name="truck" size={13} className="text-[var(--brand-text)]" />
-                    {deliveryIncluded
-                      ? t('cart.deliveryIncludedNote')
-                      : qualifiesFreeShipping || shipping === 0
+                    {qualifiesFreeShipping || shipping === 0
                       ? t('cart.freeShippingUnlocked')
                       : t('checkout.shippingForCity', { amount: formatCurrency(shipping) })}
                   </p>
                 ) : null}
+                {!isAuth && createAccount ? (
+                  <>
+                    <div className="sm:col-span-2">
+                      <Input
+                        label={t('ui.email')}
+                        type="email"
+                        autoComplete="email"
+                        inputMode="email"
+                        dir="ltr"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Input
+                      label={t('ui.password')}
+                      type="password"
+                      autoComplete="new-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                    <Input
+                      label={t('checkout.confirmPassword')}
+                      type="password"
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      minLength={6}
+                    />
+                  </>
+                ) : null}
               </div>
             </section>
 
-            <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-              <SectionTitle n={step(3)} icon="banknote" title={t('checkout.paymentTitle')} />
-              <div className="mt-4 flex items-start gap-3 rounded-xl border-2 border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_6%,transparent)] p-3 sm:p-4">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[var(--brand-fg)]">
-                  <SiteIcon name="check" size={12} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold">{t('checkout.heroKicker')}</span>
-                  <span className="mt-0.5 block text-xs leading-relaxed text-[var(--fg-muted)] sm:text-sm">
-                    {t('checkout.paymentBody')}
-                  </span>
-                </span>
-                <SiteIcon name="banknote" size={22} className="ms-auto shrink-0 text-[var(--brand-text)]" />
+            {/* 2. Coupon and note: folded, most people have neither */}
+            <details className={cn(surfaceCard, 'group')} open={Boolean(appliedCoupon || note) || undefined}>
+              <summary className="flex cursor-pointer list-none items-center gap-2.5 p-4 font-display text-base font-semibold sm:px-6 [&::-webkit-details-marker]:hidden">
+                <SiteIcon name="ticket" size={16} className="text-[var(--brand-text)]" />
+                {t('checkout.couponOrNote')}
+                <span className="text-xs font-normal text-[var(--fg-muted)]">{t('checkout.optional')}</span>
+                {appliedCoupon && discount > 0 ? (
+                  <span className="text-xs font-medium text-[var(--success)]">-{formatCurrency(discount)}</span>
+                ) : null}
+                <SiteIcon name="chevron-down" size={16} className="ms-auto text-[var(--fg-muted)] transition group-open:rotate-180" />
+              </summary>
+              <div className="border-t border-[var(--border)] p-4 sm:px-6">
+                <div className="flex gap-2">
+                  <Input
+                    value={couponCode}
+                    onChange={(e) => {
+                      const next = e.target.value.toUpperCase()
+                      setCouponCode(next)
+                      // A different code than the applied one: no discount until it is applied
+                      if (appliedCoupon && next.trim() !== appliedCoupon) {
+                        setAppliedCoupon('')
+                        setDiscount(0)
+                      }
+                    }}
+                    placeholder={t('checkout.couponCode')}
+                    aria-label={t('checkout.couponCode')}
+                    className="uppercase placeholder:normal-case"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    loading={validating}
+                    onClick={() => void validateCoupon()}
+                    className="h-11 shrink-0 rounded-xl px-4"
+                  >
+                    {t('checkout.apply')}
+                  </Button>
+                </div>
+                {appliedCoupon && discount > 0 ? (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--success)]">
+                    <SiteIcon name="check" size={12} />
+                    {t('checkout.couponApplied')}: {appliedCoupon} (-{formatCurrency(discount)})
+                  </p>
+                ) : null}
+                <div className="mt-4">
+                  <Textarea
+                    label={t('checkout.orderNote')}
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder={t('checkout.notePlaceholder')}
+                    rows={2}
+                  />
+                </div>
               </div>
-              <HelpLink guide="pay" label={t('help.ctxPay')} className="mt-3" />
-            </section>
-
-            <section className={cn(surfaceCard, 'p-4 sm:p-6')}>
-              <SectionTitle n={step(4)} icon="ticket" title={t('checkout.couponTitle')} optional={t('checkout.optional')} />
-              <div className="mt-4 flex gap-2">
-                <Input
-                  value={couponCode}
-                  onChange={(e) => {
-                    const next = e.target.value.toUpperCase()
-                    setCouponCode(next)
-                    // A different code than the applied one: no discount until it is applied
-                    if (appliedCoupon && next.trim() !== appliedCoupon) {
-                      setAppliedCoupon('')
-                      setDiscount(0)
-                    }
-                  }}
-                  placeholder={t('checkout.couponCode')}
-                  aria-label={t('checkout.couponCode')}
-                  className="uppercase placeholder:normal-case"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  loading={validating}
-                  onClick={() => void validateCoupon()}
-                  className="h-11 shrink-0 rounded-xl px-4"
-                >
-                  {t('checkout.apply')}
-                </Button>
-              </div>
-              {appliedCoupon && discount > 0 ? (
-                <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[var(--success)]">
-                  <SiteIcon name="check" size={12} />
-                  {t('checkout.couponApplied')}: {appliedCoupon} (-{formatCurrency(discount)})
-                </p>
-              ) : null}
-              <div className="mt-4">
-                <Textarea
-                  label={t('checkout.orderNote')}
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder={t('checkout.notePlaceholder')}
-                  rows={2}
-                />
-              </div>
-            </section>
+            </details>
 
             {formError ? (
               <p
@@ -793,11 +763,18 @@ export function Checkout() {
               </p>
             ) : null}
 
-            {/* Phones: totals before the sticky Place order bar */}
+            {/* Phones: one card with the products, the totals and how to pay, above the Place order bar */}
             <div className={cn(surfaceCard, 'space-y-4 p-4 lg:hidden')}>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-display text-base font-semibold">{t('checkout.orderSummary')}</h2>
+                <span className="rounded-full bg-[var(--bg-muted)] px-2 py-0.5 text-xs text-[var(--fg-muted)]">
+                  {t('cart.itemsInCart', { count: itemCount })}
+                </span>
+              </div>
               {wholesaleBadge}
-              {totalsRows}
-              {trust}
+              {summaryItems}
+              <div className="border-t border-[var(--border)] pt-4">{totalsRows}</div>
+              {paymentNote}
               <LegalConsent action="order" className="text-center" />
             </div>
           </div>
@@ -821,7 +798,7 @@ export function Checkout() {
               {t('checkout.placeOrder')}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Button>
-            <div className="mt-4">{trust}</div>
+            <div className="mt-4">{paymentNote}</div>
             <LegalConsent action="order" className="mt-3 text-center" />
           </aside>
         </form>
