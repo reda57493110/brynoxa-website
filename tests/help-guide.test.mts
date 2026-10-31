@@ -150,3 +150,16 @@ test('"How to order" follows the shopper: done steps ticked, the next move as th
   assert.match(panel, /to: '\/checkout'/);
   assert.match(fs.readFileSync(path.join(src, 'components/push/PushPrompt.tsx'), 'utf8'), /\|\| helpOpen\) return null/);
 });
+
+test('delivery included in the prices: no "fee for your city" anywhere, the cart says "Included"', async () => {
+  const { deliveryAlwaysIncluded } = await load('lib/shipping.ts');
+  assert.equal(deliveryAlwaysIncluded({ shippingFlatRate: 0, freeShippingMin: 0, shippingByCity: [] }), true);
+  assert.equal(deliveryAlwaysIncluded({ shippingFlatRate: 0, freeShippingMin: 0, shippingByCity: [{ city: 'Dakhla', rate: 90 }] }), false);
+  assert.equal(deliveryAlwaysIncluded({ shippingFlatRate: 30, freeShippingMin: 0 }), false);
+  for (const g of [en, fr, ar]) {
+    const text = JSON.stringify(g);
+    assert.doesNotMatch(text, /delivery fee for your city|frais de livraison de votre ville|مصاريف التوصيل لمدينتك|depends on your city\. You see|Cela dépend de votre ville|المصاريف حسب مدينتك|حسب مدينتك. ترى المبلغ/);
+  }
+  assert.match(fs.readFileSync(path.join(src, 'pages/store/Cart.tsx'), 'utf8'), /const included = deliveryAlwaysIncluded\(settings\.data\)/);
+  assert.match(fs.readFileSync(path.join(src, 'pages/store/Checkout.tsx'), 'utf8'), /deliveryIncluded \? t\('cart\.deliveryIncluded'\)/);
+});

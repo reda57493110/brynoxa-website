@@ -11,7 +11,7 @@ export const fr: HelpGuide = {
       steps: [
         { icon: 'search', title: 'Trouvez votre produit', text: 'Utilisez la recherche ou la boutique et ses filtres.' },
         { icon: 'cart', title: 'Ajoutez-le au panier', text: 'Touchez « Ajouter au panier », ou « Acheter maintenant » pour aller directement à la commande.' },
-        { icon: 'user', title: 'Saisissez vos coordonnées', text: 'Nom, téléphone, ville et adresse. Les frais de livraison de votre ville s’affichent.' },
+        { icon: 'user', title: 'Saisissez vos coordonnées', text: 'Nom, téléphone, ville et adresse, pour que le livreur vous trouve.' },
         { icon: 'phone', title: 'Validez la commande', text: 'Touchez « Commander, paiement à la livraison ». Nous vous appelons pour confirmer, puis nous expédions.' },
       ],
       note: 'Gardez votre numéro de commande (BRX-…) : il s’affiche juste après la commande.',
@@ -89,7 +89,7 @@ export const fr: HelpGuide = {
           steps: [
             'Saisissez votre nom complet, téléphone, ville et adresse (en invité, ajoutez aussi un email).',
             'Facultatif : ajoutez un code promo ou une note pour la livraison.',
-            'Vérifiez le récapitulatif : produits, livraison pour votre ville, total à payer.',
+            'Vérifiez le récapitulatif : vos produits et le total à payer à la livraison.',
             'Touchez « Commander, paiement à la livraison ». Une page de confirmation affiche votre numéro de commande.',
           ],
           points: ['Donnez un numéro sur lequel vous répondez : nous vous appelons ou écrivons pour confirmer avant l’expédition.'],
@@ -205,7 +205,7 @@ export const fr: HelpGuide = {
         {
           id: 'delivery-fees',
           title: 'Où livrez-vous, et combien ça coûte ?',
-          summary: 'Nous livrons partout au Maroc. Les frais dépendent de votre ville et s’affichent au moment de commander. La livraison est offerte au-delà d’un certain montant quand l’offre est active.',
+          summary: 'Nous livrons partout au Maroc. La livraison est comprise dans le prix du produit : rien de plus à payer.',
           points: ['Les commandes confirmées sont en général préparées en 1 à 2 jours ouvrés et livrées en 2 à 5 jours ouvrés (estimations).'],
           keywords: 'expedition livraison frais cout ville maroc gratuite delai jours',
           links: [{ to: '/services/home-delivery', label: 'Livraison à domicile' }],
@@ -348,7 +348,7 @@ export const fr: HelpGuide = {
     {
       id: 'faq-fee',
       q: 'Combien coûte la livraison ?',
-      a: 'Cela dépend de votre ville. Vous voyez le montant exact au moment de commander, avant de valider.',
+      a: 'Rien de plus : la livraison est comprise dans le prix du produit, partout au Maroc.',
     },
     {
       id: 'faq-check',

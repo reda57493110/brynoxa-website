@@ -25,7 +25,7 @@ import { toast } from '@/store/toastStore'
 import { saveGuestReceipt } from '@/lib/guestReceipt'
 import { linkPushToOrder } from '@/lib/push'
 import { formatCurrency } from '@/lib/format'
-import { resolveShippingFee } from '@/lib/shipping'
+import { deliveryAlwaysIncluded, resolveShippingFee } from '@/lib/shipping'
 import { orderDeposit } from '@/lib/deposit'
 import { wholesaleUnitPrice } from '@/lib/wholesale'
 import { trackBeginCheckout, trackPurchase } from '@/lib/analytics'
@@ -163,6 +163,8 @@ export function Checkout() {
   const tax = Math.round(((taxable * taxRate) / 100) * 100) / 100
   const total = Math.round((taxable + shipping + tax) * 100) / 100
   const cityRateOptions = settings.data?.shippingByCity ?? []
+  // Delivery is part of the product prices (no fee anywhere): shown as "Included"
+  const deliveryIncluded = deliveryAlwaysIncluded(settings.data)
   const freeShippingMin = settings.data?.freeShippingMin ?? 0
   const qualifiesFreeShipping = freeShippingMin > 0 && taxable >= freeShippingMin
 
@@ -457,7 +459,7 @@ export function Checkout() {
       <div className="flex justify-between">
         <span className="text-[var(--fg-muted)]">{t('checkout.shipping')}</span>
         <span className={cn('tabular-nums', shipping === 0 && 'font-medium text-[var(--success)]')}>
-          {shipping > 0 ? formatCurrency(shipping) : t('checkout.free')}
+          {shipping > 0 ? formatCurrency(shipping) : deliveryIncluded ? t('cart.deliveryIncluded') : t('checkout.free')}
         </span>
       </div>
       {taxRate > 0 ? (
@@ -709,7 +711,9 @@ export function Checkout() {
                 {address.city.trim() ? (
                   <p className="flex items-center gap-1.5 text-xs text-[var(--fg-muted)] sm:col-span-2">
                     <SiteIcon name="truck" size={13} className="text-[var(--brand-text)]" />
-                    {qualifiesFreeShipping || shipping === 0
+                    {deliveryIncluded
+                      ? t('cart.deliveryIncludedNote')
+                      : qualifiesFreeShipping || shipping === 0
                       ? t('cart.freeShippingUnlocked')
                       : t('checkout.shippingForCity', { amount: formatCurrency(shipping) })}
                   </p>

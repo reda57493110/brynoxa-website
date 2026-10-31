@@ -289,6 +289,8 @@ export const fr: Messages = {
       'Cet espace est réservé au personnel. Connectez-vous avec le compte admin pour ouvrir le back-office.',
   },
   cart: {
+    deliveryIncluded: 'Incluse',
+    deliveryIncludedNote: 'La livraison est comprise dans le prix, partout au Maroc.',
     pricesUpdated: 'Certains prix ont changé depuis l’ajout de ces produits. Votre panier affiche maintenant les prix du jour.',
     viewCart: 'Voir le panier',
     cartTotal: 'Total du panier',

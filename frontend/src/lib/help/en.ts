@@ -11,7 +11,7 @@ export const en: HelpGuide = {
       steps: [
         { icon: 'search', title: 'Find your product', text: 'Use the search bar or the shop and its filters.' },
         { icon: 'cart', title: 'Add it to the cart', text: 'Tap “Add to cart”, or “Buy now” to go straight to checkout.' },
-        { icon: 'user', title: 'Enter your details', text: 'Name, phone, city and address. The delivery fee for your city appears.' },
+        { icon: 'user', title: 'Enter your details', text: 'Name, phone, city and address, so the courier can find you.' },
         { icon: 'phone', title: 'Place the order', text: 'Tap “Place COD order”. We call you to confirm it, then we ship.' },
       ],
       note: 'Keep your order number (BRX-…): it is shown right after you order.',
@@ -89,7 +89,7 @@ export const en: HelpGuide = {
           steps: [
             'Enter your full name, phone, city and address (guests also add an email).',
             'Optional: add a coupon code or a note for the delivery.',
-            'Check the summary: products, delivery fee for your city, total to pay.',
+            'Check the summary: your products and the total to pay on delivery.',
             'Tap “Place COD order”. A confirmation page shows your order number.',
           ],
           points: ['Use a phone you answer: we call or message you to confirm before shipping.'],
@@ -205,7 +205,7 @@ export const en: HelpGuide = {
         {
           id: 'delivery-fees',
           title: 'Where do you deliver, and how much is it?',
-          summary: 'We deliver across Morocco. The fee depends on your city and is shown at checkout. Delivery is free above a certain amount when the offer is active.',
+          summary: 'We deliver across Morocco. Delivery is included in the product price: you pay nothing extra.',
           points: ['Confirmed orders are usually packed in 1–2 business days and delivered in 2–5 business days (estimates).'],
           keywords: 'shipping delivery fee cost city morocco free shipping time days',
           links: [{ to: '/services/home-delivery', label: 'Home delivery' }],
@@ -348,7 +348,7 @@ export const en: HelpGuide = {
     {
       id: 'faq-fee',
       q: 'How much is delivery?',
-      a: 'It depends on your city. You see the exact fee at checkout, before you order.',
+      a: 'Nothing extra: delivery is included in the product price, anywhere in Morocco.',
     },
     {
       id: 'faq-check',

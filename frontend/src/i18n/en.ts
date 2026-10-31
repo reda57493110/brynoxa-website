@@ -287,6 +287,8 @@ export const en = {
       'This area is for staff. Sign in with the admin account to open the back office.',
   },
   cart: {
+    deliveryIncluded: 'Included',
+    deliveryIncludedNote: 'Delivery is included in the price, anywhere in Morocco.',
     pricesUpdated: 'Some prices changed since you added these products. Your cart now shows today’s prices.',
     viewCart: 'View cart',
     cartTotal: 'Cart total',

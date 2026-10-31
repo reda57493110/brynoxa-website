@@ -8,7 +8,7 @@ import { PageHero } from '@/components/layout/PageHero'
 import { pillGhost, pillPrimary, surfaceCard } from '@/components/layout/pageStyles'
 import { useCartStore } from '@/store/cartStore'
 import { formatCurrency } from '@/lib/format'
-import { resolveShippingFee } from '@/lib/shipping'
+import { deliveryAlwaysIncluded, resolveShippingFee } from '@/lib/shipping'
 import { settingsApi } from '@/api/settingsApi'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
@@ -64,13 +64,17 @@ export function Cart() {
     )
   }
 
-  const shippingLabel =
-    qualifiesFreeShipping || estimatedShipping === 0
+  // The shop includes delivery in its prices: say so, rather than "free" next to a fee note
+  const included = deliveryAlwaysIncluded(settings.data)
+  const shippingLabel = included
+    ? t('cart.deliveryIncluded')
+    : qualifiesFreeShipping || estimatedShipping === 0
       ? t('checkout.free')
       : t('cart.shippingFrom', { amount: formatCurrency(flatRate || estimatedShipping) })
 
-  const shippingNote =
-    freeShippingMin > 0
+  const shippingNote = included
+    ? t('cart.deliveryIncludedNote')
+    : freeShippingMin > 0
       ? qualifiesFreeShipping
         ? t('cart.freeShippingUnlocked')
         : t('cart.freeShippingRemaining', { amount: formatCurrency(remainingForFree) })
