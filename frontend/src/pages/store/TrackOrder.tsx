@@ -14,6 +14,8 @@ import { dueOnDelivery } from '@/lib/deposit'
 import { PageHero } from '@/components/layout/PageHero'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { SiteIcon } from '@/components/ui/SiteIcon'
+import { SafeImage } from '@/components/ui/SafeImage'
+import { imageFit, sizedImageUrl } from '@/lib/image'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useSeo } from '@/hooks/useSeo'
@@ -44,17 +46,34 @@ function StatusLine({ status, rescheduledFor }: { status: string; rescheduledFor
   )
 }
 
-function ItemsList({ items }: { items: { name: string; qty: number; price: number }[] }) {
+/** Products of an order, each with its photo (white background for product shots, like the shop). */
+function ItemsList({ items }: { items: { name: string; qty: number; price: number; image?: string }[] }) {
   return (
-    <ul className="space-y-2 text-sm">
-      {items.map((item, i) => (
-        <li key={i} className="flex justify-between gap-3">
-          <span className="min-w-0">
-            {item.name} <span className="text-[var(--fg-muted)]">×{item.qty}</span>
-          </span>
-          <span className="shrink-0 tabular-nums">{formatCurrency(item.price * item.qty)}</span>
-        </li>
-      ))}
+    <ul className="space-y-3 text-sm">
+      {items.map((item, i) => {
+        const fit = imageFit(item.image)
+        return (
+          <li key={i} className="flex items-center gap-3">
+            <span
+              className={cn(
+                'flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--border)]',
+                item.image && fit === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]'
+              )}
+            >
+              <SafeImage
+                src={item.image ? sizedImageUrl(item.image, 160) : undefined}
+                alt=""
+                referrerPolicy="no-referrer"
+                className={cn('h-full w-full', fit === 'contain' ? 'object-contain p-1 mix-blend-multiply' : 'object-cover')}
+              />
+            </span>
+            <span className="min-w-0 flex-1 leading-snug">
+              {item.name} <span className="text-[var(--fg-muted)]">×{item.qty}</span>
+            </span>
+            <span className="shrink-0 tabular-nums">{formatCurrency(item.price * item.qty)}</span>
+          </li>
+        )
+      })}
     </ul>
   )
 }

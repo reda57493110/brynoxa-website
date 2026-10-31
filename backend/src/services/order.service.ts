@@ -601,7 +601,7 @@ export async function trackOrdersByPhone(phone: string) {
       rescheduledFor?: Date;
       pricing: { total: number };
       shippingAddress?: { city?: string };
-      items: { name: string; qty: number; price: number }[];
+      items: { name: string; qty: number; price: number; image?: string }[];
       timeline?: { status: string; at: Date }[];
     };
     return {
@@ -611,7 +611,7 @@ export async function trackOrdersByPhone(phone: string) {
       rescheduledFor: view.rescheduledFor,
       total: view.pricing.total,
       city: view.shippingAddress?.city || '',
-      items: view.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+      items: view.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price, image: i.image })),
       timeline: (view.timeline || []).map((s) => ({ status: s.status, at: s.at })),
     };
   });

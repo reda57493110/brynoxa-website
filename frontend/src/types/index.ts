@@ -340,7 +340,7 @@ export interface PhoneOrderMatch {
   rescheduledFor?: string
   total: number
   city: string
-  items: { name: string; qty: number; price: number }[]
+  items: { name: string; qty: number; price: number; image?: string }[]
   timeline: { status: OrderStatus; at: string }[]
 }
 

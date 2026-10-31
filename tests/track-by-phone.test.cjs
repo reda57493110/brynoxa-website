@@ -20,7 +20,7 @@ const ahmed = (n, phone, status = 'shipped') =>
     orderNumber: `BRX-2026102${n}-K7M2Q${n}`,
     orderStatus: status,
     shippingAddress: { fullName: 'Ahmed Benali', line1: '12 Rue Atlas, Maarif', city: 'Casablanca', postalCode: '00000', country: 'MA', phone },
-    items: [{ product: 'a'.repeat(24), name: 'HP EliteBook 840', sku: 'HP-840', qty: 1, price: 5000, unitCost: 4000 }],
+    items: [{ product: 'a'.repeat(24), name: 'HP EliteBook 840', sku: 'HP-840', qty: 1, price: 5000, unitCost: 4000, image: 'https://res.cloudinary.com/x/image/upload/hp.jpg' }],
     pricing: { subtotal: 5000, discount: 0, shipping: 0, tax: 0, total: 5000 },
     adminNote: 'Calls after 18:00',
     timeline: [
@@ -51,7 +51,7 @@ test('phone only: the orders delivered to this phone (written any way), short fo
   }
   assert.equal(found[0].city, 'Casablanca');
   assert.equal(found[0].total, 5000);
-  assert.deepEqual(found[0].items, [{ name: 'HP EliteBook 840', qty: 1, price: 5000 }]);
+  assert.deepEqual(found[0].items, [{ name: 'HP EliteBook 840', qty: 1, price: 5000, image: 'https://res.cloudinary.com/x/image/upload/hp.jpg' }], 'with the product photo');
   assert.deepEqual(found[0].timeline.map((s) => s.status), ['pending', 'shipped'], 'internal steps hidden');
 });
 
@@ -99,4 +99,10 @@ test('progress: detailed statuses sit on the 4 customer steps', async () => {
   assert.equal(orderStepIndex('no_answer'), 0);
   assert.equal(orderStepIndex('rescheduled'), 2);
   assert.equal(orderStepIndex('returned'), 3);
+});
+
+test('each product shows its photo (full and phone-only views)', () => {
+  const page = fs.readFileSync(path.join(ROOT, 'frontend/src/pages/store/TrackOrder.tsx'), 'utf8');
+  assert.match(page, /src=\{item\.image \? sizedImageUrl\(item\.image, 160\) : undefined\}/);
+  assert.equal((page.match(/<ItemsList items=/g) || []).length, 2);
 });
