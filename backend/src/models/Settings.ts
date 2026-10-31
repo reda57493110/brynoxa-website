@@ -137,7 +137,7 @@ const settingsSchema = new Schema<ISettings>(
       default: [],
     },
     taxRate: { type: Number, default: 0 },
-    supportEmail: { type: String, default: 'brynoxa.shop@gmail.com' },
+    supportEmail: { type: String, default: () => DEFAULT_SUPPORT_EMAIL },
     codEnabled: { type: Boolean, default: true },
     depositInstructions: { type: String, default: '', maxlength: 2000 },
     paymentDetailsChangedAt: { type: Date },
@@ -418,10 +418,20 @@ export async function getSettingsCached(): Promise<ISettings> {
   return doc;
 }
 
+/** The shop's real inbox (shown to customers, reply address of staff emails). */
+export const DEFAULT_SUPPORT_EMAIL = 'brynoxa.shop@gmail.com';
+/** An early placeholder saved in the database: the brynoxa.com domain belongs to someone else. */
+const RETIRED_SUPPORT_EMAILS = ['support@brynoxa.com'];
+
 export async function getSettings(): Promise<ISettings> {
   let settings = await Settings.findOne();
   if (!settings) {
     settings = await Settings.create({});
+  }
+  // One-time fix of the placeholder (replies must never go to a stranger's domain)
+  if (RETIRED_SUPPORT_EMAILS.includes(String(settings.supportEmail || '').trim().toLowerCase())) {
+    settings.supportEmail = DEFAULT_SUPPORT_EMAIL;
+    await settings.save();
   }
   return settings;
 }

@@ -14,6 +14,8 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SaveBar, SettingsCard } from './SettingsUi'
 import { useReportDirty } from './dirty'
 
+const EMAIL_RX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 function useSaveSettings(message: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -27,34 +29,54 @@ function useSaveSettings(message: string) {
   })
 }
 
-/** Store name. */
+/** Store name and support email. */
 export function GeneralSettings({ settings }: { settings?: StoreSettings }) {
   const saved = settings?.storeName || 'Brynoxa'
+  const savedEmail = settings?.supportEmail || ''
   const [storeName, setStoreName] = useState(saved)
+  const [supportEmail, setSupportEmail] = useState(savedEmail)
   useEffect(() => setStoreName(saved), [saved])
+  useEffect(() => setSupportEmail(savedEmail), [savedEmail])
   const save = useSaveSettings('Store settings saved')
 
-  const dirty = storeName.trim() !== saved
-  const error = !storeName.trim() ? 'Store name is required' : undefined
+  const dirty = storeName.trim() !== saved || supportEmail.trim() !== savedEmail
+  const error = !storeName.trim()
+    ? 'Store name is required'
+    : supportEmail.trim() && !EMAIL_RX.test(supportEmail.trim())
+      ? 'Support email is not a valid email address'
+      : undefined
   useReportDirty('general', dirty)
 
   return (
     <SettingsCard
       title="Store"
-      description="Your shop's name in emails and receipts."
+      description="Your shop's name in emails and receipts, and the inbox where customers' email replies arrive."
       footer={
         <SaveBar
           dirty={dirty}
           saving={save.isPending}
           invalid={Boolean(error)}
           error={dirty ? error : undefined}
-          onReset={() => setStoreName(saved)}
-          onSave={() => save.mutate({ storeName: storeName.trim() })}
+          onReset={() => {
+            setStoreName(saved)
+            setSupportEmail(savedEmail)
+          }}
+          onSave={() => save.mutate({ storeName: storeName.trim(), supportEmail: supportEmail.trim() })}
         />
       }
     >
-      <div className="max-w-md">
+      <div className="max-w-md space-y-4">
         <Input label="Store name" value={storeName} maxLength={60} onChange={(e) => setStoreName(e.target.value)} />
+        <Input
+          label="Support email"
+          type="email"
+          dir="ltr"
+          value={supportEmail}
+          maxLength={120}
+          placeholder="brynoxa.shop@gmail.com"
+          onChange={(e) => setSupportEmail(e.target.value)}
+        />
+        <p className="-mt-2 text-[11px] text-[var(--fg-muted)]">When a customer replies to an email you sent from Admin → Emails, the reply comes here.</p>
       </div>
     </SettingsCard>
   )
