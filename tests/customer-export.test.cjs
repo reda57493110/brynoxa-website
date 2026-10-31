@@ -52,7 +52,7 @@ test('the Excel file: a real table with bold header, filters, DH amounts, dates 
   for (const [name, text] of Object.entries(f)) assert.match(text.trim(), /<\/[A-Za-z:]+>$/, name);
 });
 
-test('export: Excel by default, a table for the printable list, CSV on request; a menu in the admin', () => {
+test('export: Excel by default, a table for the printable list, CSV on request; one Export PDF button in the admin', () => {
   const ctl = fs.readFileSync(path.join(ROOT, 'backend/src/controllers/customer.controller.ts'), 'utf8');
   assert.match(ctl, /if \(req\.query\.format === 'json'\)/);
   assert.match(ctl, /if \(req\.query\.format === 'csv'\)/);
@@ -60,7 +60,10 @@ test('export: Excel by default, a table for the printable list, CSV on request; 
   const svc = fs.readFileSync(path.join(ROOT, 'backend/src/services/customerAnalytics.service.ts'), 'utf8');
   assert.match(svc, /unverified: 'Email not confirmed'/, 'readable words, not codes');
   const page = fs.readFileSync(path.join(ROOT, 'frontend/src/pages/admin/Customers.tsx'), 'utf8');
-  for (const choice of ['Excel file (.xlsx)', 'PDF / print', 'CSV']) assert.ok(page.includes(`title: '${choice}'`), choice);
+  // Only the printable list in the admin (the owner asked for PDF only)
+  assert.match(page, /onClick={exportPdf}>/);
+  assert.match(page, /> Export PDF/);
+  assert.doesNotMatch(page, /Excel file|exportFile/);
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/app/router.tsx'), 'utf8'), /path="admin-print\/customers"/);
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/pages/admin/CustomersPrint.tsx'), 'utf8'), /size: A4 landscape/);
 });

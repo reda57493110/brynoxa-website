@@ -264,10 +264,7 @@ export const adminApi = {
       api.get<ApiResponse<CustomerRow[]>>('/admin/customers', { params: cleanParams(params) }),
     summary: (params?: { from?: string; to?: string }) =>
       api.get<ApiResponse<CustomerSummary>>('/admin/customers/summary', { params: cleanParams(params) }),
-    /** The filtered list as a file (downloaded with the staff session): Excel by default, or CSV. */
-    exportFile: (params?: CustomerListParams, format: 'xlsx' | 'csv' = 'xlsx') =>
-      api.get<Blob>('/admin/customers/export', { params: { ...cleanParams(params), format }, responseType: 'blob' }),
-    /** The same list as a table, for the printable page (Export → PDF / print). */
+    /** The filtered list as a table, for the printable page (Customers → Export PDF). */
     exportTable: (params?: CustomerListParams) =>
       api.get<ApiResponse<CustomerExportTable>>('/admin/customers/export', { params: { ...cleanParams(params), format: 'json' } }),
     profile: (id: string, params?: { from?: string; to?: string }) =>
