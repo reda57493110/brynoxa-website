@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { m, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { useImageLoaded } from '@/hooks/useImageLoaded'
@@ -26,14 +25,8 @@ export const heroChip =
 export const heroInput =
   'h-9 min-w-0 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-input)] px-3.5 text-[13px] sm:text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-muted)] focus:border-[var(--brand)] sm:h-11 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:placeholder:text-white/55'
 
-const fadeUp = (reduce: boolean | null, delay = 0) =>
-  reduce
-    ? { initial: false as const, animate: { opacity: 1 }, transition: { duration: 0 } }
-    : {
-        initial: { opacity: 0, y: 14 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const },
-      }
+// Rise in with CSS: visible at once, never waiting for the animation code (loaded after paint)
+const fadeUp = (delay = 0) => ({ 'data-rise': 'card', style: { animationDelay: `${Math.round(delay * 1000)}ms` } })
 
 function HeroProductCard({ product }: { product: Product }) {
   const t = useT()
@@ -161,7 +154,6 @@ export function StoreHero({
   frameOverlay?: ReactNode
   children?: ReactNode
 }) {
-  const reduceMotion = useReducedMotion()
   const { product, pending } = useHeroProduct(page)
   const showcase = Boolean(product) || pending
 
@@ -206,56 +198,56 @@ export function StoreHero({
             )}
           >
             <div className="min-w-0 px-4 sm:px-6 md:px-0">
-              <m.p
-                {...fadeUp(reduceMotion, 0)}
+              <p
+                {...fadeUp(0)}
                 className="kicker text-xs text-[var(--brand-text)] max-md:hidden! dark:text-[var(--brand)]"
               >
                 {kicker}
-              </m.p>
+              </p>
 
-              <m.h1
+              <h1
                 id={titleId}
-                {...fadeUp(reduceMotion, 0.06)}
+                {...fadeUp(0.06)}
                 className="max-w-2xl font-display text-[1.125rem] font-semibold leading-tight tracking-tight text-balance text-[var(--fg)] sm:text-2xl md:mt-2 md:text-[2.625rem] dark:text-white"
               >
                 {titleLead}
                 {titleAccent ? (
                   <span className="block text-[var(--brand-text)] dark:text-[var(--brand)]">{titleAccent}</span>
                 ) : null}
-              </m.h1>
+              </h1>
 
               {description ? (
-                <m.div
-                  {...fadeUp(reduceMotion, 0.12)}
+                <div
+                  {...fadeUp(0.12)}
                   className="mt-3 max-w-lg text-[15px] leading-relaxed text-[var(--fg-muted)] max-md:hidden dark:text-white/75"
                 >
                   {description}
-                </m.div>
+                </div>
               ) : null}
 
               {children ? (
-                <m.div {...fadeUp(reduceMotion, 0.18)} className="mt-3 md:mt-5">
+                <div {...fadeUp(0.18)} className="mt-3 md:mt-5">
                   {children}
-                </m.div>
+                </div>
               ) : null}
             </div>
 
             {product ? (
-              <m.div {...fadeUp(reduceMotion, 0.1)} className="relative order-first md:order-none">
+              <div {...fadeUp(0.1)} className="relative order-first md:order-none">
                 <div
                   className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] md:dark:block"
                   aria-hidden="true"
                 />
                 <HeroProductCard product={product} />
-              </m.div>
+              </div>
             ) : pending ? (
               <div className="relative order-first aspect-[4/3.5] overflow-hidden bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5">
                 <div className="absolute inset-0 animate-pulse bg-[var(--bg-elevated)]/40" aria-hidden="true" />
                 <ImageSpinner />
               </div>
             ) : (
-              <m.div
-                {...fadeUp(reduceMotion, 0.1)}
+              <div
+                {...fadeUp(0.1)}
                 className="relative order-first md:order-none md:dark:hidden!"
                 aria-hidden="true"
               >
@@ -271,7 +263,7 @@ export function StoreHero({
                   <div className="max-md:hidden">{frameOverlay}</div>
                 </div>
                 <div className="absolute inset-x-0 -bottom-1 h-1/3 bg-gradient-to-t from-[var(--bg)] from-15% to-transparent md:hidden" />
-              </m.div>
+              </div>
             )}
 
             {frameOverlay && !showcase ? (

@@ -42,9 +42,12 @@ function categoryName(product: Product, locale: Locale) {
 export function ProductCard({
   product,
   variant = 'grid',
+  eager = false,
 }: {
   product: Product
   variant?: 'grid' | 'spotlight'
+  /** First cards of a list: the photo downloads at once instead of waiting to be scrolled near */
+  eager?: boolean
 }) {
   const addItem = useCartStore((s) => s.addItem)
   const compareHas = useCompareStore((s) => s.has(product._id))
@@ -128,7 +131,7 @@ export function ProductCard({
             alt={product.name}
             referrerPolicy="no-referrer"
             decoding="async"
-            loading={spotlight ? 'eager' : 'lazy'}
+            loading={spotlight || eager ? 'eager' : 'lazy'}
             width={600}
             height={600}
             sizes={

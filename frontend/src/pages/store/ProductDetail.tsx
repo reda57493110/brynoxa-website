@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { m, useReducedMotion } from 'framer-motion'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
@@ -53,7 +52,6 @@ export function ProductDetail() {
 function ProductDetailPage() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
-  const reduceMotion = useReducedMotion()
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
@@ -111,14 +109,8 @@ function ProductDetailPage() {
     jsonLd: product.data ? productData(product.data, productDescription) : null,
   })
 
-  const fade = (delay = 0) =>
-    reduceMotion
-      ? { initial: false as const, animate: { opacity: 1 } }
-      : {
-          initial: { opacity: 0, y: 14 },
-          animate: { opacity: 1, y: 0 },
-          transition: { duration: 0.4, delay, ease: [0.22, 1, 0.36, 1] as const },
-        }
+  // Rise in with CSS: visible at once, never waiting for the animation code (loaded after paint)
+  const fade = (delay = 0) => ({ 'data-rise': 'card', style: { animationDelay: `${Math.round(delay * 1000)}ms` } })
 
   if (product.isPending) {
     return (
@@ -223,7 +215,7 @@ function ProductDetailPage() {
   return (
     <>
       <Container className="pb-24 pt-3 sm:pb-10 sm:pt-6">
-        <m.nav
+        <nav
           {...fade(0)}
           className="mb-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--fg-muted)] sm:mb-4 sm:text-sm"
         >
@@ -240,14 +232,14 @@ function ProductDetailPage() {
           ) : null}
           <span aria-hidden="true">/</span>
           <span className="line-clamp-1 text-[var(--fg)]">{p.name}</span>
-        </m.nav>
+        </nav>
 
         <div className="grid items-start gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-10">
-          <m.div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
+          <div {...fade(0.05)} className="md:sticky md:top-[calc(var(--nav-height)+1rem)]">
             <ImageGallery images={p.images || []} name={p.name} />
-          </m.div>
+          </div>
 
-          <m.div {...fade(0.1)} className="flex min-w-0 flex-col">
+          <div {...fade(0.1)} className="flex min-w-0 flex-col">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:text-sm">
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
               {brand && category ? <span aria-hidden="true">·</span> : null}
@@ -357,11 +349,11 @@ function ProductDetailPage() {
                 </li>
               ))}
             </ul>
-          </m.div>
+          </div>
         </div>
 
         {p.description?.trim() ? (
-        <m.div
+        <div
           {...fade(0.12)}
           className="mt-5 sm:mt-8"
         >
@@ -383,7 +375,7 @@ function ProductDetailPage() {
               {p.description}
             </p>
           </section>
-        </m.div>
+        </div>
         ) : null}
 
         <CompleteSetup productId={p._id} />

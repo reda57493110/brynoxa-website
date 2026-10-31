@@ -117,3 +117,25 @@ test('Cloudinary photos are never enlarged past the original (smaller downloads 
     'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,c_limit,w_768/v1/brynoxa/p.jpg'
   );
 });
+
+// The animation code loads after the first paint (LazyMotion): anything that starts hidden with it
+// (initial opacity 0) stays invisible until that download ends — product cards waited ~2 s on phones.
+test('product cards and home category tiles show at once (CSS rise, not the late animation code)', () => {
+  const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  const grid = src('components/product/ProductGrid.tsx');
+  assert.doesNotMatch(grid, /framer-motion|<m\.|initial=/);
+  assert.match(grid, /data-rise="card"/);
+  assert.match(grid, /<ProductCard product=\{p\} eager=\{i < 4\} \/>/, 'first row photos download at once');
+  assert.match(src('components/product/ProductCard.tsx'), /loading=\{spotlight \|\| eager \? 'eager' : 'lazy'\}/);
+  const home = src('pages/store/Home.tsx');
+  const tiles = home.slice(home.indexOf('categoryList.map('), home.indexOf('Closing CTA'));
+  assert.doesNotMatch(tiles, /<m\.div|initial=/);
+  assert.match(tiles, /data-rise="card"/);
+  assert.match(src('index.css'), /\[data-rise\] \{\s+animation: hero-rise/);
+  // Product page (photos, price, Add to cart) and the shop / category headers: same rule
+  for (const f of ['pages/store/ProductDetail.tsx', 'components/layout/StoreHero.tsx']) {
+    const code = src(f);
+    assert.doesNotMatch(code, /framer-motion|<m\.|opacity: 0/, f);
+    assert.match(code, /'data-rise': 'card'/, f);
+  }
+});

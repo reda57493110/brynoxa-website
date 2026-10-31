@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom'
-import { m, useReducedMotion } from 'framer-motion'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -65,7 +64,6 @@ export function ProductGrid({
 }) {
   const t = useT()
   const navigate = useNavigate()
-  const reduceMotion = useReducedMotion()
   const gridClass = cn(
     'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4',
     className
@@ -89,20 +87,11 @@ export function ProductGrid({
 
   return (
     <div className={gridClass}>
+      {/* Cards rise in with CSS: visible at once, never waiting for the animation code */}
       {products.map((p, i) => (
-        <m.div
-          key={p._id}
-          className="h-full"
-          initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.35,
-            delay: Math.min(i, 11) * 0.04,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-        >
-          <ProductCard product={p} />
-        </m.div>
+        <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 11) * 40}ms` }}>
+          <ProductCard product={p} eager={i < 4} />
+        </div>
       ))}
     </div>
   )

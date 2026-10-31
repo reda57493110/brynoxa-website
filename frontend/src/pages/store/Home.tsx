@@ -348,17 +348,12 @@ export function Home() {
                       c.description
                     )
                     return (
-                      <m.div
+                      // Rise in with CSS: visible at once, never waiting for the animation code
+                      <div
                         key={c._id}
                         className={categoryTileClass(i, categoryList.length)}
-                        initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-                        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-40px' }}
-                        transition={{
-                          delay: Math.min(i, 6) * 0.04,
-                          duration: 0.4,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
+                        data-rise="card"
+                        style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
                       >
                         <Link
                           to={`/category/${c.slug}`}
@@ -421,7 +416,7 @@ export function Home() {
                             </span>
                           </div>
                         </Link>
-                      </m.div>
+                      </div>
                     )
                   })}
             </div>
