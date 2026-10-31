@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { AdminSearch } from '@/components/admin/AdminSearch'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -46,11 +47,15 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
         <SiteIcon name="menu" size={18} />
       </Button>
 
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 items-center gap-2 lg:hidden">
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 md:hidden">
           <p className="truncate text-sm font-medium text-[var(--fg)]">{roleLabel}</p>
         </div>
-        <p className="hidden text-sm text-[var(--fg-muted)] md:block">
+        {/* Search everything (orders, customers, products, settings…): a field on computers, an icon on phones */}
+        <div className="flex min-w-0 flex-1 justify-end md:justify-start">
+          <AdminSearch />
+        </div>
+        <p className="hidden shrink-0 text-sm text-[var(--fg-muted)] xl:block">
           {canOrders
             ? stats.data
               ? `Live · ${stats.data.todayOrders} order${stats.data.todayOrders === 1 ? '' : 's'} today`

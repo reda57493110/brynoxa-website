@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { phoneSearchRegex } from '../utils/phoneSearch';
 import { customerSourceFilter } from '../utils/orderOrigin';
 import { OPEN_STATUSES, closedWithoutSale, wasDelivered } from '../utils/orderStatus';
 import { Order, type OrderStatus } from '../models/Order';
@@ -310,7 +311,7 @@ function customerFilter(query: CustomerListQuery) {
   if (q) {
     const rx = new RegExp(escapeRegex(q.replace(/^C-/i, '')), 'i');
     // Also by where they came from ("tiktok", "instagram"…)
-    const or: Record<string, unknown>[] = [{ name: rx }, { email: rx }, { phone: rx }, { 'business.companyName': rx }, { source: rx }];
+    const or: Record<string, unknown>[] = [{ name: rx }, { email: rx }, { phone: phoneSearchRegex(q) ?? rx }, { 'business.companyName': rx }, { source: rx }];
     const idPart = q.replace(/^C-/i, '').toLowerCase();
     if (/^[a-f0-9]{4,24}$/.test(idPart)) {
       or.push({ $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: `${idPart}$` } } });

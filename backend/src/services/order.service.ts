@@ -1,4 +1,5 @@
 import mongoose, { Types } from 'mongoose';
+import { phoneSearchRegex } from '../utils/phoneSearch';
 import { Product } from '../models/Product';
 import { IOrderDeposit, Order, OrderStatus } from '../models/Order';
 import { Coupon } from '../models/Coupon';
@@ -1206,7 +1207,7 @@ export async function listAllOrders(
       $or: [
         { orderNumber: rx },
         { 'shippingAddress.fullName': rx },
-        { 'shippingAddress.phone': rx },
+        { 'shippingAddress.phone': phoneSearchRegex(q) ?? rx },
         { 'deposit.payment.payerName': rx },
         { 'deposit.payment.reference': rx },
       ],
