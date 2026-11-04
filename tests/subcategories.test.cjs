@@ -77,7 +77,7 @@ test('suggested sub-categories: only the missing ones, under the main ones that 
   assert.ok(created.slice(0, 2).every((c) => c.parent === null), 'main categories');
   assert.ok(created.slice(2).every((c) => String(c.parent) === id(1)));
   // Every main category of the shop has suggestions, each address used once
-  for (const main of ['laptops', 'desktop-pcs', 'gaming-pcs', 'monitors', 'components', 'mice', 'keyboards', 'headphones', 'accessories', 'cameras']) {
+  for (const main of ['laptops', 'desktop-pcs', 'gaming-pcs', 'monitors', 'components', 'accessories', 'cameras']) {
     assert.ok(CATEGORY_SUGGESTIONS[main].length >= 2, main);
   }
   const all = Object.values(CATEGORY_SUGGESTIONS).flat().map((s) => s.slug);
@@ -126,8 +126,25 @@ test('your own "camera" and "desktop-pc" count as Cameras and Desktop PCs: no co
 });
 
 test('Desktop PCs: with a screen, or the computer alone', () => {
-  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only']);
+  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only', 'keyboards']);
   const fr = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8');
   assert.ok(fr.includes("'desktop-with-screen': { name: 'PC complet avec écran'"));
   assert.ok(fr.includes("'desktop-only': { name: 'Unité centrale seule'"));
+});
+
+test('Mice and Headphones move inside Desktop PC (Keyboards is created there); not when they have sub-categories', async () => {
+  const created = [];
+  const moved = [];
+  const top = [{ _id: id(8), slug: 'desktop-pc' }, { _id: id(9), slug: 'mice' }, { _id: id(10), slug: 'headphones' }, { _id: id(11), slug: 'laptops' }];
+  Category.find = (q) => lean(q && 'parent' in q ? top.filter((t) => !moved.some((m) => m.id === t._id)) : [...top, { slug: 'wireless-mice' }].map((c) => ({ slug: c.slug })));
+  Category.exists = async (q) => String(q.parent) === id(10); // Headphones already has a sub-category
+  Category.updateOne = async (q, u) => moved.push({ id: String(q._id), parent: String(u.$set.parent) });
+  Category.create = async (d) => created.push(d);
+  const r = await addSuggestedCategories();
+  assert.deepEqual(moved, [{ id: id(9), parent: id(8) }], 'Mice moved; Headphones kept (has a sub-category)');
+  assert.equal(r.moved, 1);
+  assert.ok(created.some((c) => c.slug === 'keyboards' && String(c.parent) === id(8)), 'Keyboards created inside Desktop PC');
+  const { MOVE_INSIDE } = require(dist('utils/categorySuggestions.js'));
+  assert.deepEqual(MOVE_INSIDE['desktop-pcs'], ['mice', 'headphones', 'keyboards']);
+  assert.equal(CATEGORY_SUGGESTIONS.mice, undefined, 'no third level under Mice');
 });

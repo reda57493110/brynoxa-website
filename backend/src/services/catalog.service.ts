@@ -13,7 +13,7 @@ import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteReplacedImage, deleteUnusedImages } from './upload.service';
 import { copyOutsidePhotos } from './imageImport.service';
-import { CATEGORY_SUGGESTIONS, MAIN_CATEGORY_SUGGESTIONS, canonicalCategorySlug } from '../utils/categorySuggestions';
+import { CATEGORY_SUGGESTIONS, MAIN_CATEGORY_SUGGESTIONS, MOVE_INSIDE, canonicalCategorySlug } from '../utils/categorySuggestions';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -144,9 +144,9 @@ async function checkParent(id: string | null, parent: string | null | undefined)
 }
 
 /**
- * Admin → "Add suggested categories": creates the missing main ones (Desktop PCs, Cameras) and
- * the suggested sub-categories (utils/categorySuggestions) missing under the main categories.
- * Nothing is changed or removed.
+ * Admin → "Add suggested categories": creates the missing main ones (Desktop PCs, Cameras), puts
+ * Mice / Headphones / Keyboards inside Desktop PCs (MOVE_INSIDE, when they have no sub-categories)
+ * and creates the suggested sub-categories missing under the main categories. Nothing is removed.
  */
 export async function addSuggestedCategories() {
   // "camera" made in admin counts as Cameras (no second one)
@@ -159,6 +159,18 @@ export async function addSuggestedCategories() {
     await Category.create({ name: m.name, slug: m.slug, description: m.description, parent: null, isActive: true, sortOrder: ++order });
     taken.add(m.slug);
     created++;
+  }
+  // Mice, Headphones, Keyboards → inside Desktop PCs
+  let moved = 0;
+  const topLevel = (await Category.find({ parent: null }).select('_id slug').lean()).map((m) => ({ ...m, canonical: canonicalCategorySlug(m.slug) }));
+  for (const [target, slugs] of Object.entries(MOVE_INSIDE)) {
+    const into = topLevel.find((m) => m.canonical === target);
+    if (!into) continue;
+    for (const m of topLevel.filter((x) => slugs.includes(x.canonical))) {
+      if (await Category.exists({ parent: m._id })) continue;
+      await Category.updateOne({ _id: m._id }, { $set: { parent: into._id } });
+      moved++;
+    }
   }
   const mains = (await Category.find({ parent: null }).select('_id slug').lean())
     .map((m) => ({ ...m, slug: canonicalCategorySlug(m.slug) }))
@@ -173,7 +185,7 @@ export async function addSuggestedCategories() {
     }
   }
   invalidateActiveCategoryCache();
-  return { created, mains: mains.map((m) => m.slug) };
+  return { created, moved, mains: mains.map((m) => m.slug) };
 }
 
 /** Call after category create/update/delete so storefront filters stay correct. */

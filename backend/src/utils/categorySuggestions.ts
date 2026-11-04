@@ -36,6 +36,15 @@ export const MAIN_CATEGORY_SUGGESTIONS: CategorySuggestion[] = [
   { slug: 'cameras', name: 'Cameras', description: 'Security cameras, webcams and cameras for photos and video.' },
 ];
 
+/**
+ * Main categories that go inside another one: Mice, Headphones and Keyboards sit inside Desktop
+ * PCs (next to "Desktop + screen" and "Desktop only"). Moved by the same button, only while they
+ * have no sub-categories of their own (two levels).
+ */
+export const MOVE_INSIDE: Record<string, string[]> = {
+  'desktop-pcs': ['mice', 'headphones', 'keyboards'],
+};
+
 export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
   laptops: [
     { slug: 'business-laptops', name: 'Business laptops', description: 'HP EliteBook, ProBook, Dell Latitude: solid laptops for work and study.' },
@@ -45,6 +54,7 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
   'desktop-pcs': [
     { slug: 'desktop-with-screen', name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
     { slug: 'desktop-only', name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
+    { slug: 'keyboards', name: 'Keyboards', description: 'Office and gaming keyboards.' },
   ],
   'gaming-pcs': [
     { slug: 'gaming-pcs-1080p', name: '1080p gaming PCs', description: 'Smooth Full HD gaming at a fair price.' },
@@ -65,21 +75,6 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
     { slug: 'power-supplies', name: 'Power supplies', description: 'PSUs for every build.' },
     { slug: 'pc-cases', name: 'PC cases', description: 'Cases for every size of build.' },
     { slug: 'cooling', name: 'Cooling', description: 'CPU coolers, fans and water cooling.' },
-  ],
-  mice: [
-    { slug: 'wireless-mice', name: 'Wireless mice', description: 'No cable, for the office and travel.' },
-    { slug: 'gaming-mice', name: 'Gaming mice', description: 'Precise sensors and extra buttons.' },
-    { slug: 'mouse-pads', name: 'Mouse pads', description: 'Desk mats and mouse pads.' },
-  ],
-  keyboards: [
-    { slug: 'office-keyboards', name: 'Office keyboards', description: 'Quiet keyboards for work.' },
-    { slug: 'gaming-keyboards', name: 'Gaming keyboards', description: 'Mechanical and RGB keyboards.' },
-    { slug: 'keyboard-mouse-sets', name: 'Keyboard & mouse sets', description: 'Matching keyboard and mouse.' },
-  ],
-  headphones: [
-    { slug: 'gaming-headsets', name: 'Gaming headsets', description: 'Headsets with a microphone for games and calls.' },
-    { slug: 'wireless-headphones', name: 'Wireless headphones', description: 'Bluetooth headphones for music.' },
-    { slug: 'earbuds', name: 'Earbuds', description: 'Small wireless earbuds.' },
   ],
   cameras: [
     { slug: 'security-cameras', name: 'Security cameras', description: 'Wi-Fi and wired cameras to watch your home or shop.' },
