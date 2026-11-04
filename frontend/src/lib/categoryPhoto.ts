@@ -11,7 +11,7 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
   // New file name when the photo changes: phones keep these photos for a week
-  'desktop-pcs': '/categories/desktop-pcs-v4.webp',
+  'desktop-pcs': '/categories/desktop-pcs-v5.webp',
   cameras: '/categories/cameras.webp',
 }
 
