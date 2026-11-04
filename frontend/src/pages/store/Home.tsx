@@ -18,7 +18,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { mainCategories } from '@/lib/categoryTree'
-import { categoryPhoto, categoryPhotoCredit, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
+import { categoryPhoto, categoryPhotoCredit, categoryPhotoPosition, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
@@ -379,6 +379,7 @@ export function Home() {
                                 height={500}
                                 sizes={featuredTile ? '(min-width: 1024px) 50vw, 100vw' : '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw'}
                                 frameClassName="absolute inset-0"
+                                style={{ objectPosition: categoryPhotoPosition(c) }}
                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                                 loading="lazy"
                               />
