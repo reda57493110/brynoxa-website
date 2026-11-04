@@ -10,7 +10,8 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   headphones: '/categories/headphones.jpg',
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
-  'desktop-pcs': '/categories/desktop-pcs.webp',
+  // New file name when the photo changes: phones keep these photos for a week
+  'desktop-pcs': '/categories/desktop-pcs-v2.webp',
   cameras: '/categories/cameras.webp',
 }
 
