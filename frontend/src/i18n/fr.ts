@@ -1127,6 +1127,12 @@ export const fr: Messages = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Cameras and its sub-categories
+      cameras: { name: 'Caméras', description: 'Caméras de surveillance, webcams et appareils photo et vidéo.' },
+      'security-cameras': { name: 'Caméras de surveillance', description: 'Caméras Wi-Fi et filaires pour surveiller votre maison ou votre commerce.' },
+      'action-cameras': { name: 'Caméras d’action', description: 'Petites caméras robustes pour le sport et les voyages.' },
+      'digital-cameras': { name: 'Appareils photo et vidéo', description: 'Compacts, hybrides et reflex.' },
+      'camera-accessories': { name: 'Accessoires photo', description: 'Cartes mémoire, trépieds, batteries et sacs.' },
       // Sub-categories (backend utils/categorySuggestions.ts)
       'business-laptops': { name: 'Portables professionnels', description: 'HP EliteBook, ProBook, Dell Latitude : des portables solides pour le travail et les études.' },
       'gaming-laptops': { name: 'Portables gamer', description: 'Des portables avec carte graphique pour le jeu et la création.' },

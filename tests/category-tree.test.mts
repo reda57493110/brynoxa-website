@@ -42,5 +42,5 @@ test('pages: home shows main categories; shop, filters and category page show th
   assert.match(src('components/layout/SearchBox.tsx'), / › /);
   const admin = src('components/admin/settings/CategoriesSettings.tsx');
   assert.match(admin, /parent: parent \|\| null/);
-  assert.match(admin, /Add suggested sub-categories/);
+  assert.match(admin, /Add suggested categories/);
 });

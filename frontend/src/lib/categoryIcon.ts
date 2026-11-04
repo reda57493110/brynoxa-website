@@ -11,6 +11,7 @@ export function categoryIcon(slug: string, name: string): SiteIconName {
   if (key.includes('keyboard')) return 'keyboard'
   if (key.includes('mice') || key.includes('mouse')) return 'mouse'
   if (key.includes('headphone') || key.includes('audio')) return 'headphones'
+  if (key.includes('camera') || key.includes('webcam')) return 'camera'
   if (key.includes('component')) return 'cpu'
   return 'package'
 }

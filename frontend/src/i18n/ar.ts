@@ -1125,6 +1125,12 @@ export const ar: Messages = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Cameras and its sub-categories
+      cameras: { name: 'كاميرات', description: 'كاميرات مراقبة وكاميرات ويب وكاميرات للصور والفيديو.' },
+      'security-cameras': { name: 'كاميرات المراقبة', description: 'كاميرات واي فاي وسلكية لمراقبة المنزل أو المحل.' },
+      'action-cameras': { name: 'كاميرات الحركة', description: 'كاميرات صغيرة ومتينة للرياضة والسفر.' },
+      'digital-cameras': { name: 'كاميرات التصوير والفيديو', description: 'كاميرات مدمجة وبدون مرآة واحترافية.' },
+      'camera-accessories': { name: 'إكسسوارات الكاميرا', description: 'بطاقات الذاكرة والحوامل والبطاريات والحقائب.' },
       // Sub-categories (backend utils/categorySuggestions.ts)
       'business-laptops': { name: 'حواسيب محمولة للأعمال', description: 'HP EliteBook وProBook وDell Latitude: حواسيب متينة للعمل والدراسة.' },
       'gaming-laptops': { name: 'حواسيب محمولة للألعاب', description: 'حواسيب ببطاقة رسومية للألعاب والأعمال الإبداعية.' },

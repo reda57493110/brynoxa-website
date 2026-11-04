@@ -1,10 +1,16 @@
 /**
- * Suggested sub-categories for the shop's main categories (by address). Admin → Settings →
+ * Suggested categories: Desktop PCs and Cameras (main ones), and sub-categories for the shop's main categories (by address). Admin → Settings →
  * Catalog → "Add suggested sub-categories" creates the missing ones under the categories that
  * exist; the owner can rename, hide or delete any of them after. French / Arabic names are in
  * the shop's translations (frontend i18n, catalog.categories), by the same address.
  */
 export type CategorySuggestion = { slug: string; name: string; description: string };
+
+/** Main categories created by the same button when missing (the others already exist in the shop). */
+export const MAIN_CATEGORY_SUGGESTIONS: CategorySuggestion[] = [
+  { slug: 'desktop-pcs', name: 'Desktop PCs', description: 'Office desktop towers like the HP EliteDesk: reliable for work and study.' },
+  { slug: 'cameras', name: 'Cameras', description: 'Security cameras, webcams and cameras for photos and video.' },
+];
 
 export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
   laptops: [
@@ -53,11 +59,17 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
     { slug: 'wireless-headphones', name: 'Wireless headphones', description: 'Bluetooth headphones for music.' },
     { slug: 'earbuds', name: 'Earbuds', description: 'Small wireless earbuds.' },
   ],
+  cameras: [
+    { slug: 'security-cameras', name: 'Security cameras', description: 'Wi-Fi and wired cameras to watch your home or shop.' },
+    { slug: 'webcams', name: 'Webcams', description: 'Webcams for calls and streaming.' },
+    { slug: 'action-cameras', name: 'Action cameras', description: 'Small tough cameras for sport and travel.' },
+    { slug: 'digital-cameras', name: 'Photo & video cameras', description: 'Compact, mirrorless and DSLR cameras.' },
+    { slug: 'camera-accessories', name: 'Camera accessories', description: 'Memory cards, tripods, batteries and bags.' },
+  ],
   accessories: [
     { slug: 'hubs-docks', name: 'Hubs & docking stations', description: 'USB-C hubs and docks for more ports.' },
     { slug: 'laptop-stands', name: 'Laptop stands', description: 'Raise your screen for a better posture.' },
     { slug: 'cables-chargers', name: 'Cables & chargers', description: 'Chargers, adapters and cables.' },
     { slug: 'bags-sleeves', name: 'Bags & sleeves', description: 'Carry your laptop safely.' },
-    { slug: 'webcams', name: 'Webcams', description: 'Webcams for calls and streaming.' },
   ],
 };

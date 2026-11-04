@@ -1123,6 +1123,12 @@ export const en = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Cameras and its sub-categories
+      cameras: { name: 'Cameras', description: 'Security cameras, webcams and cameras for photos and video.' },
+      'security-cameras': { name: 'Security cameras', description: 'Wi-Fi and wired cameras to watch your home or shop.' },
+      'action-cameras': { name: 'Action cameras', description: 'Small tough cameras for sport and travel.' },
+      'digital-cameras': { name: 'Photo & video cameras', description: 'Compact, mirrorless and DSLR cameras.' },
+      'camera-accessories': { name: 'Camera accessories', description: 'Memory cards, tripods, batteries and bags.' },
       // Sub-categories (backend utils/categorySuggestions.ts)
       'business-laptops': { name: 'Business laptops', description: 'HP EliteBook, ProBook, Dell Latitude: solid laptops for work and study.' },
       'gaming-laptops': { name: 'Gaming laptops', description: 'Laptops with a graphics card for games and creative work.' },

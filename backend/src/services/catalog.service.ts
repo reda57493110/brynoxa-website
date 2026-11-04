@@ -13,7 +13,7 @@ import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteReplacedImage, deleteUnusedImages } from './upload.service';
 import { copyOutsidePhotos } from './imageImport.service';
-import { CATEGORY_SUGGESTIONS } from '../utils/categorySuggestions';
+import { CATEGORY_SUGGESTIONS, MAIN_CATEGORY_SUGGESTIONS } from '../utils/categorySuggestions';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -144,13 +144,23 @@ async function checkParent(id: string | null, parent: string | null | undefined)
 }
 
 /**
- * Admin → "Add suggested sub-categories": creates the suggested ones (utils/categorySuggestions)
- * missing under the main categories that exist. Nothing is changed or removed.
+ * Admin → "Add suggested categories": creates the missing main ones (Desktop PCs, Cameras) and
+ * the suggested sub-categories (utils/categorySuggestions) missing under the main categories.
+ * Nothing is changed or removed.
  */
 export async function addSuggestedCategories() {
-  const mains = await Category.find({ slug: { $in: Object.keys(CATEGORY_SUGGESTIONS) }, parent: null }).select('_id slug').lean();
-  const taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
+  let taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
   let created = 0;
+  const lastOrder = await Category.find({ parent: null }).select('sortOrder').lean();
+  let order = Math.max(0, ...lastOrder.map((c) => Number(c.sortOrder) || 0));
+  for (const m of MAIN_CATEGORY_SUGGESTIONS) {
+    if (taken.has(m.slug)) continue;
+    await Category.create({ name: m.name, slug: m.slug, description: m.description, parent: null, isActive: true, sortOrder: ++order });
+    taken.add(m.slug);
+    created++;
+  }
+  const mains = await Category.find({ slug: { $in: Object.keys(CATEGORY_SUGGESTIONS) }, parent: null }).select('_id slug').lean();
+  taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
   for (const main of mains) {
     for (const [i, s] of (CATEGORY_SUGGESTIONS[main.slug] || []).entries()) {
       if (taken.has(s.slug)) continue;

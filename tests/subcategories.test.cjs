@@ -2,7 +2,8 @@
 // - a main category also lists the products of its sub-categories;
 // - hiding a main category hides its sub-categories in the shop;
 // - a category goes inside a main one only (no third level, not inside itself);
-// - "Add suggested sub-categories" creates only the missing ones, under the main ones that exist;
+// - "Add suggested categories" creates only the missing ones: Desktop PCs and Cameras (main), and
+//   the sub-categories under the main ones that exist;
 // - the live site (api/v1/admin.js) handles the button.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -69,11 +70,12 @@ test('suggested sub-categories: only the missing ones, under the main ones that 
   Category.create = async (d) => created.push(d);
   const r = await catalog.addSuggestedCategories();
   const expected = CATEGORY_SUGGESTIONS.components.filter((s) => !['ram', 'storage'].includes(s.slug));
-  assert.equal(r.created, expected.length);
-  assert.deepEqual(created.map((c) => c.slug), expected.map((s) => s.slug));
-  assert.ok(created.every((c) => String(c.parent) === id(1)));
+  assert.equal(r.created, 2 + expected.length);
+  assert.deepEqual(created.map((c) => c.slug), ['desktop-pcs', 'cameras', ...expected.map((s) => s.slug)]);
+  assert.ok(created.slice(0, 2).every((c) => c.parent === null), 'main categories');
+  assert.ok(created.slice(2).every((c) => String(c.parent) === id(1)));
   // Every main category of the shop has suggestions, each address used once
-  for (const main of ['laptops', 'desktop-pcs', 'gaming-pcs', 'monitors', 'components', 'mice', 'keyboards', 'headphones', 'accessories']) {
+  for (const main of ['laptops', 'desktop-pcs', 'gaming-pcs', 'monitors', 'components', 'mice', 'keyboards', 'headphones', 'accessories', 'cameras']) {
     assert.ok(CATEGORY_SUGGESTIONS[main].length >= 3, main);
   }
   const all = Object.values(CATEGORY_SUGGESTIONS).flat().map((s) => s.slug);
@@ -99,4 +101,13 @@ test('live site: the button reaches the code (api/v1/admin.js)', async () => {
   assert.equal(res.status, 200);
   assert.equal(res.body.data.created, 7);
   assert.match(fs.readFileSync(dist('routes/catalog.routes.js'), 'utf8'), /router\.post\('\/admin\/categories\/suggested'/);
+});
+
+test('Cameras: a main category with security cameras, webcams, action and photo cameras', () => {
+  assert.deepEqual(CATEGORY_SUGGESTIONS.cameras.map((c) => c.slug), ['security-cameras', 'webcams', 'action-cameras', 'digital-cameras', 'camera-accessories']);
+  const { MAIN_CATEGORY_SUGGESTIONS } = require(dist('utils/categorySuggestions.js'));
+  assert.deepEqual(MAIN_CATEGORY_SUGGESTIONS.map((c) => c.slug), ['desktop-pcs', 'cameras']);
+  assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8'), /cameras: [{] name: 'Caméras'/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8'), /'security-cameras': [{] name: 'Caméras de surveillance'/);
+  assert.ok(fs.readFileSync(path.join(ROOT, 'frontend/src/lib/categoryIcon.ts'), 'utf8').includes("key.includes('camera')"));
 });
