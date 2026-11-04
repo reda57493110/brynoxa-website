@@ -11,7 +11,7 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
   // New file name when the photo changes: phones keep these photos for a week
-  'desktop-pcs': '/categories/desktop-pcs-v6.webp',
+  'desktop-pcs': '/categories/desktop-pcs-v7.webp',
   cameras: '/categories/cameras.webp',
 }
 
@@ -25,7 +25,7 @@ export const BUILT_IN_PHOTO_CREDITS: Record<string, { author: string; licence: s
  * Where a built-in photo is framed in its tile (CSS object-position): keeps every element in view
  * in the wide home tile (screen, computer, keyboard, mouse). Default: the centre.
  */
-const BUILT_IN_PHOTO_POSITION: Record<string, string> = { 'desktop-pcs': 'center 68%' }
+const BUILT_IN_PHOTO_POSITION: Record<string, string> = { 'desktop-pcs': 'center 62%' }
 
 export function categoryPhotoPosition(c: { slug: string; image?: string }) {
   return c.image ? undefined : BUILT_IN_PHOTO_POSITION[canonicalCategorySlug(c.slug)]
