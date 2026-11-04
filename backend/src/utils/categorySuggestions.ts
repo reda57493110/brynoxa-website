@@ -43,10 +43,8 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
     { slug: '2-in-1-laptops', name: '2-in-1 laptops', description: 'Touch screens that fold into a tablet.' },
   ],
   'desktop-pcs': [
-    { slug: 'mini-pcs', name: 'Mini PCs', description: 'Tiny desktops (HP EliteDesk Mini…) that fit behind a screen.' },
-    { slug: 'compact-pcs', name: 'Compact PCs (SFF)', description: 'Small form factor desktops for the office.' },
-    { slug: 'tower-pcs', name: 'Tower PCs', description: 'Full-size towers with room to upgrade.' },
-    { slug: 'all-in-one-pcs', name: 'All-in-one PCs', description: 'Computer and screen in one.' },
+    { slug: 'desktop-with-screen', name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
+    { slug: 'desktop-only', name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
   ],
   'gaming-pcs': [
     { slug: 'gaming-pcs-1080p', name: '1080p gaming PCs', description: 'Smooth Full HD gaming at a fair price.' },

@@ -78,7 +78,7 @@ test('suggested sub-categories: only the missing ones, under the main ones that 
   assert.ok(created.slice(2).every((c) => String(c.parent) === id(1)));
   // Every main category of the shop has suggestions, each address used once
   for (const main of ['laptops', 'desktop-pcs', 'gaming-pcs', 'monitors', 'components', 'mice', 'keyboards', 'headphones', 'accessories', 'cameras']) {
-    assert.ok(CATEGORY_SUGGESTIONS[main].length >= 3, main);
+    assert.ok(CATEGORY_SUGGESTIONS[main].length >= 2, main);
   }
   const all = Object.values(CATEGORY_SUGGESTIONS).flat().map((s) => s.slug);
   assert.equal(new Set(all).size, all.length);
@@ -122,5 +122,12 @@ test('your own "camera" and "desktop-pc" count as Cameras and Desktop PCs: no co
   await addSuggestedCategories();
   assert.ok(!created.some((c) => c.slug === 'cameras' || c.slug === 'desktop-pcs'), 'no second main category');
   assert.ok(created.filter((c) => String(c.parent) === id(7)).some((c) => c.slug === 'security-cameras'));
-  assert.ok(created.filter((c) => String(c.parent) === id(8)).some((c) => c.slug === 'mini-pcs'));
+  assert.ok(created.filter((c) => String(c.parent) === id(8)).some((c) => c.slug === 'desktop-only'));
+});
+
+test('Desktop PCs: with a screen, or the computer alone', () => {
+  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only']);
+  const fr = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8');
+  assert.ok(fr.includes("'desktop-with-screen': { name: 'PC complet avec écran'"));
+  assert.ok(fr.includes("'desktop-only': { name: 'Unité centrale seule'"));
 });

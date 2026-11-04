@@ -1123,6 +1123,9 @@ export const en = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Inside Desktop PCs
+      'desktop-with-screen': { name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
+      'desktop-only': { name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
       // Cameras and its sub-categories
       cameras: { name: 'Cameras', description: 'Security cameras, webcams and cameras for photos and video.' },
       'security-cameras': { name: 'Security cameras', description: 'Wi-Fi and wired cameras to watch your home or shop.' },

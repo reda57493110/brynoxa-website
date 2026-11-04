@@ -1127,6 +1127,9 @@ export const fr: Messages = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Inside Desktop PCs
+      'desktop-with-screen': { name: 'PC complet avec écran', description: 'Ensemble complet : l’unité centrale avec son écran, son clavier et sa souris.' },
+      'desktop-only': { name: 'Unité centrale seule', description: 'L’ordinateur seul (HP EliteDesk…), à utiliser avec votre propre écran.' },
       // Cameras and its sub-categories
       cameras: { name: 'Caméras', description: 'Caméras de surveillance, webcams et appareils photo et vidéo.' },
       'security-cameras': { name: 'Caméras de surveillance', description: 'Caméras Wi-Fi et filaires pour surveiller votre maison ou votre commerce.' },

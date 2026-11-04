@@ -1125,6 +1125,9 @@ export const ar: Messages = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      // Inside Desktop PCs
+      'desktop-with-screen': { name: 'حاسوب كامل مع شاشة', description: 'مجموعة كاملة: الوحدة المركزية مع الشاشة ولوحة المفاتيح والفأرة.' },
+      'desktop-only': { name: 'وحدة مركزية فقط', description: 'الحاسوب وحده (HP EliteDesk…)، لاستعماله مع شاشتك.' },
       // Cameras and its sub-categories
       cameras: { name: 'كاميرات', description: 'كاميرات مراقبة وكاميرات ويب وكاميرات للصور والفيديو.' },
       'security-cameras': { name: 'كاميرات المراقبة', description: 'كاميرات واي فاي وسلكية لمراقبة المنزل أو المحل.' },
