@@ -1,4 +1,5 @@
 import { en, type Messages } from './en'
+import { canonicalCategorySlug } from '../lib/categorySlug'
 
 export type Locale = 'en' | 'fr' | 'ar'
 
@@ -69,7 +70,7 @@ export function getMessages(locale: Locale): Messages {
  */
 export function categoryDisplayName(locale: Locale, slug: string, fallback: string) {
   if (locale === 'en' && fallback) return fallback
-  const key = `catalog.categories.${slug}.name`
+  const key = `catalog.categories.${canonicalCategorySlug(slug)}.name`
   const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   return typeof raw === 'string' ? raw : fallback
 }
@@ -81,7 +82,7 @@ export function categoryDisplayDescription(
   fallback?: string
 ) {
   if (locale === 'en' && fallback) return fallback
-  const key = `catalog.categories.${slug}.description`
+  const key = `catalog.categories.${canonicalCategorySlug(slug)}.description`
   const raw = lookup(dictionary(locale), key) ?? lookup(en, key)
   if (typeof raw === 'string') return raw
   return fallback || ''

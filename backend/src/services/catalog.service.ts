@@ -13,7 +13,7 @@ import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteReplacedImage, deleteUnusedImages } from './upload.service';
 import { copyOutsidePhotos } from './imageImport.service';
-import { CATEGORY_SUGGESTIONS, MAIN_CATEGORY_SUGGESTIONS } from '../utils/categorySuggestions';
+import { CATEGORY_SUGGESTIONS, MAIN_CATEGORY_SUGGESTIONS, canonicalCategorySlug } from '../utils/categorySuggestions';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -149,7 +149,8 @@ async function checkParent(id: string | null, parent: string | null | undefined)
  * Nothing is changed or removed.
  */
 export async function addSuggestedCategories() {
-  let taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
+  // "camera" made in admin counts as Cameras (no second one)
+  let taken = new Set((await Category.find({}).select('slug').lean()).flatMap((c) => [c.slug, canonicalCategorySlug(c.slug)]));
   let created = 0;
   const lastOrder = await Category.find({ parent: null }).select('sortOrder').lean();
   let order = Math.max(0, ...lastOrder.map((c) => Number(c.sortOrder) || 0));
@@ -159,8 +160,10 @@ export async function addSuggestedCategories() {
     taken.add(m.slug);
     created++;
   }
-  const mains = await Category.find({ slug: { $in: Object.keys(CATEGORY_SUGGESTIONS) }, parent: null }).select('_id slug').lean();
-  taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
+  const mains = (await Category.find({ parent: null }).select('_id slug').lean())
+    .map((m) => ({ ...m, slug: canonicalCategorySlug(m.slug) }))
+    .filter((m) => CATEGORY_SUGGESTIONS[m.slug]);
+  taken = new Set((await Category.find({}).select('slug').lean()).flatMap((c) => [c.slug, canonicalCategorySlug(c.slug)]));
   for (const main of mains) {
     for (const [i, s] of (CATEGORY_SUGGESTIONS[main.slug] || []).entries()) {
       if (taken.has(s.slug)) continue;

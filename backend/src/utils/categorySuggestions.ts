@@ -6,6 +6,30 @@
  */
 export type CategorySuggestion = { slug: string; name: string; description: string };
 
+/**
+ * Addresses typed differently in admin, mapped to the one above ("Desktop PC" → desktop-pc →
+ * desktop-pcs). Same list as frontend lib/categorySlug.ts.
+ */
+export const CATEGORY_ALIASES: Record<string, string> = {
+  'desktop-pc': 'desktop-pcs',
+  desktop: 'desktop-pcs',
+  desktops: 'desktop-pcs',
+  'desktop-computers': 'desktop-pcs',
+  camera: 'cameras',
+  laptop: 'laptops',
+  'gaming-pc': 'gaming-pcs',
+  monitor: 'monitors',
+  mouse: 'mice',
+  keyboard: 'keyboards',
+  headphone: 'headphones',
+  component: 'components',
+  accessory: 'accessories',
+};
+
+export function canonicalCategorySlug(slug: string) {
+  return CATEGORY_ALIASES[slug] ?? slug;
+}
+
 /** Main categories created by the same button when missing (the others already exist in the shop). */
 export const MAIN_CATEGORY_SUGGESTIONS: CategorySuggestion[] = [
   { slug: 'desktop-pcs', name: 'Desktop PCs', description: 'Office desktop towers like the HP EliteDesk: reliable for work and study.' },

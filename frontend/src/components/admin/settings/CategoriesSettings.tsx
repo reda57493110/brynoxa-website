@@ -14,6 +14,7 @@ import { SPEC_TEMPLATES, getTemplate, isTemplateId, templateForCategory } from '
 import { BUILT_IN_CATEGORY_PHOTOS, categoryPhoto } from '@/lib/categoryPhoto'
 import { prepareImageForUpload } from '@/lib/prepareImage'
 import { categoryTree, childrenOf, mainCategories, parentIdOf } from '@/lib/categoryTree'
+import { canonicalCategorySlug } from '@/lib/categorySlug'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { Category } from '@/types'
@@ -270,7 +271,7 @@ export function CategoriesSettings() {
                     className="w-24 shrink-0 sm:w-28"
                     photo={categoryPhoto(c)}
                     custom={Boolean(c.image)}
-                    hasBuiltIn={Boolean(BUILT_IN_CATEGORY_PHOTOS[c.slug])}
+                    hasBuiltIn={Boolean(BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)])}
                     uploading={uploadingId === c._id}
                     onPick={(file) => changePhoto(c, file)}
                     onReset={() => update.mutate({ id: c._id, patch: { image: '' } })}

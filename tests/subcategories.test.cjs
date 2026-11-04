@@ -15,6 +15,8 @@ setTestEnv();
 const { Category } = require(dist('models/Category.js'));
 const catalog = require(dist('services/catalog.service.js'));
 const { CATEGORY_SUGGESTIONS } = require(dist('utils/categorySuggestions.js'));
+// The real one (a later test replaces it on the module for the live-site check)
+const addSuggestedCategories = catalog.addSuggestedCategories;
 
 const id = (n) => String(n).padStart(24, '0');
 const cats = [
@@ -64,7 +66,7 @@ test('inside a main category only: no third level, not inside itself, not when i
 test('suggested sub-categories: only the missing ones, under the main ones that exist', async () => {
   const created = [];
   Category.find = (q) => {
-    if (q && q.slug && q.slug.$in) return lean([{ _id: id(1), slug: 'components' }]);
+    if (q && 'parent' in q) return lean([{ _id: id(1), slug: 'components', sortOrder: 3 }]);
     return lean(cats.map((c) => ({ slug: c.slug })));
   };
   Category.create = async (d) => created.push(d);
@@ -110,4 +112,15 @@ test('Cameras: a main category with security cameras, webcams, action and photo 
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8'), /cameras: [{] name: 'Caméras'/);
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8'), /'security-cameras': [{] name: 'Caméras de surveillance'/);
   assert.ok(fs.readFileSync(path.join(ROOT, 'frontend/src/lib/categoryIcon.ts'), 'utf8').includes("key.includes('camera')"));
+});
+
+test('your own "camera" and "desktop-pc" count as Cameras and Desktop PCs: no copies, their sub-categories go inside them', async () => {
+  const created = [];
+  const mine = [{ _id: id(7), slug: 'camera' }, { _id: id(8), slug: 'desktop-pc' }];
+  Category.find = (q) => lean(q && 'parent' in q ? mine : mine.map((c) => ({ slug: c.slug })));
+  Category.create = async (d) => created.push(d);
+  await addSuggestedCategories();
+  assert.ok(!created.some((c) => c.slug === 'cameras' || c.slug === 'desktop-pcs'), 'no second main category');
+  assert.ok(created.filter((c) => String(c.parent) === id(7)).some((c) => c.slug === 'security-cameras'));
+  assert.ok(created.filter((c) => String(c.parent) === id(8)).some((c) => c.slug === 'mini-pcs'));
 });

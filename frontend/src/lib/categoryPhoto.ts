@@ -1,3 +1,5 @@
+import { canonicalCategorySlug } from './categorySlug'
+
 /** Built-in photos for the store's main categories (by address), used until the owner sets one. */
 export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   laptops: '/categories/laptops.webp',
@@ -8,6 +10,8 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   headphones: '/categories/headphones.jpg',
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
+  'desktop-pcs': '/categories/desktop-pcs.webp',
+  cameras: '/categories/cameras.webp',
 }
 
 /** Width of each built-in photo's larger copy (some originals are under 960 px). */
@@ -19,13 +23,14 @@ const BUILT_IN_LARGE_WIDTH: Record<string, number> = { accessories: 679, headpho
  */
 export function categoryPhotoSrcSet(c: { slug: string; image?: string }): string | undefined {
   if (c.image) return undefined
-  const original = BUILT_IN_CATEGORY_PHOTOS[c.slug]
+  const slug = canonicalCategorySlug(c.slug)
+  const original = BUILT_IN_CATEGORY_PHOTOS[slug]
   if (!original) return undefined
   const base = original.replace(/\.[^.]+$/, '')
-  return `${base}-480.webp 480w, ${base}-960.webp ${BUILT_IN_LARGE_WIDTH[c.slug] ?? 960}w`
+  return `${base}-480.webp 480w, ${base}-960.webp ${BUILT_IN_LARGE_WIDTH[slug] ?? 960}w`
 }
 
 /** The photo shown for a category: the one picked in admin, else the built-in one (if any). */
 export function categoryPhoto(c: { slug: string; image?: string }): string | undefined {
-  return c.image || BUILT_IN_CATEGORY_PHOTOS[c.slug]
+  return c.image || BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)]
 }
