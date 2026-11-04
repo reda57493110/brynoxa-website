@@ -11,8 +11,8 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
   // New file name when the photo changes: phones keep these photos for a week
-  // Designed for Brynoxa (source: desktop-pcs-v8-source.svg): screen, mini PC, keyboard, mouse, headset
-  'desktop-pcs': '/categories/desktop-pcs-v8.webp',
+  // Made by the owner (AI image, no logos); wall and desk extended to the sides for the wide tile
+  'desktop-pcs': '/categories/desktop-pcs-v10.webp',
   cameras: '/categories/cameras.webp',
 }
 
@@ -38,7 +38,7 @@ export function categoryPhotoCredit(c: { slug: string; image?: string }) {
 }
 
 /** Built-in originals sharp enough for phone screens (3× pixels): offered as the largest size. */
-const BUILT_IN_ORIGINAL_WIDTH: Record<string, number> = { 'desktop-pcs': 1600 }
+const BUILT_IN_ORIGINAL_WIDTH: Record<string, number> = { 'desktop-pcs': 2128 }
 
 /** Width of each built-in photo's larger copy (some originals are under 960 px). */
 const BUILT_IN_LARGE_WIDTH: Record<string, number> = { accessories: 679, headphones: 736, mice: 735, monitors: 736 }
