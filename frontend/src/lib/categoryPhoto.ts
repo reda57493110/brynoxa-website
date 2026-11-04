@@ -11,7 +11,7 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   components: '/categories/components.jpg',
   accessories: '/categories/accessories.jpg',
   // New file name when the photo changes: phones keep these photos for a week
-  'desktop-pcs': '/categories/desktop-pcs-v3.webp',
+  'desktop-pcs': '/categories/desktop-pcs-v4.webp',
   cameras: '/categories/cameras.webp',
 }
 
@@ -19,15 +19,7 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
  * Built-in photos whose licence asks for a credit (CC BY-SA): shown under the home categories
  * while the photo is used (a photo set in admin needs none).
  */
-export const BUILT_IN_PHOTO_CREDITS: Record<string, { author: string; licence: string; source: string; licenceUrl: string; edited?: boolean }> = {
-  'desktop-pcs': {
-    author: 'Miguel Durán (Museo8bits)',
-    licence: 'CC BY-SA 4.0',
-    source: 'https://commons.wikimedia.org/wiki/File:HP_EliteDesk_800_35_W_G2_mini_003.jpg',
-    licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
-    edited: true,
-  },
-}
+export const BUILT_IN_PHOTO_CREDITS: Record<string, { author: string; licence: string; source: string; licenceUrl: string; edited?: boolean }> = {}
 
 /** The credit for a category's photo, when it is a built-in photo that needs one. */
 export function categoryPhotoCredit(c: { slug: string; image?: string }) {
