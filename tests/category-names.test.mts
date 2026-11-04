@@ -45,10 +45,10 @@ test('addresses typed differently ("camera", "desktop-pc") get the names and the
   assert.equal(i18n.categoryDisplayName('fr', 'desktop-pc', 'Desktop PC'), 'Unités centrales');
   assert.equal(i18n.categoryDisplayName('en', 'desktop-pc', 'Desktop PC'), 'Desktop PC', 'English: the admin name');
   assert.equal(photos.categoryPhoto({ slug: 'camera' }), '/categories/cameras.webp');
-  assert.equal(photos.categoryPhoto({ slug: 'desktop-pc' }), '/categories/desktop-pcs-v2.webp');
+  assert.equal(photos.categoryPhoto({ slug: 'desktop-pc' }), '/categories/desktop-pcs-v3.webp');
   assert.ok(photos.categoryPhotoSrcSet({ slug: 'camera' }).includes('/categories/cameras-480.webp 480w, /categories/cameras-960.webp 960w'));
   assert.equal(photos.categoryPhoto({ slug: 'camera', image: 'https://x/y.jpg' }), 'https://x/y.jpg', 'a photo set in admin wins');
-  for (const f of ['cameras.webp', 'cameras-480.webp', 'cameras-960.webp', 'desktop-pcs-v2.webp', 'desktop-pcs-v2-480.webp', 'desktop-pcs-v2-960.webp']) {
+  for (const f of ['cameras.webp', 'cameras-480.webp', 'cameras-960.webp', 'desktop-pcs-v3.webp', 'desktop-pcs-v3-480.webp', 'desktop-pcs-v3-960.webp']) {
     const size = fs.statSync(path.join(root, 'frontend/public/categories', f)).size;
     assert.ok(size > 2000 && size < 200_000, f + ': ' + size);
   }
@@ -63,4 +63,10 @@ test('the HP EliteDesk photo (CC BY-SA) is credited while it is shown, not once 
   assert.equal(photos.categoryPhotoCredit({ slug: 'desktop-pc', image: 'https://x/own.jpg' }), undefined);
   assert.equal(photos.categoryPhotoCredit({ slug: 'cameras' }), undefined, 'Unsplash photos need no credit');
   assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8').includes('categoryPhotoCredit(c)'));
+});
+
+test('the HP EliteDesk photo is sharp on phones: a 1600 px copy is offered', async () => {
+  const photos = await load('lib/categoryPhoto.ts');
+  assert.ok(photos.categoryPhotoSrcSet({ slug: 'desktop-pc' }).endsWith('/categories/desktop-pcs-v3.webp 1600w'));
+  assert.ok(!photos.categoryPhotoSrcSet({ slug: 'laptops' }).includes('1600w'), 'others unchanged');
 });
