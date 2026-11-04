@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1125" width="2000" height="1125">
+  <defs>
+    <!-- Studio background: dark, with the site's cyan glow -->
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#14303d"/>
+      <stop offset="0.45" stop-color="#0b1820"/>
+      <stop offset="1" stop-color="#05090c"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#00c2ff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#00c2ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a33"/>
+      <stop offset="1" stop-color="#0a1116"/>
+    </linearGradient>
+    <linearGradient id="deskEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00c2ff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#5fdcff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#00c2ff" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Screen picture: calm abstract waves -->
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#062a45"/>
+      <stop offset="0.55" stop-color="#0a6c9c"/>
+      <stop offset="1" stop-color="#26c6f0"/>
+    </linearGradient>
+    <linearGradient id="wave1" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7fe3ff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#9beaff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#7fe3ff" stop-opacity="0.1"/>
+    </linearGradient>
+    <linearGradient id="bezel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3238"/>
+      <stop offset="1" stop-color="#0d1013"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a444b"/>
+      <stop offset="0.5" stop-color="#8b979f"/>
+      <stop offset="1" stop-color="#2d353b"/>
+    </linearGradient>
+    <linearGradient id="pcTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b434a"/>
+      <stop offset="1" stop-color="#1e2428"/>
+    </linearGradient>
+    <linearGradient id="pcFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22282d"/>
+      <stop offset="1" stop-color="#101417"/>
+    </linearGradient>
+    <linearGradient id="kb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a3137"/>
+      <stop offset="1" stop-color="#14191d"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d464d"/>
+      <stop offset="1" stop-color="#22282d"/>
+    </linearGradient>
+    <linearGradient id="mouse" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4a545b"/>
+      <stop offset="1" stop-color="#15191c"/>
+    </linearGradient>
+    <linearGradient id="cup" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3f484f"/>
+      <stop offset="1" stop-color="#121619"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="18"/></filter>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="ledGlow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs>
+
+  <!-- Room and desk -->
+  <rect width="2000" height="1125" fill="url(#bg)"/>
+  <ellipse cx="1000" cy="470" rx="760" ry="330" fill="url(#glow)"/>
+  <rect x="0" y="680" width="2000" height="445" fill="url(#desk)"/>
+  <rect x="0" y="678" width="2000" height="3" fill="url(#deskEdge)"/>
+  <!-- Products grouped in the middle band: the whole set shows in wide and normal tiles -->
+  <g transform="translate(345 178) scale(0.66)">
+
+  <!-- Monitor -->
+  <ellipse cx="1000" cy="800" rx="230" ry="20" fill="#000" opacity="0.55" filter="url(#shadow)"/>
+  <path d="M905 790 h190 l-18 -22 h-154 z" fill="url(#metal)"/>
+  <rect x="978" y="640" width="44" height="135" rx="8" fill="url(#metal)"/>
+  <rect x="560" y="200" width="880" height="470" rx="18" fill="url(#bezel)"/>
+  <rect x="580" y="218" width="840" height="424" rx="6" fill="url(#screen)"/>
+  <path d="M580 520 C720 450 860 600 1000 520 S1280 430 1420 500 V642 H580 Z" fill="#0a8fc2" opacity="0.55"/>
+  <path d="M580 470 C760 400 900 560 1060 470 S1300 380 1420 440" stroke="url(#wave1)" stroke-width="6" fill="none"/>
+  <path d="M580 560 C760 500 900 640 1080 560 S1310 500 1420 540" stroke="url(#wave1)" stroke-width="4" fill="none" opacity="0.7"/>
+  <rect x="580" y="218" width="840" height="200" rx="6" fill="#fff" opacity="0.04"/>
+  <rect x="580" y="620" width="840" height="22" fill="#05131c" opacity="0.65"/>
+  <circle cx="1000" cy="656" r="3" fill="#5fdcff"/>
+
+  <!-- Mini PC (office desktop mini, front ports, blue power light) -->
+  <ellipse cx="1600" cy="800" rx="190" ry="18" fill="#000" opacity="0.6" filter="url(#shadow)"/>
+  <path d="M1440 700 l40 -36 h290 l-40 36 z" fill="url(#pcTop)"/>
+  <path d="M1730 700 l40 -36 v92 l-40 38 z" fill="#14181b"/>
+  <rect x="1440" y="700" width="290" height="94" rx="6" fill="url(#pcFront)"/>
+  <g fill="#0b0e10">
+    <rect x="1458" y="716" width="6" height="62" rx="3"/><rect x="1472" y="716" width="6" height="62" rx="3"/>
+    <rect x="1486" y="716" width="6" height="62" rx="3"/><rect x="1500" y="716" width="6" height="62" rx="3"/>
+    <rect x="1514" y="716" width="6" height="62" rx="3"/><rect x="1528" y="716" width="6" height="62" rx="3"/>
+    <rect x="1542" y="716" width="6" height="62" rx="3"/><rect x="1556" y="716" width="6" height="62" rx="3"/>
+  </g>
+  <rect x="1580" y="738" width="34" height="14" rx="3" fill="#0d2a3a" stroke="#2e86b0" stroke-width="2"/>
+  <rect x="1622" y="738" width="34" height="14" rx="3" fill="#0d2a3a" stroke="#2e86b0" stroke-width="2"/>
+  <rect x="1664" y="740" width="18" height="10" rx="5" fill="#0b0e10" stroke="#4a545b" stroke-width="2"/>
+  <circle cx="1704" cy="745" r="7" fill="none" stroke="#3aa8ff" stroke-width="3"/>
+  <circle cx="1704" cy="745" r="9" fill="#3aa8ff" opacity="0.6" filter="url(#ledGlow)"/>
+  <rect x="1440" y="700" width="290" height="3" fill="#fff" opacity="0.08"/>
+
+  <!-- Headset on a stand -->
+  <ellipse cx="370" cy="800" rx="120" ry="16" fill="#000" opacity="0.6" filter="url(#shadow)"/>
+  <ellipse cx="370" cy="790" rx="86" ry="14" fill="url(#metal)"/>
+  <rect x="362" y="430" width="16" height="360" rx="6" fill="url(#metal)"/>
+  <path d="M250 560 C250 380 490 380 490 560" fill="none" stroke="#1d2328" stroke-width="30" stroke-linecap="round"/>
+  <path d="M250 560 C250 390 490 390 490 560" fill="none" stroke="#3b454c" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+  <rect x="214" y="545" width="78" height="130" rx="34" fill="url(#cup)"/>
+  <rect x="448" y="545" width="78" height="130" rx="34" fill="url(#cup)"/>
+  <rect x="228" y="560" width="22" height="100" rx="11" fill="#00c2ff" opacity="0.35"/>
+  <rect x="490" y="560" width="22" height="100" rx="11" fill="#00c2ff" opacity="0.35"/>
+  <path d="M292 640 C330 690 360 700 380 700" fill="none" stroke="#2a3137" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="386" cy="700" r="8" fill="#2a3137"/>
+
+  <!-- Keyboard -->
+  <ellipse cx="960" cy="960" rx="420" ry="26" fill="#000" opacity="0.55" filter="url(#shadow)"/>
+  <path d="M560 935 l44 -110 h712 l44 110 z" fill="url(#kb)"/>
+  <path d="M560 935 h800 v14 h-800 z" fill="#0b0f12"/>
+  <g fill="url(#key)">
+    <!-- 5 rows of keys in perspective -->
+    <g transform="translate(0,0)">
+      <rect x="616" y="836" width="38" height="14" rx="3"/><rect x="662" y="836" width="38" height="14" rx="3"/><rect x="708" y="836" width="38" height="14" rx="3"/><rect x="754" y="836" width="38" height="14" rx="3"/><rect x="800" y="836" width="38" height="14" rx="3"/><rect x="846" y="836" width="38" height="14" rx="3"/><rect x="892" y="836" width="38" height="14" rx="3"/><rect x="938" y="836" width="38" height="14" rx="3"/><rect x="984" y="836" width="38" height="14" rx="3"/><rect x="1030" y="836" width="38" height="14" rx="3"/><rect x="1076" y="836" width="38" height="14" rx="3"/><rect x="1122" y="836" width="38" height="14" rx="3"/><rect x="1168" y="836" width="38" height="14" rx="3"/><rect x="1214" y="836" width="38" height="14" rx="3"/><rect x="1260" y="836" width="44" height="14" rx="3"/>
+    </g>
+    <g>
+      <rect x="608" y="858" width="44" height="15" rx="3"/><rect x="660" y="858" width="40" height="15" rx="3"/><rect x="708" y="858" width="40" height="15" rx="3"/><rect x="756" y="858" width="40" height="15" rx="3"/><rect x="804" y="858" width="40" height="15" rx="3"/><rect x="852" y="858" width="40" height="15" rx="3"/><rect x="900" y="858" width="40" height="15" rx="3"/><rect x="948" y="858" width="40" height="15" rx="3"/><rect x="996" y="858" width="40" height="15" rx="3"/><rect x="1044" y="858" width="40" height="15" rx="3"/><rect x="1092" y="858" width="40" height="15" rx="3"/><rect x="1140" y="858" width="40" height="15" rx="3"/><rect x="1188" y="858" width="40" height="15" rx="3"/><rect x="1236" y="858" width="76" height="15" rx="3"/>
+    </g>
+    <g>
+      <rect x="598" y="882" width="58" height="16" rx="3"/><rect x="664" y="882" width="41" height="16" rx="3"/><rect x="713" y="882" width="41" height="16" rx="3"/><rect x="762" y="882" width="41" height="16" rx="3"/><rect x="811" y="882" width="41" height="16" rx="3"/><rect x="860" y="882" width="41" height="16" rx="3"/><rect x="909" y="882" width="41" height="16" rx="3"/><rect x="958" y="882" width="41" height="16" rx="3"/><rect x="1007" y="882" width="41" height="16" rx="3"/><rect x="1056" y="882" width="41" height="16" rx="3"/><rect x="1105" y="882" width="41" height="16" rx="3"/><rect x="1154" y="882" width="41" height="16" rx="3"/><rect x="1203" y="882" width="118" height="16" rx="3"/>
+    </g>
+    <g>
+      <rect x="588" y="906" width="78" height="17" rx="3"/><rect x="674" y="906" width="42" height="17" rx="3"/><rect x="724" y="906" width="42" height="17" rx="3"/><rect x="774" y="906" width="42" height="17" rx="3"/><rect x="824" y="906" width="380" height="17" rx="3"/><rect x="1212" y="906" width="42" height="17" rx="3"/><rect x="1262" y="906" width="70" height="17" rx="3"/>
+    </g>
+  </g>
+  <path d="M604 825 h712" stroke="#5fdcff" stroke-width="2" opacity="0.35"/>
+
+  <!-- Mouse -->
+  <ellipse cx="1520" cy="955" rx="80" ry="18" fill="#000" opacity="0.6" filter="url(#shadow)"/>
+  <path d="M1460 940 C1450 860 1490 830 1520 830 C1550 830 1590 860 1580 940 C1575 965 1465 965 1460 940 Z" fill="url(#mouse)"/>
+  <path d="M1520 832 V880" stroke="#0b0e10" stroke-width="3"/>
+  <rect x="1515" y="846" width="10" height="20" rx="5" fill="#0b0e10" stroke="#3aa8ff" stroke-width="2"/>
+  <path d="M1470 935 C1500 950 1540 950 1570 935" stroke="#00c2ff" stroke-width="3" fill="none" opacity="0.7"/>
+
+  <!-- Light from the screen on the desk -->
+  <ellipse cx="1000" cy="770" rx="560" ry="40" fill="#00c2ff" opacity="0.10" filter="url(#soft)"/>
+  </g>
+</svg>
