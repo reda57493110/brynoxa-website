@@ -10,7 +10,7 @@ export function PageHero({
   titleId = 'page-heading',
   className,
 }: {
-  kicker: string
+  kicker: ReactNode
   title: ReactNode
   description?: ReactNode
   children?: ReactNode

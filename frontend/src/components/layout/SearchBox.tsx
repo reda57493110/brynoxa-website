@@ -9,6 +9,7 @@ import { categoryDisplayName } from '@/i18n'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryIcon } from '@/lib/categoryIcon'
+import { mainOf } from '@/lib/categoryTree'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
@@ -123,14 +124,23 @@ export function SearchBox({
   })
 
   const options: Option[] = useMemo(() => {
-    const cats = (categories.data ?? []).map((c) => ({
-      kind: 'category' as const,
-      slug: c.slug,
-      label: categoryDisplayName(locale, c.slug, c.name),
-      icon: categoryIcon(c.slug, c.name),
-    }))
+    const all = categories.data ?? []
+    // Sub-categories read "Components › RAM"; before typing, the main categories are suggested
+    const cats = all.map((c) => {
+      const main = mainOf(all, c)
+      const sub = Boolean(main && main._id !== c._id)
+      return {
+        kind: 'category' as const,
+        slug: c.slug,
+        sub,
+        label: sub
+          ? `${categoryDisplayName(locale, main!.slug, main!.name)} › ${categoryDisplayName(locale, c.slug, c.name)}`
+          : categoryDisplayName(locale, c.slug, c.name),
+        icon: categoryIcon(c.slug, c.name),
+      }
+    })
     if (!searching) {
-      return [...recent.map((r) => ({ kind: 'recent' as const, q: r })), ...cats.slice(0, 6)]
+      return [...recent.map((r) => ({ kind: 'recent' as const, q: r })), ...cats.filter((c) => !c.sub).slice(0, 6)]
     }
     const lower = debounced.toLowerCase()
     const matchingCats = cats.filter((c) => c.label.toLowerCase().includes(lower) || c.slug.includes(lower)).slice(0, 3)

@@ -183,6 +183,8 @@ export const adminApi = {
       api.patch<ApiResponse<Category>>(`/admin/categories/${id}`, payload),
     /** Deletes the category and its products. */
     remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/categories/${id}`),
+    /** Adds the suggested sub-categories (Components › RAM, Storage…) missing under the main ones */
+    addSuggested: () => api.post<ApiResponse<{ created: number; mains: string[] }>>('/admin/categories/suggested'),
   },
 
   brands: {

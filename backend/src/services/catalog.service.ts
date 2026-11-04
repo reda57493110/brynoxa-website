@@ -13,6 +13,7 @@ import { adjustStock } from './inventoryOps.service';
 import { slugify, uniqueSlug } from '../utils/slugify';
 import { deleteAbandonedUploads, deleteReplacedImage, deleteUnusedImages } from './upload.service';
 import { copyOutsidePhotos } from './imageImport.service';
+import { CATEGORY_SUGGESTIONS } from '../utils/categorySuggestions';
 
 function looksLikeObjectId(value: string) {
   return mongoose.Types.ObjectId.isValid(value) && String(new mongoose.Types.ObjectId(value)) === value;
@@ -83,17 +84,83 @@ async function activeCategoryObjectIds() {
   if (now - activeCategoryCache.at < ACTIVE_CATEGORY_TTL_MS && activeCategoryCache.ids.length) {
     return activeCategoryCache.ids;
   }
-  const cats = await Category.find({
-    isActive: true,
-    slug: { $nin: ['office', 'networking'] },
-  })
-    .select('_id')
-    .lean();
+  const cats = await Category.find({}).select('_id isActive slug parent').lean();
+  const visible = visibleCategoryIds(cats);
   activeCategoryCache = {
     at: now,
-    ids: cats.map((c) => c._id as mongoose.Types.ObjectId),
+    ids: cats.filter((c) => visible.has(String(c._id))).map((c) => c._id as mongoose.Types.ObjectId),
   };
   return activeCategoryCache.ids;
+}
+
+type CategoryNode = { _id: unknown; isActive?: boolean; slug?: string; parent?: unknown };
+
+/** Shown in the shop: active, and every category above it active too (a hidden one hides its sub-categories). */
+export function visibleCategoryIds(cats: CategoryNode[]) {
+  const byId = new Map(cats.map((c) => [String(c._id), c]));
+  const visible = new Set<string>();
+  for (const c of cats) {
+    let node: CategoryNode | undefined = c;
+    let ok = true;
+    for (let depth = 0; node && depth < 5; depth++) {
+      if (node.isActive === false || node.slug === 'office' || node.slug === 'networking') ok = false;
+      node = node.parent ? byId.get(String(node.parent)) : undefined;
+    }
+    if (ok) visible.add(String(c._id));
+  }
+  return visible;
+}
+
+/** A category and the ones inside it (sub-categories, and theirs): "Components" also lists RAM, Storage… */
+export function categoryAndChildren(rootId: string, cats: CategoryNode[]) {
+  const ids = new Set([String(rootId)]);
+  for (let grew = true; grew; ) {
+    grew = false;
+    for (const c of cats) {
+      if (c.parent && ids.has(String(c.parent)) && !ids.has(String(c._id))) {
+        ids.add(String(c._id));
+        grew = true;
+      }
+    }
+  }
+  return [...ids];
+}
+
+/**
+ * Where a category may sit: inside a main category only (two levels, like Components › RAM).
+ * Not inside itself, not inside one of its own sub-categories, and a category that has
+ * sub-categories stays a main category.
+ */
+async function checkParent(id: string | null, parent: string | null | undefined) {
+  if (!parent) return;
+  if (!mongoose.isValidObjectId(parent)) throw new ApiError(400, 'Choose an existing category to put it in');
+  if (id && String(parent) === String(id)) throw new ApiError(400, 'A category cannot be inside itself');
+  const target = await Category.findById(parent).select('parent').lean<{ parent?: unknown }>();
+  if (!target) throw new ApiError(400, 'Choose an existing category to put it in');
+  if (target.parent) throw new ApiError(400, 'Choose a main category: sub-categories cannot hold other sub-categories');
+  if (id && (await Category.exists({ parent: id }))) {
+    throw new ApiError(400, 'This category has sub-categories: it stays a main category');
+  }
+}
+
+/**
+ * Admin → "Add suggested sub-categories": creates the suggested ones (utils/categorySuggestions)
+ * missing under the main categories that exist. Nothing is changed or removed.
+ */
+export async function addSuggestedCategories() {
+  const mains = await Category.find({ slug: { $in: Object.keys(CATEGORY_SUGGESTIONS) }, parent: null }).select('_id slug').lean();
+  const taken = new Set((await Category.find({}).select('slug').lean()).map((c) => c.slug));
+  let created = 0;
+  for (const main of mains) {
+    for (const [i, s] of (CATEGORY_SUGGESTIONS[main.slug] || []).entries()) {
+      if (taken.has(s.slug)) continue;
+      await Category.create({ name: s.name, slug: s.slug, description: s.description, parent: main._id, isActive: true, sortOrder: i });
+      taken.add(s.slug);
+      created++;
+    }
+  }
+  invalidateActiveCategoryCache();
+  return { created, mains: mains.map((m) => m.slug) };
 }
 
 /** Call after category create/update/delete so storefront filters stay correct. */
@@ -115,7 +182,11 @@ export async function listCategories(activeOnly = true) {
   };
   if (activeOnly) filter.isActive = true;
   const items = await Category.find(filter).sort({ sortOrder: 1, name: 1 }).populate('parent', 'name slug');
-  if (activeOnly) return items;
+  if (activeOnly) {
+    // A sub-category of a hidden category is hidden too
+    const visible = visibleCategoryIds(await Category.find({}).select('_id isActive slug parent').lean());
+    return items.filter((c) => visible.has(String(c._id)));
+  }
   // Staff list: how many products each one holds (shown in Settings, needed before a delete)
   const counts = await Product.aggregate<{ _id: unknown; n: number }>([{ $group: { _id: '$category', n: { $sum: 1 } } }]);
   const byId = new Map(counts.map((c) => [String(c._id), c.n]));
@@ -124,8 +195,11 @@ export async function listCategories(activeOnly = true) {
 
 export async function getCategoryBySlug(slug: string) {
   if (slug === 'office' || slug === 'networking') throw new ApiError(404, 'Category not found');
-  const category = await Category.findOne({ slug, isActive: true });
+  // With the category it sits in (for "Components › RAM"); hidden with a hidden main category
+  const category = await Category.findOne({ slug, isActive: true }).populate('parent', 'name slug isActive');
   if (!category) throw new ApiError(404, 'Category not found');
+  const parent = category.parent as unknown as { isActive?: boolean } | null;
+  if (parent && parent.isActive === false) throw new ApiError(404, 'Category not found');
   return category;
 }
 
@@ -138,6 +212,7 @@ export async function createCategory(data: {
   sortOrder?: number;
   specTemplate?: string | null;
 }) {
+  await checkParent(null, data.parent);
   let slug = slugify(data.name);
   const exists = await Category.findOne({ slug });
   if (exists) slug = uniqueSlug(data.name, Date.now().toString(36));
@@ -170,7 +245,10 @@ export async function updateCategory(id: string, data: Partial<{
   if (data.description !== undefined) category.description = data.description;
   const previousImage = category.image;
   if (data.image !== undefined) category.image = data.image;
-  if (data.parent !== undefined) category.parent = data.parent as never;
+  if (data.parent !== undefined) {
+    await checkParent(id, data.parent);
+    category.parent = (data.parent || null) as never;
+  }
   if (data.isActive !== undefined) category.isActive = data.isActive;
   if (data.sortOrder !== undefined) category.sortOrder = data.sortOrder;
   const specTemplate = sanitizeSpecTemplate(data.specTemplate);
@@ -289,20 +367,17 @@ export async function listProducts(query: ProductQuery) {
     if (!categoryId) {
       return { items: [], total: 0, page: query.page, limit: query.limit };
     }
-    // Hidden categories are not browsable on the storefront.
+    // The category and its sub-categories; hidden ones are not browsable on the storefront
+    const cats = await Category.find({}).select('_id isActive slug parent').lean();
+    let ids = categoryAndChildren(categoryId, cats);
     if (!query.admin) {
-      const active = await Category.findOne({
-        _id: categoryId,
-        isActive: true,
-        slug: { $nin: ['office', 'networking'] },
-      })
-        .select('_id')
-        .lean();
-      if (!active) {
+      const visible = visibleCategoryIds(cats);
+      if (!visible.has(String(categoryId))) {
         return { items: [], total: 0, page: query.page, limit: query.limit };
       }
+      ids = ids.filter((x) => visible.has(x));
     }
-    filter.category = categoryId;
+    filter.category = ids.length === 1 ? ids[0] : { $in: ids };
   } else if (!query.admin) {
     const activeIds = await activeCategoryObjectIds();
     if (!activeIds.length) {

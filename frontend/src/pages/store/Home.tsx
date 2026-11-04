@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
+import { mainCategories } from '@/lib/categoryTree'
 import { categoryPhoto, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { whatsappHref } from '@/lib/whatsapp'
@@ -107,8 +108,9 @@ export function Home() {
     jsonLd: organizationData(),
   })
 
-  const categoryList = (categories.data ?? []).filter(
-    (c) => c.slug !== 'office' && c.slug !== 'networking'
+  // Main categories only (Components, not RAM / Storage, which are inside it)
+  const categoryList = mainCategories(
+    (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
   )
 
   return (

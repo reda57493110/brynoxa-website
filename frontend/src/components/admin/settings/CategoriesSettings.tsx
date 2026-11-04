@@ -13,6 +13,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SPEC_TEMPLATES, getTemplate, isTemplateId, templateForCategory } from '@/lib/specs'
 import { BUILT_IN_CATEGORY_PHOTOS, categoryPhoto } from '@/lib/categoryPhoto'
 import { prepareImageForUpload } from '@/lib/prepareImage'
+import { categoryTree, childrenOf, mainCategories, parentIdOf } from '@/lib/categoryTree'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import type { Category } from '@/types'
@@ -97,11 +98,15 @@ function CategoryPhotoPicker({
   )
 }
 
-/** Catalog categories: add (with photo), photo, show/hide, spec type and delete. Saved right away. */
+/**
+ * Catalog categories: add (with photo, inside a main category or not), photo, place, show/hide,
+ * spec type and delete. Saved right away. Two levels: Components › RAM, Storage…
+ */
 export function CategoriesSettings() {
   const qc = useQueryClient()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [parent, setParent] = useState('')
   const [newPhoto, setNewPhoto] = useState('')
   const [newUploading, setNewUploading] = useState(false)
   const [uploadingId, setUploadingId] = useState<string | null>(null)
@@ -120,11 +125,13 @@ export function CategoriesSettings() {
         name: name.trim(),
         description: description.trim() || undefined,
         image: newPhoto || undefined,
+        parent: parent || null,
       }),
     onSuccess: () => {
       refresh()
       setName('')
       setDescription('')
+      setParent('')
       setNewPhoto('')
       toast.success('Category added')
     },
@@ -136,6 +143,16 @@ export function CategoriesSettings() {
     onSuccess: () => {
       refresh()
       toast.success('Category updated')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+
+  // The suggested sub-categories missing under the main ones (Components › RAM, Storage…)
+  const suggested = useMutation({
+    mutationFn: async () => (await adminApi.categories.addSuggested()).data.data,
+    onSuccess: (r) => {
+      refresh()
+      toast.success(r.created ? `${r.created} sub-categories added` : 'All suggested sub-categories are already there')
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -174,6 +191,8 @@ export function CategoriesSettings() {
   }
 
   const list = categories.data ?? []
+  const mains = mainCategories(list)
+  const tree = categoryTree(list)
   const pending = (id: string) => (update.isPending && update.variables?.id === id) || uploadingId === id
   const deletingCount = deleting?.productCount ?? 0
 
@@ -201,6 +220,21 @@ export function CategoriesSettings() {
         <div className="flex min-w-0 flex-col gap-3">
           <Input label="New category" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Laptops" maxLength={60} />
           <Input label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={200} />
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">Inside</span>
+            <select
+              value={parent}
+              onChange={(e) => setParent(e.target.value)}
+              className="h-11 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm"
+            >
+              <option value="">— Main category (shown on its own)</option>
+              {mains.map((m) => (
+                <option key={m._id} value={m._id}>
+                  Inside {m.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <p className="text-[11px] text-[var(--fg-muted)]">
             Photo: a wide picture (about 16:10) looks best; the corners are rounded for you, like on the home page.
           </p>
@@ -218,13 +252,15 @@ export function CategoriesSettings() {
         <QueryErrorState onRetry={() => categories.refetch()} />
       ) : list.length ? (
         <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
-          {list.map((c) => {
+          {tree.map(({ category: c, depth }) => {
             const count = c.productCount ?? 0
+            const hasChildren = childrenOf(list, c._id).length > 0
             return (
               <li
                 key={c._id}
                 className={cn(
                   'flex min-w-0 flex-col gap-2.5 px-3 py-2.5 sm:flex-row sm:items-center sm:gap-3',
+                  depth === 1 && 'bg-[var(--bg-muted)]/40 ps-6 sm:ps-10',
                   pending(c._id) && 'opacity-60'
                 )}
               >
@@ -241,6 +277,7 @@ export function CategoriesSettings() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">
+                      {depth === 1 ? <span className="me-1 text-[var(--fg-muted)]" aria-hidden="true">↳</span> : null}
                       {c.name}
                       {!c.isActive ? <span className="ms-2 text-xs font-normal text-[var(--fg-muted)]">hidden</span> : null}
                     </p>
@@ -249,7 +286,24 @@ export function CategoriesSettings() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={`Where ${c.name} is`}
+                    title={hasChildren ? 'Has sub-categories: stays a main category' : 'Main category, or inside another one'}
+                    value={parentIdOf(c) ?? ''}
+                    disabled={pending(c._id) || hasChildren}
+                    onChange={(e) => update.mutate({ id: c._id, patch: { parent: e.target.value || null } })}
+                    className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2 text-xs sm:max-w-[10rem] sm:flex-none"
+                  >
+                    <option value="">Main category</option>
+                    {mains
+                      .filter((m) => m._id !== c._id)
+                      .map((m) => (
+                        <option key={m._id} value={m._id}>
+                          In {m.name}
+                        </option>
+                      ))}
+                  </select>
                   <select
                     aria-label={`Spec type for ${c.name}`}
                     value={isTemplateId(c.specTemplate) ? c.specTemplate : ''}
@@ -299,7 +353,19 @@ export function CategoriesSettings() {
       ) : (
         <p className="text-sm text-[var(--fg-muted)]">No categories yet — add your first above.</p>
       )}
-      <p className="text-[11px] text-[var(--fg-muted)]">Hidden categories and their products are not shown in the shop.</p>
+      <p className="text-[11px] text-[var(--fg-muted)]">
+        Hidden categories and their products are not shown in the shop (hiding a main category hides its sub-categories too).
+        A main category also shows the products of its sub-categories.
+      </p>
+      <div className="flex flex-col gap-2 rounded-xl border border-dashed border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-relaxed text-[var(--fg-muted)]">
+          <span className="font-medium text-[var(--fg)]">Suggested sub-categories</span> for your main categories, e.g. Components › Graphics cards,
+          Processors, RAM, Storage (SSD &amp; HDD)… Only the missing ones are added, already named in French and Arabic; rename, hide or delete any after.
+        </p>
+        <Button type="button" size="sm" variant="outline" className="shrink-0" loading={suggested.isPending} onClick={() => suggested.mutate()}>
+          <SiteIcon name="plus" size={13} /> Add suggested sub-categories
+        </Button>
+      </div>
 
       <Modal open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Delete “${deleting?.name ?? ''}”?`} size="sm">
         <p className="text-sm leading-relaxed text-[var(--fg-muted)]">

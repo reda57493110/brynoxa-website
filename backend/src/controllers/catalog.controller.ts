@@ -24,6 +24,10 @@ export const getCategory = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, item);
 });
 
+export const addSuggestedCategories = asyncHandler(async (_req: Request, res: Response) => {
+  sendSuccess(res, await catalog.addSuggestedCategories(), 'Suggested sub-categories added');
+});
+
 export const createCategory = asyncHandler(async (req: Request, res: Response) => {
   const item = await catalog.createCategory(req.body);
   sendSuccess(res, item, 'Category created', 201);

@@ -13,6 +13,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
+import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
 import { categoryPhoto } from '@/lib/categoryPhoto'
 import { cn } from '@/lib/cn'
 
@@ -103,6 +104,22 @@ export function CategoryPage() {
         : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
     )
 
+  // Two levels: the main categories, then the sub-categories of this one (or of its main one)
+  const allCategories = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
+  const current = allCategories.find((c) => c.slug === slug)
+  const main = mainOf(allCategories, current)
+  const subs = main ? childrenOf(allCategories, main._id) : []
+  const parentOfThis = main && current && main._id !== current._id ? main : null
+
+  const subChip = (active: boolean) =>
+    cn(
+      'inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:text-[13px]',
+      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+      active
+        ? 'border-[var(--brand)] text-[var(--brand-text)]'
+        : 'border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
+    )
+
   const productCount = products.data?.length ?? 0
   // Skeleton on first load or a filter change — not on silent background refetches
   const productsLoading = category.isPending || products.isPending || products.isPlaceholderData
@@ -110,7 +127,15 @@ export function CategoryPage() {
   return (
     <>
       <PageHero
-        kicker={t('shop.categoryKicker')}
+        kicker={
+          parentOfThis ? (
+            <Link to={`/category/${parentOfThis.slug}`} className="hover:underline">
+              {categoryDisplayName(locale, parentOfThis.slug, parentOfThis.name)} ›
+            </Link>
+          ) : (
+            t('shop.categoryKicker')
+          )
+        }
         title={
           category.data ? (
             displayName
@@ -134,14 +159,27 @@ export function CategoryPage() {
           <Link to="/shop" className={chip(false)}>
             {t('shop.all')}
           </Link>
-          {(categories.data ?? [])
-            .filter((c) => c.slug !== 'office' && c.slug !== 'networking')
-            .map((c) => (
-              <Link key={c._id} to={`/category/${c.slug}`} className={chip(c.slug === slug)}>
+          {mainCategories(allCategories).map((c) => (
+            <Link key={c._id} to={`/category/${c.slug}`} className={chip(c._id === main?._id)}>
+              {categoryDisplayName(locale, c.slug, c.name)}
+            </Link>
+          ))}
+        </div>
+        {main && subs.length ? (
+          <div
+            className="-mx-4 -mt-5 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            aria-label={categoryDisplayName(locale, main.slug, main.name)}
+          >
+            <Link to={`/category/${main.slug}`} className={subChip(main.slug === slug)}>
+              {t('shop.all')}
+            </Link>
+            {subs.map((c) => (
+              <Link key={c._id} to={`/category/${c.slug}`} className={subChip(c.slug === slug)}>
                 {categoryDisplayName(locale, c.slug, c.name)}
               </Link>
             ))}
-        </div>
+          </div>
+        ) : null}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-[var(--fg-muted)]">
             {productsLoading

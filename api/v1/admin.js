@@ -95,6 +95,13 @@ async function handleCategoryMutation(req, res, route) {
 
   const catalog = require('../../backend/dist/services/catalog.service');
 
+  // Adds the suggested sub-categories (Components › RAM, Storage…) missing under the main ones
+  if (req.method === 'POST' && route === 'categories/suggested') {
+    const result = await catalog.addSuggestedCategories();
+    sendJson(res, 200, { success: true, message: 'Suggested sub-categories added', data: result });
+    return;
+  }
+
   if (req.method === 'POST' && route === 'categories') {
     const body = validated('categorySchema', await readJsonBody(req));
     const item = await catalog.createCategory(body);

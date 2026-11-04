@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
+import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
@@ -134,6 +135,10 @@ export function Shop() {
   )
   const brandList = brands.data ?? []
   const activeCategory = categoryList.find((c) => c.slug === filters.category)
+  // Two levels: main chips, then the sub-categories of the chosen main category
+  const mainList = mainCategories(categoryList)
+  const activeMain = mainOf(categoryList, activeCategory)
+  const subList = activeMain ? childrenOf(categoryList, activeMain._id) : []
   const activeCategoryName = activeCategory
     ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name)
     : undefined
@@ -196,6 +201,16 @@ export function Shop() {
       active
         ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
         : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+    )
+
+  // Sub-categories (RAM, Storage…): smaller chips under the main ones
+  const subChip = (active: boolean) =>
+    cn(
+      'inline-flex h-7 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:h-8',
+      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+      active
+        ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
+        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
     )
 
   const chipIcon = (active: boolean, name: SiteIconName) => (
@@ -281,7 +296,7 @@ export function Shop() {
       </StoreHero>
 
       <Container className="max-w-[96rem] pb-8 pt-4 sm:pb-10 sm:pt-6">
-        <div className="mb-4 flex flex-col gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:mb-5 sm:gap-3 sm:p-3.5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mb-4 flex flex-col gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:mb-5 sm:gap-3 sm:p-3.5 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
           <div
             className="-mx-3 flex min-w-0 gap-1.5 overflow-x-auto px-3 [scrollbar-width:none] sm:-mx-4 sm:gap-2 sm:px-4 lg:mx-0 lg:flex-1 lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
             aria-label={t('shop.shopByCategory')}
@@ -294,20 +309,35 @@ export function Shop() {
               {chipIcon(!filters.category, 'layers')}
               {t('shop.all')}
             </button>
-            {categoryList.map((c) => (
+            {mainList.map((c) => (
               <button
                 key={c._id}
                 type="button"
-                className={chip(filters.category === c.slug)}
+                className={chip(activeMain?._id === c._id)}
                 onClick={() =>
                   update({ category: filters.category === c.slug ? undefined : c.slug })
                 }
               >
-                {chipIcon(filters.category === c.slug, categoryIcon(c.slug, c.name))}
+                {chipIcon(activeMain?._id === c._id, categoryIcon(c.slug, c.name))}
                 {categoryDisplayName(locale, c.slug, c.name)}
               </button>
             ))}
           </div>
+          {activeMain && subList.length ? (
+            <div
+              className="-mx-3 flex min-w-0 basis-full gap-1.5 overflow-x-auto px-3 lg:order-last [scrollbar-width:none] sm:-mx-4 sm:px-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
+              aria-label={categoryDisplayName(locale, activeMain.slug, activeMain.name)}
+            >
+              <button type="button" className={subChip(filters.category === activeMain.slug)} onClick={() => update({ category: activeMain.slug })}>
+                {t('shop.all')}
+              </button>
+              {subList.map((c) => (
+                <button key={c._id} type="button" className={subChip(filters.category === c.slug)} onClick={() => update({ category: c.slug })}>
+                  {categoryDisplayName(locale, c.slug, c.name)}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
           {/* Phones: count on its own line, Filters + Sort as two equal buttons under it (fits any text size) */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5 sm:flex-nowrap sm:gap-3 lg:shrink-0 lg:border-0 lg:pt-0">

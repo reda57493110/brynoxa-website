@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayName } from '@/i18n'
+import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
 
 export interface FilterValues {
   category?: string
@@ -117,6 +118,8 @@ export function FilterSidebar({
 }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
+  // The chosen category's main one (itself, or Components when RAM is chosen)
+  const activeMain = mainOf(categories, categories.find((c) => c.slug === values.category))
   const activeCount = [
     values.category,
     values.brand,
@@ -212,11 +215,11 @@ export function FilterSidebar({
               label={t('shop.allCategories')}
               onClick={() => onChange({ ...values, category: undefined })}
             />
-            {categories.map((c) => (
+            {mainCategories(categories).map((c) => (
               <OptionChip
                 compact={compact}
                 key={c._id}
-                active={values.category === c.slug}
+                active={activeMain?._id === c._id}
                 label={categoryDisplayName(locale, c.slug, c.name)}
                 onClick={() =>
                   onChange({
@@ -227,6 +230,21 @@ export function FilterSidebar({
               />
             ))}
           </div>
+          {activeMain && childrenOf(categories, activeMain._id).length ? (
+            <div className="mt-2.5 flex flex-wrap gap-2 border-s-2 border-[var(--brand)]/40 ps-2.5">
+              {childrenOf(categories, activeMain._id).map((c) => (
+                <OptionChip
+                  compact
+                  key={c._id}
+                  active={values.category === c.slug}
+                  label={categoryDisplayName(locale, c.slug, c.name)}
+                  onClick={() =>
+                    onChange({ ...values, category: values.category === c.slug ? activeMain.slug : c.slug })
+                  }
+                />
+              ))}
+            </div>
+          ) : null}
         </FilterSection>
       ) : null}
 

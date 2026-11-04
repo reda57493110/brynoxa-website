@@ -18,6 +18,8 @@ const router = Router();
 
 router.get('/categories', optionalAuth, catalog.getCategories);
 router.get('/categories/:slug', catalog.getCategory);
+// Adds the suggested sub-categories (Components › RAM, Storage…) missing under the main ones
+router.post('/admin/categories/suggested', requireAuth, requirePermission('products:write'), catalog.addSuggestedCategories);
 router.post(
   '/admin/categories',
   requireAuth,
