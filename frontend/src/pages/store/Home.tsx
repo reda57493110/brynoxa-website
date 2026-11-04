@@ -18,7 +18,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { mainCategories } from '@/lib/categoryTree'
-import { categoryPhoto, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
+import { categoryPhoto, categoryPhotoCredit, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useT } from '@/hooks/useT'
@@ -423,6 +423,29 @@ export function Home() {
                   })}
             </div>
           )}
+          {/* Photo credits asked by the licence of some built-in photos (CC BY-SA) */}
+          {categoryList.some((c) => categoryPhotoCredit(c)) ? (
+            <p className="mt-3 text-[11px] text-[var(--fg-muted)]" dir="ltr">
+              {categoryList
+                .filter((c) => categoryPhotoCredit(c))
+                .map((c) => {
+                  const cr = categoryPhotoCredit(c)!
+                  return (
+                    <span key={c._id} className="me-3">
+                      {categoryDisplayName(locale, c.slug, c.name)}:{' '}
+                      <a href={cr.source} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">
+                        {cr.author}
+                      </a>
+                      ,{' '}
+                      <a href={cr.licenceUrl} target="_blank" rel="noopener noreferrer license" className="underline-offset-2 hover:underline">
+                        {cr.licence}
+                      </a>
+                      {cr.edited ? ' (edited)' : ''}
+                    </span>
+                  )
+                })}
+            </p>
+          ) : null}
         </Container>
       </section>
 

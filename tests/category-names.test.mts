@@ -53,3 +53,14 @@ test('addresses typed differently ("camera", "desktop-pc") get the names and the
     assert.ok(size > 2000 && size < 200_000, f + ': ' + size);
   }
 });
+
+test('the HP EliteDesk photo (CC BY-SA) is credited while it is shown, not once the owner sets a photo', async () => {
+  const photos = await load('lib/categoryPhoto.ts');
+  const credit = photos.categoryPhotoCredit({ slug: 'desktop-pc' });
+  assert.equal(credit.author, 'Miguel Durán (Museo8bits)');
+  assert.equal(credit.licence, 'CC BY-SA 4.0');
+  assert.ok(credit.source.startsWith('https://commons.wikimedia.org/'));
+  assert.equal(photos.categoryPhotoCredit({ slug: 'desktop-pc', image: 'https://x/own.jpg' }), undefined);
+  assert.equal(photos.categoryPhotoCredit({ slug: 'cameras' }), undefined, 'Unsplash photos need no credit');
+  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8').includes('categoryPhotoCredit(c)'));
+});

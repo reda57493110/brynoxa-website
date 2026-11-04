@@ -14,6 +14,25 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   cameras: '/categories/cameras.webp',
 }
 
+/**
+ * Built-in photos whose licence asks for a credit (CC BY-SA): shown under the home categories
+ * while the photo is used (a photo set in admin needs none).
+ */
+export const BUILT_IN_PHOTO_CREDITS: Record<string, { author: string; licence: string; source: string; licenceUrl: string; edited?: boolean }> = {
+  'desktop-pcs': {
+    author: 'Miguel Durán (Museo8bits)',
+    licence: 'CC BY-SA 4.0',
+    source: 'https://commons.wikimedia.org/wiki/File:HP_EliteDesk_800_35_W_G2_mini_003.jpg',
+    licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    edited: true,
+  },
+}
+
+/** The credit for a category's photo, when it is a built-in photo that needs one. */
+export function categoryPhotoCredit(c: { slug: string; image?: string }) {
+  return c.image ? undefined : BUILT_IN_PHOTO_CREDITS[canonicalCategorySlug(c.slug)]
+}
+
 /** Width of each built-in photo's larger copy (some originals are under 960 px). */
 const BUILT_IN_LARGE_WIDTH: Record<string, number> = { accessories: 679, headphones: 736, mice: 735, monitors: 736 }
 
