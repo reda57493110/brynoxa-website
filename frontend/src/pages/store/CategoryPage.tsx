@@ -14,7 +14,8 @@ import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
-import { categoryPhoto } from '@/lib/categoryPhoto'
+import { SubThumb } from '@/components/product/SubThumb'
+import { categoryPhoto, categoryThumb } from '@/lib/categoryPhoto'
 import { cn } from '@/lib/cn'
 
 export function CategoryPage() {
@@ -175,6 +176,7 @@ export function CategoryPage() {
             </Link>
             {subs.map((c) => (
               <Link key={c._id} to={`/category/${c.slug}`} className={subChip(c.slug === slug)}>
+                <SubThumb src={categoryThumb(c, allCategories)} />
                 {categoryDisplayName(locale, c.slug, c.name)}
               </Link>
             ))}

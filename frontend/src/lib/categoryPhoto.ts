@@ -1,3 +1,4 @@
+import { sizedImageUrl } from './image'
 import { canonicalCategorySlug } from './categorySlug'
 
 /** Built-in photos for the store's main categories (by address), used until the owner sets one. */
@@ -15,6 +16,43 @@ export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
   'desktop-pcs': '/categories/desktop-pcs-v10.webp',
   cameras: '/categories/cameras.webp',
 }
+
+/**
+ * Sub-categories with a photo of their own (public/categories/sub/<address>.webp, 1200 px, with
+ * -480 / -960 copies): RAM shows RAM sticks, Security cameras a security camera…
+ */
+export const SUB_CATEGORY_PHOTOS = [
+  'business-laptops',
+  'gaming-laptops',
+  'student-laptops',
+  'mini-pcs',
+  'desktop-with-screen',
+  'desktop-only',
+  'gaming-pcs-1080p',
+  'gaming-pcs-1440p',
+  'gaming-pcs-4k',
+  'office-monitors',
+  'gaming-monitors',
+  'curved-monitors',
+  'graphics-cards',
+  'processors',
+  'ram',
+  'storage',
+  'motherboards',
+  'power-supplies',
+  'pc-cases',
+  'cooling',
+  'security-cameras',
+  'webcams',
+  'action-cameras',
+  'digital-cameras',
+  'camera-accessories',
+  'hubs-docks',
+  'laptop-stands',
+  'cables-chargers',
+  'bags-sleeves',
+] as const
+for (const s of SUB_CATEGORY_PHOTOS) BUILT_IN_CATEGORY_PHOTOS[s] = `/categories/sub/${s}.webp`
 
 /**
  * Built-in photos whose licence asks for a credit (CC BY-SA): shown under the home categories
@@ -38,7 +76,10 @@ export function categoryPhotoCredit(c: { slug: string; image?: string }) {
 }
 
 /** Built-in originals sharp enough for phone screens (3× pixels): offered as the largest size. */
-const BUILT_IN_ORIGINAL_WIDTH: Record<string, number> = { 'desktop-pcs': 2128 }
+const BUILT_IN_ORIGINAL_WIDTH: Record<string, number> = {
+  'desktop-pcs': 2128,
+  ...Object.fromEntries(SUB_CATEGORY_PHOTOS.map((s) => [s, 1200])),
+}
 
 /** Width of each built-in photo's larger copy (some originals are under 960 px). */
 const BUILT_IN_LARGE_WIDTH: Record<string, number> = { accessories: 679, headphones: 736, mice: 735, monitors: 736 }
@@ -69,4 +110,11 @@ export function categoryPhoto(c: PhotoCategory, all: PhotoCategory[] = []): stri
   if (own || !c.parent) return own
   const parent = typeof c.parent === 'string' ? all.find((x) => x._id === c.parent) : c.parent
   return parent ? parent.image || BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(parent.slug)] : undefined
+}
+
+/** A small copy of the category photo, for chips (the built-in 480 px copy, or the admin photo resized). */
+export function categoryThumb(c: PhotoCategory, all: PhotoCategory[] = []): string | undefined {
+  const photo = categoryPhoto(c, all)
+  if (!photo) return undefined
+  return photo.startsWith('/categories/') ? photo.replace(/\.(webp|jpg)$/, '-480.webp') : sizedImageUrl(photo, 160)
 }

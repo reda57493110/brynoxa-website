@@ -16,6 +16,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
+import { categoryThumb } from '@/lib/categoryPhoto'
+import { SubThumb } from '@/components/product/SubThumb'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
@@ -333,6 +335,7 @@ export function Shop() {
               </button>
               {subList.map((c) => (
                 <button key={c._id} type="button" className={subChip(filters.category === c.slug)} onClick={() => update({ category: c.slug })}>
+                  <SubThumb src={categoryThumb(c, categoryList)} />
                   {categoryDisplayName(locale, c.slug, c.name)}
                 </button>
               ))}

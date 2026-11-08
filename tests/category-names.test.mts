@@ -78,9 +78,32 @@ test('Desktop PCs image: wide enough for the wide tile, so no special framing is
 test('a sub-category without its own photo shows its main category photo', async () => {
   const photos = await load('lib/categoryPhoto.ts');
   const list = [{ _id: 'l', slug: 'laptops' }, { _id: 'd', slug: 'desktop-pc', image: 'https://x/own-desktop.jpg' }];
-  assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: 'l' }, list), '/categories/laptops.webp');
-  assert.equal(photos.categoryPhoto({ slug: 'mini-pcs', parent: 'd' }, list), 'https://x/own-desktop.jpg');
-  assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: { slug: 'laptops' } }), '/categories/laptops.webp', 'populated parent');
+  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: 'l' }, list), '/categories/laptops.webp');
+  assert.equal(photos.categoryPhoto({ slug: 'my-other-sub', parent: 'd' }, list), 'https://x/own-desktop.jpg');
+  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: { slug: 'laptops' } }), '/categories/laptops.webp', 'populated parent');
   assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: 'l', image: 'https://x/mine.jpg' }, list), 'https://x/mine.jpg', 'its own photo wins');
   assert.equal(photos.categoryPhoto({ slug: 'mice' }), '/categories/mice.jpg', 'built-in photo of its own');
+});
+
+test('every suggested sub-category has a photo of its own (480 / 960 / 1200 copies), shown on the shop chips', async () => {
+  const photos = await load('lib/categoryPhoto.ts');
+  const src = fs.readFileSync(path.join(root, 'backend/src/utils/categorySuggestions.ts'), 'utf8');
+  const suggested = [...src.slice(src.indexOf('export const CATEGORY_SUGGESTIONS')).matchAll(/slug: '([^']+)'/g)].map((m) => m[1]);
+  assert.ok(suggested.length >= 28);
+  for (const slug of suggested) {
+    const photo = photos.categoryPhoto({ slug });
+    assert.ok(photo, 'no photo: ' + slug);
+    if (!photo.startsWith('/categories/sub/')) continue; // keyboards: its built-in photo
+    for (const f of [photo, photo.replace('.webp', '-480.webp'), photo.replace('.webp', '-960.webp')]) {
+      const size = fs.statSync(path.join(root, 'frontend/public', f)).size;
+      assert.ok(size > 2000 && size < 400_000, f + ': ' + size);
+    }
+    assert.ok(photos.categoryPhotoSrcSet({ slug }).endsWith(photo + ' 1200w'), slug);
+  }
+  assert.equal(photos.categoryThumb({ slug: 'ram' }), '/categories/sub/ram-480.webp');
+  assert.equal(photos.categoryThumb({ slug: 'mice' }), '/categories/mice-480.webp');
+  assert.ok(photos.categoryThumb({ slug: 'ram', image: 'https://res.cloudinary.com/x/image/upload/own.jpg' }).includes('w_160'), 'admin photo resized');
+  for (const p of ['pages/store/Shop.tsx', 'pages/store/CategoryPage.tsx']) {
+    assert.ok(fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8').includes('<SubThumb src={categoryThumb('), p);
+  }
 });
