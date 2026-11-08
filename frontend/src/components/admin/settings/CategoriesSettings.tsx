@@ -273,9 +273,10 @@ export function CategoriesSettings() {
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <CategoryPhotoPicker
                     className="w-24 shrink-0 sm:w-28"
-                    photo={categoryPhoto(c)}
+                    // A sub-category without its own photo shows its main category's photo
+                    photo={categoryPhoto(c, list)}
                     custom={Boolean(c.image)}
-                    hasBuiltIn={Boolean(BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)])}
+                    hasBuiltIn={Boolean(BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)] || (!c.image && categoryPhoto(c, list)))}
                     uploading={uploadingId === c._id}
                     onPick={(file) => changePhoto(c, file)}
                     onReset={() => update.mutate({ id: c._id, patch: { image: '' } })}

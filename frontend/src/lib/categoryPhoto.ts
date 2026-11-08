@@ -57,7 +57,16 @@ export function categoryPhotoSrcSet(c: { slug: string; image?: string }): string
   return `${base}-480.webp 480w, ${base}-960.webp ${BUILT_IN_LARGE_WIDTH[slug] ?? 960}w${large}`
 }
 
-/** The photo shown for a category: the one picked in admin, else the built-in one (if any). */
-export function categoryPhoto(c: { slug: string; image?: string }): string | undefined {
-  return c.image || BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)]
+type PhotoCategory = { _id?: string; slug: string; image?: string; parent?: string | PhotoCategory | null }
+
+/**
+ * The photo shown for a category: the one picked in admin, else the built-in one, else (for a
+ * sub-category) its main category's photo — "Business laptops" shows the Laptops photo until it
+ * gets its own. `all`: the category list, to find the main category by id.
+ */
+export function categoryPhoto(c: PhotoCategory, all: PhotoCategory[] = []): string | undefined {
+  const own = c.image || BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(c.slug)]
+  if (own || !c.parent) return own
+  const parent = typeof c.parent === 'string' ? all.find((x) => x._id === c.parent) : c.parent
+  return parent ? parent.image || BUILT_IN_CATEGORY_PHOTOS[canonicalCategorySlug(parent.slug)] : undefined
 }

@@ -74,3 +74,13 @@ test('Desktop PCs image: wide enough for the wide tile, so no special framing is
   assert.equal(photos.categoryPhotoPosition({ slug: 'laptops' }), undefined);
   assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8').includes('objectPosition: categoryPhotoPosition(c)'));
 });
+
+test('a sub-category without its own photo shows its main category photo', async () => {
+  const photos = await load('lib/categoryPhoto.ts');
+  const list = [{ _id: 'l', slug: 'laptops' }, { _id: 'd', slug: 'desktop-pc', image: 'https://x/own-desktop.jpg' }];
+  assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: 'l' }, list), '/categories/laptops.webp');
+  assert.equal(photos.categoryPhoto({ slug: 'mini-pcs', parent: 'd' }, list), 'https://x/own-desktop.jpg');
+  assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: { slug: 'laptops' } }), '/categories/laptops.webp', 'populated parent');
+  assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: 'l', image: 'https://x/mine.jpg' }, list), 'https://x/mine.jpg', 'its own photo wins');
+  assert.equal(photos.categoryPhoto({ slug: 'mice' }), '/categories/mice.jpg', 'built-in photo of its own');
+});

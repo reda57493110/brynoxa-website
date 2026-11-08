@@ -52,6 +52,7 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
     { slug: 'student-laptops', name: 'Student / small budget', description: 'Reliable laptops for school, study and everyday use at a small price.' },
   ],
   'desktop-pcs': [
+    { slug: 'mini-pcs', name: 'Mini PCs', description: 'Tiny desktops (HP EliteDesk Mini…) that fit behind a screen.' },
     { slug: 'desktop-with-screen', name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
     { slug: 'desktop-only', name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
   ],

@@ -125,8 +125,8 @@ test('your own "camera" and "desktop-pc" count as Cameras and Desktop PCs: no co
   assert.ok(created.filter((c) => String(c.parent) === id(8)).some((c) => c.slug === 'desktop-only'));
 });
 
-test('Desktop PCs: with a screen, or the computer alone', () => {
-  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only']);
+test('Desktop PCs: mini PCs, with a screen, or the computer alone', () => {
+  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['mini-pcs', 'desktop-with-screen', 'desktop-only']);
   const fr = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8');
   assert.ok(fr.includes("'desktop-with-screen': { name: 'PC complet avec écran'"));
   assert.ok(fr.includes("'desktop-only': { name: 'Unité centrale seule'"));

@@ -67,7 +67,7 @@ export function CategoryPage() {
     path: slug ? `/category/${slug}` : '/shop',
     noIndex: !category.data,
     // Share preview shows the category photo instead of the logo
-    image: category.data ? categoryPhoto(category.data) : undefined,
+    image: category.data ? categoryPhoto(category.data, categories.data ?? []) : undefined,
   })
 
   if (category.isError) {
