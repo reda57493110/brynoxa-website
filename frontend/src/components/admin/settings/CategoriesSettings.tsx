@@ -155,7 +155,7 @@ export function CategoriesSettings() {
       refresh()
       toast.success(
         r.created || r.moved
-          ? [r.created ? `${r.created} added` : '', r.moved ? `${r.moved} moved inside Desktop PC` : ''].filter(Boolean).join(', ')
+          ? [r.created ? `${r.created} added` : '', r.moved ? `${r.moved} moved inside Accessories` : ''].filter(Boolean).join(', ')
           : 'All suggested categories are already there'
       )
     },
@@ -365,7 +365,7 @@ export function CategoriesSettings() {
       <div className="flex flex-col gap-2 rounded-xl border border-dashed border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-xs leading-relaxed text-[var(--fg-muted)]">
           <span className="font-medium text-[var(--fg)]">Suggested categories</span>: Desktop PCs and Cameras if missing; Mice, Headphones and Keyboards placed
-          inside Desktop PCs; and sub-categories for your main
+          inside Accessories; and sub-categories for your main
           categories, e.g. Components › Graphics cards, Processors, RAM, Storage (SSD &amp; HDD)… Only the missing ones are added, already named in French
           and Arabic; rename, hide or delete any after.
         </p>

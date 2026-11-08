@@ -37,24 +37,23 @@ export const MAIN_CATEGORY_SUGGESTIONS: CategorySuggestion[] = [
 ];
 
 /**
- * Main categories that go inside another one: Mice, Headphones and Keyboards sit inside Desktop
- * PCs (next to "Desktop + screen" and "Desktop only"). Moved by the same button, only while they
- * have no sub-categories of their own (two levels).
+ * Main categories that go inside another one: Mice, Headphones and Keyboards sit inside
+ * Accessories (Desktop PCs keeps computers only). Moved by the same button, only while they have
+ * no sub-categories of their own (two levels).
  */
 export const MOVE_INSIDE: Record<string, string[]> = {
-  'desktop-pcs': ['mice', 'headphones', 'keyboards'],
+  accessories: ['mice', 'headphones', 'keyboards'],
 };
 
 export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
   laptops: [
     { slug: 'business-laptops', name: 'Business laptops', description: 'HP EliteBook, ProBook, Dell Latitude: solid laptops for work and study.' },
     { slug: 'gaming-laptops', name: 'Gaming laptops', description: 'Laptops with a graphics card for games and creative work.' },
-    { slug: '2-in-1-laptops', name: '2-in-1 laptops', description: 'Touch screens that fold into a tablet.' },
+    { slug: 'student-laptops', name: 'Student / small budget', description: 'Reliable laptops for school, study and everyday use at a small price.' },
   ],
   'desktop-pcs': [
     { slug: 'desktop-with-screen', name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
     { slug: 'desktop-only', name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
-    { slug: 'keyboards', name: 'Keyboards', description: 'Office and gaming keyboards.' },
   ],
   'gaming-pcs': [
     { slug: 'gaming-pcs-1080p', name: '1080p gaming PCs', description: 'Smooth Full HD gaming at a fair price.' },
@@ -88,5 +87,6 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
     { slug: 'laptop-stands', name: 'Laptop stands', description: 'Raise your screen for a better posture.' },
     { slug: 'cables-chargers', name: 'Cables & chargers', description: 'Chargers, adapters and cables.' },
     { slug: 'bags-sleeves', name: 'Bags & sleeves', description: 'Carry your laptop safely.' },
+    { slug: 'keyboards', name: 'Keyboards', description: 'Office and gaming keyboards.' },
   ],
 };

@@ -126,16 +126,16 @@ test('your own "camera" and "desktop-pc" count as Cameras and Desktop PCs: no co
 });
 
 test('Desktop PCs: with a screen, or the computer alone', () => {
-  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only', 'keyboards']);
+  assert.deepEqual(CATEGORY_SUGGESTIONS['desktop-pcs'].map((c) => c.slug), ['desktop-with-screen', 'desktop-only']);
   const fr = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8');
   assert.ok(fr.includes("'desktop-with-screen': { name: 'PC complet avec écran'"));
   assert.ok(fr.includes("'desktop-only': { name: 'Unité centrale seule'"));
 });
 
-test('Mice and Headphones move inside Desktop PC (Keyboards is created there); not when they have sub-categories', async () => {
+test('Mice and Headphones move inside Accessories (Keyboards is created there); not when they have sub-categories', async () => {
   const created = [];
   const moved = [];
-  const top = [{ _id: id(8), slug: 'desktop-pc' }, { _id: id(9), slug: 'mice' }, { _id: id(10), slug: 'headphones' }, { _id: id(11), slug: 'laptops' }];
+  const top = [{ _id: id(8), slug: 'accessories' }, { _id: id(9), slug: 'mice' }, { _id: id(10), slug: 'headphones' }, { _id: id(11), slug: 'laptops' }];
   Category.find = (q) => lean(q && 'parent' in q ? top.filter((t) => !moved.some((m) => m.id === t._id)) : [...top, { slug: 'wireless-mice' }].map((c) => ({ slug: c.slug })));
   Category.exists = async (q) => String(q.parent) === id(10); // Headphones already has a sub-category
   Category.updateOne = async (q, u) => moved.push({ id: String(q._id), parent: String(u.$set.parent) });
@@ -143,8 +143,33 @@ test('Mice and Headphones move inside Desktop PC (Keyboards is created there); n
   const r = await addSuggestedCategories();
   assert.deepEqual(moved, [{ id: id(9), parent: id(8) }], 'Mice moved; Headphones kept (has a sub-category)');
   assert.equal(r.moved, 1);
-  assert.ok(created.some((c) => c.slug === 'keyboards' && String(c.parent) === id(8)), 'Keyboards created inside Desktop PC');
+  assert.ok(created.some((c) => c.slug === 'keyboards' && String(c.parent) === id(8)), 'Keyboards created inside Accessories');
   const { MOVE_INSIDE } = require(dist('utils/categorySuggestions.js'));
-  assert.deepEqual(MOVE_INSIDE['desktop-pcs'], ['mice', 'headphones', 'keyboards']);
+  assert.deepEqual(MOVE_INSIDE.accessories, ['mice', 'headphones', 'keyboards']);
+  assert.equal(MOVE_INSIDE['desktop-pcs'], undefined, 'Desktop PC keeps computers only');
   assert.equal(CATEGORY_SUGGESTIONS.mice, undefined, 'no third level under Mice');
+});
+
+test('Laptops: "Student / small budget" instead of 2-in-1, named in French and Arabic', () => {
+  assert.deepEqual(CATEGORY_SUGGESTIONS.laptops.map((c) => c.slug), ['business-laptops', 'gaming-laptops', 'student-laptops']);
+  const fr = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/fr.ts'), 'utf8');
+  assert.ok(fr.includes("'student-laptops': { name: 'Étudiants / petit budget'"));
+});
+
+test('shop: an empty sub-category is hidden; main categories always show', async () => {
+  const cats = [
+    { _id: id(1), slug: 'components', isActive: true, parent: null },
+    { _id: id(2), slug: 'ram', isActive: true, parent: id(1) },
+    { _id: id(3), slug: 'storage', isActive: true, parent: id(1) },
+    { _id: id(4), slug: 'cameras', isActive: true, parent: null },
+  ];
+  const docs = cats.map((c) => ({ ...c, toObject: () => c }));
+  Category.find = (q) => {
+    if (q && q.slug) return { sort: () => ({ populate: async () => docs }) };
+    return { select: () => ({ lean: async () => cats }) };
+  };
+  const { Product } = require(dist('models/Product.js'));
+  Product.aggregate = async () => [{ _id: id(2), n: 3 }];
+  const shown = (await catalog.listCategories(true)).map((c) => c.slug);
+  assert.deepEqual(shown, ['components', 'ram', 'cameras'], 'Storage has no product: hidden; Cameras is a main category: shown');
 });

@@ -1123,6 +1123,7 @@ export const en = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      'student-laptops': { name: 'Student / small budget', description: 'Reliable laptops for school, study and everyday use at a small price.' },
       // Inside Desktop PCs
       'desktop-with-screen': { name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
       'desktop-only': { name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
