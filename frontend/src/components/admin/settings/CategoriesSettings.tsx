@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { Fragment, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -257,10 +257,16 @@ export function CategoriesSettings() {
         <QueryErrorState onRetry={() => categories.refetch()} />
       ) : list.length ? (
         <ul className="divide-y divide-[var(--border)] overflow-hidden rounded-xl border border-[var(--border)]">
-          {tree.map(({ category: c, depth }) => {
+          {tree.map(({ category: c, depth }, index) => {
             const count = c.productCount ?? 0
             const hasChildren = childrenOf(list, c._id).length > 0
+            // After a main category's last sub-category: a row to add one more inside it
+            const mainId = depth === 0 ? c._id : parentIdOf(c)
+            const next = tree[index + 1]
+            const endOfGroup = mainId && (!next || next.depth === 0)
+            const main = mainId ? list.find((x) => x._id === mainId) : undefined
             return (
+              <Fragment key={c._id}>
               <li
                 key={c._id}
                 className={cn(
@@ -353,6 +359,8 @@ export function CategoriesSettings() {
                   </button>
                 </div>
               </li>
+              {endOfGroup && main ? <AddSubRow main={main} onAdded={refresh} /> : null}
+              </Fragment>
             )
           })}
         </ul>
@@ -391,5 +399,58 @@ export function CategoriesSettings() {
         </div>
       </Modal>
     </SettingsCard>
+  )
+}
+
+/** Row under each main category: add a sub-category inside it (name, then Add). */
+function AddSubRow({ main, onAdded }: { main: Category; onAdded: () => void }) {
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const add = useMutation({
+    mutationFn: () => adminApi.categories.create({ name: name.trim(), parent: main._id }),
+    onSuccess: () => {
+      onAdded()
+      setName('')
+      setOpen(false)
+      toast.success(`Sub-category added in ${main.name}`)
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+  return (
+    <li className="bg-[var(--bg-muted)]/40 px-3 py-2 ps-6 sm:ps-10">
+      {open ? (
+        <form
+          className="flex flex-wrap items-center gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (name.trim().length >= 2) add.mutate()
+          }}
+        >
+          <input
+            autoFocus
+            value={name}
+            maxLength={60}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={`New sub-category in ${main.name}`}
+            aria-label={`New sub-category in ${main.name}`}
+            className="h-9 min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm outline-none ring-brand sm:max-w-sm"
+          />
+          <Button type="submit" size="sm" loading={add.isPending} disabled={name.trim().length < 2}>
+            Add
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--brand-text)] hover:underline"
+        >
+          <SiteIcon name="plus" size={14} /> Add sub-category in {main.name}
+        </button>
+      )}
+    </li>
   )
 }

@@ -44,3 +44,10 @@ test('pages: home shows main categories; shop, filters and category page show th
   assert.match(admin, /parent: parent \|\| null/);
   assert.match(admin, /Add suggested categories/);
 });
+
+test('admin: each main category has its own "Add sub-category" row, which creates it inside', () => {
+  const admin = fs.readFileSync(path.join(root, 'frontend/src/components/admin/settings/CategoriesSettings.tsx'), 'utf8');
+  assert.match(admin, /\{endOfGroup && main \? <AddSubRow main=\{main\} onAdded=\{refresh\} \/> : null\}/);
+  assert.match(admin, /adminApi\.categories\.create\(\{ name: name\.trim\(\), parent: main\._id \}\)/);
+  assert.match(admin, /Add sub-category in \{main\.name\}/);
+});
