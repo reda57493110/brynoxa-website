@@ -96,7 +96,8 @@ export function Shop() {
       else next.set(k, v)
     })
     if (!('page' in patch)) next.set('page', '1')
-    setParams(next)
+    // Category / filter changes keep the page where it is; changing page goes back up
+    setParams(next, 'page' in patch ? undefined : { state: { keepScroll: true } })
   }
 
   const filterValues: FilterValues = {

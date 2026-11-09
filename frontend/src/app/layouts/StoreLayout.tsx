@@ -25,6 +25,8 @@ export function StoreLayout() {
   const navigationType = useNavigationType()
   const reduceMotion = useReducedMotion()
   const t = useT()
+  // Category / filter clicks keep the page where it is (state set by the shop and category pages)
+  const keepScroll = navigationType !== 'POP' && Boolean((location.state as { keepScroll?: boolean } | null)?.keepScroll)
   const isAccount = location.pathname === '/account' || location.pathname.startsWith('/account/')
 
   useLayoutEffect(() => {
@@ -43,11 +45,13 @@ export function StoreLayout() {
   }, [location.key])
 
   useLayoutEffect(() => {
-    if (location.hash) return
+    if (location.hash || keepScroll) return
     jumpTo(navigationType === 'POP' ? scrollPositions.get(location.key) ?? 0 : 0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key, location.hash, navigationType])
 
   useEffect(() => {
+    if (keepScroll) return
     let cancelled = false
     let timer: ReturnType<typeof setTimeout> | undefined
     let attempts = 0
@@ -88,6 +92,7 @@ export function StoreLayout() {
       cancelAnimationFrame(frame)
       if (timer) clearTimeout(timer)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.key, location.hash, navigationType])
 
   return (

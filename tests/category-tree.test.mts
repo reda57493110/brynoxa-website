@@ -51,3 +51,12 @@ test('admin: each main category has its own "Add sub-category" row, which create
   assert.match(admin, /adminApi\.categories\.create\(\{ name: name\.trim\(\), parent: main\._id \}\)/);
   assert.match(admin, /Add sub-category in \{main\.name\}/);
 });
+
+test('category and filter clicks keep the scroll position; changing page still goes back up', () => {
+  const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  const layout = src('app/layouts/StoreLayout.tsx');
+  assert.match(layout, /const keepScroll = navigationType !== 'POP' && Boolean\(/);
+  assert.match(layout, /if \(location\.hash \|\| keepScroll\) return/);
+  assert.match(src('pages/store/Shop.tsx'), /setParams\(next, 'page' in patch \? undefined : \{ state: \{ keepScroll: true \} \}\)/);
+  assert.equal((src('pages/store/CategoryPage.tsx').match(/state=\{\{ keepScroll: true \}\}/g) || []).length, 4);
+});

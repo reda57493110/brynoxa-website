@@ -157,11 +157,11 @@ export function CategoryPage() {
           className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
           aria-label={t('shop.shopByCategory')}
         >
-          <Link to="/shop" className={chip(false)}>
+          <Link to="/shop" state={{ keepScroll: true }} className={chip(false)}>
             {t('shop.all')}
           </Link>
           {mainCategories(allCategories).map((c) => (
-            <Link key={c._id} to={`/category/${c.slug}`} className={chip(c._id === main?._id)}>
+            <Link key={c._id} to={`/category/${c.slug}`} state={{ keepScroll: true }} className={chip(c._id === main?._id)}>
               {categoryDisplayName(locale, c.slug, c.name)}
             </Link>
           ))}
@@ -171,11 +171,11 @@ export function CategoryPage() {
             className="-mx-4 -mt-5 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
             aria-label={categoryDisplayName(locale, main.slug, main.name)}
           >
-            <Link to={`/category/${main.slug}`} className={subChip(main.slug === slug)}>
+            <Link to={`/category/${main.slug}`} state={{ keepScroll: true }} className={subChip(main.slug === slug)}>
               {t('shop.all')}
             </Link>
             {subs.map((c) => (
-              <Link key={c._id} to={`/category/${c.slug}`} className={subChip(c.slug === slug)}>
+              <Link key={c._id} to={`/category/${c.slug}`} state={{ keepScroll: true }} className={subChip(c.slug === slug)}>
                 <SubThumb src={categoryThumb(c, allCategories)} />
                 {categoryDisplayName(locale, c.slug, c.name)}
               </Link>
