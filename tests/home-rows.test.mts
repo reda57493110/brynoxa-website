@@ -13,3 +13,16 @@ test('Deals facts come from the real prices; New arrivals from the real dates', 
   assert.equal(rows.latestAdded([p(1, undefined, '2026-11-01T10:00:00Z'), p(2, undefined, '2026-11-07T09:00:00Z'), p(3)])?.toISOString(), '2026-11-07T09:00:00.000Z');
   assert.equal(rows.latestAdded([p(1)]), null);
 });
+
+test('budget bands: under 3,000 / 3,000–8,000 / over 8,000 DH; the closing banner is gone', async () => {
+  const fs = await import('node:fs');
+  assert.deepEqual(rows.BUDGETS.map((b: { id: string }) => b.id), ['small', 'mid', 'high']);
+  const band = (price: number) => rows.BUDGETS.find((b: { min?: number; max?: number }) => rows.inBudget(price, b))?.id;
+  assert.equal(band(2999), 'small');
+  assert.equal(band(3000), 'mid');
+  assert.equal(band(7999), 'mid');
+  assert.equal(band(8000), 'high');
+  const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
+  assert.ok(!home.includes('home-cta-heading') && !home.includes('CTA_STEPS'), 'closing banner removed');
+  assert.ok(home.trimEnd().endsWith('<HomeBudget />\n    </>\n  )\n}'.trimEnd()), 'budget is the last section before the footer');
+});
