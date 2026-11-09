@@ -204,7 +204,7 @@ export function CategoriesSettings() {
   return (
     <SettingsCard
       title="Categories"
-      description="Changes here apply immediately. The photo is the one shown in the home page categories. Spec type sets the specification fields in the product form."
+      description="Changes apply immediately."
     >
       <form
         className="grid gap-4 rounded-xl border border-[var(--border)] p-3 sm:grid-cols-[13rem_1fr] sm:p-4"
@@ -240,9 +240,6 @@ export function CategoriesSettings() {
               ))}
             </select>
           </label>
-          <p className="text-[11px] text-[var(--fg-muted)]">
-            Photo: a wide picture (about 16:10) looks best; the corners are rounded for you, like on the home page.
-          </p>
           <Button type="submit" className="self-start" loading={create.isPending} disabled={name.trim().length < 2 || newUploading}>
             <SiteIcon name="plus" size={14} /> Add category
           </Button>
@@ -367,17 +364,7 @@ export function CategoriesSettings() {
       ) : (
         <p className="text-sm text-[var(--fg-muted)]">No categories yet — add your first above.</p>
       )}
-      <p className="text-[11px] text-[var(--fg-muted)]">
-        Hidden categories and their products are not shown in the shop (hiding a main category hides its sub-categories too).
-        A main category also shows the products of its sub-categories.
-      </p>
-      <div className="flex flex-col gap-2 rounded-xl border border-dashed border-[var(--border)] p-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs leading-relaxed text-[var(--fg-muted)]">
-          <span className="font-medium text-[var(--fg)]">Suggested categories</span>: Desktop PCs and Cameras if missing; Mice, Headphones and Keyboards placed
-          inside Accessories; and sub-categories for your main
-          categories, e.g. Components › Graphics cards, Processors, RAM, Storage (SSD &amp; HDD)… Only the missing ones are added, already named in French
-          and Arabic; rename, hide or delete any after.
-        </p>
+      <div className="flex justify-end">
         <Button type="button" size="sm" variant="outline" className="shrink-0" loading={suggested.isPending} onClick={() => suggested.mutate()}>
           <SiteIcon name="plus" size={13} /> Add suggested categories
         </Button>
