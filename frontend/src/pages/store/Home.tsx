@@ -7,6 +7,7 @@ import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { HomeProductRow } from '@/components/home/HomeProductRow'
 import { HomeBudget } from '@/components/home/HomeBudget'
+import { useHomeRows } from '@/hooks/useHomeRows'
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -83,21 +84,8 @@ export function Home() {
     queryFn: async () => (await productsApi.list({ carousel: true, limit: 12 })).data.data,
   })
 
-  // Deals and New arrivals rows: automatic, in stock, never a product already shown above
-  const onSale = useQuery({
-    queryKey: ['products', 'home-deals-row'],
-    queryFn: async () => (await productsApi.list({ onSale: true, inStock: true, limit: 16 })).data.data,
-  })
-  const newest = useQuery({
-    queryKey: ['products', 'home-new-row'],
-    queryFn: async () => (await productsApi.list({ sort: 'newest', inStock: true, limit: 16 })).data.data,
-  })
-  const shownAbove = new Set(
-    [...deals.products, ...(featured.data ?? []), ...(carousel.data ?? [])].map((p) => p._id)
-  )
-  const dealsRow = (onSale.data ?? []).filter((p) => !shownAbove.has(p._id)).slice(0, 12)
-  const dealsIds = new Set(dealsRow.map((p) => p._id))
-  const newRow = (newest.data ?? []).filter((p) => !shownAbove.has(p._id) && !dealsIds.has(p._id)).slice(0, 12)
+  // Deals, New arrivals, Shop by budget: automatic, the same as Admin → Products shows
+  const rows = useHomeRows([...deals.products, ...(featured.data ?? []), ...(carousel.data ?? [])])
 
   const categories = useQuery({
     queryKey: ['categories'],
@@ -300,7 +288,7 @@ export function Home() {
         title={t('home.dealsTitle')}
         body={t('home.dealsBody')}
         viewAll={{ to: '/shop?onSale=true', label: t('home.seeAllDeals') }}
-        products={dealsRow}
+        products={rows.deals}
       />
 
       {/* Categories — bento of the full catalog */}
@@ -473,11 +461,11 @@ export function Home() {
         title={t('home.newTitle')}
         body={t('home.newBody')}
         viewAll={{ to: '/shop?sort=newest', label: t('common.viewAll') }}
-        products={newRow}
+        products={rows.newArrivals}
       />
 
       {/* Last section: products by budget, then the footer */}
-      <HomeBudget />
+      <HomeBudget budgets={rows.budgets} total={rows.budgetTotal} />
     </>
   )
 }

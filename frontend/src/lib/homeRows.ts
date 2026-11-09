@@ -15,7 +15,7 @@ export function latestAdded(products: Product[]) {
 }
 
 /** "Shop by budget" price bands, in DH (min included, max excluded). */
-type Budget = { id: string; label: 'home.budgetUnder' | 'home.budgetBetween' | 'home.budgetOver'; min?: number; max?: number }
+export type Budget = { id: string; label: 'home.budgetUnder' | 'home.budgetBetween' | 'home.budgetOver'; min?: number; max?: number }
 
 export const BUDGETS: readonly Budget[] = [
   { id: 'small', label: 'home.budgetUnder', max: 3000 },

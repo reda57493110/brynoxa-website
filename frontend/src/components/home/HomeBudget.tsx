@@ -1,33 +1,27 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ProductCard } from '@/components/product/ProductCard'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { cn } from '@/lib/cn'
-import { BUDGETS, inBudget } from '@/lib/homeRows'
+import type { Budget } from '@/lib/homeRows'
+import type { Product } from '@/types'
 
 /**
  * Last home section: "Shop by budget". Three price tabs (with how many products each), a grid of
  * up to 8 in-stock products for the chosen one, and a button to the shop filtered on that budget.
  * Tabs without products are not shown; the section hides when the shop has fewer than 4 products.
  */
-export function HomeBudget() {
+export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Product[] })[]; total: number }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   // 3,000 / 3 000 / ٣٬٠٠٠ in the visitor's language
   const amount = (n: number) => new Intl.NumberFormat(locale === 'ar' ? 'ar-MA' : locale === 'fr' ? 'fr-MA' : 'en-US').format(n)
-  const products = useQuery({
-    queryKey: ['products', 'home-budget'],
-    queryFn: async () => (await productsApi.list({ inStock: true, sort: 'price_asc', limit: 60 })).data.data,
-  })
-  const all = products.data ?? []
-  const tabs = BUDGETS.map((b) => ({ ...b, items: all.filter((p) => inBudget(p.price, b)) })).filter((b) => b.items.length)
+  const tabs = budgets.filter((b) => b.items.length)
   const [chosen, setChosen] = useState<string | null>(null)
-  if (all.length < 4 || !tabs.length) return null
+  if (total < 4 || !tabs.length) return null
   const active = tabs.find((b) => b.id === chosen) ?? tabs[0]
   const shopLink = `/shop?${new URLSearchParams({
     ...(active.min ? { minPrice: String(active.min) } : {}),

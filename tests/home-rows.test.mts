@@ -24,5 +24,5 @@ test('budget bands: under 3,000 / 3,000–8,000 / over 8,000 DH; the closing ban
   assert.equal(band(8000), 'high');
   const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
   assert.ok(!home.includes('home-cta-heading') && !home.includes('CTA_STEPS'), 'closing banner removed');
-  assert.ok(home.trimEnd().endsWith('<HomeBudget />\n    </>\n  )\n}'.trimEnd()), 'budget is the last section before the footer');
+  assert.match(home, /<HomeBudget budgets=\{rows\.budgets\} total=\{rows\.budgetTotal\} \/>\n    <\/>\n  \)\n\}\s*$/, 'budget is the last section before the footer');
 });

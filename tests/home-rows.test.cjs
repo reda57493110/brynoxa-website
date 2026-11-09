@@ -36,11 +36,16 @@ test('live site: the products function passes onSale on', async () => {
 test('home: two rows, deduplicated, hidden under 4 products; shop understands ?onSale=true', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   const home = src('pages/store/Home.tsx');
-  assert.match(home, /productsApi\.list\(\{ onSale: true, inStock: true, limit: 16 \}\)/);
-  assert.match(home, /productsApi\.list\(\{ sort: 'newest', inStock: true, limit: 16 \}\)/);
-  assert.match(home, /\[\.\.\.deals\.products, \.\.\.\(featured\.data \?\? \[\]\), \.\.\.\(carousel\.data \?\? \[\]\)\]/);
-  assert.match(home, /!shownAbove\.has\(p\._id\) && !dealsIds\.has\(p\._id\)/);
-  assert.match(home, /viewAll=\{\{ to: '\/shop\?onSale=true'/);
+  const hook = src('hooks/useHomeRows.ts');
+  assert.ok(hook.includes("productsApi.list({ onSale: true, inStock: true, limit: 16 })"), "productsApi.list({ onSale: true, inStock: true, limit: 16 })");
+  assert.ok(hook.includes("productsApi.list({ sort: 'newest', inStock: true, limit: 16 })"), "productsApi.list({ sort: 'newest', inStock: true, limit: 16 })");
+  assert.ok(hook.includes("!above.has(p._id) && !dealIds.has(p._id)"), "!above.has(p._id) && !dealIds.has(p._id)");
+  assert.ok(home.includes("useHomeRows([...deals.products, ...(featured.data ?? []), ...(carousel.data ?? [])])"), "useHomeRows([...deals.products, ...(featured.data ?? []), ...(carousel.data ?? [])])");
+  assert.ok(home.includes("viewAll={{ to: '/shop?onSale=true'"), "viewAll={{ to: '/shop?onSale=true'");
+  // Admin → Products shows the same rows (same hook), with "hidden" when under 4
+  const board = src('components/admin/HomeLayoutBoard.tsx');
+  assert.ok(board.includes("useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])"), "useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])");
+  for (const t of ['title="Deals"', 'title="New arrivals"', 'Budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
   const row = src('components/home/HomeProductRow.tsx');
   assert.match(row, /export const HOME_ROW_MIN = 4/);
   assert.match(row, /if \(products\.length < HOME_ROW_MIN\) return null/);

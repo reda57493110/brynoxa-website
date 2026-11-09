@@ -3,6 +3,8 @@ import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { Spinner } from '@/components/ui/Spinner'
 import type { ManagedSection } from '@/components/admin/SectionManager'
 import { useStorefrontPlacements } from '@/hooks/useStorefrontPlacements'
+import { useHomeRows } from '@/hooks/useHomeRows'
+import { HOME_ROW_MIN } from '@/components/home/HomeProductRow'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
@@ -89,13 +91,20 @@ function Section({
 
 /**
  * The home page exactly as customers see it, section by section, top to bottom: Hero (top deals),
- * Featured (one big product), Carousel (the product row), plus the Shop page header. Every product
+ * Featured (one big product), Carousel (the product row), Deals, New arrivals, Shop by budget (one
+ * line per price tab; automatic), plus the Shop page header. Every product
  * of a section is listed, in order, even when it is also in another section.
  */
 export function HomeLayoutBoard({ onManage, onOpen }: { onManage: (s: ManagedSection) => void; onOpen: (p: Product) => void }) {
   const place = useStorefrontPlacements()
+  const rows = useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])
+  // The home page hides a row with fewer than 4 products: say so here
+  const rowNote = (n: number) => (n < HOME_ROW_MIN ? `auto · hidden (needs ${HOME_ROW_MIN})` : 'auto')
+  const amount = (n: number) => new Intl.NumberFormat('en-US').format(n)
+  const bandTitle = (b: { min?: number; max?: number }) =>
+    b.min === undefined ? `Under ${amount(b.max!)} DH` : b.max === undefined ? `Over ${amount(b.min)} DH` : `${amount(b.min)} – ${amount(b.max)} DH`
 
-  if (!place.ready) {
+  if (!place.ready || !rows.ready) {
     return (
       <div className="flex justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] py-6">
         <Spinner />
@@ -141,6 +150,33 @@ export function HomeLayoutBoard({ onManage, onOpen }: { onManage: (s: ManagedSec
         onOpen={onOpen}
         empty="No products in the carousel."
       />
+      <Section
+        icon="tag"
+        title="Deals"
+        note={rowNote(rows.deals.length)}
+        products={rows.deals}
+        onOpen={onOpen}
+        empty="No deals: give a product an old price higher than its price."
+      />
+      <Section
+        icon="clock"
+        title="New arrivals"
+        note={rowNote(rows.newArrivals.length)}
+        products={rows.newArrivals}
+        onOpen={onOpen}
+        empty="Nothing new that is not already shown above."
+      />
+      {rows.budgets.map((b) => (
+        <Section
+          key={b.id}
+          icon="banknote"
+          title={`Budget · ${bandTitle(b)}`}
+          note={rows.budgetTotal < HOME_ROW_MIN ? `auto · hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'tab hidden'}
+          products={b.items.slice(0, 8)}
+          onOpen={onOpen}
+          empty="No product in stock at this price."
+        />
+      ))}
       <Section
           icon="monitor"
           title="Shop header"
