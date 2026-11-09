@@ -307,6 +307,7 @@ export function Home() {
 
       <HomeProductRow
         id="deals"
+        tone="deals"
         icon="tag"
         kicker={t('home.dealsKicker')}
         title={t('home.dealsTitle')}
@@ -479,6 +480,7 @@ export function Home() {
 
       <HomeProductRow
         id="new-arrivals"
+        tone="new"
         icon="clock"
         kicker={t('home.newKicker')}
         title={t('home.newTitle')}
