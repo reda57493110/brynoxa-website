@@ -5,6 +5,7 @@ import { useHomeDeals } from '@/hooks/useHomeDeals'
 import { HeroBackdrop } from '@/components/home/HeroBackdrop'
 import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
+import { HomeProductRow } from '@/components/home/HomeProductRow'
 import { useQuery } from '@tanstack/react-query'
 import { m, useReducedMotion } from 'framer-motion'
 import { productsApi } from '@/api/productsApi'
@@ -94,6 +95,22 @@ export function Home() {
     queryKey: ['products', 'carousel'],
     queryFn: async () => (await productsApi.list({ carousel: true, limit: 12 })).data.data,
   })
+
+  // Deals and New arrivals rows: automatic, in stock, never a product already shown above
+  const onSale = useQuery({
+    queryKey: ['products', 'home-deals-row'],
+    queryFn: async () => (await productsApi.list({ onSale: true, inStock: true, limit: 16 })).data.data,
+  })
+  const newest = useQuery({
+    queryKey: ['products', 'home-new-row'],
+    queryFn: async () => (await productsApi.list({ sort: 'newest', inStock: true, limit: 16 })).data.data,
+  })
+  const shownAbove = new Set(
+    [...deals.products, ...(featured.data ?? []), ...(carousel.data ?? [])].map((p) => p._id)
+  )
+  const dealsRow = (onSale.data ?? []).filter((p) => !shownAbove.has(p._id)).slice(0, 12)
+  const dealsIds = new Set(dealsRow.map((p) => p._id))
+  const newRow = (newest.data ?? []).filter((p) => !shownAbove.has(p._id) && !dealsIds.has(p._id)).slice(0, 12)
 
   const categories = useQuery({
     queryKey: ['categories'],
@@ -288,6 +305,16 @@ export function Home() {
         </Container>
       </section>
 
+      <HomeProductRow
+        id="deals"
+        icon="tag"
+        kicker={t('home.dealsKicker')}
+        title={t('home.dealsTitle')}
+        body={t('home.dealsBody')}
+        viewAll={{ to: '/shop?onSale=true', label: t('home.seeAllDeals') }}
+        products={dealsRow}
+      />
+
       {/* Categories — bento of the full catalog */}
       <section
         id="categories"
@@ -449,6 +476,16 @@ export function Home() {
           ) : null}
         </Container>
       </section>
+
+      <HomeProductRow
+        id="new-arrivals"
+        icon="clock"
+        kicker={t('home.newKicker')}
+        title={t('home.newTitle')}
+        body={t('home.newBody')}
+        viewAll={{ to: '/shop?sort=newest', label: t('common.viewAll') }}
+        products={newRow}
+      />
 
       {/* Closing CTA */}
       <section

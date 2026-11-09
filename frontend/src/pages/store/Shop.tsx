@@ -66,6 +66,7 @@ export function Shop() {
       minPrice: params.get('minPrice') ? Number(params.get('minPrice')) : undefined,
       maxPrice: params.get('maxPrice') ? Number(params.get('maxPrice')) : undefined,
       inStock: params.get('inStock') === 'true' ? true : undefined,
+      onSale: params.get('onSale') === 'true' ? true : undefined,
     }),
     [params]
   )
@@ -130,7 +131,8 @@ export function Shop() {
       filters.minPrice ||
       filters.maxPrice ||
       filters.q ||
-      filters.inStock
+      filters.inStock ||
+      filters.onSale
   )
 
   const categoryList = (categories.data ?? []).filter(
@@ -419,6 +421,9 @@ export function Shop() {
             ) : null}
             {activeBrand ? (
               <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} />
+            ) : null}
+            {filters.onSale ? (
+              <ActiveChip label={t('shop.onSaleOnly')} onRemove={() => update({ onSale: undefined })} />
             ) : null}
             {filters.inStock ? (
               <ActiveChip

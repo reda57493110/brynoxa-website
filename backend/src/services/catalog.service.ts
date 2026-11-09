@@ -370,6 +370,8 @@ type ProductQuery = {
   featured?: boolean;
   carousel?: boolean;
   inStock?: boolean;
+  /** Deals: an old price (compareAtPrice) above the price */
+  onSale?: boolean;
   isActive?: boolean;
   admin?: boolean;
   condition?: string;
@@ -434,6 +436,7 @@ export async function listProducts(query: ProductQuery) {
     filter.$and = [...((filter.$and as unknown[]) || []), placementFilter];
   }
   if (query.inStock) filter.stock = { $gt: 0 };
+  if (query.onSale) filter.$and = [...((filter.$and as unknown[]) || []), { $expr: { $gt: ['$compareAtPrice', '$price'] } }];
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
     filter.price = {};
     if (query.minPrice !== undefined) (filter.price as Record<string, number>).$gte = query.minPrice;

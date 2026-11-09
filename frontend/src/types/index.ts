@@ -186,6 +186,8 @@ export interface ProductFilters {
   featured?: boolean
   carousel?: boolean
   inStock?: boolean
+  /** Deals: an old price above the price */
+  onSale?: boolean
   isActive?: boolean
   admin?: boolean
   condition?: ProductCondition

@@ -113,6 +113,7 @@ module.exports = async (req, res) => {
       featured: raw.featured === 'true',
       carousel: raw.carousel === 'true',
       inStock: raw.inStock === 'true',
+      onSale: raw.onSale === 'true',
       admin: isAdmin,
       isActive: toBool(raw.isActive),
       condition: raw.condition,

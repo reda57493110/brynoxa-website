@@ -525,6 +525,8 @@ export const paginationQuerySchema = z.object({
   featured: queryBool,
   carousel: queryBool,
   inStock: queryBool,
+  /** Deals: products with a crossed-out old price above the price */
+  onSale: queryBool,
   isActive: queryBool,
   condition: z.enum(['new', 'refurbished', 'used']).optional(),
 });
