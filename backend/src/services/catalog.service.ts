@@ -211,15 +211,8 @@ export async function listCategories(activeOnly = true) {
     // A sub-category of a hidden category is hidden too
     const all = await Category.find({}).select('_id isActive slug parent').lean();
     const visible = visibleCategoryIds(all);
-    // An empty sub-category (no product on sale) is not shown: no empty pages for customers.
-    // Main categories always show (the owner chose them).
-    const counts = await Product.aggregate<{ _id: unknown; n: number }>([
-      { $match: { isActive: true } },
-      { $group: { _id: '$category', n: { $sum: 1 } } },
-    ]);
-    const filled = new Set(counts.filter((c) => c.n > 0).map((c) => String(c._id)));
-    const hasProducts = (id: string) => categoryAndChildren(id, all).some((x) => filled.has(x));
-    return items.filter((c) => visible.has(String(c._id)) && (!c.parent || hasProducts(String(c._id))));
+    // Sub-categories show even while empty: clicking a category always shows what is inside it
+    return items.filter((c) => visible.has(String(c._id)));
   }
   // Staff list: how many products each one holds (shown in Settings, needed before a delete)
   const counts = await Product.aggregate<{ _id: unknown; n: number }>([{ $group: { _id: '$category', n: { $sum: 1 } } }]);
