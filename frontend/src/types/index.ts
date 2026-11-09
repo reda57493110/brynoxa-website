@@ -188,6 +188,8 @@ export interface ProductFilters {
   inStock?: boolean
   /** Deals: an old price above the price */
   onSale?: boolean
+  /** Only these products (comma separated ids, 12 at most) */
+  ids?: string
   isActive?: boolean
   admin?: boolean
   condition?: ProductCondition
@@ -457,6 +459,8 @@ export interface StoreSettings {
   pageHeroProducts?: Partial<Record<HeroPage, string>>
   /** Home page deals (product ids, max 4, in order). Empty: automatic. */
   homeDeals?: string[]
+  /** Home sections chosen by staff: deals, new, budget-small, budget-mid, budget-high (missing = automatic) */
+  homeRows?: Partial<Record<string, string[]>>
 }
 
 export type HeroPage = 'home' | 'shop' | 'services' | 'contact'

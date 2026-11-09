@@ -14,6 +14,7 @@ import {
   sanitizeEmailNotifications,
   sanitizePageHeroProducts,
   sanitizeHomeDeals,
+  sanitizeHomeRows,
   sanitizeDepositMethods,
   sanitizeSegmentSettings,
   sanitizeInventoryStatuses,
@@ -238,6 +239,9 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.homeDeals !== undefined) {
     body.homeDeals = sanitizeHomeDeals(body.homeDeals);
+  }
+  if (body.homeRows !== undefined) {
+    body.homeRows = sanitizeHomeRows(body.homeRows, settings.homeRows);
   }
   if (body.emailNotifications !== undefined) {
     body.emailNotifications = sanitizeEmailNotifications(body.emailNotifications, settings.emailNotifications);

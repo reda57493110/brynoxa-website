@@ -115,6 +115,8 @@ export interface ISettings extends Document {
   pageHeroProducts: Record<HeroPage, string>;
   /** Products shown as deals at the top of the home page (max 4, in order). Empty: automatic. */
   homeDeals: string[];
+  /** Home sections chosen by staff (Deals, New arrivals, budget tabs); a missing / empty list = automatic */
+  homeRows: Partial<Record<HomeRowKey, string[]>>;
   /** What the courier charges the shop per parcel: delivered, and sent back (refused / failed). */
   courierCosts: { delivered: number; returned: number };
   /** Database size of the MongoDB plan, in MB (Admin → Settings → Storage); 0 = not set (STORAGE_LIMIT_MB or 512). */
@@ -206,6 +208,7 @@ const settingsSchema = new Schema<ISettings>(
     },
     notifyStaffLoginEmail: { type: Boolean, default: true },
     homeDeals: { type: [String], default: [] },
+    homeRows: { type: Schema.Types.Mixed, default: () => ({}) },
     courierCosts: {
       delivered: { type: Number, default: 0, min: 0 },
       returned: { type: Number, default: 0, min: 0 },
@@ -267,6 +270,27 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
 }
 
 /** Unique, valid product ids for the home page deals, in the given order (max 4). */
+/** Home sections staff can choose and order (Admin → Products, Home page board). */
+export const HOME_ROW_KEYS = ['deals', 'new', 'budget-small', 'budget-mid', 'budget-high'] as const;
+export type HomeRowKey = (typeof HOME_ROW_KEYS)[number];
+export const MAX_HOME_ROW = 12;
+
+/**
+ * Keeps known sections with valid product ids (12 at most, no repeats). Only the sections sent
+ * change; an empty list puts a section back to automatic.
+ */
+export function sanitizeHomeRows(input: unknown, current: Partial<Record<HomeRowKey, string[]>> = {}) {
+  const src = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
+  const out: Partial<Record<HomeRowKey, string[]>> = {};
+  for (const key of HOME_ROW_KEYS) {
+    const value = key in src ? src[key] : current?.[key];
+    if (!Array.isArray(value)) continue;
+    const ids = [...new Set(value.map((v) => String(v ?? '').trim()).filter((id) => OBJECT_ID.test(id)))].slice(0, MAX_HOME_ROW);
+    if (ids.length) out[key] = ids;
+  }
+  return out;
+}
+
 export function sanitizeHomeDeals(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   const ids = input.map((v) => String(v ?? '').trim()).filter((id) => OBJECT_ID.test(id));

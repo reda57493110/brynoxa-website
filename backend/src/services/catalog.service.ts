@@ -372,6 +372,8 @@ type ProductQuery = {
   inStock?: boolean;
   /** Deals: an old price (compareAtPrice) above the price */
   onSale?: boolean;
+  /** Only these products (comma separated ids, 12 at most) */
+  ids?: string;
   isActive?: boolean;
   admin?: boolean;
   condition?: string;
@@ -436,6 +438,10 @@ export async function listProducts(query: ProductQuery) {
     filter.$and = [...((filter.$and as unknown[]) || []), placementFilter];
   }
   if (query.inStock) filter.stock = { $gt: 0 };
+  if (query.ids) {
+    const ids = query.ids.split(',').map((x) => x.trim()).filter((x) => looksLikeObjectId(x)).slice(0, 12);
+    filter._id = { $in: ids };
+  }
   if (query.onSale) filter.$and = [...((filter.$and as unknown[]) || []), { $expr: { $gt: ['$compareAtPrice', '$price'] } }];
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
     filter.price = {};

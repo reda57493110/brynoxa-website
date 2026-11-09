@@ -55,3 +55,26 @@ test('home: two rows, deduplicated, hidden under 4 products; shop understands ?o
     for (const k of ['dealsKicker', 'dealsTitle', 'dealsBody', 'newKicker', 'newTitle', 'newBody', 'seeAllDeals', 'onSaleOnly']) assert.ok(t.includes(`    ${k}: '`), `${l}: ${k}`);
   }
 });
+
+test('home sections chosen in admin: known sections, valid products, 12 at most, empty = automatic', () => {
+  const { sanitizeHomeRows } = require(dist('models/Settings.js'));
+  const a = 'a'.repeat(24), b = 'b'.repeat(24);
+  const ids = Array.from({ length: 15 }, (_, i) => String(i).padStart(24, 'c'));
+  const out = sanitizeHomeRows({ deals: [b, a, a, 'nope'], new: ids, hacker: [a], 'budget-mid': [] }, { 'budget-small': [a] });
+  assert.deepEqual(out.deals, [b, a], 'order kept, repeats and bad ids dropped');
+  assert.equal(out.new.length, 12);
+  assert.equal(out.hacker, undefined);
+  assert.equal(out['budget-mid'], undefined, 'empty list = back to automatic');
+  assert.deepEqual(out['budget-small'], [a], 'sections not sent are kept');
+  const { STOREFRONT_SETTINGS } = require(dist('middleware/auth.js'));
+  assert.ok(STOREFRONT_SETTINGS.includes('homeRows'), 'catalog staff can arrange the home page');
+  assert.match(fs.readFileSync(api('v1/settings.js'), 'utf8'), /settings\[key\] = sanitizeHomeRows\(body\[key\], settings\.homeRows\);/);
+  assert.match(fs.readFileSync(api('v1/products.js'), 'utf8'), /ids: typeof raw\.ids === 'string' \? raw\.ids : undefined,/);
+});
+
+test('admin board: rank, move, edit, remove and add on every section; no Manage button', () => {
+  const board = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
+  for (const t of ['aria-label="Move left"', 'aria-label="Move right"', 'aria-label="Edit the product"', 'aria-label="Remove from this section"', "full ? `Full (${max})` : 'Add'", 'Back to automatic']) assert.ok(board.includes(t), t);
+  assert.ok(!board.includes('/> Manage'), 'no Manage button');
+  for (const key of ["key: 'deals'", "key: 'new'", 'key: b.key', "kind: 'homeDeals'", "flag: 'isFeatured'", "flag: 'isCarousel'"]) assert.ok(board.includes(key), key);
+});

@@ -114,6 +114,7 @@ module.exports = async (req, res) => {
       carousel: raw.carousel === 'true',
       inStock: raw.inStock === 'true',
       onSale: raw.onSale === 'true',
+      ids: typeof raw.ids === 'string' ? raw.ids : undefined,
       admin: isAdmin,
       isActive: toBool(raw.isActive),
       condition: raw.condition,
