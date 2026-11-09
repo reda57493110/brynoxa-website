@@ -54,6 +54,7 @@ export const CATEGORY_SUGGESTIONS: Record<string, CategorySuggestion[]> = {
   'desktop-pcs': [
     { slug: 'mini-pcs', name: 'Mini PCs', description: 'Tiny desktops (HP EliteDesk Mini…) that fit behind a screen.' },
     { slug: 'desktop-with-screen', name: 'Desktop + screen', description: 'Complete set: the computer with its screen, keyboard and mouse.' },
+    { slug: 'desktop-screens', name: 'Screens', description: 'Screens for your desktop PC, for the office and home.' },
     { slug: 'desktop-only', name: 'Desktop only', description: 'The computer alone (HP EliteDesk…), to use with your own screen.' },
   ],
   'gaming-pcs': [

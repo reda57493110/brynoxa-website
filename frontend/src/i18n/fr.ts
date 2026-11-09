@@ -1127,6 +1127,7 @@ export const fr: Messages = {
   // Category names and descriptions by address (slug); English shows the name set in admin
   catalog: {
     categories: {
+      'desktop-screens': { name: 'Écrans', description: 'Des écrans pour votre unité centrale, au bureau comme à la maison.' },
       'student-laptops': { name: 'Étudiants / petit budget', description: 'Des portables fiables pour l’école, les études et le quotidien, à petit prix.' },
       // Inside Desktop PCs
       'desktop-with-screen': { name: 'PC complet avec écran', description: 'Ensemble complet : l’unité centrale avec son écran, son clavier et sa souris.' },

@@ -28,6 +28,7 @@ export const SUB_CATEGORY_PHOTOS = [
   'mini-pcs',
   'desktop-with-screen',
   'desktop-only',
+  'desktop-screens',
   'gaming-pcs-1080p',
   'gaming-pcs-1440p',
   'gaming-pcs-4k',
