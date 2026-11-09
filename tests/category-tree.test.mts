@@ -60,3 +60,9 @@ test('category and filter clicks keep the scroll position; changing page still g
   assert.match(src('pages/store/Shop.tsx'), /setParams\(next, 'page' in patch \? undefined : \{ state: \{ keepScroll: true \} \}\)/);
   assert.equal((src('pages/store/CategoryPage.tsx').match(/state=\{\{ keepScroll: true \}\}/g) || []).length, 4);
 });
+
+test('shop: 3 products per row on tablets and computers (phones keep the 1 / 2 choice)', () => {
+  const shop = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Shop.tsx'), 'utf8');
+  assert.ok(shop.includes("'md:grid-cols-3 xl:grid-cols-3'"));
+  assert.ok(!shop.includes('xl:grid-cols-4'));
+});
