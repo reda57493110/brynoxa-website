@@ -12,6 +12,9 @@ import { ProductSearch } from '@/components/admin/PageHeaderProducts'
 import { HERO_NONE, SHOP_ALL, useHeroProduct, type HeroCategory, type HeroSource } from '@/hooks/useHeroProduct'
 import { childrenOf, mainCategories } from '@/lib/categoryTree'
 import { categoryPhoto } from '@/lib/categoryPhoto'
+import { onePerCategory } from '@/lib/heroProduct'
+import { settingsApi } from '@/api/settingsApi'
+import { productsApi } from '@/api/productsApi'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
@@ -32,10 +35,10 @@ const SOURCE_TEXT: Record<HeroSource, string> = {
 const btn =
   'inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] disabled:pointer-events-none disabled:opacity-40'
 
-function Thumb({ product, photo }: { product: Product | null; photo?: string }) {
+function Thumb({ product, photo, small = false }: { product: Product | null; photo?: string; small?: boolean }) {
   const image = product?.images?.find((i) => i.isPrimary)?.url || product?.images?.[0]?.url || photo
   return (
-    <span className={cn('relative block h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-[var(--border)]', imageFit(image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]')}>
+    <span className={cn('relative block shrink-0 overflow-hidden rounded-lg border border-[var(--border)]', small ? 'h-12 w-16' : 'h-16 w-24', imageFit(image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]')}>
       {image ? (
         <SafeImage
           src={sizedImageUrl(image, 240)}
@@ -65,7 +68,10 @@ function HeaderRow({
   busy,
   photo,
   allView = false,
+  rotation = [],
 }: {
+  /** The "All" line: the products shown in turn there */
+  rotation?: Product[]
   /** The shop's "All" line: no product = the category photos */
   allView?: boolean
   /** The category photo, shown when no product is */
@@ -87,7 +93,15 @@ function HeaderRow({
 
   return (
     <div className={cn('flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/25 p-2.5', depth === 1 && 'ms-6 border-dashed')}>
-      <Thumb product={shown.product} photo={photo} />
+      {allView && !shown.product && rotation.length ? (
+        <div className="flex flex-wrap gap-1">
+          {rotation.map((p) => (
+            <Thumb key={p._id} small product={p} />
+          ))}
+        </div>
+      ) : (
+        <Thumb product={shown.product} photo={photo} />
+      )}
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold">
           {depth === 1 ? <SiteIcon name="chevron-right" size={12} className="text-[var(--fg-muted)] rtl:rotate-180" /> : null}
@@ -112,7 +126,7 @@ function HeaderRow({
           ) : shown.pending ? (
             'Loading…'
           ) : (
-            allView ? 'One product of each category in turn (a laptop, a gaming PC, a screen…), changing every 5 seconds.' : photo ? 'The category photo is shown.' : 'The page photo is shown.'
+            allView ? (rotation.length ? `In turn, every 5 seconds: ${rotation.map((p) => p.name).join(' · ')}` : 'One product of each category in turn, changing every 5 seconds.') : photo ? 'The category photo is shown.' : 'The page photo is shown.'
           )}
         </p>
       </div>
@@ -184,7 +198,14 @@ function MainBlock({
  */
 export function ShopHeaderBoard() {
   const qc = useQueryClient()
-  const settings = useQuery({ queryKey: ['settings'], queryFn: async () => (await adminApi.settings.get()).data.data, staleTime: 60_000 })
+  // The shop's own settings (the same ones the shop reads), not the owner-only admin copy
+  const settings = useQuery({ queryKey: ['settings'], queryFn: async () => (await settingsApi.get()).data.data, staleTime: 60_000 })
+  // What "All" shows in turn: the same pick as the shop page
+  const allPicks = useQuery({
+    queryKey: ['products', 'shop-all-hero'],
+    queryFn: async () => (await productsApi.list({ inStock: true, sort: 'popular', limit: 60 })).data.data,
+    staleTime: 5 * 60_000,
+  })
   const categories = useQuery({ queryKey: ['categories'], queryFn: async () => (await categoriesApi.list()).data.data })
   const save = useMutation({
     mutationFn: (payload: { categoryHeroes?: Record<string, string>; pageHeroProducts?: { shop: string } }) => adminApi.settings.update(payload),
@@ -215,7 +236,7 @@ export function ShopHeaderBoard() {
         products (featured first), or its photo when it has nothing in stock; a sub-category uses its main category’s choice unless it has its own.
       </p>
       <div className="flex flex-col gap-2.5">
-        <HeaderRow title="All products (no category chosen)" allView setting={shopSetting} save={saveFor(SHOP_ALL)} busy={save.isPending} />
+        <HeaderRow title="All products (no category chosen)" allView rotation={onePerCategory(allPicks.data ?? [], list)} setting={shopSetting} save={saveFor(SHOP_ALL)} busy={save.isPending} />
         {mains.map((m) => (
           <MainBlock key={m._id} all={list} main={m} subs={childrenOf(list, m._id)} heroes={heroes} saveFor={saveFor} busy={save.isPending} />
         ))}

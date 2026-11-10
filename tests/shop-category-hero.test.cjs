@@ -67,3 +67,11 @@ test('shop "All": one product per category in turn, not always the same laptop; 
   assert.ok(!src('pages/admin/Settings.tsx').includes('<PageHeaderProducts'), 'Settings points to Products → Shop page header');
   assert.ok(fs.readFileSync(path.join(ROOT, 'frontend/public/preload.js'), 'utf8').includes('s.data.categoryHeroes && s.data.categoryHeroes.all'));
 });
+
+test('admin Shop page header: reads the shop settings (not the owner-only copy); All shows its products in turn', () => {
+  const b = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/ShopHeaderBoard.tsx'), 'utf8');
+  assert.ok(b.includes("queryKey: ['settings'], queryFn: async () => (await settingsApi.get()).data.data"), 'same data under the same name as the shop');
+  assert.ok(!b.includes('adminApi.settings.get()'));
+  assert.ok(b.includes('allView rotation={onePerCategory(allPicks.data ?? [], list)}'));
+  assert.ok(b.includes('In turn, every 5 seconds: '));
+});
