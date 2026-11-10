@@ -65,3 +65,13 @@ test('Arabic help is in Moroccan Darija, not standard Arabic', () => {
   assert.ok(help.includes('heading: "كيفاش نقدرو نعاونوك؟"'));
   assert.ok(!help.includes('كيف يمكننا مساعدتك'), 'no more standard Arabic heading');
 });
+
+test('Help Center on phones: compact guide cards, steps and "Still need help?"', () => {
+  const guide = fs.readFileSync(path.join(root, 'frontend/src/components/help/QuickGuide.tsx'), 'utf8');
+  assert.ok(guide.includes('relative flex gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 sm:flex-col'), 'small step boxes on phones');
+  assert.ok(guide.includes('text-[12.5px] leading-snug text-[var(--fg-muted)] sm:text-sm'), 'small step text on phones');
+  const page = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Help.tsx'), 'utf8');
+  assert.ok(page.includes("className={cn(surfaceCard, 'mt-3 p-3 sm:p-6')}"), 'guide box');
+  assert.ok(page.includes('font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-2xl'), 'guide title');
+  assert.ok(page.includes("'flex flex-col gap-3 p-3.5 sm:flex-row"), '"Still need help?" card');
+});

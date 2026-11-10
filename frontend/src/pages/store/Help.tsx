@@ -151,34 +151,34 @@ function StillNeedHelp() {
   return (
     <section
       aria-labelledby="help-still"
-      className={cn(surfaceCard, 'flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6')}
+      className={cn(surfaceCard, 'flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-6')}
     >
-      <div className="flex items-start gap-3.5">
-        <span className={cn(iconTile, 'size-11 rounded-full')}>
-          <SiteIcon name="chat" size={20} />
+      <div className="flex items-start gap-2.5 sm:gap-3.5">
+        <span className={cn(iconTile, 'size-8 rounded-full sm:size-11')}>
+          <SiteIcon name="chat" size={16} />
         </span>
         <div>
-          <h2 id="help-still" className="font-display text-lg font-semibold text-[var(--fg)]">
+          <h2 id="help-still" className="font-display text-[15px] font-semibold text-[var(--fg)] sm:text-lg">
             {t('help.stillNeedHelp')}
           </h2>
-          <p className="mt-1 max-w-md text-sm text-[var(--fg-muted)]">{t('help.stillNeedHelpBody')}</p>
-          <p className="mt-1.5 text-xs text-[var(--fg-muted)]">{t('contact.hoursValue')}</p>
+          <p className="mt-0.5 max-w-md text-[12.5px] leading-snug text-[var(--fg-muted)] sm:mt-1 sm:text-sm">{t('help.stillNeedHelpBody')}</p>
+          <p className="mt-1 text-[11px] text-[var(--fg-muted)] sm:mt-1.5 sm:text-xs">{t('contact.hoursValue')}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2 sm:justify-end">
         <button
           type="button"
           onClick={() => openWhatsApp()}
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 text-[13px] font-semibold text-[var(--brand-fg)] transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
         >
-          <SiteIcon name="chat" size={16} />
+          <SiteIcon name="chat" size={15} />
           {t('help.chatWhatsApp')}
         </button>
-        <a href={CONTACT.phone.href} className={cn(chipLink, 'h-10')}>
+        <a href={CONTACT.phone.href} className={cn(chipLink, 'h-9 text-[13px] sm:h-10 sm:text-sm')}>
           <SiteIcon name="phone" size={15} />
           <PhoneText>{CONTACT.phone.value}</PhoneText>
         </a>
-        <Link to="/contact" className={cn(chipLink, 'h-10')}>
+        <Link to="/contact" className={cn(chipLink, 'h-9 text-[13px] sm:h-10 sm:text-sm')}>
           <SiteIcon name="mail" size={15} />
           {t('help.contactPage')}
         </Link>
@@ -352,14 +352,14 @@ function GuideTabs({ data, selected, onSelect }: { data: HelpGuide; selected: He
               tabIndex={active ? 0 : -1}
               onClick={() => onSelect(g.id)}
               className={cn(
-                'flex shrink-0 snap-start items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-start text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:flex-col sm:items-start sm:gap-2 sm:p-3.5',
+                'flex shrink-0 snap-start items-center gap-2 rounded-xl border px-2.5 py-2 text-start text-[13px] font-semibold transition sm:rounded-2xl sm:text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:flex-col sm:items-start sm:gap-2 sm:p-3.5',
                 active
                   ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_8%,var(--bg-elevated))] text-[var(--fg)] shadow-soft'
                   : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
               )}
             >
-              <span className={cn(iconTile, 'size-9 rounded-xl', active && 'bg-[var(--brand)] text-[var(--brand-fg)]')}>
-                <SiteIcon name={g.icon} size={18} />
+              <span className={cn(iconTile, 'size-7 rounded-lg sm:size-9 sm:rounded-xl', active && 'bg-[var(--brand)] text-[var(--brand-fg)]')}>
+                <SiteIcon name={g.icon} size={15} />
               </span>
               {g.title}
             </button>
@@ -371,9 +371,9 @@ function GuideTabs({ data, selected, onSelect }: { data: HelpGuide; selected: He
         id="help-guide-panel"
         role="tabpanel"
         aria-labelledby={`help-tab-${guide.id}`}
-        className={cn(surfaceCard, 'mt-3 p-4 sm:p-6')}
+        className={cn(surfaceCard, 'mt-3 p-3 sm:p-6')}
       >
-        <h3 className="font-display text-xl font-semibold tracking-tight text-[var(--fg)] sm:text-2xl">{guide.title}</h3>
+        <h3 className="font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-2xl">{guide.title}</h3>
         <div className="mt-1">
           <QuickGuide guide={guide} wide moreHref={`/help#${guide.more}`} />
         </div>

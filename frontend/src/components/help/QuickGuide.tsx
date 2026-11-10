@@ -39,14 +39,14 @@ export function QuickGuide({
   return (
     <div>
       {hideIntro ? null : (
-        <p className={cn('text-[var(--fg-muted)]', wide ? 'text-sm sm:text-base' : 'text-sm')}>{guide.intro}</p>
+        <p className={cn('text-[var(--fg-muted)]', wide ? 'text-[13px] sm:text-base' : 'text-sm')}>{guide.intro}</p>
       )}
 
       <ol
         className={cn(
           'mt-4',
           wide
-            ? cn('grid gap-3 sm:grid-cols-2', guide.steps.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4')
+            ? cn('grid gap-2 sm:grid-cols-2 sm:gap-3', guide.steps.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4')
             : 'relative'
         )}
       >
@@ -54,12 +54,12 @@ export function QuickGuide({
           wide ? (
             <li
               key={step.title}
-              className="relative flex gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 sm:flex-col sm:gap-2.5"
+              className="relative flex gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 sm:flex-col sm:gap-2.5 sm:rounded-2xl sm:p-4"
             >
-              <span className="relative grid size-11 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)]">
-                <SiteIcon name={step.icon} size={20} />
+              <span className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] sm:size-11 sm:rounded-xl">
+                <SiteIcon name={step.icon} size={16} />
                 <span
-                  className="absolute -end-1.5 -top-1.5 grid size-5 place-items-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-[var(--brand-fg)]"
+                  className="absolute -end-1.5 -top-1.5 grid size-4 place-items-center rounded-full bg-[var(--brand)] text-[10px] font-bold text-[var(--brand-fg)] sm:size-5 sm:text-[11px]"
                   aria-hidden="true"
                 >
                   {i + 1}
@@ -67,8 +67,8 @@ export function QuickGuide({
               </span>
               <span className="min-w-0">
                 <span className="sr-only">{t('help.step', { n: i + 1 })}: </span>
-                <span className="block font-display text-[15px] font-semibold text-[var(--fg)]">{step.title}</span>
-                <span className="mt-0.5 block text-sm leading-relaxed text-[var(--fg-muted)]">{step.text}</span>
+                <span className="block font-display text-[13.5px] font-semibold leading-tight text-[var(--fg)] sm:text-[15px]">{step.title}</span>
+                <span className="mt-0.5 block text-[12.5px] leading-snug text-[var(--fg-muted)] sm:text-sm sm:leading-relaxed">{step.text}</span>
               </span>
             </li>
           ) : (
@@ -142,13 +142,13 @@ export function QuickGuide({
       </ol>
 
       {guide.note ? (
-        <p className="mt-4 flex gap-2 rounded-xl bg-[var(--bg-muted)] px-3 py-2.5 text-[13px] leading-relaxed text-[var(--fg)] sm:text-sm">
+        <p className="mt-3 flex gap-2 rounded-xl bg-[var(--bg-muted)] px-3 py-2 text-[12.5px] leading-snug text-[var(--fg)] sm:mt-4 sm:py-2.5 sm:text-sm sm:leading-relaxed">
           <SiteIcon name="help" size={16} className="mt-0.5 text-[var(--brand-text)]" />
           <span>{guide.note}</span>
         </p>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 sm:mt-4">
         {main.to ? (
           <Link to={main.to} onClick={onNavigate} className={mainClass}>
             {main.label}
