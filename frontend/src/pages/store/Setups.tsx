@@ -23,6 +23,16 @@ const INNER_LG = ['', 'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:
  * (computer, screen, mouse / keyboard / headset, components, cameras, accessories). In stock only.
  * Which products: hooks/useSetupLists.ts (chosen in Admin → Products, or automatic: lib/setups.ts).
  */
+/** The category most of a group's products are in (its 'See all' opens it in the shop) */
+function mainCategoryOf(items: { category?: unknown }[]) {
+  const counts = new Map<string, number>()
+  for (const p of items) {
+    const slug = p.category && typeof p.category === 'object' ? (p.category as { slug?: string }).slug : undefined
+    if (slug) counts.set(slug, (counts.get(slug) ?? 0) + 1)
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? ''
+}
+
 export function Setups() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
@@ -158,11 +168,22 @@ export function Setups() {
                     id={pieceId(g.piece)}
                     className={cn('min-w-0 scroll-mt-24 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2.5 sm:rounded-2xl sm:p-4', SPAN_SM[Math.min(n, 2)], SPAN_LG[Math.min(n, 4)])}
                   >
-                    <div className="mb-2 sm:mb-3">
-                      <h3 className="font-display text-[15px] font-semibold leading-tight sm:text-lg">{t(`setups.groups.${active}.${g.piece}`)}</h3>
-                      <p className="mt-0.5 text-[11px] text-[var(--fg-muted)] sm:text-xs">
-                        {t(n === 1 ? 'setups.countOne' : 'setups.count', { count: n })} · {t('setups.from', { price: amount(Math.min(...g.items.map((p) => p.price))) })}
-                      </p>
+                    <div className="mb-2 flex items-start justify-between gap-2 sm:mb-3">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-[15px] font-semibold leading-tight sm:text-lg">{t(`setups.groups.${active}.${g.piece}`)}</h3>
+                        <p className="mt-0.5 text-[11px] text-[var(--fg-muted)] sm:text-xs">
+                          {t(n === 1 ? 'setups.countOne' : 'setups.count', { count: n })} · {t('setups.from', { price: amount(Math.min(...g.items.map((p) => p.price))) })}
+                        </p>
+                      </div>
+                      {/* More of this kind in the shop (its category) */}
+                      <Link
+                        to={mainCategoryOf(g.items) ? `/shop?category=${mainCategoryOf(g.items)}` : '/shop'}
+                        aria-label={`${t('setups.seeAll')}: ${t(`setups.groups.${active}.${g.piece}`)}`}
+                        className="inline-flex h-7 shrink-0 items-center gap-1 rounded-full border border-[var(--border)] px-2.5 text-[11px] font-semibold text-[var(--brand-text)] transition hover:border-[var(--brand)] sm:h-8 sm:text-xs"
+                      >
+                        {t('setups.seeAll')}
+                        <SiteIcon name="arrow-right" size={12} className="rtl:rotate-180" />
+                      </Link>
                     </div>
                     {isPhone && n > 1 ? (
                       <ProductCarousel products={g.items} size="md" />
@@ -181,6 +202,23 @@ export function Setups() {
               })}
             </div>
           )}
+
+          {groups.length ? (
+            <div className="mt-4 flex flex-col items-start gap-3 rounded-xl border border-dashed border-[color-mix(in_srgb,var(--brand)_45%,var(--border))] bg-[color-mix(in_srgb,var(--brand)_6%,var(--bg))] p-3 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:rounded-2xl sm:p-5">
+              <div className="min-w-0">
+                <p className="font-display text-[15px] font-semibold sm:text-lg">{t('setups.moreTitle')}</p>
+                <p className="mt-0.5 text-[12.5px] leading-snug text-[var(--fg-muted)] sm:text-sm">{t('setups.moreBody')}</p>
+              </div>
+              <Link
+                to="/shop"
+                className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-11"
+              >
+                <SiteIcon name="layers" size={15} />
+                {t('setups.moreCta')}
+                <SiteIcon name="arrow-right" size={15} className="rtl:rotate-180" />
+              </Link>
+            </div>
+          ) : null}
         </div>
 
         {/* Not sure? */}

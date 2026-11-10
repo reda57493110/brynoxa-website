@@ -2,12 +2,18 @@ import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import type { Product } from '@/types'
 import { ProductCard } from './ProductCard'
 import { cn } from '@/lib/cn'
+import { cardOffset, nearestCard } from '@/lib/carousel'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 
 const DRAG_THRESHOLD = 8
 const AUTO_SPEED = 0.45
+/** After ‹ › the automatic scroll waits this long, so the product stays in view */
+const ARROW_HOLD_MS = 6000
+/** Glide to a product in this long */
+const GLIDE_MS = 380
+
 
 function wrapOffset(value: number, half: number) {
   if (half <= 0) return value
@@ -33,6 +39,10 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
   const startXRef = useRef(0)
   const startOffsetRef = useRef(0)
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** A glide in progress (the automatic scroll waits) */
+  const glideRef = useRef<number | null>(null)
+  /** No automatic scroll until this time (after ‹ ›) */
+  const holdUntilRef = useRef(0)
   const [paused, setPaused] = useState(false)
 
   // Always moves (the owner wants it); visitors can stop it with the Pause button
@@ -58,8 +68,10 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
     if (!track) return
 
     const measure = () => {
-      halfRef.current = products.length > 1 ? track.scrollWidth / 2 : 0
-      stepRef.current = products.length > 1 ? halfRef.current / products.length : 0
+      // One product = its card + the gap after it (the last card has no gap after it, so add one)
+      const gap = parseFloat(getComputedStyle(track).columnGap) || 0
+      stepRef.current = products.length > 1 ? (track.scrollWidth + gap) / loop.length : 0
+      halfRef.current = stepRef.current * products.length
       paint(offsetRef.current)
     }
 
@@ -88,7 +100,7 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
     if (!moving) return
     let frame = 0
     const tick = () => {
-      if (!pausedRef.current && !hoveringRef.current && !draggingRef.current) {
+      if (!pausedRef.current && !hoveringRef.current && !draggingRef.current && glideRef.current === null && performance.now() > holdUntilRef.current) {
         paint(offsetRef.current - AUTO_SPEED)
       }
       frame = requestAnimationFrame(tick)
@@ -97,7 +109,49 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
     return () => cancelAnimationFrame(frame)
   }, [moving])
 
-  useEffect(() => () => clearResumeTimer(), [])
+  useEffect(
+    () => () => {
+      clearResumeTimer()
+      if (glideRef.current !== null) cancelAnimationFrame(glideRef.current)
+    },
+    []
+  )
+
+  const sizes = () => {
+    const track = trackRef.current
+    const card = (track?.firstElementChild as HTMLElement | null)?.offsetWidth ?? 0
+    const viewport = track?.parentElement?.clientWidth ?? 0
+    return { card, viewport, step: stepRef.current }
+  }
+
+  /** Glide smoothly to an offset (eased), then stay there */
+  const glideTo = (target: number) => {
+    if (glideRef.current !== null) cancelAnimationFrame(glideRef.current)
+    const from = offsetRef.current
+    const start = performance.now()
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce) {
+      paint(target)
+      glideRef.current = null
+      return
+    }
+    const frame = (now: number) => {
+      const t = Math.min(1, (now - start) / GLIDE_MS)
+      const eased = 1 - Math.pow(1 - t, 3)
+      // From → target as plain numbers; paint() wraps them into the loop
+      paint(from + (target - from) * eased)
+      if (t < 1) glideRef.current = requestAnimationFrame(frame)
+      else glideRef.current = null
+    }
+    glideRef.current = requestAnimationFrame(frame)
+  }
+
+  /** Stop on a whole product (the nearest one), not half-way */
+  const snapToNearest = () => {
+    const { card, viewport, step } = sizes()
+    if (!step) return
+    glideTo(cardOffset(nearestCard(offsetRef.current, step, viewport, card), step, viewport, card))
+  }
 
   const endPointer = (event: PointerEvent<HTMLDivElement>) => {
     if (pointerIdRef.current !== event.pointerId) return
@@ -109,6 +163,7 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
+    if (movedRef.current && (pausedRef.current || event.pointerType !== 'mouse')) snapToNearest()
 
     // Touch has no reliable hover — resume autoplay shortly after drag
     if (event.pointerType !== 'mouse') {
@@ -154,8 +209,16 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
     paint(startOffsetRef.current + dx)
   }
 
+  /** ‹ / ›: exactly one product, landing on it (centred on phones) */
   const moveByCard = (direction: number) => {
-    paint(offsetRef.current + direction * (stepRef.current || 304))
+    const { card, viewport, step } = sizes()
+    if (!step) {
+      paint(offsetRef.current + direction * 304)
+      return
+    }
+    holdUntilRef.current = performance.now() + ARROW_HOLD_MS
+    const i = nearestCard(offsetRef.current, step, viewport, card) - direction
+    glideTo(cardOffset(i, step, viewport, card))
   }
 
   return (
@@ -244,6 +307,8 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
               const next = !paused
               pausedRef.current = next
               setPaused(next)
+              // Paused: stop on a whole product, not half-way
+              if (next) snapToNearest()
             }}
             className="rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
             aria-pressed={paused}
