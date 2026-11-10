@@ -16,7 +16,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
-import { categoryThumb } from '@/lib/categoryPhoto'
+import { categoryThumb, categoryPhoto } from '@/lib/categoryPhoto'
 import { SubThumb } from '@/components/product/SubThumb'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -235,7 +235,9 @@ export function Shop() {
         page="shop"
         category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
         titleId="shop-heading"
-        image={SHOP_HERO_IMAGE}
+        // A category shows its own photo when it has no product to show (never a laptop on Cameras)
+        image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
+        photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}
         imagePosition="object-[50%_40%]"
         maxWidthClassName="max-w-[96rem]"
         kicker={t('shop.kicker')}

@@ -125,6 +125,7 @@ function HeroProductCard({ product }: { product: Product }) {
 export function StoreHero({
   page,
   category,
+  photoCard = false,
   kicker,
   titleLead,
   titleAccent,
@@ -141,6 +142,8 @@ export function StoreHero({
   page?: HeroPage
   /** Shop page: the category being browsed (its own header product, Admin → Products → Shop page) */
   category?: HeroCategory
+  /** No product: show the photo as a framed picture in dark mode too (a category's own photo) */
+  photoCard?: boolean
   kicker: string
   titleLead: ReactNode
   titleAccent?: ReactNode
@@ -158,7 +161,8 @@ export function StoreHero({
   children?: ReactNode
 }) {
   const { product, pending } = useHeroProduct(page, category)
-  const showcase = Boolean(product) || pending
+  // A framed picture (product, loading, or the category photo): no full-bleed background photo
+  const showcase = Boolean(product) || pending || photoCard
 
   return (
     <section
@@ -251,7 +255,7 @@ export function StoreHero({
             ) : (
               <div
                 {...fadeUp(0.1)}
-                className="relative order-first md:order-none md:dark:hidden!"
+                className={cn('relative order-first md:order-none', !photoCard && 'md:dark:hidden!')}
                 aria-hidden="true"
               >
                 <div className="relative aspect-[4/3] overflow-hidden md:rounded-2xl md:border md:border-[var(--border)] md:bg-[var(--bg-muted)] md:shadow-soft lg:aspect-[16/10] md:dark:border-white/10">

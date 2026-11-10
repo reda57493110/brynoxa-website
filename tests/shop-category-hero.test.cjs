@@ -33,6 +33,12 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   const hook = src('hooks/useHeroProduct.ts');
   assert.ok(hook.includes("productsApi.list({ category: cat!.slug, inStock: true, sort: 'popular', limit: 12 })"), 'in stock, from that category');
   assert.ok(hook.includes("const own = cat && !categoryChoice ? '' : pick.value"), 'the shop header choice never hides the category product');
+  assert.ok(hook.includes('const needAuto = Boolean(page) && !cat && settings.isSuccess'), 'a category never borrows the shop product (no laptop on Cameras)');
+  assert.ok(hook.includes("? 'empty-category'"), 'nothing in stock: the category photo');
+  const shop = src('pages/store/Shop.tsx');
+  assert.ok(shop.includes('image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}'), 'the category photo in the header');
+  assert.ok(shop.includes('photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}'));
+  assert.ok(src('components/layout/StoreHero.tsx').includes("!photoCard && 'md:dark:hidden!'"), 'framed in dark mode too');
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("{ id: 'shop', label: 'Shop page header', icon: 'cart', href: '/shop' }"));
   assert.ok(board.includes('<ShopHeaderBoard />'));

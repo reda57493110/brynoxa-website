@@ -23,5 +23,13 @@ test('the automatic pick in a category: in stock, featured first, then one with 
   assert.equal(hero.pickCategoryHero([p('1', 0, { isFeatured: true }), p('2', 3), p('3', 2, { isFeatured: true })])?._id, '3');
   assert.equal(hero.pickCategoryHero([p('1', 3), p('2', 3, { images: [{ url: 'x' }] })])?._id, '2');
   assert.equal(hero.pickCategoryHero([p('1', 3)])?._id, '1');
-  assert.equal(hero.pickCategoryHero([p('1', 0)]), null, 'nothing in stock: the shop header is used');
+  assert.equal(hero.pickCategoryHero([p('1', 0)]), null, 'nothing in stock: the category photo is used');
+});
+
+test('an empty category shows its own photo: Cameras a camera, a sub-category its own or its main one', async () => {
+  const photo = await import(pathToFileURL(path.join(root, 'frontend/src/lib/categoryPhoto.ts')).href);
+  assert.equal(photo.categoryPhoto({ slug: 'camera' }), '/categories/cameras.webp', 'camera = cameras');
+  assert.equal(photo.categoryPhoto({ slug: 'security-cameras', parent: 'c1' }), '/categories/sub/security-cameras.webp');
+  assert.equal(photo.categoryPhoto({ slug: 'new-sub', parent: 'c1' }, [{ _id: 'c1', slug: 'camera' }]), '/categories/cameras.webp', 'no photo of its own: the main one');
+  assert.ok(!String(photo.categoryPhoto({ slug: 'camera' })).includes('laptop'));
 });

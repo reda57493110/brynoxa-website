@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal'
 import { ProductSearch } from '@/components/admin/PageHeaderProducts'
 import { HERO_NONE, useHeroProduct, type HeroCategory, type HeroSource } from '@/hooks/useHeroProduct'
 import { childrenOf, mainCategories } from '@/lib/categoryTree'
+import { categoryPhoto } from '@/lib/categoryPhoto'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
@@ -22,16 +23,17 @@ const SOURCE_TEXT: Record<HeroSource, string> = {
   category: 'your choice',
   main: 'same as its main category',
   'from-category': 'auto: from this category',
-  page: 'shop header (nothing in stock here)',
+  page: 'shop header',
+  'empty-category': 'category photo (nothing in stock here)',
   auto: 'auto: first featured product',
-  none: 'photo only',
+  none: 'photo only (category photo)',
 }
 
 const btn =
   'inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2.5 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] disabled:pointer-events-none disabled:opacity-40'
 
-function Thumb({ product }: { product: Product | null }) {
-  const image = product?.images?.find((i) => i.isPrimary)?.url || product?.images?.[0]?.url
+function Thumb({ product, photo }: { product: Product | null; photo?: string }) {
+  const image = product?.images?.find((i) => i.isPrimary)?.url || product?.images?.[0]?.url || photo
   return (
     <span className={cn('relative block h-16 w-24 shrink-0 overflow-hidden rounded-lg border border-[var(--border)]', imageFit(image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]')}>
       {image ? (
@@ -61,7 +63,10 @@ function HeaderRow({
   setting,
   save,
   busy,
+  photo,
 }: {
+  /** The category photo, shown when no product is */
+  photo?: string
   title: string
   depth?: 0 | 1
   /** undefined = the shop page with no category chosen */
@@ -79,7 +84,7 @@ function HeaderRow({
 
   return (
     <div className={cn('flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/25 p-2.5', depth === 1 && 'ms-6 border-dashed')}>
-      <Thumb product={shown.product} />
+      <Thumb product={shown.product} photo={photo} />
       <div className="min-w-0 flex-1">
         <p className="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold">
           {depth === 1 ? <SiteIcon name="chevron-right" size={12} className="text-[var(--fg-muted)] rtl:rotate-180" /> : null}
@@ -104,7 +109,7 @@ function HeaderRow({
           ) : shown.pending ? (
             'Loading…'
           ) : (
-            'The page photo is shown.'
+            photo ? 'The category photo is shown.' : 'The page photo is shown.'
           )}
         </p>
       </div>
@@ -138,7 +143,9 @@ function MainBlock({
   heroes,
   saveFor,
   busy,
+  all,
 }: {
+  all: Category[]
   main: Category
   subs: Category[]
   heroes: Record<string, string>
@@ -148,7 +155,7 @@ function MainBlock({
   const [open, setOpen] = useState(() => subs.some((s) => heroes[s.slug]))
   return (
     <div className="space-y-1.5">
-      <HeaderRow title={main.name} category={{ slug: main.slug, main: main.slug }} setting={heroes[main.slug] ?? ''} save={saveFor(main.slug)} busy={busy} />
+      <HeaderRow title={main.name} photo={categoryPhoto(main, all)} category={{ slug: main.slug, main: main.slug }} setting={heroes[main.slug] ?? ''} save={saveFor(main.slug)} busy={busy} />
       {subs.length ? (
         <button type="button" onClick={() => setOpen((v) => !v)} className="ms-6 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--brand-text)] hover:underline">
           <SiteIcon name={open ? 'chevron-down' : 'chevron-right'} size={12} className={open ? '' : 'rtl:rotate-180'} />
@@ -157,7 +164,7 @@ function MainBlock({
       ) : null}
       {open
         ? subs.map((s) => (
-            <HeaderRow key={s._id} depth={1} title={s.name} category={{ slug: s.slug, main: main.slug }} setting={heroes[s.slug] ?? ''} save={saveFor(s.slug)} busy={busy} />
+            <HeaderRow key={s._id} depth={1} title={s.name} photo={categoryPhoto(s, all)} category={{ slug: s.slug, main: main.slug }} setting={heroes[s.slug] ?? ''} save={saveFor(s.slug)} busy={busy} />
           ))
         : null}
     </div>
@@ -200,12 +207,12 @@ export function ShopHeaderBoard() {
     <>
       <p className="mb-2.5 text-[11px] text-[var(--fg-muted)]">
         The product at the top of the Shop page changes with the category the customer picks. Nothing chosen = one of that category’s own
-        products (featured first); a sub-category uses its main category’s choice unless it has its own.
+        products (featured first), or its photo when it has nothing in stock; a sub-category uses its main category’s choice unless it has its own.
       </p>
       <div className="flex flex-col gap-2.5">
         <HeaderRow title="All products (no category chosen)" setting={shopSetting} save={(value) => save.mutateAsync({ pageHeroProducts: { shop: value } })} busy={save.isPending} />
         {mains.map((m) => (
-          <MainBlock key={m._id} main={m} subs={childrenOf(list, m._id)} heroes={heroes} saveFor={saveFor} busy={save.isPending} />
+          <MainBlock key={m._id} all={list} main={m} subs={childrenOf(list, m._id)} heroes={heroes} saveFor={saveFor} busy={save.isPending} />
         ))}
       </div>
     </>

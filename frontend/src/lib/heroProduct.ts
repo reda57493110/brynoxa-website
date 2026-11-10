@@ -3,7 +3,8 @@ import type { HeroPage, Product } from '@/types'
 /** Page-header setting meaning "no product — show the page photo". */
 export const HERO_NONE = 'none'
 
-export type HeroSource = 'category' | 'main' | 'from-category' | 'page' | 'auto' | 'none'
+/** empty-category: nothing in stock in the category, its photo is shown */
+export type HeroSource = 'category' | 'main' | 'from-category' | 'page' | 'auto' | 'none' | 'empty-category'
 
 /** The shop category being browsed: its address and its main category's (for sub-categories). */
 export type HeroCategory = { slug: string; main?: string }

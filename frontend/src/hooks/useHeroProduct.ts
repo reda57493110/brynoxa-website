@@ -9,9 +9,10 @@ export { HERO_NONE, heroSettingFor, pickCategoryHero, type HeroCategory, type He
 /**
  * Product shown in a page header. Shop page with a category: the product chosen for that
  * category (or its main category); when none, one from that category (featured first); when the
- * category has nothing in stock, the shop's own header. Other pages: the product chosen in
- * admin, else the first featured product (or the newest). HERO_NONE or no page disables it (the
- * header then shows its default photo).
+ * category has nothing in stock, no product — the header shows the category's own photo, never
+ * another category's product (a laptop on Cameras). Other pages: the product chosen in admin,
+ * else the first featured product (or the newest). HERO_NONE or no page disables it (the header
+ * then shows its photo).
  */
 export function useHeroProduct(
   page?: HeroPage,
@@ -38,7 +39,7 @@ export function useHeroProduct(
   const cat = page === 'shop' ? category : undefined
   const pick = page ? heroSettingFor(settings.data, page, cat) : { value: '', from: 'page' as const }
   const categoryChoice = pick.from !== 'page'
-  // In a category, the shop's own choice only counts when the category has nothing in stock
+  // In a category, only a choice made for it (or its main category) counts, never the shop's own
   const own = cat && !categoryChoice ? '' : pick.value
   const hidden = own === HERO_NONE
   const id = hidden ? '' : own
@@ -63,27 +64,8 @@ export function useHeroProduct(
   })
   const categoryProduct = wantCategory ? (fromCategory.data ?? null) : null
 
-  // No category (or nothing in stock in it): the page's own choice, then the automatic pick
-  const pageSetting = page ? (settings.data?.pageHeroProducts?.[page] || '') : ''
-  const fallBack = wantCategory && fromCategory.isSuccess && !categoryProduct
-  const pageHidden = fallBack && pageSetting === HERO_NONE
-  const pageId = fallBack && !pageHidden && pageSetting !== id ? pageSetting : ''
-  const pageChosen = useQuery({
-    queryKey: ['hero-product', pageId],
-    queryFn: async () => (await productsApi.compare([pageId])).data.data[0] ?? null,
-    enabled: Boolean(pageId),
-    staleTime: 5 * 60_000,
-  })
-  const pageChosenUsable = Boolean(pageChosen.data && pageChosen.data.stock > 0)
-
-  const needAuto =
-    Boolean(page) &&
-    settings.isSuccess &&
-    !hidden &&
-    !pageHidden &&
-    (cat
-      ? fallBack && (!pageId || (pageChosen.isSuccess && !pageChosenUsable))
-      : !id || chosenFailed)
+  // No category: the page's automatic pick
+  const needAuto = Boolean(page) && !cat && settings.isSuccess && !hidden && (!id || chosenFailed)
   const auto = useQuery({
     queryKey: ['hero-auto-products'],
     queryFn: async () => {
@@ -98,27 +80,25 @@ export function useHeroProduct(
   if (!page) return { product: null, pending: false, pinned: false, hidden: false, source: 'none' }
 
   const pinnedProduct = (id && chosenUsable && chosen.data) || null
-  const pagePinned = (pageId && pageChosenUsable && pageChosen.data) || null
-  const product = pinnedProduct || categoryProduct || pagePinned || (needAuto ? (auto.data?.[0] ?? null) : null)
+  const product = hidden ? null : pinnedProduct || categoryProduct || (needAuto ? (auto.data?.[0] ?? null) : null)
   return {
-    product: hidden || pageHidden ? null : product,
+    product,
     pending:
-      settings.isPending ||
-      (Boolean(id) && chosen.isPending) ||
-      (wantCategory && fromCategory.isPending) ||
-      (Boolean(pageId) && pageChosen.isPending) ||
-      (needAuto && auto.isPending),
-    pinned: Boolean(pinnedProduct || pagePinned) && (categoryChoice ? Boolean(pinnedProduct) : true),
-    hidden: hidden || pageHidden,
-    source:
-      hidden || pageHidden || !product
-        ? 'none'
-        : pinnedProduct
-          ? (pick.from === 'main' ? 'main' : pick.from === 'category' ? 'category' : 'page')
-          : categoryProduct
-            ? 'from-category'
-            : pagePinned
-              ? 'page'
-              : 'auto',
+      settings.isPending || (Boolean(id) && chosen.isPending) || (wantCategory && fromCategory.isPending) || (needAuto && auto.isPending),
+    pinned: Boolean(pinnedProduct),
+    hidden,
+    source: !product
+      ? cat && !hidden
+        ? 'empty-category'
+        : 'none'
+      : pinnedProduct
+        ? pick.from === 'main'
+          ? 'main'
+          : pick.from === 'category'
+            ? 'category'
+            : 'page'
+        : categoryProduct
+          ? 'from-category'
+          : 'auto',
   }
 }
