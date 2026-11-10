@@ -1053,6 +1053,12 @@ export const fr: Messages = {
     ctxTrack: "Comment suivre ma commande",
     ctxReturn: "Comment fonctionnent retours et garantie",
     ctxAny: "Besoin d’aide ? Voir les guides",
+    askTitle: "Posez votre question",
+    askPlaceholder: "ex. où est ma commande ? prix de la livraison ?",
+    notThis: "Pas la bonne réponse ?",
+    askNoAnswer: "Envoyez-nous votre question sur WhatsApp, nous répondons vite.",
+    askWhatsApp: "Demandez-nous sur WhatsApp",
+    waAsk: "Bonjour, j’ai une question :",
   },
   services: {
     heroKicker: 'Services',

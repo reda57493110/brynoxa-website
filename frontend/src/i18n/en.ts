@@ -1049,6 +1049,12 @@ export const en = {
     ctxTrack: "How to follow my order",
     ctxReturn: "How returns and warranty work",
     ctxAny: "Need help? See the guides",
+    askTitle: "Ask anything",
+    askPlaceholder: "e.g. where is my order? delivery price?",
+    notThis: "Not the answer?",
+    askNoAnswer: "Send us your question on WhatsApp and we reply quickly.",
+    askWhatsApp: "Ask us on WhatsApp",
+    waAsk: "Hello, I have a question:",
   },
   services: {
     heroKicker: 'Services',

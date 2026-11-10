@@ -13,6 +13,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { composeWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp'
 import { CONTACT } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import {
@@ -457,7 +458,7 @@ function SearchResults({
   onClear: () => void
 }) {
   const t = useT()
-  const count = results.topics.length + results.faqs.length
+  const count = Math.min(results.topics.length, 8) + Math.min(results.faqs.length, 4)
   // While searching, an answer is open unless the reader closed it
   const isOpen = (id: string) => !open.has(`closed:${id}`)
   const flip = (id: string) => toggle(`closed:${id}`)
@@ -476,6 +477,15 @@ function SearchResults({
           <h2 className="mt-3 font-display text-lg font-semibold text-[var(--fg)]">{t('help.noResultsTitle', { q: query.trim() })}</h2>
           <p className="mx-auto mt-1.5 max-w-md text-sm text-[var(--fg-muted)]">{t('help.noResultsBody')}</p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
+            {/* Their question, already written in a WhatsApp message to us */}
+            <button
+              type="button"
+              onClick={() => openWhatsApp(composeWhatsAppMessage([t('help.waAsk'), query.trim()]))}
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110"
+            >
+              <SiteIcon name="chat" size={16} />
+              {t('help.askWhatsApp')}
+            </button>
             <button type="button" onClick={onClear} className={chipLink}>
               {t('help.allTopics')}
             </button>
@@ -486,13 +496,13 @@ function SearchResults({
         </div>
       ) : (
         <div className={cn(surfaceCard, 'mt-4 px-4 sm:px-6')}>
-          {results.topics.map(({ section, topic }) => (
+          {results.topics.slice(0, 8).map(({ section, topic }) => (
             <Disclosure key={topic.id} id={topic.id} title={topic.title} open={isOpen(topic.id)} onToggle={() => flip(topic.id)}>
               <p className="-mt-1 mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--brand-text)]">{section.title}</p>
               <TopicBody topic={topic} />
             </Disclosure>
           ))}
-          {results.faqs.map((faq) => (
+          {results.faqs.slice(0, 4).map((faq) => (
             <Disclosure key={faq.id} id={faq.id} title={faq.q} open={isOpen(faq.id)} onToggle={() => flip(faq.id)}>
               <p className="-mt-1 mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--brand-text)]">{t('help.popularTitle')}</p>
               <FaqAnswer faq={faq} />
