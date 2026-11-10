@@ -35,6 +35,9 @@ test('the carousel uses them: Pause snaps, arrows glide one product and hold the
   // One product = card + gap, measured exactly (an estimate made every stop creep a few pixels)
   assert.ok(src.includes('stepRef.current = products.length > 1 ? (track.scrollWidth + gap) / loop.length : 0'));
   assert.ok(src.includes('halfRef.current = stepRef.current * products.length'));
+  // A phone tap is not a mouse resting on the row: it starts moving again after an arrow
+  assert.ok(src.includes("if (event.pointerType === 'mouse') hoveringRef.current = true"));
+  assert.ok(!src.includes('onMouseEnter='));
 });
 
 test('Grab your setup: "See all" per group and a "see all products" box', () => {

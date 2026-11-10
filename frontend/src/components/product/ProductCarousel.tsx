@@ -228,13 +228,12 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
       role="region"
       aria-roledescription="carousel"
       aria-label={t('home.featuredProducts')}
-      onMouseEnter={() => {
-        hoveringRef.current = true
+      // Only a real mouse pauses it while over it: a phone tap would count as 'hovering' forever
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') hoveringRef.current = true
       }}
-      onMouseLeave={() => {
-        hoveringRef.current = false
-        if (!draggingRef.current) return
-        // If mouse leaves while still holding, keep drag until pointerup on window
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') hoveringRef.current = false
       }}
     >
       <div
