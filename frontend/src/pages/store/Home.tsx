@@ -48,13 +48,6 @@ function categoryTileClass(index: number, count: number) {
   return cn('min-h-[12.5rem]', last && smOdd && 'sm:col-span-2', last && lgLeft === 1 && 'lg:col-span-3', last && lgLeft === 2 && 'lg:col-span-2', last && smOdd && lgLeft === 0 && 'lg:col-span-1')
 }
 
-const TRUST = [
-  { key: 'home.heroPerkCod', icon: 'banknote' },
-  { key: 'home.heroPerkDelivery', icon: 'truck' },
-  { key: 'home.heroPerkWarranty', icon: 'shield' },
-  { key: 'home.heroPerkReturns', icon: 'refresh' },
-] as const
-
 export function Home() {
   const navigate = useNavigate()
   const t = useT()
@@ -157,24 +150,6 @@ export function Home() {
               {t('home.heroCtaBrowse')}
             </a>
           </div>
-
-          {/* Why buy here, at a glance */}
-          <ul
-            data-rise style={{ animationDelay: '300ms' }}
-            className="order-4 mt-3 grid grid-cols-2 gap-1.5 text-[11px] font-medium text-[var(--fg)] sm:mt-7 sm:flex sm:flex-wrap sm:gap-2 sm:text-sm dark:text-white/90"
-          >
-            {TRUST.map((item) => (
-              <li
-                key={item.key}
-                className="flex min-w-0 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)]/85 px-2.5 py-1.5 shadow-soft backdrop-blur-sm sm:shrink-0 sm:gap-2 sm:whitespace-nowrap sm:rounded-full sm:px-3.5 sm:py-2 dark:border-white/10 dark:bg-white/[0.06]"
-              >
-                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] text-[var(--brand-text)] sm:size-6 dark:text-[var(--brand)]">
-                  <SiteIcon name={item.icon} size={12} />
-                </span>
-                {t(item.key)}
-              </li>
-            ))}
-          </ul>
 
           {/* Phones / tablets: the same deals showcase as desktop, under the headline */}
           {showDeals && !isDesktop ? (

@@ -28,7 +28,8 @@ test('said in a few places only; the product page shows the product own warranty
   for (const p of ['pages/store/Shop.tsx', 'pages/store/Setups.tsx', 'pages/store/Cart.tsx', 'pages/store/Checkout.tsx']) {
     assert.ok(!/heroPerkWarranty|warrantyFromDelivery|warranty6/.test(src(p)), `${p}: no warranty line`);
   }
-  assert.ok(src('pages/store/Home.tsx').includes("'home.heroPerkWarranty'"), 'home header keeps it');
+  assert.ok(src('pages/store/ProductDetail.tsx').includes("t('home.proofWarranty')"), 'the product page keeps it');
+  assert.ok(!src('pages/store/Home.tsx').includes('heroPerk'), 'no reassurance labels under the home title');
   const product = src('pages/store/ProductDetail.tsx');
   assert.ok(product.includes("formatSpecValue('warranty', p.specs.warranty, locale)"), 'its Warranty spec (2 months, 1 year…)');
   assert.ok(product.includes(": t('home.proofWarranty'),"), 'else the general line');
