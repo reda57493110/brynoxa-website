@@ -149,6 +149,7 @@ export const ar: Messages = {
     categoriesKicker: 'الفئات',
     categoriesTitle: 'تسوق حسب الفئة',
     categoriesBody: 'حواسيب محمولة، أجهزة ألعاب، شاشات، لوحات مفاتيح والمزيد.',
+    seeMoreCategories: 'عرض فئات أخرى',
     categoriesErrorTitle: 'تعذر تحميل الفئات',
     categoriesErrorBody: 'حدث خطأ أثناء جلب الكتالوج.',
     ctaKicker: 'بلا مخاطرة، بلا كارط',

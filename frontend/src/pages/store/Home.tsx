@@ -20,6 +20,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { mainCategories } from '@/lib/categoryTree'
+import { canonicalCategorySlug } from '@/lib/categorySlug'
 import { categoryPhoto, categoryPhotoCredit, categoryPhotoPosition, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
@@ -35,6 +36,9 @@ const HERO_IMAGE =
  * Bento of categories: the first two are big; the rest fill rows of three (two on tablets). The
  * last tile stretches over what is left of its row, so the grid never ends with an empty gap.
  */
+/** Categories on the home page (by address), in order: Desktop PC, Laptops, Gaming PCs, Monitors */
+const HOME_CATEGORIES = ['desktop-pcs', 'laptops', 'gaming-pcs', 'monitors']
+
 function categoryTileClass(index: number, count: number) {
   if (index === 0) return 'min-h-[18rem] sm:col-span-2 lg:col-span-2 lg:row-span-2 lg:min-h-[24rem]'
   if (index === 1) return cn('min-h-[18rem] lg:row-span-2 lg:min-h-[24rem]', count === 2 && 'sm:col-span-2 lg:col-span-1')
@@ -91,6 +95,10 @@ export function Home() {
   // Main categories only (Components, not RAM / Storage, which are inside it)
   const categoryList = mainCategories(
     (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
+  )
+  // The home page shows four of them, in this order; "See more categories" opens the shop for the rest
+  const homeCategories = HOME_CATEGORIES.map((slug) => categoryList.find((c) => canonicalCategorySlug(c.slug) === slug)).filter(
+    (c): c is (typeof categoryList)[number] => Boolean(c)
   )
 
   return (
@@ -301,13 +309,6 @@ export function Home() {
                 {t('home.categoriesBody')}
               </p>
             </div>
-            <Link
-              to="/shop"
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-sm font-medium text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-            >
-              {t('common.allProducts')}
-              <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-            </Link>
           </div>
 
           {categories.isError ? (
@@ -330,7 +331,7 @@ export function Home() {
                       <Skeleton key={i} className="min-h-[12.5rem] rounded-[1.35rem]" />
                     )),
                   ]
-                : categoryList.map((c, i) => {
+                : homeCategories.map((c, i) => {
                     const photo = categoryPhoto(c)
                     const featuredTile = i < 2
                     const icon = categoryIcon(c.slug, c.name)
@@ -344,7 +345,7 @@ export function Home() {
                       // Rise in with CSS: visible at once, never waiting for the animation code
                       <div
                         key={c._id}
-                        className={categoryTileClass(i, categoryList.length)}
+                        className={categoryTileClass(i, homeCategories.length)}
                         data-rise="card"
                         style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
                       >
@@ -415,10 +416,23 @@ export function Home() {
                   })}
             </div>
           )}
+          {/* The other categories (Accessories, Components, Cameras…): in the shop */}
+          {homeCategories.length ? (
+            <div className="mt-5 flex justify-center sm:mt-6">
+              <Link
+                to="/shop"
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-semibold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+              >
+                <SiteIcon name="layers" size={16} />
+                {t('home.seeMoreCategories')}
+                <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+              </Link>
+            </div>
+          ) : null}
           {/* Photo credits asked by the licence of some built-in photos (CC BY-SA) */}
-          {categoryList.some((c) => categoryPhotoCredit(c)) ? (
+          {homeCategories.some((c) => categoryPhotoCredit(c)) ? (
             <p className="mt-3 text-[11px] text-[var(--fg-muted)]" dir="ltr">
-              {categoryList
+              {homeCategories
                 .filter((c) => categoryPhotoCredit(c))
                 .map((c) => {
                   const cr = categoryPhotoCredit(c)!

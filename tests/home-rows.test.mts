@@ -78,3 +78,14 @@ test('phones: New arrivals and Shop by budget use small titles and normal-size c
   assert.ok(budget.includes('font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl'), 'budget title: small on phones');
   assert.ok(budget.includes('h-10 w-full rounded-full'), 'budget input: smaller on phones');
 });
+
+test('home categories: Desktop PC, Laptops, Gaming PCs, Monitors only, then "See more categories" to the shop', async () => {
+  const fs = await import('node:fs');
+  const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
+  assert.ok(home.includes("const HOME_CATEGORIES = ['desktop-pcs', 'laptops', 'gaming-pcs', 'monitors']"));
+  assert.ok(home.includes('HOME_CATEGORIES.map((slug) => categoryList.find((c) => canonicalCategorySlug(c.slug) === slug))'), 'desktop-pc counts as desktop-pcs');
+  assert.ok(home.includes('homeCategories.map((c, i) => {'));
+  const i = home.indexOf("{t('home.seeMoreCategories')}");
+  assert.ok(i > 0 && home.slice(i - 500, i).includes('to="/shop"'), 'the button opens the shop');
+  for (const l of ['en', 'fr', 'ar']) assert.ok(fs.readFileSync(path.join(root, `frontend/src/i18n/${l}.ts`), 'utf8').includes("    seeMoreCategories: '"), l);
+});

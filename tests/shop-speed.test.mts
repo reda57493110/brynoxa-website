@@ -128,7 +128,7 @@ test('product cards and home category tiles show at once (CSS rise, not the late
   assert.match(grid, /<ProductCard product=\{p\} eager=\{i < 4\} \/>/, 'first row photos download at once');
   assert.match(src('components/product/ProductCard.tsx'), /loading=\{spotlight \|\| eager \? 'eager' : 'lazy'\}/);
   const home = src('pages/store/Home.tsx');
-  const tiles = home.slice(home.indexOf('categoryList.map('), home.indexOf('Closing CTA'));
+  const tiles = home.slice(home.indexOf('homeCategories.map('), home.indexOf('Closing CTA'));
   assert.doesNotMatch(tiles, /<m\.div|initial=/);
   assert.match(tiles, /data-rise="card"/);
   assert.match(src('index.css'), /\[data-rise\] \{\s+animation: hero-rise/);

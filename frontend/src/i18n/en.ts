@@ -147,6 +147,7 @@ export const en = {
     categoriesKicker: 'Categories',
     categoriesTitle: 'Shop by category',
     categoriesBody: 'Laptops, gaming PCs, monitors, keyboards, and more.',
+    seeMoreCategories: 'See more categories',
     categoriesErrorTitle: 'Couldn’t load categories',
     categoriesErrorBody: 'Something went wrong fetching the catalog.',
     ctaKicker: 'Zero risk, zero card',

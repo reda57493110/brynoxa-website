@@ -149,6 +149,7 @@ export const fr: Messages = {
     categoriesKicker: 'Catégories',
     categoriesTitle: 'Acheter par catégorie',
     categoriesBody: 'Portables, PC gaming, écrans, claviers et plus.',
+    seeMoreCategories: 'Voir plus de catégories',
     categoriesErrorTitle: 'Impossible de charger les catégories',
     categoriesErrorBody: 'Une erreur s’est produite en chargeant le catalogue.',
     ctaKicker: 'Zéro risque, zéro carte',
