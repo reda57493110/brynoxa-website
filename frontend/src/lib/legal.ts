@@ -83,7 +83,7 @@ const en: Record<LegalPage, LegalDocument> = {
         id: 'warranty',
         title: '7. Warranty',
         paragraphs: [
-          'Eligible products include a 6-month Brynoxa warranty from the delivery date, covering manufacturing defects. Your order number is your proof of purchase.',
+          'Every product includes a Brynoxa warranty from the delivery date, covering manufacturing defects; its length is shown on the product page. Your order number is your proof of purchase.',
           'The warranty does not cover drops, liquid damage, misuse, normal wear, or repairs done outside Brynoxa. This commercial warranty does not remove your legal rights regarding hidden defects.',
         ],
       },
@@ -277,7 +277,7 @@ const fr: Record<LegalPage, LegalDocument> = {
         id: 'warranty',
         title: '7. Garantie',
         paragraphs: [
-          'Les produits éligibles bénéficient d’une garantie Brynoxa de 6 mois à compter de la livraison, couvrant les défauts de fabrication. Votre numéro de commande sert de preuve d’achat.',
+          'Chaque produit bénéficie d’une garantie Brynoxa à compter de la livraison, couvrant les défauts de fabrication ; sa durée est indiquée sur la page du produit. Votre numéro de commande sert de preuve d’achat.',
           'La garantie ne couvre pas les chutes, les dégâts liés aux liquides, la mauvaise utilisation, l’usure normale, ni les réparations effectuées en dehors de Brynoxa. Cette garantie commerciale ne supprime pas vos droits légaux concernant les vices cachés.',
         ],
       },
@@ -473,7 +473,7 @@ const ar: Record<LegalPage, LegalDocument> = {
         id: 'warranty',
         title: '7. الضمان',
         paragraphs: [
-          'تستفيد المنتجات المؤهلة من ضمان Brynoxa لمدة 6 أشهر من تاريخ الاستلام، يغطي عيوب التصنيع. رقم طلبك هو إثبات الشراء.',
+          'يستفيد كل منتج من ضمان Brynoxa من تاريخ الاستلام، يغطي عيوب التصنيع؛ ومدته مكتوبة في صفحة المنتج. رقم طلبك هو إثبات الشراء.',
           'لا يشمل الضمان السقوط أو أضرار السوائل أو سوء الاستعمال أو التآكل العادي أو الإصلاحات التي تتم خارج Brynoxa. هذا الضمان التجاري لا يلغي حقوقك القانونية المتعلقة بالعيوب الخفية.',
         ],
       },

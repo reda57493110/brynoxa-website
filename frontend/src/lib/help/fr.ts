@@ -50,7 +50,7 @@ export const fr: HelpGuide = {
       id: 'return',
       icon: 'shield',
       title: 'Retour ou garantie',
-      intro: '14 jours pour retourner un produit, et 6 mois de garantie sur les produits éligibles.',
+      intro: '14 jours pour retourner un produit, et une garantie sur chaque produit (sa durée est sur la page du produit).',
       steps: [
         { icon: 'chat', title: 'Écrivez-nous d’abord', text: 'Sur WhatsApp, avec votre numéro de commande et la raison.' },
         { icon: 'monitor', title: 'Montrez le problème', text: 'Pour une panne, ajoutez une photo ou une courte vidéo.' },
@@ -256,7 +256,7 @@ export const fr: HelpGuide = {
         {
           id: 'warranty-claim',
           title: 'Que couvre la garantie ?',
-          summary: '6 mois à partir de la livraison sur les produits éligibles, pour les défauts de fabrication. Votre numéro de commande sert de preuve d’achat.',
+          summary: 'Chaque produit est garanti à partir de la livraison, pour les défauts de fabrication ; sa durée est sur la page du produit. Votre numéro de commande sert de preuve d’achat.',
           steps: [
             'Écrivez-nous sur WhatsApp avec votre numéro de commande.',
             'Ajoutez une photo ou une courte vidéo du problème.',
@@ -264,7 +264,7 @@ export const fr: HelpGuide = {
             'Nous réparons, remplaçons ou accordons un avoir.',
           ],
           points: ['Non couverts : chutes, liquides, mauvaise utilisation, usure normale, réparations faites ailleurs.'],
-          keywords: 'garantie 6 mois defaut panne ne marche pas',
+          keywords: 'garantie mois duree defaut panne ne marche pas',
           links: [
             { to: '/services/warranty', label: 'Garantie' },
             { to: '/terms#warranty', label: 'Conditions : garantie' },

@@ -50,7 +50,7 @@ export const en: HelpGuide = {
       id: 'return',
       icon: 'shield',
       title: 'Return or warranty',
-      intro: '14 days to return a product, and a 6-month warranty on eligible products.',
+      intro: '14 days to return a product, and a warranty on every product (its length is on the product page).',
       steps: [
         { icon: 'chat', title: 'Message us first', text: 'On WhatsApp, with your order number and the reason.' },
         { icon: 'monitor', title: 'Show the problem', text: 'For a fault, add a photo or a short video.' },
@@ -256,7 +256,7 @@ export const en: HelpGuide = {
         {
           id: 'warranty-claim',
           title: 'What does the warranty cover?',
-          summary: '6 months from delivery on eligible products, for manufacturing defects. Your order number is your proof of purchase.',
+          summary: 'Every product has a warranty from delivery, for manufacturing defects; its length is on the product page. Your order number is your proof of purchase.',
           steps: [
             'Message us on WhatsApp with your order number.',
             'Add a photo or a short video of the problem.',
@@ -264,7 +264,7 @@ export const en: HelpGuide = {
             'We repair it, replace it or give you a credit.',
           ],
           points: ['Not covered: drops, liquids, misuse, normal wear, repairs done elsewhere.'],
-          keywords: 'warranty guarantee 6 months defect broken faulty not working',
+          keywords: 'warranty guarantee months how long defect broken faulty not working',
           links: [
             { to: '/services/warranty', label: 'Warranty' },
             { to: '/terms#warranty', label: 'Terms: warranty' },

@@ -325,7 +325,7 @@ function statusEmailContent(order: OrderDoc, status: OrderStatus, settings: ISet
         subject: `Order ${order.orderNumber} delivered — Brynoxa`,
         heading: 'Your order was delivered',
         preheader: 'Payment received — thank you for shopping with Brynoxa.',
-        intro: 'Your order was delivered and your payment has been received. Thank you for shopping with Brynoxa! Your 6-month warranty starts today — keep this email and your order number as proof of purchase.',
+        intro: 'Your order was delivered and your payment has been received. Thank you for shopping with Brynoxa! Your warranty starts today — keep this email and your order number as proof of purchase.',
         extra: panel(
           'Payment received',
           detailRows([

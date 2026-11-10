@@ -487,7 +487,6 @@ export function Checkout() {
         <SiteIcon name="banknote" size={16} className="mt-0.5 shrink-0 text-[var(--brand-text)]" />
         <span>
           <span className="font-semibold text-[var(--fg)]">{t('checkout.heroKicker')}</span> · {t('checkout.paymentBody')}{' '}
-          <span className="whitespace-nowrap">· {t('checkout.warranty6')}</span>
         </span>
       </p>
       <HelpLink guide="pay" label={t('help.ctxPay')} className="mt-1.5 ps-6" />

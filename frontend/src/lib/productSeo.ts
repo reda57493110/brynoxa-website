@@ -6,9 +6,9 @@
 export type SeoLocale = 'en' | 'fr' | 'ar'
 
 const COPY: Record<SeoLocale, { price: string; at: (p: string) => string; promise: string }> = {
-  en: { price: 'Price in Morocco', at: (p) => `at ${p} in Morocco`, promise: 'Cash on delivery, 6-month warranty and 14-day returns.' },
-  fr: { price: 'Prix au Maroc', at: (p) => `à ${p} au Maroc`, promise: 'Paiement à la livraison, garantie 6 mois et retour sous 14 jours.' },
-  ar: { price: 'الثمن في المغرب', at: (p) => `بثمن ${p} في المغرب`, promise: 'الدفع عند الاستلام، ضمان 6 أشهر وإرجاع خلال 14 يوماً.' },
+  en: { price: 'Price in Morocco', at: (p) => `at ${p} in Morocco`, promise: 'Cash on delivery, warranty and 14-day returns.' },
+  fr: { price: 'Prix au Maroc', at: (p) => `à ${p} au Maroc`, promise: 'Paiement à la livraison, garantie et retour sous 14 jours.' },
+  ar: { price: 'الثمن في المغرب', at: (p) => `بثمن ${p} في المغرب`, promise: 'الدفع عند الاستلام، الضمان وإرجاع خلال 14 يوماً.' },
 }
 
 /** Google shows about 60 characters of a title and 155 of a description. */

@@ -4,21 +4,21 @@ export const en = {
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Warranty, returns & delivery — Brynoxa',
     shopTitle: 'Shop — Brynoxa',
-    homeDescription: 'Gaming PCs, laptops, monitors and components at the best prices in DH. Delivered across Morocco, pay cash at your door, 6-month warranty.',
+    homeDescription: 'Gaming PCs, laptops, monitors and components at the best prices in DH. Delivered across Morocco, pay cash at your door, every product under warranty.',
     shopDescription:
       'Browse Brynoxa’s catalog of PCs, laptops, and components. Filter by category, brand, and stock — pay on delivery in Morocco.',
     contactDescription:
       'Contact Brynoxa by WhatsApp, phone, or email. Order help, compatibility questions, and support across Morocco.',
     servicesDescription:
-      'Brynoxa warranty (6 months), 14-day returns, cash on delivery, and nationwide shipping in Morocco.',
+      'Brynoxa warranty on every product, 14-day returns, cash on delivery, and nationwide shipping in Morocco.',
     privacyTitle: 'Privacy Policy — Brynoxa',
     privacyDescription:
       'How Brynoxa collects, uses and protects your personal information, and your rights under Moroccan Law 09-08.',
     termsTitle: 'Terms of Sale — Brynoxa',
     termsDescription:
-      'Brynoxa terms of sale: prices, cash on delivery, delivery across Morocco, 14-day returns and 6-month warranty.',
+      'Brynoxa terms of sale: prices, cash on delivery, delivery across Morocco, 14-day returns and warranty.',
     categoryTitle: '{name} in Morocco — Best prices in DH | Brynoxa',
-    categoryDescription: '{name} at the best prices in DH, delivered across Morocco. Pay cash at your door, 6-month warranty and 14-day returns.',
+    categoryDescription: '{name} at the best prices in DH, delivered across Morocco. Pay cash at your door, warranty on every product and 14-day returns.',
   },
   common: {
     shop: 'Shop',
@@ -63,7 +63,7 @@ export const en = {
     myAccount: 'My account',
     tagline: 'PCs, laptops, and components — delivered across Morocco, paid on arrival.',
     copyright: '© {year} Brynoxa. Cash on delivery across Morocco.',
-    warrantyBadge: '6-month warranty',
+    warrantyBadge: 'Products under warranty',
     noCard: 'No card needed',
     backToTop: 'Back to top',
     legal: 'Legal',
@@ -93,14 +93,14 @@ export const en = {
     heroTitleAccent: 'delivered to your door',
     heroBody: 'Gaming PCs, laptops, monitors and parts — picked for performance and value.',
     proofCod: 'Cash on delivery',
-    proofWarranty: '6-month warranty',
+    proofWarranty: 'Warranty on every product',
     proofDelivery: 'Delivery across Morocco',
     proofReturns: '14-day returns',
     heroCtaShop: 'Grab your setup',
     heroCtaBrowse: 'Explore categories',
     heroPerkCod: 'Pay cash at your door',
     heroPerkDelivery: 'Delivered to every city',
-    heroPerkWarranty: '6-month warranty, no stress',
+    heroPerkWarranty: 'Every product under warranty',
     heroPerkReturns: '14 days to change your mind',
     spotlightSave: 'You save {amount}',
     spotlightDeal: 'Hot deal',
@@ -108,7 +108,7 @@ export const en = {
     offLabel: 'Off',
     dealsKicker: 'Deals',
     dealsTitle: 'Prices that drop',
-    dealsBody: 'Reduced prices, while stock lasts. Cash on delivery, 6-month warranty.',
+    dealsBody: 'Reduced prices, while stock lasts. Cash on delivery.',
     newKicker: 'Just in',
     newTitle: 'New arrivals',
     newBody: 'The latest computers and gear added to the shop.',
@@ -254,7 +254,7 @@ export const en = {
     max: 'Max',
     any: 'Any',
     allCategories: 'All categories',
-    filterNote: 'Cash on delivery · 6-month warranty',
+    filterNote: 'Cash on delivery',
     inStockOnly: 'In stock only',
     onSaleOnly: 'Deals only',
     under: 'Under {amount} DH',
@@ -318,7 +318,7 @@ export const en = {
     hasAccount: 'Already have an account?',
     titleSignIn: 'Sign in — Brynoxa',
     titleRegister: 'Create account — Brynoxa',
-    layoutHint: 'Morocco · cash on delivery · 6-month warranty',
+    layoutHint: 'Morocco · cash on delivery',
     adminRequired: 'Admin access required',
     adminRequiredBody:
       'This area is for staff. Sign in with the admin account to open the back office.',
@@ -341,7 +341,7 @@ export const en = {
     summary: 'Summary',
     subtotal: 'Subtotal',
     payCourier: 'Pay the courier — no card',
-    warrantyFromDelivery: '6-month warranty from delivery',
+    warrantyFromDelivery: 'Warranty starts on delivery',
     shipping: 'Shipping',
     shippingFrom: 'From {amount}',
     shippingHint: 'Final fee depends on your city at checkout.',
@@ -386,7 +386,7 @@ export const en = {
     tax: 'Tax',
     totalCod: 'Total (COD)',
     payOnArrival: 'Pay on arrival',
-    warranty6: '6-month warranty',
+    warranty6: 'Warranty on every product',
     placeOrder: 'Place COD order',
     backToCart: 'Back to cart',
     orderPlaced: 'Order placed',
@@ -1086,10 +1086,10 @@ export const en = {
     items: {
       warranty: {
         title: 'Official warranty',
-        highlight: '6 months',
-        summary: 'Covered for manufacturing defects for six months from delivery.',
+        highlight: 'Every product',
+        summary: 'Covered for manufacturing defects from delivery; each product’s warranty length is on its page.',
         details:
-          'Every eligible product includes a 6-month Brynoxa warranty from the day it arrives. It covers manufacturing defects only. Your order number is your proof of purchase — no extra paperwork.',
+          'Every product includes a Brynoxa warranty from the day it arrives; its length is written on the product page. It covers manufacturing defects only. Your order number is your proof of purchase — no extra paperwork.',
       },
       returns: {
         title: 'Returns',
@@ -1131,7 +1131,7 @@ export const en = {
       warranty: [
         {
           q: 'How long is the warranty?',
-          a: 'Six months from the delivery date — always under one year. After that, repairs can be quoted separately.',
+          a: 'It depends on the product: its warranty length is written on the product page. It always starts on the delivery date. After that, repairs can be quoted separately.',
         },
       ],
       returns: [

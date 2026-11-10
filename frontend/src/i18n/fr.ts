@@ -6,21 +6,21 @@ export const fr: Messages = {
     contactTitle: 'Contact — Brynoxa',
     servicesTitle: 'Garantie, retours et livraison — Brynoxa',
     shopTitle: 'Boutique — Brynoxa',
-    homeDescription: 'PC gamer, portables, écrans et composants aux meilleurs prix en DH. Livraison partout au Maroc, paiement à la livraison, garantie 6 mois.',
+    homeDescription: 'PC gamer, portables, écrans et composants aux meilleurs prix en DH. Livraison partout au Maroc, paiement à la livraison, tous les produits garantis.',
     shopDescription:
       'Parcourez le catalogue Brynoxa : PC, portables et composants. Filtrez par catégorie et marque — paiement à la livraison.',
     contactDescription:
       'Contactez Brynoxa par WhatsApp, téléphone ou e-mail. Commandes, compatibilité et support au Maroc.',
     servicesDescription:
-      'Garantie Brynoxa (6 mois), retours 14 jours, paiement à la livraison et livraison nationale au Maroc.',
+      'Garantie Brynoxa sur chaque produit, retours 14 jours, paiement à la livraison et livraison nationale au Maroc.',
     privacyTitle: 'Politique de confidentialité — Brynoxa',
     privacyDescription:
       'Comment Brynoxa collecte, utilise et protège vos informations personnelles, et vos droits selon la loi marocaine 09-08.',
     termsTitle: 'Conditions générales de vente — Brynoxa',
     termsDescription:
-      'CGV Brynoxa : prix, paiement à la livraison, livraison au Maroc, retours sous 14 jours et garantie 6 mois.',
+      'CGV Brynoxa : prix, paiement à la livraison, livraison au Maroc, retours sous 14 jours et garantie.',
     categoryTitle: '{name} au Maroc — Meilleurs prix en DH | Brynoxa',
-    categoryDescription: '{name} aux meilleurs prix en DH, livrés partout au Maroc. Paiement à la livraison, garantie 6 mois et retour sous 14 jours.',
+    categoryDescription: '{name} aux meilleurs prix en DH, livrés partout au Maroc. Paiement à la livraison, garantie sur chaque produit et retour sous 14 jours.',
   },
   common: {
     shop: 'Boutique',
@@ -65,7 +65,7 @@ export const fr: Messages = {
     myAccount: 'Mon compte',
     tagline: 'PC, portables et composants — livrés au Maroc, payés à l’arrivée.',
     copyright: '© {year} Brynoxa. Paiement à la livraison au Maroc.',
-    warrantyBadge: 'Garantie 6 mois',
+    warrantyBadge: 'Produits garantis',
     noCard: 'Pas de carte nécessaire',
     backToTop: 'Haut de page',
     legal: 'Mentions légales',
@@ -95,14 +95,14 @@ export const fr: Messages = {
     heroTitleAccent: 'livré chez vous',
     heroBody: 'PC gaming, portables, écrans et composants — choisis pour la performance et le bon prix.',
     proofCod: 'Paiement à la livraison',
-    proofWarranty: 'Garantie 6 mois',
+    proofWarranty: 'Garantie sur chaque produit',
     proofDelivery: 'Livraison partout au Maroc',
     proofReturns: 'Retour sous 14 jours',
     heroCtaShop: 'Je choisis mon setup',
     heroCtaBrowse: 'Voir les catégories',
     heroPerkCod: 'Payez cash à la porte',
     heroPerkDelivery: 'Livré dans toutes les villes',
-    heroPerkWarranty: 'Garantie 6 mois, zéro stress',
+    heroPerkWarranty: 'Tous les produits garantis',
     heroPerkReturns: '14 jours pour changer d’avis',
     spotlightSave: 'Vous économisez {amount}',
     spotlightDeal: 'Bonne affaire',
@@ -110,7 +110,7 @@ export const fr: Messages = {
     offLabel: 'Remise',
     dealsKicker: 'Promotions',
     dealsTitle: 'Les prix qui baissent',
-    dealsBody: 'Des prix réduits, dans la limite des stocks. Paiement à la livraison, garantie 6 mois.',
+    dealsBody: 'Des prix réduits, dans la limite des stocks. Paiement à la livraison.',
     newKicker: 'Nouveau',
     newTitle: 'Nouveautés',
     newBody: 'Les derniers ordinateurs et accessoires ajoutés à la boutique.',
@@ -256,7 +256,7 @@ export const fr: Messages = {
     max: 'Max',
     any: 'Tous',
     allCategories: 'Toutes les catégories',
-    filterNote: 'Paiement à la livraison · garantie 6 mois',
+    filterNote: 'Paiement à la livraison',
     inStockOnly: 'En stock uniquement',
     onSaleOnly: 'Promotions uniquement',
     under: 'Moins de {amount} DH',
@@ -320,7 +320,7 @@ export const fr: Messages = {
     hasAccount: 'Vous avez déjà un compte ?',
     titleSignIn: 'Connexion — Brynoxa',
     titleRegister: 'Créer un compte — Brynoxa',
-    layoutHint: 'Maroc · paiement à la livraison · garantie 6 mois',
+    layoutHint: 'Maroc · paiement à la livraison',
     adminRequired: 'Accès admin requis',
     adminRequiredBody:
       'Cet espace est réservé au personnel. Connectez-vous avec le compte admin pour ouvrir le back-office.',
@@ -343,7 +343,7 @@ export const fr: Messages = {
     summary: 'Récapitulatif',
     subtotal: 'Sous-total',
     payCourier: 'Payez le livreur — pas de carte',
-    warrantyFromDelivery: 'Garantie 6 mois à partir de la livraison',
+    warrantyFromDelivery: 'La garantie commence à la livraison',
     shipping: 'Livraison',
     shippingFrom: 'À partir de {amount}',
     shippingHint: 'Le montant final dépend de votre ville au paiement.',
@@ -388,7 +388,7 @@ export const fr: Messages = {
     tax: 'Taxe',
     totalCod: 'Total à payer à la livraison',
     payOnArrival: 'Payer à l’arrivée',
-    warranty6: 'Garantie 6 mois',
+    warranty6: 'Garantie sur chaque produit',
     placeOrder: 'Commander, paiement à la livraison',
     backToCart: 'Retour au panier',
     orderPlaced: 'Commande passée',
@@ -1090,10 +1090,10 @@ export const fr: Messages = {
     items: {
       warranty: {
         title: 'Garantie officielle',
-        highlight: '6 mois',
-        summary: 'Couverture des défauts de fabrication pendant six mois à partir de la livraison.',
+        highlight: 'Chaque produit',
+        summary: 'Défauts de fabrication couverts à partir de la livraison ; la durée de garantie de chaque produit est indiquée sur sa page.',
         details:
-          'Chaque produit éligible inclut une garantie Brynoxa de 6 mois à compter de l’arrivée. Elle couvre uniquement les défauts de fabrication. Votre numéro de commande sert de preuve d’achat.',
+          'Chaque produit inclut une garantie Brynoxa à compter de l’arrivée ; sa durée est indiquée sur la page du produit. Elle couvre uniquement les défauts de fabrication. Votre numéro de commande sert de preuve d’achat.',
       },
       returns: {
         title: 'Retours',
@@ -1135,7 +1135,7 @@ export const fr: Messages = {
       warranty: [
         {
           q: 'Quelle est la durée de la garantie ?',
-          a: 'Six mois à compter de la date de livraison — toujours moins d’un an. Ensuite, les réparations peuvent être chiffrées à part.',
+          a: 'Cela dépend du produit : sa durée de garantie est indiquée sur la page du produit. Elle commence toujours à la date de livraison. Ensuite, les réparations peuvent être chiffrées à part.',
         },
       ],
       returns: [

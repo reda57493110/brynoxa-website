@@ -305,7 +305,6 @@ export function Shop() {
           {(
             [
               { icon: 'banknote' as const, label: t('home.heroPerkCod') },
-              { icon: 'shield' as const, label: t('home.heroPerkWarranty') },
             ] as const
           ).map((item) => (
             <li key={item.label} className={heroChip}>

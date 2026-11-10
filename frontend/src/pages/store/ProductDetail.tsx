@@ -32,7 +32,7 @@ import { categoryDisplayName } from '@/i18n'
 import type { Brand, Category, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
-import { resolveTemplate } from '@/lib/specs'
+import { formatSpecValue, resolveTemplate, specLabel } from '@/lib/specs'
 import { ProductSpecs } from '@/components/product/ProductSpecs'
 import { VariantPicker } from '@/components/product/VariantPicker'
 
@@ -209,7 +209,13 @@ function ProductDetailPage() {
 
   const proofChips = [
     { icon: 'package-check' as const, label: t('home.proofCod') },
-    { icon: 'shield' as const, label: t('home.proofWarranty') },
+    // This product's own warranty when its Warranty spec is filled in (2 months, 1 year…)
+    {
+      icon: 'shield' as const,
+      label: p.specs?.warranty
+        ? `${specLabel('warranty', locale)}: ${formatSpecValue('warranty', p.specs.warranty, locale)}`
+        : t('home.proofWarranty'),
+    },
   ]
 
   return (

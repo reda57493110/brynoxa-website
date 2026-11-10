@@ -6,21 +6,21 @@ export const ar: Messages = {
     contactTitle: 'اتصل بنا — Brynoxa',
     servicesTitle: 'الضمان والإرجاع والتوصيل — Brynoxa',
     shopTitle: 'المتجر — Brynoxa',
-    homeDescription: 'PC Gamer، لابتوبات، شاشات ومكونات بأفضل الأثمنة بالدرهم. التوصيل لجميع مدن المغرب، الدفع عند الاستلام وضمان 6 أشهر.',
+    homeDescription: 'PC Gamer، لابتوبات، شاشات ومكونات بأفضل الأثمنة بالدرهم. التوصيل لجميع مدن المغرب، الدفع عند الاستلام وكل المنتجات مضمونة.',
     shopDescription:
       'تصفّح كتالوج Brynoxa من الحواسيب والمكوّنات. صفِّ حسب الفئة والعلامة — ادفع عند الاستلام.',
     contactDescription:
       'تواصل مع Brynoxa عبر واتساب أو الهاتف أو البريد. طلبات وأسئلة التوافق والدعم في المغرب.',
     servicesDescription:
-      'ضمان Brynoxa (6 أشهر)، إرجاع خلال 14 يومًا، الدفع عند الاستلام والتوصيل في أنحاء المغرب.',
+      'ضمان Brynoxa على كل منتج، إرجاع خلال 14 يومًا، الدفع عند الاستلام والتوصيل في أنحاء المغرب.',
     privacyTitle: 'سياسة الخصوصية — Brynoxa',
     privacyDescription:
       'كيف تجمع Brynoxa معلوماتك الشخصية وتستخدمها وتحميها، وحقوقك وفق القانون المغربي 09-08.',
     termsTitle: 'شروط البيع — Brynoxa',
     termsDescription:
-      'شروط البيع لدى Brynoxa: الأسعار، الدفع عند الاستلام، التوصيل في المغرب، الإرجاع خلال 14 يومًا وضمان 6 أشهر.',
+      'شروط البيع لدى Brynoxa: الأسعار، الدفع عند الاستلام، التوصيل في المغرب، الإرجاع خلال 14 يومًا والضمان.',
     categoryTitle: '{name} في المغرب — أفضل الأثمنة بالدرهم | Brynoxa',
-    categoryDescription: '{name} بأفضل الأثمنة بالدرهم، مع التوصيل لجميع مدن المغرب. الدفع عند الاستلام، ضمان 6 أشهر وإرجاع خلال 14 يوماً.',
+    categoryDescription: '{name} بأفضل الأثمنة بالدرهم، مع التوصيل لجميع مدن المغرب. الدفع عند الاستلام، ضمان على كل منتج وإرجاع خلال 14 يوماً.',
   },
   common: {
     shop: 'المتجر',
@@ -65,7 +65,7 @@ export const ar: Messages = {
     myAccount: 'حسابي',
     tagline: 'حواسيب محمولة ومكتبية ومكوّنات — توصيل في المغرب والدفع عند الوصول.',
     copyright: '© {year} Brynoxa. الدفع عند الاستلام في المغرب.',
-    warrantyBadge: 'ضمان 6 أشهر',
+    warrantyBadge: 'منتجات مضمونة',
     noCard: 'بدون بطاقة',
     backToTop: 'إلى الأعلى',
     legal: 'معلومات قانونية',
@@ -95,14 +95,14 @@ export const ar: Messages = {
     heroTitleAccent: 'حتى لباب الدار',
     heroBody: 'PC ديال الگيمينگ، لابتوبات، شاشات وقطع — مختارين على الأداء والثمن المزيان.',
     proofCod: 'الدفع عند الاستلام',
-    proofWarranty: 'ضمان 6 أشهر',
+    proofWarranty: 'ضمان على كل منتج',
     proofDelivery: 'توصيل لجميع مدن المغرب',
     proofReturns: 'إرجاع خلال 14 يومًا',
     heroCtaShop: 'ختار السيتاب ديالك',
     heroCtaBrowse: 'شوف الأقسام',
     heroPerkCod: 'خلّص كاش فالباب',
     heroPerkDelivery: 'التوصيل لكل مدينة',
-    heroPerkWarranty: 'ضمان 6 شهور بلا صداع',
+    heroPerkWarranty: 'كل المنتجات مضمونة',
     heroPerkReturns: '14 يوم باش تبدّل رأيك',
     spotlightSave: 'توفّر {amount}',
     spotlightDeal: 'عرض مميز',
@@ -110,7 +110,7 @@ export const ar: Messages = {
     offLabel: 'خصم',
     dealsKicker: 'عروض',
     dealsTitle: 'أسعار منخفضة',
-    dealsBody: 'أسعار مخفضة في حدود المخزون. الدفع عند الاستلام وضمان 6 أشهر.',
+    dealsBody: 'أسعار مخفضة في حدود المخزون. الدفع عند الاستلام.',
     newKicker: 'جديد',
     newTitle: 'وصل حديثاً',
     newBody: 'آخر الحواسيب والإكسسوارات المضافة إلى المتجر.',
@@ -256,7 +256,7 @@ export const ar: Messages = {
     max: 'أقصى',
     any: 'الكل',
     allCategories: 'كل الفئات',
-    filterNote: 'الدفع عند الاستلام · ضمان 6 أشهر',
+    filterNote: 'الدفع عند الاستلام',
     inStockOnly: 'المتوفرة فقط',
     onSaleOnly: 'العروض فقط',
     under: 'أقل من {amount} درهم',
@@ -320,7 +320,7 @@ export const ar: Messages = {
     hasAccount: 'لديك حساب بالفعل؟',
     titleSignIn: 'تسجيل الدخول — برينوكسا',
     titleRegister: 'إنشاء حساب — برينوكسا',
-    layoutHint: 'المغرب · الدفع عند الاستلام · ضمان 6 أشهر',
+    layoutHint: 'المغرب · الدفع عند الاستلام',
     adminRequired: 'يلزم حساب الإدارة',
     adminRequiredBody:
       'هذه المنطقة للموظفين. سجّل الدخول بحساب المدير لفتح لوحة التحكم.',
@@ -343,7 +343,7 @@ export const ar: Messages = {
     summary: 'الملخص',
     subtotal: 'المجموع الفرعي',
     payCourier: 'ادفع للمندوب — بدون بطاقة',
-    warrantyFromDelivery: 'ضمان 6 أشهر من يوم التسليم',
+    warrantyFromDelivery: 'الضمان يبدأ من يوم التسليم',
     shipping: 'الشحن',
     shippingFrom: 'ابتداءً من {amount}',
     shippingHint: 'المبلغ النهائي يعتمد على مدينتك عند الدفع.',
@@ -388,7 +388,7 @@ export const ar: Messages = {
     tax: 'الضريبة',
     totalCod: 'الإجمالي (عند الاستلام)',
     payOnArrival: 'الدفع عند الوصول',
-    warranty6: 'ضمان 6 أشهر',
+    warranty6: 'ضمان على كل منتج',
     placeOrder: 'تأكيد طلب الدفع عند الاستلام',
     backToCart: 'العودة إلى السلة',
     orderPlaced: 'تم تقديم الطلب',
@@ -1088,10 +1088,10 @@ export const ar: Messages = {
     items: {
       warranty: {
         title: 'ضمان رسمي',
-        highlight: '6 أشهر',
-        summary: 'تغطية عيوب التصنيع لمدة ستة أشهر من التسليم.',
+        highlight: 'كل منتج',
+        summary: 'تغطية عيوب التصنيع ابتداءً من التسليم؛ مدة ضمان كل منتج مكتوبة في صفحته.',
         details:
-          'يشمل كل منتج مؤهل ضمان Brynoxa لمدة 6 أشهر من يوم الوصول. يغطي عيوب التصنيع فقط. رقم طلبك هو إثبات الشراء.',
+          'يشمل كل منتج ضمان Brynoxa من يوم الوصول؛ مدته مكتوبة في صفحة المنتج. يغطي عيوب التصنيع فقط. رقم طلبك هو إثبات الشراء.',
       },
       returns: {
         title: 'الإرجاع',
@@ -1133,7 +1133,7 @@ export const ar: Messages = {
       warranty: [
         {
           q: 'كم مدة الضمان؟',
-          a: 'ستة أشهر من تاريخ التسليم — دائمًا أقل من سنة. بعد ذلك يمكن تسعير الإصلاحات بشكل منفصل.',
+          a: 'حسب المنتج: مدة الضمان مكتوبة في صفحة المنتج، وتبدأ دائمًا من تاريخ التسليم. بعد ذلك يمكن تسعير الإصلاحات بشكل منفصل.',
         },
       ],
       returns: [

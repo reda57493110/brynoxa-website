@@ -180,10 +180,6 @@ export function Cart() {
                 <SiteIcon name="package-check" size={14} className="text-[var(--brand-text)]" />
                 {t('cart.payCourier')}
               </li>
-              <li className="flex items-center gap-2">
-                <SiteIcon name="shield" size={14} className="text-[var(--brand-text)]" />
-                {t('cart.warrantyFromDelivery')}
-              </li>
             </ul>
             <Link to="/checkout" className={cn(pillPrimary, 'mt-6 w-full text-sm sm:text-base')}>
               {t('cart.checkout')}
