@@ -269,7 +269,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
 
   return (
     <>
-      <div className="grid gap-2.5 xl:grid-cols-2">
+      <div className="flex flex-col gap-2.5">
         <Section
           step={1}
           icon="tag"
@@ -422,7 +422,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
           <Spinner />
         </div>
       ) : list.groups.length ? (
-        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+        <div className="mt-3 flex flex-col gap-3 divide-y divide-[var(--border)] [&>*+*]:pt-3">
           {list.groups.map((g) => (
             <Section
               key={g.piece}
@@ -463,7 +463,7 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
         Each setup fills itself (products ticked for it, or by category and their own words). Move, remove or add a product and that setup
         becomes your choice; groups follow each product’s category.
       </p>
-      <div className="grid gap-2.5 2xl:grid-cols-2">
+      <div className="flex flex-col gap-2.5">
         {SETUP_IDS.map((id) => (
           <SetupCard key={id} list={lists[id]} onOpen={onOpen} />
         ))}

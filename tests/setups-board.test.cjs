@@ -38,3 +38,10 @@ test('admin board: two tabs (Home page, Grab your setup page); a card per setup 
   assert.ok(hook.includes("export const setupRowKey = (id: SetupId) => `setup-${id}` as const"));
   assert.ok(hook.includes('p && p.stock > 0'), 'sold out chosen products are skipped on the page');
 });
+
+test('admin board: one section per line (Home page sections, setups and their groups)', () => {
+  const board = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
+  assert.ok(!board.includes('xl:grid-cols-2') && !board.includes('2xl:grid-cols-2') && !board.includes('flex-wrap gap-x-6'), 'nothing side by side');
+  assert.equal((board.match(/className="flex flex-col gap-2.5"/g) || []).length, 2, 'home sections and setup cards stacked');
+  assert.ok(board.includes('mt-3 flex flex-col gap-3 divide-y'), 'groups of a setup stacked, with a line between');
+});
