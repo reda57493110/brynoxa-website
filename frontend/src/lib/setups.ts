@@ -156,3 +156,16 @@ export const SETUP_PIECES: Record<SetupId, SetupPiece[]> = {
 export function isSetupId(value: unknown): value is SetupId {
   return typeof value === 'string' && (SETUP_IDS as readonly string[]).includes(value)
 }
+
+/**
+ * A setup's whole list after one of its groups changed: the group's products go back into the
+ * places the group had (in the new order), removed ones drop out, new ones go at the end.
+ */
+export function setupListAfter(all: string[], group: string[], nextGroup: string[]) {
+  const inGroup = new Set(group)
+  const kept = nextGroup.filter((id) => inGroup.has(id))
+  const added = nextGroup.filter((id) => !inGroup.has(id) && !all.includes(id))
+  let k = 0
+  const out = all.map((id) => (inGroup.has(id) ? (kept[k++] ?? null) : id)).filter((id): id is string => Boolean(id))
+  return [...out, ...added]
+}

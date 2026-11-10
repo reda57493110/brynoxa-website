@@ -270,10 +270,14 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
 }
 
 /** Unique, valid product ids for the home page deals, in the given order (max 4). */
-/** Home sections staff can choose and order (Admin → Products, Home page board). */
-export const HOME_ROW_KEYS = ['deals', 'new', 'budget-small', 'budget-mid', 'budget-high'] as const;
+/**
+ * Sections staff can choose and order (Admin → Products): the home rows, and the four setups of
+ * the 'Pick your setup' page (setup-gaming …), which hold more products (all their groups).
+ */
+export const HOME_ROW_KEYS = ['deals', 'new', 'budget-small', 'budget-mid', 'budget-high', 'setup-gaming', 'setup-study', 'setup-work', 'setup-creator'] as const;
 export type HomeRowKey = (typeof HOME_ROW_KEYS)[number];
 export const MAX_HOME_ROW = 12;
+export const MAX_SETUP_ROW = 48;
 
 /**
  * Keeps known sections with valid product ids (12 at most, no repeats). Only the sections sent
@@ -285,7 +289,7 @@ export function sanitizeHomeRows(input: unknown, current: Partial<Record<HomeRow
   for (const key of HOME_ROW_KEYS) {
     const value = key in src ? src[key] : current?.[key];
     if (!Array.isArray(value)) continue;
-    const ids = [...new Set(value.map((v) => String(v ?? '').trim()).filter((id) => OBJECT_ID.test(id)))].slice(0, MAX_HOME_ROW);
+    const ids = [...new Set(value.map((v) => String(v ?? '').trim()).filter((id) => OBJECT_ID.test(id)))].slice(0, key.startsWith('setup-') ? MAX_SETUP_ROW : MAX_HOME_ROW);
     if (ids.length) out[key] = ids;
   }
   return out;

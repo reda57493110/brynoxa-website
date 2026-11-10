@@ -370,7 +370,7 @@ export const settingsSchema = z.object({
     .optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
   homeDeals: z.array(z.string().max(24)).max(4).optional(),
-  homeRows: z.record(z.string().max(20), z.array(z.string().max(24)).max(12)).optional(),
+  homeRows: z.record(z.string().max(20), z.array(z.string().max(24)).max(48)).optional(),
   pageHeroProducts: z
     .object({
       home: z.string().max(24).optional(),
@@ -531,8 +531,8 @@ export const paginationQuerySchema = z.object({
   inStock: queryBool,
   /** Deals: products with a crossed-out old price above the price */
   onSale: queryBool,
-  /** Products by id (comma separated, 12 at most): home sections chosen by staff */
-  ids: z.string().max(400).optional(),
+  /** Products by id (comma separated, 48 at most): home sections and setups chosen by staff */
+  ids: z.string().max(1300).optional(),
   /** "Pick your setup": gaming | study | work | creator */
   setup: z.enum(SETUP_IDS).optional(),
   isActive: queryBool,

@@ -55,3 +55,12 @@ test('setups: categories only one kind of setup uses go by category; admin ticks
   assert.deepEqual(on(p('mice', 'Logitech Aero Pro Wireless', 'Competitive gaming', ['study'])), ['study'], 'ticked in admin');
   assert.deepEqual(on(p('unknown-category', 'X')), []);
 });
+
+test('admin setups board: a group change keeps the other groups in place', () => {
+  const all = ['pc1', 'm1', 'pc2', 'm2', 'h1'];
+  assert.deepEqual(shop.setupListAfter(all, ['m1', 'm2'], ['m2', 'm1']), ['pc1', 'm2', 'pc2', 'm1', 'h1'], 'move');
+  assert.deepEqual(shop.setupListAfter(all, ['m1', 'm2'], ['m2']), ['pc1', 'm2', 'pc2', 'h1'], 'remove');
+  assert.deepEqual(shop.setupListAfter(all, ['m1', 'm2'], ['m1', 'm2', 'm3']), ['pc1', 'm1', 'pc2', 'm2', 'h1', 'm3'], 'add');
+  assert.deepEqual(shop.setupListAfter(all, ['m1', 'm2'], ['m1', 'm2', 'pc1']), all, 'already in the setup: no repeat');
+  assert.deepEqual(shop.setupListAfter([], [], ['x']), ['x'], 'first product of an empty setup');
+});

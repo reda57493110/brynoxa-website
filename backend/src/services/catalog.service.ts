@@ -373,7 +373,7 @@ type ProductQuery = {
   inStock?: boolean;
   /** Deals: an old price (compareAtPrice) above the price */
   onSale?: boolean;
-  /** Only these products (comma separated ids, 12 at most) */
+  /** Only these products (comma separated ids, 48 at most) */
   ids?: string;
   /** "Pick your setup": products ticked for it, or untagged ones from its categories */
   setup?: string;
@@ -442,7 +442,7 @@ export async function listProducts(query: ProductQuery) {
   }
   if (query.inStock) filter.stock = { $gt: 0 };
   if (query.ids) {
-    const ids = query.ids.split(',').map((x) => x.trim()).filter((x) => looksLikeObjectId(x)).slice(0, 12);
+    const ids = query.ids.split(',').map((x) => x.trim()).filter((x) => looksLikeObjectId(x)).slice(0, 48);
     filter._id = { $in: ids };
   }
   if (isSetupId(query.setup)) {

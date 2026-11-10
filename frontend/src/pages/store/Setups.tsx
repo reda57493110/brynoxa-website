@@ -1,20 +1,15 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useQueries } from '@tanstack/react-query'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductCarousel } from '@/components/product/ProductCarousel'
-import { productsApi } from '@/api/productsApi'
+import { useSetupLists } from '@/hooks/useSetupLists'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { useLocaleStore } from '@/store/localeStore'
 import { cn } from '@/lib/cn'
-import { SETUP_ICON, SETUP_IDS, SETUP_PIECES, categorySlugOf, isSetupId, setupPieceOf, setupsFor, type SetupId, type SetupPiece } from '@/lib/setups'
-import type { Product } from '@/types'
-
-/** Products asked for per setup (the server's page size limit) */
-const SETUP_LIMIT = 100
+import { SETUP_ICON, SETUP_IDS, isSetupId, type SetupId, type SetupPiece } from '@/lib/setups'
 
 // Written out in full so Tailwind keeps them (index = how many columns)
 const SPAN_SM = ['', 'sm:col-span-1', 'sm:col-span-2']
@@ -26,7 +21,7 @@ const INNER_LG = ['', 'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:
  * "Pick your setup" (/setups, /setups/gaming …): the customer picks what the computer is for
  * (gaming, study, work, streaming & creation) and sees only what goes with it, grouped by part
  * (computer, screen, mouse / keyboard / headset, components, cameras, accessories). In stock only.
- * Which products: lib/setups.ts (ticked in admin, or by category).
+ * Which products: hooks/useSetupLists.ts (chosen in Admin → Products, or automatic: lib/setups.ts).
  */
 export function Setups() {
   const t = useT()
@@ -38,21 +33,9 @@ export function Setups() {
   const amount = (n: number) => new Intl.NumberFormat(locale === 'ar' ? 'ar-MA' : locale === 'fr' ? 'fr-MA' : 'en-US').format(n)
 
   // Every setup at once: the tiles show how many products each has
-  const lists = useQueries({
-    queries: SETUP_IDS.map((id) => ({
-      queryKey: ['products', 'setup', id],
-      // The server sends the setup's categories; the product's own words decide inside shared ones
-      queryFn: async () =>
-        (await productsApi.list({ setup: id, inStock: true, sort: 'popular', limit: SETUP_LIMIT })).data.data.filter((p) => setupsFor(p).includes(id)),
-      staleTime: 60_000,
-    })),
-  })
-  const byId = Object.fromEntries(SETUP_IDS.map((id, i) => [id, lists[i]])) as Record<SetupId, (typeof lists)[number]>
+  const byId = useSetupLists()
   const current = byId[active]
-  const products: Product[] = current.data ?? []
-  const groups = SETUP_PIECES[active]
-    .map((piece) => ({ piece, items: products.filter((p) => setupPieceOf(categorySlugOf(p)) === piece) }))
-    .filter((g) => g.items.length)
+  const groups = current.groups
 
   useSeo({
     title: `${t(`setups.${active}.name`)} · ${t('setups.metaTitle')}`,
@@ -81,7 +64,7 @@ export function Setups() {
         <div role="tablist" aria-label={t('setups.kicker')} className="mt-6 grid grid-cols-2 gap-2.5 sm:mt-8 sm:gap-3 lg:grid-cols-4">
           {SETUP_IDS.map((id) => {
             const on = id === active
-            const n = byId[id].data?.length
+            const n = byId[id].pending ? undefined : byId[id].items.length
             return (
               <button
                 key={id}
@@ -150,7 +133,7 @@ export function Setups() {
             </nav>
           ) : null}
 
-          {current.isPending ? (
+          {current.pending ? (
             <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4" aria-hidden>
               {Array.from({ length: 4 }, (_, i) => (
                 <div key={i} className="h-72 animate-pulse rounded-2xl bg-[var(--bg-muted)]" />

@@ -63,8 +63,10 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
   assert.ok(router.includes('<Route path="setups" element={<S><Setups /></S>} />'));
   assert.ok(router.includes('<Route path="setups/:kind" element={<S><Setups /></S>} />'));
   const page = src('pages/store/Setups.tsx');
-  assert.ok(page.includes('productsApi.list({ setup: id, inStock: true'), 'in stock only');
-  assert.ok(page.includes('.filter((p) => setupsFor(p).includes(id))'), 'the product words decide inside shared categories');
+  const hook = src('hooks/useSetupLists.ts');
+  assert.ok(page.includes('const byId = useSetupLists()'), 'page and admin board share one source');
+  assert.ok(hook.includes('productsApi.list({ setup: id, inStock: true'), 'in stock only');
+  assert.ok(hook.includes('.filter((p) => setupsFor(p).includes(id))'), 'the product words decide inside shared categories');
   assert.ok(page.includes('t(`setups.groups.${active}.${g.piece}`)'), 'group names per setup (Gaming mice, Laptops for learning)');
   assert.ok(page.includes('<ProductCarousel products={g.items} size="lg" />'), 'phones: moving rows');
   assert.ok(page.includes("SPAN_LG[Math.min(n, 4)]") && page.includes('[grid-auto-flow:row_dense]'), 'small groups sit side by side, no empty half rows');

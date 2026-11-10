@@ -190,7 +190,7 @@ export interface ProductFilters {
   inStock?: boolean
   /** Deals: an old price above the price */
   onSale?: boolean
-  /** Only these products (comma separated ids, 12 at most) */
+  /** Only these products (comma separated ids, 48 at most) */
   ids?: string
   /** "Pick your setup": gaming | study | work | creator */
   setup?: string
