@@ -10,11 +10,14 @@ const b = 'b'.repeat(24);
 
 test('which header setting applies: the category, else its main category, else the shop', () => {
   const s = { pageHeroProducts: { shop: b }, categoryHeroes: { laptops: a, 'desktop-pc': 'none' } };
+  const withAll = { categoryHeroes: { all: a } };
   assert.deepEqual(hero.heroSettingFor(s, 'shop', { slug: 'laptops', main: 'laptops' }), { value: a, from: 'category' });
   assert.deepEqual(hero.heroSettingFor(s, 'shop', { slug: 'gaming-laptops', main: 'laptops' }), { value: a, from: 'main' }, 'sub-category uses its main');
   assert.deepEqual(hero.heroSettingFor(s, 'shop', { slug: 'mini-pcs', main: 'desktop-pc' }), { value: 'none', from: 'main' }, 'photo only, from the main');
-  assert.deepEqual(hero.heroSettingFor(s, 'shop', { slug: 'mice', main: 'accessories' }), { value: b, from: 'page' }, 'nothing chosen: the shop (the hook then picks from the category first)');
-  assert.deepEqual(hero.heroSettingFor(s, 'shop'), { value: b, from: 'page' }, 'no category');
+  assert.deepEqual(hero.heroSettingFor(s, 'shop', { slug: 'mice', main: 'accessories' }), { value: '', from: 'page' }, 'nothing chosen: picked from the category');
+  assert.deepEqual(hero.heroSettingFor(s, 'shop'), { value: '', from: 'page' }, '"All": the old shop pin (a laptop) is not used, the category photos are shown');
+  assert.deepEqual(hero.heroSettingFor(withAll, 'shop'), { value: a, from: 'page' }, '"All": a product chosen for All');
+  assert.equal(hero.SHOP_ALL, 'all');
   assert.deepEqual(hero.heroSettingFor(s, 'home', { slug: 'laptops' }), { value: '', from: 'page' }, 'only the shop page follows categories');
 });
 

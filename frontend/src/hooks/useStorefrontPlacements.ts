@@ -105,6 +105,7 @@ export function useStorefrontPlacements() {
     row,
     rowFromCarousel,
     shopHero,
-    shopHeroSetting: settings.data?.pageHeroProducts?.shop || '',
+    /** Product chosen for the shop's "All" view ('' = the category photos) */
+    shopHeroSetting: settings.data?.categoryHeroes?.all || '',
   }
 }

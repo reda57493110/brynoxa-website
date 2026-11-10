@@ -86,7 +86,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
   })
 
   const updateSettings = useMutation({
-    mutationFn: (payload: { homeDeals?: string[]; pageHeroProducts?: { shop: string } }) => adminApi.settings.update(payload),
+    mutationFn: (payload: { homeDeals?: string[]; categoryHeroes?: Record<string, string> }) => adminApi.settings.update(payload),
     onSuccess: () => {
       refresh()
       toast.success('Placement updated')
@@ -230,11 +230,11 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             tone={isShopHeader ? 'on' : 'muted'}
           >
             {shopPinned ? (
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ pageHeroProducts: { shop: '' } })}>
-                Use automatic
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ categoryHeroes: { all: '' } })}>
+                Use category photos
               </Button>
             ) : (
-              <Button size="sm" variant="outline" disabled={busy || !p.isActive} onClick={() => updateSettings.mutate({ pageHeroProducts: { shop: p._id } })}>
+              <Button size="sm" variant="outline" disabled={busy || !p.isActive} onClick={() => updateSettings.mutate({ categoryHeroes: { all: p._id } })}>
                 Use as header
               </Button>
             )}

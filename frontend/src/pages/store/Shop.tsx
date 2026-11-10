@@ -16,14 +16,18 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { cn } from '@/lib/cn'
 import { categoryIcon } from '@/lib/categoryIcon'
 import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
-import { categoryThumb, categoryPhoto } from '@/lib/categoryPhoto'
+import { categoryThumb, categoryPhoto, categoryPhotoSrcSet } from '@/lib/categoryPhoto'
+import { canonicalCategorySlug } from '@/lib/categorySlug'
 import { SubThumb } from '@/components/product/SubThumb'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { StoreHero, heroChip, heroInput } from '@/components/layout/StoreHero'
+import { StoreHero, heroChip, heroInput, type HeroMosaicTile } from '@/components/layout/StoreHero'
+
+/** Main categories shown first in the "All" header (by address) */
+const ALL_TILE_ORDER = ['laptops', 'gaming-pcs', 'desktop-pcs', 'monitors', 'accessories', 'components', 'cameras']
 
 const SHOP_HERO_IMAGE =
   'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
@@ -151,6 +155,20 @@ export function Shop() {
     ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description)
     : undefined
 
+  // The "All" header: up to 4 main categories with a photo, computers first
+  const allTiles: HeroMosaicTile[] = [...mainList]
+    .map((c) => ({ c, photo: categoryPhoto(c, categoryList), rank: ALL_TILE_ORDER.indexOf(canonicalCategorySlug(c.slug)) }))
+    .filter((x) => x.photo)
+    .sort((a, b) => (a.rank < 0 ? 99 : a.rank) - (b.rank < 0 ? 99 : b.rank))
+    .slice(0, 4)
+    .map(({ c, photo }) => ({
+      key: c._id,
+      label: categoryDisplayName(locale, c.slug, c.name),
+      image: photo!,
+      srcSet: categoryPhotoSrcSet(c),
+      to: `/shop?category=${c.slug}`,
+    }))
+
   const shopTitle = activeCategoryName
     ? `${activeCategoryName} — ${t('shop.title')} · Brynoxa`
     : filters.q
@@ -238,6 +256,8 @@ export function Shop() {
         // A category shows its own photo when it has no product to show (never a laptop on Cameras)
         image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
         photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}
+        // "All": photos of the main categories (what the shop sells), not one product
+        mosaic={activeCategory ? undefined : allTiles}
         imagePosition="object-[50%_40%]"
         maxWidthClassName="max-w-[96rem]"
         kicker={t('shop.kicker')}

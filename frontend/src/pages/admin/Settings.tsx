@@ -6,7 +6,6 @@ import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
-import { PageHeaderProducts } from '@/components/admin/PageHeaderProducts'
 import { HomeDealsSettings } from '@/components/admin/HomeDealsSettings'
 import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
 import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
@@ -67,9 +66,11 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
         </SettingsCard>
         <SettingsCard
           title="Shop page header"
-          description="The product at the top of the Shop page. Automatic uses your first featured product. Saved immediately."
+          description="The top of the Shop page changes with the category the customer picks; “All” shows your category photos."
         >
-          <PageHeaderProducts value={settings?.pageHeroProducts} />
+          <Link to="/admin/products" className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
+            Choose them in Products → Shop page header
+          </Link>
         </SettingsCard>
         </>
       )

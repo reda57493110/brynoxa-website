@@ -12,6 +12,57 @@ import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { HeroPage, Product } from '@/types'
 
+export type HeroMosaicTile = { key: string; label: string; image: string; srcSet?: string; to: string }
+
+/**
+ * The shop's "All" header: up to 4 category photos in a grid (the first one larger on computers),
+ * so the top of the shop shows everything it sells, not one laptop. Each tile opens its category.
+ */
+function HeroMosaic({ tiles }: { tiles: HeroMosaicTile[] }) {
+  const shown = tiles.slice(0, 4)
+  return (
+    <div
+      className={cn(
+        'grid aspect-[4/3] gap-1.5 overflow-hidden sm:gap-2 md:rounded-2xl lg:aspect-[16/10]',
+        shown.length === 4 ? 'grid-cols-2 grid-rows-2 md:grid-cols-4' : shown.length === 3 ? 'grid-cols-2 grid-rows-2 md:grid-cols-3' : 'grid-cols-2'
+      )}
+    >
+      {shown.map((tile, i) => (
+        <Link
+          key={tile.key}
+          to={tile.to}
+          state={{ keepScroll: true }}
+          className={cn(
+            'group relative min-h-0 overflow-hidden bg-[var(--bg-muted)] md:rounded-xl',
+            // 4 photos: a big one on the left, two small, one wide; 3 photos: a big one and two small
+            shown.length >= 3 && i === 0 && 'md:col-span-2 md:row-span-2',
+            shown.length === 3 && i === 0 && 'col-span-2',
+            shown.length === 4 && i === 3 && 'md:col-span-2'
+          )}
+        >
+          <SafeImage
+            src={tile.image}
+            srcSet={tile.srcSet}
+            sizes={i === 0 ? '(min-width: 768px) 40vw, 50vw' : '(min-width: 768px) 20vw, 50vw'}
+            alt=""
+            width={960}
+            height={640}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            fetchPriority={i === 0 ? 'high' : undefined}
+          />
+          <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+          <span className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
+            <span className="truncate text-sm font-semibold text-white sm:text-base">{tile.label}</span>
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)]">
+              <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
+            </span>
+          </span>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
 /** Light card in light mode, glass on the photo in dark mode. */
 export const heroGhostPill =
   'inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3.5 text-[13px] font-medium sm:text-sm text-[var(--fg)] transition hover:border-[var(--brand)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-5 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:hover:bg-white/15'
@@ -126,6 +177,7 @@ export function StoreHero({
   page,
   category,
   photoCard = false,
+  mosaic,
   kicker,
   titleLead,
   titleAccent,
@@ -144,6 +196,8 @@ export function StoreHero({
   category?: HeroCategory
   /** No product: show the photo as a framed picture in dark mode too (a category's own photo) */
   photoCard?: boolean
+  /** No product: a collage of category photos (the shop's "All" view), each opening its category */
+  mosaic?: HeroMosaicTile[]
   kicker: string
   titleLead: ReactNode
   titleAccent?: ReactNode
@@ -162,7 +216,8 @@ export function StoreHero({
 }) {
   const { product, pending } = useHeroProduct(page, category)
   // A framed picture (product, loading, or the category photo): no full-bleed background photo
-  const showcase = Boolean(product) || pending || photoCard
+  const hasMosaic = Boolean(mosaic && mosaic.length >= 2)
+  const showcase = Boolean(product) || pending || photoCard || hasMosaic
 
   return (
     <section
@@ -251,6 +306,10 @@ export function StoreHero({
               <div className="relative order-first aspect-[4/3.5] overflow-hidden bg-[var(--bg-muted)] md:order-none md:aspect-[4/3] md:rounded-2xl lg:aspect-[16/10] dark:bg-white/5">
                 <div className="absolute inset-0 animate-pulse bg-[var(--bg-elevated)]/40" aria-hidden="true" />
                 <ImageSpinner />
+              </div>
+            ) : hasMosaic ? (
+              <div {...fadeUp(0.1)} className="relative order-first md:order-none">
+                <HeroMosaic tiles={mosaic!} />
               </div>
             ) : (
               <div

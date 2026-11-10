@@ -33,7 +33,7 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   const hook = src('hooks/useHeroProduct.ts');
   assert.ok(hook.includes("productsApi.list({ category: cat!.slug, inStock: true, sort: 'popular', limit: 12 })"), 'in stock, from that category');
   assert.ok(hook.includes("const own = cat && !categoryChoice ? '' : pick.value"), 'the shop header choice never hides the category product');
-  assert.ok(hook.includes('const needAuto = Boolean(page) && !cat && settings.isSuccess'), 'a category never borrows the shop product (no laptop on Cameras)');
+  assert.ok(hook.includes("const needAuto = Boolean(page) && page !== 'shop' && !cat && settings.isSuccess"), 'a category never borrows the shop product (no laptop on Cameras)');
   assert.ok(hook.includes("? 'empty-category'"), 'nothing in stock: the category photo');
   const shop = src('pages/store/Shop.tsx');
   assert.ok(shop.includes('image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}'), 'the category photo in the header');
@@ -46,4 +46,20 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   for (const t of ['All products (no category chosen)', 'Photo only', 'Automatic', "{yours && setting !== HERO_NONE ? 'Change' : 'Choose'}", 'save.mutateAsync({ categoryHeroes: { [slug]: value } })', 'sub-categories']) {
     assert.ok(shopBoard.includes(t), t);
   }
+});
+
+test('shop "All": photos of the categories, not one laptop; a product only if chosen for All', () => {
+  const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
+  const shop = src('pages/store/Shop.tsx');
+  assert.ok(shop.includes('mosaic={activeCategory ? undefined : allTiles}'));
+  assert.ok(shop.includes("const ALL_TILE_ORDER = ['laptops', 'gaming-pcs', 'desktop-pcs', 'monitors', 'accessories', 'components', 'cameras']"));
+  const hero = src('components/layout/StoreHero.tsx');
+  assert.ok(hero.includes('<HeroMosaic tiles={mosaic!} />') && hero.includes('const shown = tiles.slice(0, 4)'));
+  assert.ok(src('hooks/useHeroProduct.ts').includes("page !== 'shop' && !cat"), 'no automatic product on the shop');
+  // Every place that chose the old Shop header product now saves the choice for All
+  assert.ok(src('pages/admin/ProductForm.tsx').includes('adminApi.settings.update({ categoryHeroes: { all: savedId } })'));
+  assert.ok(src('components/admin/ProductPlacementDialog.tsx').includes('updateSettings.mutate({ categoryHeroes: { all: p._id } })'));
+  assert.ok(src('components/admin/ShopHeaderBoard.tsx').includes('save={saveFor(SHOP_ALL)}'));
+  assert.ok(!src('pages/admin/Settings.tsx').includes('<PageHeaderProducts'), 'Settings points to Products → Shop page header');
+  assert.ok(fs.readFileSync(path.join(ROOT, 'frontend/public/preload.js'), 'utf8').includes('s.data.categoryHeroes && s.data.categoryHeroes.all'));
 });

@@ -4,7 +4,7 @@ import { productsApi } from '@/api/productsApi'
 import { HERO_NONE, heroSettingFor, pickCategoryHero, type HeroCategory, type HeroSource } from '@/lib/heroProduct'
 import type { HeroPage, Product } from '@/types'
 
-export { HERO_NONE, heroSettingFor, pickCategoryHero, type HeroCategory, type HeroSource } from '@/lib/heroProduct'
+export { HERO_NONE, SHOP_ALL, heroSettingFor, pickCategoryHero, type HeroCategory, type HeroSource } from '@/lib/heroProduct'
 
 /**
  * Product shown in a page header. Shop page with a category: the product chosen for that
@@ -65,7 +65,8 @@ export function useHeroProduct(
   const categoryProduct = wantCategory ? (fromCategory.data ?? null) : null
 
   // No category: the page's automatic pick
-  const needAuto = Boolean(page) && !cat && settings.isSuccess && !hidden && (!id || chosenFailed)
+  // (The shop's "All" view shows the category photos instead: no automatic product there)
+  const needAuto = Boolean(page) && page !== 'shop' && !cat && settings.isSuccess && !hidden && (!id || chosenFailed)
   const auto = useQuery({
     queryKey: ['hero-auto-products'],
     queryFn: async () => {

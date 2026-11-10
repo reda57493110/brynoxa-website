@@ -9,7 +9,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Spinner } from '@/components/ui/Spinner'
 import { Modal } from '@/components/ui/Modal'
 import { ProductSearch } from '@/components/admin/PageHeaderProducts'
-import { HERO_NONE, useHeroProduct, type HeroCategory, type HeroSource } from '@/hooks/useHeroProduct'
+import { HERO_NONE, SHOP_ALL, useHeroProduct, type HeroCategory, type HeroSource } from '@/hooks/useHeroProduct'
 import { childrenOf, mainCategories } from '@/lib/categoryTree'
 import { categoryPhoto } from '@/lib/categoryPhoto'
 import { formatCurrency } from '@/lib/format'
@@ -64,7 +64,10 @@ function HeaderRow({
   save,
   busy,
   photo,
+  allView = false,
 }: {
+  /** The shop's "All" line: no product = the category photos */
+  allView?: boolean
   /** The category photo, shown when no product is */
   photo?: string
   title: string
@@ -79,7 +82,7 @@ function HeaderRow({
   const navigate = useNavigate()
   const shown = useHeroProduct('shop', category)
   const [picking, setPicking] = useState(false)
-  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : setting === HERO_NONE ? 'photo only' : setting ? 'your choice' : 'auto: first featured product'
+  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : shown.product ? 'your choice' : 'category photos (default)'
   const yours = Boolean(setting)
 
   return (
@@ -109,7 +112,7 @@ function HeaderRow({
           ) : shown.pending ? (
             'Loading…'
           ) : (
-            photo ? 'The category photo is shown.' : 'The page photo is shown.'
+            allView ? 'Photos of your categories (Laptops, Gaming PCs, Desktop PC, Monitors…) are shown.' : photo ? 'The category photo is shown.' : 'The page photo is shown.'
           )}
         </p>
       </div>
@@ -117,11 +120,13 @@ function HeaderRow({
         <button type="button" className={btn} disabled={busy} onClick={() => setPicking(true)}>
           <SiteIcon name="pencil" size={12} /> {yours && setting !== HERO_NONE ? 'Change' : 'Choose'}
         </button>
-        <button type="button" className={btn} disabled={busy || setting === HERO_NONE} onClick={() => save(HERO_NONE)} title="Show the page photo, no product">
-          <SiteIcon name="close" size={12} /> Photo only
-        </button>
+        {allView ? null : (
+          <button type="button" className={btn} disabled={busy || setting === HERO_NONE} onClick={() => save(HERO_NONE)} title="Show the page photo, no product">
+            <SiteIcon name="close" size={12} /> Photo only
+          </button>
+        )}
         <button type="button" className={btn} disabled={busy || !yours} onClick={() => save('')} title="Pick one by itself">
-          <SiteIcon name="refresh" size={12} /> Automatic
+          <SiteIcon name="refresh" size={12} /> {allView ? 'Category photos' : 'Automatic'}
         </button>
       </div>
       <Modal open={picking} onClose={() => setPicking(false)} title={`Header product · ${title}`} size="md">
@@ -175,7 +180,7 @@ function MainBlock({
  * The product at the top of the Shop page, per category: Desktop PC shows a desktop, Laptops a
  * laptop… Nothing chosen = one of the category's own products (featured first); a sub-category
  * uses its main category's choice unless it has its own. Saved in Settings → categoryHeroes
- * (the shop without a category: pageHeroProducts.shop).
+ * (the shop without a category, "All": categoryHeroes.all — the category photos by default).
  */
 export function ShopHeaderBoard() {
   const qc = useQueryClient()
@@ -201,7 +206,7 @@ export function ShopHeaderBoard() {
   const list = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
   const mains = mainCategories(list)
   const saveFor = (slug: string) => (value: string) => save.mutateAsync({ categoryHeroes: { [slug]: value } })
-  const shopSetting = (settings.data as { pageHeroProducts?: { shop?: string } } | undefined)?.pageHeroProducts?.shop ?? ''
+  const shopSetting = heroes[SHOP_ALL] ?? ''
 
   return (
     <>
@@ -210,7 +215,7 @@ export function ShopHeaderBoard() {
         products (featured first), or its photo when it has nothing in stock; a sub-category uses its main category’s choice unless it has its own.
       </p>
       <div className="flex flex-col gap-2.5">
-        <HeaderRow title="All products (no category chosen)" setting={shopSetting} save={(value) => save.mutateAsync({ pageHeroProducts: { shop: value } })} busy={save.isPending} />
+        <HeaderRow title="All products (no category chosen)" allView setting={shopSetting} save={saveFor(SHOP_ALL)} busy={save.isPending} />
         {mains.map((m) => (
           <MainBlock key={m._id} all={list} main={m} subs={childrenOf(list, m._id)} heroes={heroes} saveFor={saveFor} busy={save.isPending} />
         ))}

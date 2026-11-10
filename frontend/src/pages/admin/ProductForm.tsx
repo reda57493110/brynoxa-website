@@ -18,7 +18,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
-import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
+import { useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
 import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupsFor } from '@/lib/setups'
 import type { Brand, Category, Product, ProductCondition } from '@/types'
@@ -431,9 +431,9 @@ export function ProductForm() {
         : await adminApi.products.create(payload)
       const savedId = res.data.data?._id || id
       if (savedId && shopHero && !isShownInShopHero) {
-        await adminApi.settings.update({ pageHeroProducts: { shop: savedId } })
+        await adminApi.settings.update({ categoryHeroes: { all: savedId } })
       } else if (savedId && !shopHero && isShownInShopHero) {
-        await adminApi.settings.update({ pageHeroProducts: { shop: HERO_NONE } })
+        await adminApi.settings.update({ categoryHeroes: { all: '' } })
       }
 
       // Versions: create the new ones, or save changed options for an existing group
@@ -1273,10 +1273,10 @@ export function ProductForm() {
                 {isAutoShopHero
                   ? 'It appears there automatically because it is your first featured product.'
                   : isShownInShopHero
-                    ? 'This product is the big picture at the top of the Shop page.'
+                    ? 'This product is the big picture at the top of the Shop page (“All”).'
                     : shopHeroShown.product
                       ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
-                      : 'The big picture at the top of the Shop page. Only one product can be there.'}
+                      : 'The big picture at the top of the Shop page when “All” is chosen (instead of the category photos). Only one product can be there.'}
                 {canOpenSettings ? (
                   <>
                     {' '}You can also change it in{' '}

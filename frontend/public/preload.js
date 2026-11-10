@@ -128,11 +128,11 @@
     return imgs[0] && imgs[0].url
   }
 
-  // Shop: the product picked for the top of the page (Admin → Settings), then its photo
+  // Shop ("All"): the product picked for the top of the page (Admin → Products → Shop page header), then its photo
   // (src/components/layout/StoreHero.tsx)
   if (page === 'shop' && plain) {
     early['/api/v1/settings'].response.then(function (s) {
-      var id = s && s.data && s.data.pageHeroProducts && s.data.pageHeroProducts.shop
+      var id = s && s.data && s.data.categoryHeroes && s.data.categoryHeroes.all
       if (!id || !/^[a-f0-9]{24}$/i.test(id)) return
       get('/api/v1/products/compare?ids=' + id).then(function (r) {
         var p = r && r.data && r.data[0]

@@ -74,10 +74,10 @@ test('home, category and product pages (also in French / Arabic) ask for what th
 
 const cloud = 'https://res.cloudinary.com/demo/image/upload/v1/brynoxa/p.jpg';
 
-test('shop: the picked product and its photo follow the settings, with the page’s exact photo address', async () => {
+test('shop ("All"): the product picked for All and its photo follow the settings, with the page’s exact photo address', async () => {
   const id = 'a'.repeat(24);
   const r = await run('/shop', {
-    '/api/v1/settings': { data: { pageHeroProducts: { shop: id } } },
+    '/api/v1/settings': { data: { categoryHeroes: { all: id } } },
     [`/api/v1/products/compare?ids=${id}`]: { data: [{ stock: 3, images: [{ url: 'x' }, { url: cloud, isPrimary: true }] }] },
   });
   assert.ok(r.fetched.includes(`/api/v1/products/compare?ids=${id}`));
@@ -86,7 +86,7 @@ test('shop: the picked product and its photo follow the settings, with the page�
   assert.equal(p.attrs.imagesrcset, image.imageSrcSet(cloud, [640, 960, 1280, 1600]));
   assert.equal(p.referrerPolicy, 'no-referrer');
   const sold = await run('/shop', {
-    '/api/v1/settings': { data: { pageHeroProducts: { shop: id } } },
+    '/api/v1/settings': { data: { categoryHeroes: { all: id } } },
     [`/api/v1/products/compare?ids=${id}`]: { data: [{ stock: 0, images: [{ url: cloud }] }] },
   });
   assert.equal(sold.links.filter((l) => l.as === 'image').length, 0, 'a sold-out pick is replaced by the page, so no photo');
