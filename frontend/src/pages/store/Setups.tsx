@@ -189,7 +189,7 @@ export function Setups() {
                       <ProductCarousel products={g.items} size="md" />
                     ) : (
                       // Phones: one product stays card-sized (not the whole width)
-                      <div className={cn('grid grid-cols-1 gap-3 max-sm:w-[min(15.5rem,72vw)] sm:gap-4', INNER_SM[Math.min(n, 2)], INNER_LG[Math.min(n, 4)])}>
+                      <div className={cn('grid grid-cols-1 gap-3 max-sm:w-[min(14rem,62vw)] sm:gap-4', INNER_SM[Math.min(n, 2)], INNER_LG[Math.min(n, 4)])}>
                         {g.items.map((p, i) => (
                           <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
                             <ProductCard product={p} />

@@ -70,22 +70,22 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
   }
 
   return (
-    <section id="budget" aria-labelledby="home-budget-heading" className="pb-12 pt-6 sm:pb-16 sm:pt-8">
+    <section id="budget" aria-labelledby="home-budget-heading" className="pb-10 pt-4 sm:pb-16 sm:pt-8">
       <Container>
-        <div className="rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-soft sm:rounded-[2rem] sm:p-7">
+        <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:rounded-[2rem] sm:p-7">
           <div className="max-w-xl">
             <p className="kicker inline-flex items-center gap-1.5">
               <SiteIcon name="banknote" size={13} />
               {t('home.budgetKicker')}
             </p>
-            <h2 id="home-budget-heading" className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl">
+            <h2 id="home-budget-heading" className="mt-1 font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
               {t('home.budgetTitle')}
             </h2>
-            <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">{t('home.budgetBody')}</p>
+            <p className="mt-1 text-[12.5px] leading-snug text-[var(--fg-muted)] sm:mt-2 sm:text-base sm:leading-relaxed">{t('home.budgetBody')}</p>
           </div>
 
           {/* Budget tiles: tap one to see its products */}
-          <div role="tablist" aria-label={t('home.budgetTitle')} className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
+          <div role="tablist" aria-label={t('home.budgetTitle')} className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3">
             {tabs.map((b) => {
               const on = own === null && b.id === active.id
               const from = Math.min(...b.items.map((p) => p.price))
@@ -118,10 +118,10 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="hidden text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)] sm:block">{t(BAND_NAME[b.id])}</span>
-                    <span className="block font-display text-[13px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
+                    <span className="block font-display text-[12px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
                       {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                     </span>
-                    <span className="mt-1 block text-[11px] text-[var(--fg-muted)] sm:text-xs">
+                    <span className="mt-0.5 block text-[10px] text-[var(--fg-muted)] sm:mt-1 sm:text-xs">
                       {t('home.budgetCount', { count: b.items.length })}
                       <span className="hidden sm:inline"> · {t('home.budgetFrom', { price: amount(from) })}</span>
                     </span>
@@ -136,14 +136,14 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
           <form
             onSubmit={submitOwn}
             className={cn(
-              'mt-3 flex flex-col gap-2.5 rounded-2xl border p-3 transition sm:flex-row sm:items-center sm:gap-4 sm:p-4',
+              'mt-2 flex flex-col gap-2 rounded-xl border p-2.5 transition sm:mt-3 sm:flex-row sm:items-center sm:gap-4 sm:rounded-2xl sm:p-4',
               own !== null
                 ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
                 : 'border-dashed border-[var(--border)] bg-[var(--bg)]'
             )}
           >
-            <label htmlFor="home-budget-own" className="flex items-center gap-2.5 text-sm font-semibold sm:shrink-0">
-              <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)] sm:size-10 sm:rounded-xl">
+            <label htmlFor="home-budget-own" className="flex items-center gap-2 text-[13px] font-semibold sm:shrink-0 sm:gap-2.5 sm:text-sm">
+              <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)] sm:size-10 sm:rounded-xl">
                 <SiteIcon name="sliders" size={18} />
               </span>
               {t('home.budgetOwnTitle')}
@@ -159,14 +159,14 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   value={draft}
                   onChange={(e) => setDraft(e.target.value.replace(/[^\d\s.,]/g, ''))}
                   placeholder={t('home.budgetOwnPlaceholder')}
-                  className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pe-12 ps-4 text-sm font-semibold outline-none transition focus:border-[var(--brand)]"
+                  className="h-10 w-full rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pe-12 ps-4 text-sm font-semibold sm:h-11 outline-none transition focus:border-[var(--brand)]"
                 />
                 <span className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--fg-muted)]">DH</span>
               </div>
               <button
                 type="submit"
                 disabled={ownBudgetAmount(draft) === null}
-                className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110 disabled:opacity-50"
+                className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 text-sm font-semibold sm:h-11 sm:px-4 text-[var(--brand-fg)] transition hover:brightness-110 disabled:opacity-50"
               >
                 <SiteIcon name="search" size={15} />
                 {t('home.budgetOwnShow')}
@@ -177,7 +177,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   onClick={clearOwn}
                   aria-label={t('home.budgetOwnClear')}
                   title={t('home.budgetOwnClear')}
-                  className="grid size-11 shrink-0 place-items-center rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] transition hover:text-[var(--fg)]"
+                  className="grid size-10 shrink-0 place-items-center rounded-full border sm:size-11 border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] transition hover:text-[var(--fg)]"
                 >
                   <SiteIcon name="close" size={16} />
                 </button>
@@ -186,9 +186,9 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
           </form>
 
           {/* The chosen budget: up to 8 products */}
-          <div id="home-budget-panel" role="tabpanel" className="mt-6">
+          <div id="home-budget-panel" role="tabpanel" className="mt-4 sm:mt-6">
             {own !== null ? (
-              <p className="mb-3 text-sm font-semibold">{t('home.budgetOwnLabel', { max: amount(own) })}</p>
+              <p className="mb-2 text-[13px] font-semibold sm:mb-3 sm:text-sm">{t('home.budgetOwnLabel', { max: amount(own) })}</p>
             ) : null}
             {own !== null && ownQuery.isPending ? (
               <div className="grid h-40 place-items-center text-sm text-[var(--fg-muted)]">…</div>
@@ -208,11 +208,11 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
               </div>
             )}
             {items.length ? (
-              <div className="mt-5 flex flex-col items-center gap-2 border-t border-[var(--border)] pt-5 sm:flex-row sm:justify-between">
-                <p className="text-sm text-[var(--fg-muted)]">{t('home.budgetShowing', { shown: items.length, count })}</p>
+              <div className="mt-3 flex flex-col items-center gap-2 border-t border-[var(--border)] pt-3 sm:mt-5 sm:flex-row sm:justify-between sm:pt-5">
+                <p className="text-[12px] text-[var(--fg-muted)] sm:text-sm">{t('home.budgetShowing', { shown: items.length, count })}</p>
                 <Link
                   to={shopLink}
-                  className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110"
+                  className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow sm:h-11 transition hover:brightness-110"
                 >
                   {t('home.budgetSeeAll')}
                   <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />

@@ -40,7 +40,7 @@ test('New arrivals uses bigger cards; budget section has cards with count and "f
 test('phone: budget tiles are 3 small tiles in one row; products slide by themselves like the other rows', async () => {
   const fs = await import('node:fs');
   const b = fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBudget.tsx'), 'utf8');
-  assert.ok(b.includes('className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3"'), 'three tiles side by side, no sideways scroll');
+  assert.ok(b.includes('className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3"'), 'three tiles side by side, no sideways scroll');
   assert.ok(!b.includes('w-[15.5rem]'), 'no wide budget cards');
   assert.ok(b.includes("const isPhone = !useMediaQuery('(min-width: 640px)')"), 'phone detected');
   assert.ok(b.includes('<ProductCarousel key={own ?? active.id} products={items} size="lg" />'), 'phones: the moving carousel with big cards');
@@ -65,4 +65,17 @@ test('own budget: the customer types an amount; best in-stock products up to it,
     const t = fs.readFileSync(path.join(root, `frontend/src/i18n/${l}.ts`), 'utf8');
     for (const k of ['budgetOwnTitle', 'budgetOwnPlaceholder', 'budgetOwnShow', 'budgetOwnClear', 'budgetOwnLabel', 'budgetOwnEmpty']) assert.ok(t.includes(`    ${k}: '`), `${l}: ${k}`);
   }
+});
+
+test('phones: New arrivals and Shop by budget use small titles and normal-size cards', async () => {
+  const fs = await import('node:fs');
+  const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  const row = src('components/home/HomeProductRow.tsx');
+  assert.ok(row.includes('font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl'), 'row title: small on phones');
+  assert.ok(row.includes("'inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[10.5px]"), 'small fact chips');
+  const carousel = src('components/product/ProductCarousel.tsx');
+  assert.ok(carousel.includes("size === 'lg' ? 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[21.5rem]'"), 'big cards on tablets / computers only; phones: compact cards');
+  const budget = src('components/home/HomeBudget.tsx');
+  assert.ok(budget.includes('font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl'), 'budget title: small on phones');
+  assert.ok(budget.includes('h-10 w-full rounded-full'), 'budget input: smaller on phones');
 });
