@@ -2,7 +2,9 @@
  * "Pick your setup" (shop page /setups): gaming, study, work, creator. A product belongs to the
  * setups staff ticked on it (Admin → Products → product → Setups). A product with none ticked
  * goes by its category: SETUP_CATEGORIES lists, per setup, the category addresses (exact, not
- * their sub-categories) whose untagged products show there.
+ * their sub-categories) whose untagged products can show there. Inside categories several setups
+ * share (mice, headsets, screens, laptops…) the shop page then keeps the ones whose own words fit
+ * (frontend lib/setups.ts setupsFor: "Competitive gaming" → gaming).
  * Same list as frontend lib/setups.ts — keep both copies in sync.
  */
 export const SETUP_IDS = ['gaming', 'study', 'work', 'creator'] as const;
@@ -10,14 +12,14 @@ export type SetupId = (typeof SETUP_IDS)[number];
 
 export const SETUP_CATEGORIES: Record<SetupId, string[]> = {
   gaming: [
-    'gaming-pcs', 'gaming-pcs-1080p', 'gaming-pcs-1440p', 'gaming-pcs-4k', 'gaming-laptops',
+    'gaming-pcs', 'gaming-pcs-1080p', 'gaming-pcs-1440p', 'gaming-pcs-4k', 'laptops', 'gaming-laptops',
     'monitors', 'gaming-monitors', 'curved-monitors',
     'components', 'graphics-cards', 'processors', 'ram', 'storage', 'motherboards', 'power-supplies', 'pc-cases', 'cooling',
     'mice', 'keyboards', 'headphones',
   ],
   study: [
     'laptops', 'student-laptops', 'business-laptops',
-    'desktop-pc', 'desktop-pcs', 'mini-pcs', 'desktop-only', 'desktop-with-screen', 'desktop-screens', 'office-monitors',
+    'desktop-pc', 'desktop-pcs', 'mini-pcs', 'desktop-only', 'desktop-with-screen', 'desktop-screens', 'monitors', 'office-monitors',
     'mice', 'keyboards', 'headphones',
     'accessories', 'laptop-stands', 'bags-sleeves', 'hubs-docks', 'cables-chargers', 'webcams',
   ],
@@ -29,7 +31,7 @@ export const SETUP_CATEGORIES: Record<SetupId, string[]> = {
     'accessories', 'hubs-docks', 'laptop-stands', 'cables-chargers', 'bags-sleeves', 'storage',
   ],
   creator: [
-    'gaming-pcs', 'gaming-pcs-1440p', 'gaming-pcs-4k', 'gaming-laptops',
+    'gaming-pcs', 'gaming-pcs-1440p', 'gaming-pcs-4k', 'laptops', 'gaming-laptops',
     'monitors', 'curved-monitors',
     'components', 'graphics-cards', 'ram', 'storage',
     'camera', 'cameras', 'webcams', 'digital-cameras', 'action-cameras', 'camera-accessories',

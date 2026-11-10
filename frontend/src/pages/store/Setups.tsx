@@ -10,11 +10,17 @@ import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { useLocaleStore } from '@/store/localeStore'
 import { cn } from '@/lib/cn'
-import { SETUP_ICON, SETUP_IDS, SETUP_PIECES, isSetupId, setupPieceOf, type SetupId, type SetupPiece } from '@/lib/setups'
+import { SETUP_ICON, SETUP_IDS, SETUP_PIECES, categorySlugOf, isSetupId, setupPieceOf, setupsFor, type SetupId, type SetupPiece } from '@/lib/setups'
 import type { Product } from '@/types'
 
 /** Products asked for per setup (the server's page size limit) */
 const SETUP_LIMIT = 100
+
+// Written out in full so Tailwind keeps them (index = how many columns)
+const SPAN_SM = ['', 'sm:col-span-1', 'sm:col-span-2']
+const SPAN_LG = ['', 'lg:col-span-1', 'lg:col-span-2', 'lg:col-span-3', 'lg:col-span-4']
+const INNER_SM = ['', 'sm:grid-cols-1', 'sm:grid-cols-2']
+const INNER_LG = ['', 'lg:grid-cols-1', 'lg:grid-cols-2', 'lg:grid-cols-3', 'lg:grid-cols-4']
 
 /**
  * "Pick your setup" (/setups, /setups/gaming …): the customer picks what the computer is for
@@ -35,7 +41,9 @@ export function Setups() {
   const lists = useQueries({
     queries: SETUP_IDS.map((id) => ({
       queryKey: ['products', 'setup', id],
-      queryFn: async () => (await productsApi.list({ setup: id, inStock: true, sort: 'popular', limit: SETUP_LIMIT })).data.data,
+      // The server sends the setup's categories; the product's own words decide inside shared ones
+      queryFn: async () =>
+        (await productsApi.list({ setup: id, inStock: true, sort: 'popular', limit: SETUP_LIMIT })).data.data.filter((p) => setupsFor(p).includes(id)),
       staleTime: 60_000,
     })),
   })
@@ -43,7 +51,7 @@ export function Setups() {
   const current = byId[active]
   const products: Product[] = current.data ?? []
   const groups = SETUP_PIECES[active]
-    .map((piece) => ({ piece, items: products.filter((p) => setupPieceOf(typeof p.category === 'object' ? p.category?.slug : undefined) === piece) }))
+    .map((piece) => ({ piece, items: products.filter((p) => setupPieceOf(categorySlugOf(p)) === piece) }))
     .filter((g) => g.items.length)
 
   useSeo({
@@ -83,7 +91,7 @@ export function Setups() {
                 aria-controls="setup-panel"
                 onClick={() => pick(id)}
                 className={cn(
-                  'group relative flex min-w-0 flex-col items-start gap-2.5 overflow-hidden rounded-2xl border p-3 text-start transition sm:gap-3 sm:p-5',
+                  'group relative flex min-w-0 items-center gap-2.5 overflow-hidden rounded-2xl border p-3 text-start transition sm:flex-col sm:items-start sm:gap-3 sm:p-5',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                   on
                     ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
@@ -100,9 +108,9 @@ export function Setups() {
                 </span>
                 <span className="min-w-0">
                   <span className="block font-display text-base font-semibold leading-tight sm:text-xl">{t(`setups.${id}.name`)}</span>
-                  <span className="mt-1 block text-xs leading-snug text-[var(--fg-muted)] sm:text-sm">{t(`setups.${id}.tagline`)}</span>
+                  <span className="mt-1 hidden text-xs leading-snug text-[var(--fg-muted)] sm:block sm:text-sm">{t(`setups.${id}.tagline`)}</span>
                   <span className="mt-2 block text-[11px] font-semibold text-[var(--brand-text)] sm:text-xs">
-                    {n === undefined ? '…' : t('setups.count', { count: n })}
+                    {n === undefined ? '…' : t(n === 1 ? 'setups.countOne' : 'setups.count', { count: n })}
                   </span>
                 </span>
                 {on ? <SiteIcon name="check" size={16} className="absolute end-3 top-3 text-[var(--brand-text)]" /> : null}
@@ -133,7 +141,7 @@ export function Setups() {
                       href={`#${pieceId(g.piece)}`}
                       className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3.5 text-xs font-semibold transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:text-sm"
                     >
-                      {t(`setups.piece.${g.piece}`)}
+                      {t(`setups.groups.${active}.${g.piece}`)}
                       <span className="rounded-full bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] px-1.5 text-[11px] text-[var(--brand-text)]">{g.items.length}</span>
                     </a>
                   </li>
@@ -157,28 +165,36 @@ export function Setups() {
               </Link>
             </div>
           ) : (
-            <div className="mt-2">
-              {groups.map((g) => (
-                <div key={`${active}-${g.piece}`} id={pieceId(g.piece)} className="scroll-mt-24 border-t border-[var(--border)] pt-5 mt-5 first:mt-4">
-                  <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="font-display text-lg font-semibold sm:text-xl">{t(`setups.piece.${g.piece}`)}</h3>
-                    <p className="text-xs text-[var(--fg-muted)] sm:text-sm">
-                      {t('setups.count', { count: g.items.length })} · {t('setups.from', { price: amount(Math.min(...g.items.map((p) => p.price))) })}
-                    </p>
-                  </div>
-                  {isPhone && g.items.length > 1 ? (
-                    <ProductCarousel products={g.items} size="lg" />
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {g.items.map((p, i) => (
-                        <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
-                          <ProductCard product={p} />
-                        </div>
-                      ))}
+            // Groups side by side, each as wide as its products (a group of 1 takes 1 column), gaps filled
+            <div className="mt-5 grid grid-cols-1 gap-4 [grid-auto-flow:row_dense] sm:grid-cols-2 lg:grid-cols-4">
+              {groups.map((g) => {
+                const n = g.items.length
+                return (
+                  <div
+                    key={`${active}-${g.piece}`}
+                    id={pieceId(g.piece)}
+                    className={cn('min-w-0 scroll-mt-24 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3 sm:p-4', SPAN_SM[Math.min(n, 2)], SPAN_LG[Math.min(n, 4)])}
+                  >
+                    <div className="mb-3">
+                      <h3 className="font-display text-base font-semibold leading-tight sm:text-lg">{t(`setups.groups.${active}.${g.piece}`)}</h3>
+                      <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
+                        {t(n === 1 ? 'setups.countOne' : 'setups.count', { count: n })} · {t('setups.from', { price: amount(Math.min(...g.items.map((p) => p.price))) })}
+                      </p>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {isPhone && n > 1 ? (
+                      <ProductCarousel products={g.items} size="lg" />
+                    ) : (
+                      <div className={cn('grid grid-cols-1 gap-3 sm:gap-4', INNER_SM[Math.min(n, 2)], INNER_LG[Math.min(n, 4)])}>
+                        {g.items.map((p, i) => (
+                          <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
+                            <ProductCard product={p} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

@@ -64,7 +64,11 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
   assert.ok(router.includes('<Route path="setups/:kind" element={<S><Setups /></S>} />'));
   const page = src('pages/store/Setups.tsx');
   assert.ok(page.includes('productsApi.list({ setup: id, inStock: true'), 'in stock only');
+  assert.ok(page.includes('.filter((p) => setupsFor(p).includes(id))'), 'the product words decide inside shared categories');
+  assert.ok(page.includes('t(`setups.groups.${active}.${g.piece}`)'), 'group names per setup (Gaming mice, Laptops for learning)');
   assert.ok(page.includes('<ProductCarousel products={g.items} size="lg" />'), 'phones: moving rows');
+  assert.ok(page.includes("SPAN_LG[Math.min(n, 4)]") && page.includes('[grid-auto-flow:row_dense]'), 'small groups sit side by side, no empty half rows');
+  assert.ok(page.includes("t(n === 1 ? 'setups.countOne' : 'setups.count'"), '1 product, not 1 products');
   assert.ok(fs.readFileSync(api('sitemap.js'), 'utf8').includes("{ path: '/setups', changefreq: 'weekly', priority: '0.8' }"));
   const form = src('pages/admin/ProductForm.tsx');
   assert.ok(form.includes('setups: SETUP_IDS.filter((s) => form.setups.includes(s)),'), 'admin sends the ticks');
@@ -74,7 +78,7 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
     const start = t.indexOf('\n  setups: {');
     assert.ok(start > 0, l);
     const block = t.slice(start, t.indexOf('\n  },', start));
-    for (const k of ['kicker', 'title', 'body', 'count', 'from', 'inside', 'empty', 'browseAll', 'helpTitle', 'helpBody', 'helpCta', 'computer', 'screen', 'gear', 'components', 'cameras', 'accessories', 'gaming', 'study', 'work', 'creator', 'tagline', 'intro']) {
+    for (const k of ['kicker', 'title', 'body', 'count', 'from', 'inside', 'empty', 'browseAll', 'helpTitle', 'helpBody', 'helpCta', 'countOne', 'groups', 'pc', 'laptop', 'screen', 'mouse', 'keyboard', 'headset', 'webcam', 'camera', 'components', 'accessories', 'gaming', 'study', 'work', 'creator', 'tagline', 'intro']) {
       assert.ok(block.includes(`${k}: `), `${l}: ${k}`);
     }
   }

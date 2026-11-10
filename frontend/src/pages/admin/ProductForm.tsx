@@ -20,7 +20,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
-import { SETUP_ADMIN_LABEL, SETUP_CATEGORIES, SETUP_ICON, SETUP_IDS } from '@/lib/setups'
+import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupsFor } from '@/lib/setups'
 import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
@@ -302,7 +302,10 @@ export function ProductForm() {
     (populatedCategory?._id === form.category ? populatedCategory : null)
   const autoTemplate = templateForCategory(selectedCategory, categoryList)
   // Setups the product shows on while none is ticked (by its category)
-  const autoSetups = SETUP_IDS.filter((s) => Boolean(selectedCategory?.slug && SETUP_CATEGORIES[s].includes(selectedCategory.slug)))
+  const autoSetups = setupsFor(
+    { name: form.name, tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean), specs: specs ? draftToSpecs(specs) : {} },
+    selectedCategory?.slug
+  )
   // Wait for the category list so the type does not flip once it arrives
   const categoriesReady = Boolean(categories.data) || categories.isError
   const specTemplate = specOverride || (form.category && categoriesReady ? autoTemplate : null)
@@ -1193,7 +1196,7 @@ export function ProductForm() {
         <div className="sm:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4">
           <p className="text-sm font-medium">Setups</p>
           <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
-            Shown on the shop page “Pick your setup”. None ticked = by its category
+            Shown on the shop page “Pick your setup”. None ticked = by its category and its name / “Use” spec
             {autoSetups.length ? ` (now: ${autoSetups.map((s) => SETUP_ADMIN_LABEL[s]).join(', ')})` : ' (now: none)'}.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
