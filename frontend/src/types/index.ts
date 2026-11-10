@@ -465,6 +465,8 @@ export interface StoreSettings {
   homeDeals?: string[]
   /** Home sections chosen by staff: deals, new, budget-small, budget-mid, budget-high (missing = automatic) */
   homeRows?: Partial<Record<string, string[]>>
+  /** Shop page header product per category: address → product id, or 'none' (the photo) */
+  categoryHeroes?: Record<string, string>
 }
 
 export type HeroPage = 'home' | 'shop' | 'services' | 'contact'

@@ -5,7 +5,7 @@ import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { useImageLoaded } from '@/hooks/useImageLoaded'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { useHeroProduct } from '@/hooks/useHeroProduct'
+import { useHeroProduct, type HeroCategory } from '@/hooks/useHeroProduct'
 import { useT } from '@/hooks/useT'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
@@ -124,6 +124,7 @@ function HeroProductCard({ product }: { product: Product }) {
 
 export function StoreHero({
   page,
+  category,
   kicker,
   titleLead,
   titleAccent,
@@ -138,6 +139,8 @@ export function StoreHero({
 }: {
   /** Feature the Admin → Settings → Page header product; omit to show the photo. */
   page?: HeroPage
+  /** Shop page: the category being browsed (its own header product, Admin → Products → Shop page) */
+  category?: HeroCategory
   kicker: string
   titleLead: ReactNode
   titleAccent?: ReactNode
@@ -154,7 +157,7 @@ export function StoreHero({
   frameOverlay?: ReactNode
   children?: ReactNode
 }) {
-  const { product, pending } = useHeroProduct(page)
+  const { product, pending } = useHeroProduct(page, category)
   const showcase = Boolean(product) || pending
 
   return (

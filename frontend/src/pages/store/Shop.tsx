@@ -233,6 +233,7 @@ export function Shop() {
     <>
       <StoreHero
         page="shop"
+        category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
         titleId="shop-heading"
         image={SHOP_HERO_IMAGE}
         imagePosition="object-[50%_40%]"

@@ -68,7 +68,7 @@ export function requirePermission(...permissions: Permission[]) {
 }
 
 /** Where products show in the shop: the settings catalog staff may change (Products page, product form). */
-export const STOREFRONT_SETTINGS = ['homeDeals', 'pageHeroProducts', 'homeRows'] as const;
+export const STOREFRONT_SETTINGS = ['homeDeals', 'pageHeroProducts', 'homeRows', 'categoryHeroes'] as const;
 
 /**
  * After requirePermission('settings', 'products:write'): the owner changes any setting; catalog

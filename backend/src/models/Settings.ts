@@ -117,6 +117,8 @@ export interface ISettings extends Document {
   homeDeals: string[];
   /** Home sections chosen by staff (Deals, New arrivals, budget tabs); a missing / empty list = automatic */
   homeRows: Partial<Record<HomeRowKey, string[]>>;
+  /** Shop page header product per category (address → product id, or 'none' = the photo) */
+  categoryHeroes: Record<string, string>;
   /** What the courier charges the shop per parcel: delivered, and sent back (refused / failed). */
   courierCosts: { delivered: number; returned: number };
   /** Database size of the MongoDB plan, in MB (Admin → Settings → Storage); 0 = not set (STORAGE_LIMIT_MB or 512). */
@@ -209,6 +211,7 @@ const settingsSchema = new Schema<ISettings>(
     notifyStaffLoginEmail: { type: Boolean, default: true },
     homeDeals: { type: [String], default: [] },
     homeRows: { type: Schema.Types.Mixed, default: () => ({}) },
+    categoryHeroes: { type: Schema.Types.Mixed, default: () => ({}) },
     courierCosts: {
       delivered: { type: Number, default: 0, min: 0 },
       returned: { type: Number, default: 0, min: 0 },
@@ -293,6 +296,24 @@ export function sanitizeHomeRows(input: unknown, current: Partial<Record<HomeRow
     if (ids.length) out[key] = ids;
   }
   return out;
+}
+
+export const MAX_CATEGORY_HEROES = 200;
+
+/**
+ * Shop page header product per category: category address (a-z, 0-9, -) → a product id, or
+ * HERO_NONE (show the photo). Only the categories sent change; '' puts one back to automatic.
+ */
+export function sanitizeCategoryHeroes(input: unknown, current: Record<string, string> = {}): Record<string, string> {
+  const src = input && typeof input === 'object' && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
+  const out: Record<string, string> = { ...(current && typeof current === 'object' ? current : {}) };
+  for (const [slug, value] of Object.entries(src)) {
+    if (!/^[a-z0-9-]{1,80}$/.test(slug)) continue;
+    const id = String(value ?? '').trim();
+    if (OBJECT_ID.test(id) || id === HERO_NONE) out[slug] = id;
+    else delete out[slug];
+  }
+  return Object.fromEntries(Object.entries(out).filter(([slug, id]) => /^[a-z0-9-]{1,80}$/.test(slug) && (OBJECT_ID.test(id) || id === HERO_NONE)).slice(0, MAX_CATEGORY_HEROES));
 }
 
 export function sanitizeHomeDeals(input: unknown): string[] {

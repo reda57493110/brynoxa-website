@@ -29,6 +29,7 @@ const ALLOWED_FIELDS = [
   'pageHeroProducts',
   'homeDeals',
   'homeRows',
+  'categoryHeroes',
 ];
 
 module.exports = async (req, res) => {
@@ -71,6 +72,7 @@ module.exports = async (req, res) => {
         sanitizePageHeroProducts,
         sanitizeHomeDeals,
         sanitizeHomeRows,
+        sanitizeCategoryHeroes,
         sanitizeDepositMethods,
         sanitizeEmailNotifications,
         sanitizeEmailMessages,
@@ -108,6 +110,9 @@ module.exports = async (req, res) => {
         } else if (key === 'homeRows') {
           settings[key] = sanitizeHomeRows(body[key], settings.homeRows);
           settings.markModified('homeRows');
+        } else if (key === 'categoryHeroes') {
+          settings[key] = sanitizeCategoryHeroes(body[key], settings.categoryHeroes);
+          settings.markModified('categoryHeroes');
         } else if (key === 'pageHeroProducts') {
           settings[key] = sanitizePageHeroProducts(body[key], settings.pageHeroProducts);
         } else {

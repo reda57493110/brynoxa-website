@@ -371,6 +371,8 @@ export const settingsSchema = z.object({
   notifyStaffLoginEmail: z.boolean().optional(),
   homeDeals: z.array(z.string().max(24)).max(4).optional(),
   homeRows: z.record(z.string().max(20), z.array(z.string().max(24)).max(48)).optional(),
+  /** Shop page header product per category: address → product id, 'none' or '' (automatic) */
+  categoryHeroes: z.record(z.string().max(80), z.string().max(24)).optional(),
   pageHeroProducts: z
     .object({
       home: z.string().max(24).optional(),

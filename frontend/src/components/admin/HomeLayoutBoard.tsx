@@ -13,6 +13,7 @@ import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT, useStorefrontPlacements } from '@/
 import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
 import { HOME_ROW_MIN } from '@/components/home/HomeProductRow'
+import { ShopHeaderBoard } from '@/components/admin/ShopHeaderBoard'
 import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupListAfter, type SetupPiece } from '@/lib/setups'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
@@ -347,9 +348,6 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           />
         ))}
       </div>
-      <p className="mt-3 text-[11px] text-[var(--fg-muted)]">
-        Shop header: {place.shopHero.product ? place.shopHero.product.name : 'none'} {place.shopHeroSetting ? '' : '(auto)'}
-      </p>
     </>
   )
 }
@@ -472,7 +470,7 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   )
 }
 
-type BoardTab = 'home' | 'setups'
+type BoardTab = 'home' | 'setups' | 'shop'
 const TAB_KEY = 'brynoxa-admin-board-tab'
 
 /**
@@ -485,7 +483,8 @@ const TAB_KEY = 'brynoxa-admin-board-tab'
 export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Product) => void }) {
   const [tab, setTab] = useState<BoardTab>(() => {
     try {
-      return localStorage.getItem(TAB_KEY) === 'setups' ? 'setups' : 'home'
+      const saved = localStorage.getItem(TAB_KEY)
+      return saved === 'setups' || saved === 'shop' ? saved : 'home'
     } catch {
       return 'home'
     }
@@ -501,6 +500,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
   const tabs: { id: BoardTab; label: string; icon: SiteIconName; href: string }[] = [
     { id: 'home', label: 'Home page', icon: 'home', href: '/' },
     { id: 'setups', label: 'Grab your setup page', icon: 'layers', href: '/setups' },
+    { id: 'shop', label: 'Shop page header', icon: 'cart', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
 
@@ -529,7 +529,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
           View <SiteIcon name="external" size={11} />
         </a>
       </div>
-      {tab === 'home' ? <HomeBoard onOpen={onOpen} /> : <SetupsBoard onOpen={onOpen} />}
+      {tab === 'home' ? <HomeBoard onOpen={onOpen} /> : tab === 'setups' ? <SetupsBoard onOpen={onOpen} /> : <ShopHeaderBoard />}
     </section>
   )
 }
