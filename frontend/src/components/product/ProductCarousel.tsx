@@ -23,8 +23,8 @@ function wrapOffset(value: number, half: number) {
   return next
 }
 
-/** `size="lg"`: bigger cards on tablets and computers (home New arrivals); phones keep the normal size */
-export function ProductCarousel({ products, size = 'md' }: { products: Product[]; size?: 'md' | 'lg' }) {
+/** `size="lg"`: bigger cards on tablets and computers (home New arrivals); `sm`: small cards, about two on a phone (Grab your setup) */
+export function ProductCarousel({ products, size = 'md' }: { products: Product[]; size?: 'sm' | 'md' | 'lg' }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -275,7 +275,7 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
           <div
             key={`${product._id}-${i}`}
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
-            className={size === 'lg' ? 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[21.5rem]' : 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[18.5rem]'}
+            className={size === 'lg' ? 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[21.5rem]' : size === 'sm' ? 'relative w-[min(11.5rem,48vw)] shrink-0 sm:w-[15rem]' : 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[18.5rem]'}
             aria-hidden={i >= products.length ? true : undefined}
           >
             <ProductCard product={product} />

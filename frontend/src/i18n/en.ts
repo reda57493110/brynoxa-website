@@ -771,6 +771,7 @@ export const en = {
     metaTitle: 'Pick your setup',
     kicker: 'Pick your setup',
     title: 'What will you use it for?',
+    short: 'Pick what it’s for: we show only what fits.',
     body: 'Choose a setup and see everything that goes with it: the computer, the screen, the gear and the extras. All in stock, cash on delivery.',
     count: '{count} products',
     countOne: '1 product',

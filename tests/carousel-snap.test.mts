@@ -42,7 +42,7 @@ test('the carousel uses them: Pause snaps, arrows glide one product and hold the
 
 test('Grab your setup: "See all" per group and a "see all products" box', () => {
   const page = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Setups.tsx'), 'utf8');
-  assert.ok(page.includes("to={mainCategoryOf(g.items) ? `/shop?category=${mainCategoryOf(g.items)}` : '/shop'}"));
+  assert.ok(page.includes("to={slug ? `/shop?category=${slug}` : '/shop'}"));
   assert.ok(page.includes("{t('setups.moreCta')}") && page.includes('to="/shop"'));
   for (const l of ['en', 'fr', 'ar']) {
     const t = fs.readFileSync(path.join(root, `frontend/src/i18n/${l}.ts`), 'utf8');

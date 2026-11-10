@@ -68,10 +68,13 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
   assert.ok(hook.includes('productsApi.list({ setup: id, inStock: true'), 'in stock only');
   assert.ok(hook.includes('.filter((p) => setupsFor(p).includes(id))'), 'the product words decide inside shared categories');
   assert.ok(page.includes('t(`setups.groups.${active}.${g.piece}`)'), 'group names per setup (Gaming mice, Laptops for learning)');
-  assert.ok(page.includes('<ProductCarousel products={g.items} size="md" />'), 'phones: moving rows, normal-size cards');
-  assert.ok(page.includes('mt-4 grid grid-cols-4 gap-1.5'), 'phones: the 4 setups in one row of small cards');
-  assert.ok(page.includes('text-2xl font-semibold tracking-tight sm:mt-2 sm:text-5xl'), 'phones: smaller title');
-  assert.ok(page.includes('max-sm:w-[min(14rem,62vw)]'), 'phones: one product stays card-sized');
+  assert.ok(page.includes('<ProductCarousel products={g.items} size="sm" />'), 'phones: moving rows, small cards (about two at once)');
+  assert.ok(page.includes('mt-5 grid grid-cols-4 gap-1.5'), 'the 4 setups in one row of small cards');
+  assert.ok(page.includes('font-display text-2xl font-semibold tracking-tight sm:text-4xl'), 'smaller title');
+  // Simple page: no repeated setup box, no chips, no box around groups, no long texts
+  for (const gone of ['.intro`)}</p>', "t('setups.inside')", "t('setups.from'", "t('setups.moreBody')", "t('setups.helpBody')", '.tagline`)']) assert.ok(!page.includes(gone), gone);
+  assert.ok(page.includes("{t('home.heroPerkCod')}") && page.includes("{t('home.heroPerkWarranty')}"), 'reassurance: cash at the door, warranty');
+  assert.ok(page.includes('max-sm:w-[min(11.5rem,48vw)]'), 'phones: one product stays card-sized');
   assert.ok(page.includes("SPAN_LG[Math.min(n, 4)]") && page.includes('[grid-auto-flow:row_dense]'), 'small groups sit side by side, no empty half rows');
   assert.ok(page.includes("t(n === 1 ? 'setups.countOne' : 'setups.count'"), '1 product, not 1 products');
   assert.ok(fs.readFileSync(api('sitemap.js'), 'utf8').includes("{ path: '/setups', changefreq: 'weekly', priority: '0.8' }"));

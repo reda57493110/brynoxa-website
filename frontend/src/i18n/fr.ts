@@ -775,6 +775,7 @@ export const fr: Messages = {
     metaTitle: 'Choisissez votre setup',
     kicker: 'Choisissez votre setup',
     title: 'Pour quoi allez-vous l’utiliser ?',
+    short: 'Choisissez l’usage : on vous montre seulement ce qui convient.',
     body: 'Choisissez un setup et voyez tout ce qui va avec : l’ordinateur, l’écran, les périphériques et les accessoires. Tout en stock, paiement à la livraison.',
     count: '{count} produits',
     countOne: '1 produit',
