@@ -36,3 +36,12 @@ test('New arrivals uses bigger cards; budget section has cards with count and "f
   for (const k of ["t('home.budgetCount'", "t('home.budgetFrom'", "t('home.budgetShowing'", 'BAND_ICON', 'id="home-budget-panel"']) assert.ok(b.includes(k), k);
   assert.equal((b.match(/to=\{shopLink\}/g) || []).length, 1, 'one "see all" button');
 });
+
+test('phone: budget cards are 3 small tiles in one row; products are big cards sliding sideways', async () => {
+  const fs = await import('node:fs');
+  const b = fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBudget.tsx'), 'utf8');
+  assert.ok(b.includes('className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3"'), 'three tiles side by side, no sideways scroll');
+  assert.ok(!b.includes('w-[15.5rem]'), 'no wide budget cards');
+  assert.ok(!b.includes('grid grid-cols-2 gap-2.5'), 'no two small products per line on phones');
+  assert.ok(b.includes('w-[min(17.5rem,78vw)] shrink-0 snap-start sm:w-auto'), 'big product cards on phones');
+});

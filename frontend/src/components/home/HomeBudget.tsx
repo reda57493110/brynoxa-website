@@ -52,7 +52,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
           </div>
 
           {/* Budget cards: tap one to see its products */}
-          <div role="tablist" aria-label={t('home.budgetTitle')} className="-mx-4 mt-6 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <div role="tablist" aria-label={t('home.budgetTitle')} className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3">
             {tabs.map((b) => {
               const on = b.id === active.id
               const from = Math.min(...b.items.map((p) => p.price))
@@ -65,7 +65,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   aria-controls="home-budget-panel"
                   onClick={() => setChosen(b.id)}
                   className={cn(
-                    'group relative flex w-[15.5rem] shrink-0 snap-start items-center gap-3 overflow-hidden rounded-2xl border p-3.5 text-start transition sm:w-auto sm:flex-col sm:items-start sm:p-4',
+                    'group relative flex min-w-0 flex-col items-start gap-2 overflow-hidden rounded-xl border p-2.5 text-start transition sm:gap-3 sm:rounded-2xl sm:p-4',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                     on
                       ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
@@ -74,22 +74,23 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                 >
                   <span
                     className={cn(
-                      'grid size-10 shrink-0 place-items-center rounded-xl transition',
+                      'grid size-8 shrink-0 place-items-center rounded-lg transition sm:size-10 sm:rounded-xl',
                       on ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
                     )}
                   >
                     <SiteIcon name={BAND_ICON[b.id] ?? 'banknote'} size={18} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)]">{t(BAND_NAME[b.id])}</span>
-                    <span className="mt-0.5 block font-display text-lg font-semibold leading-tight sm:text-xl">
+                    <span className="hidden text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)] sm:block">{t(BAND_NAME[b.id])}</span>
+                    <span className="block font-display text-[13px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
                       {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                     </span>
-                    <span className="mt-1 block text-xs text-[var(--fg-muted)]">
-                      {t('home.budgetCount', { count: b.items.length })} · {t('home.budgetFrom', { price: amount(from) })}
+                    <span className="mt-1 block text-[11px] text-[var(--fg-muted)] sm:text-xs">
+                      {t('home.budgetCount', { count: b.items.length })}
+                      <span className="hidden sm:inline"> · {t('home.budgetFrom', { price: amount(from) })}</span>
                     </span>
                   </span>
-                  {on ? <SiteIcon name="check" size={16} className="absolute end-3 top-3 text-[var(--brand-text)]" /> : null}
+                  {on ? <SiteIcon name="check" size={16} className="absolute end-2 top-2 text-[var(--brand-text)] sm:end-3 sm:top-3" /> : null}
                 </button>
               )
             })}
@@ -97,9 +98,9 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
 
           {/* The chosen budget: up to 8 products */}
           <div id="home-budget-panel" role="tabpanel" className="mt-6">
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-3 xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               {active.items.slice(0, 8).map((p, i) => (
-                <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
+                <div key={p._id} className="h-full w-[min(17.5rem,78vw)] shrink-0 snap-start sm:w-auto" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
                   <ProductCard product={p} />
                 </div>
               ))}
