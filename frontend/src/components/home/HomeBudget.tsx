@@ -8,6 +8,11 @@ import { useLocaleStore } from '@/store/localeStore'
 import { cn } from '@/lib/cn'
 import type { Budget } from '@/lib/homeRows'
 import type { Product } from '@/types'
+import type { SiteIconName } from '@/components/ui/SiteIcon'
+import type { MessageKey } from '@/i18n'
+
+const BAND_ICON: Record<string, SiteIconName> = { small: 'tag', mid: 'laptop', high: 'star' }
+const BAND_NAME: Record<string, MessageKey> = { small: 'home.budgetSmallName', mid: 'home.budgetMidName', high: 'home.budgetHighName' }
 
 /**
  * Last home section: "Shop by budget". Three price tabs (with how many products each), a grid of
@@ -44,19 +49,13 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)] sm:text-base">{t('home.budgetBody')}</p>
             </div>
-            <Link
-              to={shopLink}
-              className="inline-flex h-10 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg)] px-4 text-sm font-semibold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-            >
-              {t('home.budgetSeeAll')}
-              <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-            </Link>
           </div>
 
-          {/* Price tabs */}
-          <div role="tablist" aria-label={t('home.budgetTitle')} className="-mx-1 mt-5 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Budget cards: tap one to see its products */}
+          <div role="tablist" aria-label={t('home.budgetTitle')} className="-mx-4 mt-6 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-3 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
             {tabs.map((b) => {
               const on = b.id === active.id
+              const from = Math.min(...b.items.map((p) => p.price))
               return (
                 <button
                   key={b.id}
@@ -66,38 +65,57 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   aria-controls="home-budget-panel"
                   onClick={() => setChosen(b.id)}
                   className={cn(
-                    'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition',
+                    'group relative flex w-[15.5rem] shrink-0 snap-start items-center gap-3 overflow-hidden rounded-2xl border p-3.5 text-start transition sm:w-auto sm:flex-col sm:items-start sm:p-4',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                     on
-                      ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
-                      : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)]'
+                      ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
+                      : 'border-[var(--border)] bg-[var(--bg)] hover:-translate-y-0.5 hover:border-[var(--brand)]'
                   )}
                 >
-                  {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                   <span
                     className={cn(
-                      'rounded-full px-1.5 text-[11px] tabular-nums',
-                      on ? 'bg-white/25' : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
+                      'grid size-10 shrink-0 place-items-center rounded-xl transition',
+                      on ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
                     )}
                   >
-                    {b.items.length}
+                    <SiteIcon name={BAND_ICON[b.id] ?? 'banknote'} size={18} />
                   </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)]">{t(BAND_NAME[b.id])}</span>
+                    <span className="mt-0.5 block font-display text-lg font-semibold leading-tight sm:text-xl">
+                      {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
+                    </span>
+                    <span className="mt-1 block text-xs text-[var(--fg-muted)]">
+                      {t('home.budgetCount', { count: b.items.length })} · {t('home.budgetFrom', { price: amount(from) })}
+                    </span>
+                  </span>
+                  {on ? <SiteIcon name="check" size={16} className="absolute end-3 top-3 text-[var(--brand-text)]" /> : null}
                 </button>
               )
             })}
           </div>
 
           {/* The chosen budget: up to 8 products */}
-          <div
-            id="home-budget-panel"
-            role="tabpanel"
-            className="mt-5 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
-          >
-            {active.items.slice(0, 8).map((p, i) => (
-              <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
-                <ProductCard product={p} />
-              </div>
-            ))}
+          <div id="home-budget-panel" role="tabpanel" className="mt-6">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              {active.items.slice(0, 8).map((p, i) => (
+                <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-col items-center gap-2 border-t border-[var(--border)] pt-5 sm:flex-row sm:justify-between">
+              <p className="text-sm text-[var(--fg-muted)]">
+                {t('home.budgetShowing', { shown: Math.min(8, active.items.length), count: active.items.length })}
+              </p>
+              <Link
+                to={shopLink}
+                className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110"
+              >
+                {t('home.budgetSeeAll')}
+                <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+              </Link>
+            </div>
           </div>
         </div>
       </Container>

@@ -26,3 +26,13 @@ test('budget bands: under 3,000 / 3,000–8,000 / over 8,000 DH; the closing ban
   assert.ok(!home.includes('home-cta-heading') && !home.includes('CTA_STEPS'), 'closing banner removed');
   assert.match(home, /<HomeBudget budgets=\{rows\.budgets\} total=\{rows\.budgetTotal\} \/>\n    <\/>\n  \)\n\}\s*$/, 'budget is the last section before the footer');
 });
+
+test('New arrivals uses bigger cards; budget section has cards with count and "from" price', async () => {
+  const fs = await import('node:fs');
+  const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  assert.ok(src('components/home/HomeProductRow.tsx').includes("size={tone === 'new' ? 'lg' : 'md'}"));
+  assert.ok(src('components/product/ProductCarousel.tsx').includes("sm:w-[21.5rem]"));
+  const b = src('components/home/HomeBudget.tsx');
+  for (const k of ["t('home.budgetCount'", "t('home.budgetFrom'", "t('home.budgetShowing'", 'BAND_ICON', 'id="home-budget-panel"']) assert.ok(b.includes(k), k);
+  assert.equal((b.match(/to=\{shopLink\}/g) || []).length, 1, 'one "see all" button');
+});
