@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Container } from '@/components/ui/Container'
 import { ImageSpinner } from '@/components/ui/ImageLoader'
@@ -12,53 +12,59 @@ import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import type { HeroPage, Product } from '@/types'
 
-export type HeroMosaicTile = { key: string; label: string; image: string; srcSet?: string; to: string }
+/** Time each product stays in the rotating "All" header */
+export const HERO_ROTATE_MS = 5000
 
 /**
- * The shop's "All" header: up to 4 category photos in a grid (the first one larger on computers),
- * so the top of the shop shows everything it sells, not one laptop. Each tile opens its category.
+ * The shop's "All" header: one product per category in turn (a laptop, a gaming PC, a screen…),
+ * so the top of the shop shows what it sells, not always the same laptop. Changes every 5 s,
+ * stops while the pointer or focus is on it (and for visitors who ask for less motion); the dots
+ * show each one.
  */
-function HeroMosaic({ tiles }: { tiles: HeroMosaicTile[] }) {
-  const shown = tiles.slice(0, 4)
+function RotatingHeroCard({ products }: { products: Product[] }) {
+  const t = useT()
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const count = products.length
+  const current = products[index % count]
+  useEffect(() => {
+    if (count < 2 || paused) return
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const timer = window.setTimeout(() => setIndex((i) => (i + 1) % count), HERO_ROTATE_MS)
+    return () => window.clearTimeout(timer)
+  }, [index, count, paused])
+  // The next photo starts loading now, so the change is instant
+  const next = products[(index + 1) % count]
+  const nextImage = next?.images?.find((i) => i.isPrimary)?.url || next?.images?.[0]?.url
+
   return (
     <div
-      className={cn(
-        'grid aspect-[4/3] gap-1.5 overflow-hidden sm:gap-2 md:rounded-2xl lg:aspect-[16/10]',
-        shown.length === 4 ? 'grid-cols-2 grid-rows-2 md:grid-cols-4' : shown.length === 3 ? 'grid-cols-2 grid-rows-2 md:grid-cols-3' : 'grid-cols-2'
-      )}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
     >
-      {shown.map((tile, i) => (
-        <Link
-          key={tile.key}
-          to={tile.to}
-          state={{ keepScroll: true }}
-          className={cn(
-            'group relative min-h-0 overflow-hidden bg-[var(--bg-muted)] md:rounded-xl',
-            // 4 photos: a big one on the left, two small, one wide; 3 photos: a big one and two small
-            shown.length >= 3 && i === 0 && 'md:col-span-2 md:row-span-2',
-            shown.length === 3 && i === 0 && 'col-span-2',
-            shown.length === 4 && i === 3 && 'md:col-span-2'
-          )}
-        >
-          <SafeImage
-            src={tile.image}
-            srcSet={tile.srcSet}
-            sizes={i === 0 ? '(min-width: 768px) 40vw, 50vw' : '(min-width: 768px) 20vw, 50vw'}
-            alt=""
-            width={960}
-            height={640}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-            fetchPriority={i === 0 ? 'high' : undefined}
-          />
-          <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <span className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 sm:inset-x-3 sm:bottom-3">
-            <span className="truncate text-sm font-semibold text-white sm:text-base">{tile.label}</span>
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/15 text-white backdrop-blur transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)]">
-              <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
-            </span>
-          </span>
-        </Link>
-      ))}
+      <div key={current._id} data-rise="card">
+        <HeroProductCard product={current} />
+      </div>
+      {nextImage && count > 1 ? <link rel="prefetch" as="image" href={sizedImageUrl(nextImage, 1280)} /> : null}
+      {count > 1 ? (
+        <div className="mt-2.5 flex items-center justify-center gap-1.5" role="group" aria-label={t('product.featuredPick')}>
+          {products.map((p, i) => (
+            <button
+              key={p._id}
+              type="button"
+              onClick={() => setIndex(i)}
+              aria-label={p.name}
+              aria-current={i === index % count}
+              className={cn(
+                'h-1.5 rounded-full transition-all',
+                i === index % count ? 'w-6 bg-[var(--brand)]' : 'w-1.5 bg-[var(--border)] hover:bg-[var(--fg-muted)]'
+              )}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -177,7 +183,8 @@ export function StoreHero({
   page,
   category,
   photoCard = false,
-  mosaic,
+  rotate,
+  rotatePending = false,
   kicker,
   titleLead,
   titleAccent,
@@ -196,8 +203,10 @@ export function StoreHero({
   category?: HeroCategory
   /** No product: show the photo as a framed picture in dark mode too (a category's own photo) */
   photoCard?: boolean
-  /** No product: a collage of category photos (the shop's "All" view), each opening its category */
-  mosaic?: HeroMosaicTile[]
+  /** No product chosen: these products in turn (the shop's "All" view: one per category) */
+  rotate?: Product[]
+  /** The products to rotate are still loading */
+  rotatePending?: boolean
   kicker: string
   titleLead: ReactNode
   titleAccent?: ReactNode
@@ -214,10 +223,13 @@ export function StoreHero({
   frameOverlay?: ReactNode
   children?: ReactNode
 }) {
-  const { product, pending } = useHeroProduct(page, category)
+  const hero = useHeroProduct(page, category)
+  const product = hero.product
+  // Still loading: the header product, or the products to rotate
+  const pending = hero.pending || (!product && rotatePending)
   // A framed picture (product, loading, or the category photo): no full-bleed background photo
-  const hasMosaic = Boolean(mosaic && mosaic.length >= 2)
-  const showcase = Boolean(product) || pending || photoCard || hasMosaic
+  const rotating = !product && !pending && Boolean(rotate?.length)
+  const showcase = Boolean(product) || pending || photoCard || rotating
 
   return (
     <section
@@ -307,9 +319,13 @@ export function StoreHero({
                 <div className="absolute inset-0 animate-pulse bg-[var(--bg-elevated)]/40" aria-hidden="true" />
                 <ImageSpinner />
               </div>
-            ) : hasMosaic ? (
+            ) : rotating ? (
               <div {...fadeUp(0.1)} className="relative order-first md:order-none">
-                <HeroMosaic tiles={mosaic!} />
+                <div
+                  className="absolute -inset-3 hidden rounded-[1.75rem] bg-[radial-gradient(closest-side,rgba(0,194,255,0.22),transparent)] md:dark:block"
+                  aria-hidden="true"
+                />
+                <RotatingHeroCard products={rotate!} />
               </div>
             ) : (
               <div

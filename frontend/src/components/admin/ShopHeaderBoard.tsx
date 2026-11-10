@@ -82,7 +82,7 @@ function HeaderRow({
   const navigate = useNavigate()
   const shown = useHeroProduct('shop', category)
   const [picking, setPicking] = useState(false)
-  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : shown.product ? 'your choice' : 'category photos (default)'
+  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : shown.product ? 'your choice' : 'one product per category, in turn (default)'
   const yours = Boolean(setting)
 
   return (
@@ -112,7 +112,7 @@ function HeaderRow({
           ) : shown.pending ? (
             'Loading…'
           ) : (
-            allView ? 'Photos of your categories (Laptops, Gaming PCs, Desktop PC, Monitors…) are shown.' : photo ? 'The category photo is shown.' : 'The page photo is shown.'
+            allView ? 'One product of each category in turn (a laptop, a gaming PC, a screen…), changing every 5 seconds.' : photo ? 'The category photo is shown.' : 'The page photo is shown.'
           )}
         </p>
       </div>
@@ -126,7 +126,7 @@ function HeaderRow({
           </button>
         )}
         <button type="button" className={btn} disabled={busy || !yours} onClick={() => save('')} title="Pick one by itself">
-          <SiteIcon name="refresh" size={12} /> {allView ? 'Category photos' : 'Automatic'}
+          <SiteIcon name="refresh" size={12} /> {allView ? 'One per category' : 'Automatic'}
         </button>
       </div>
       <Modal open={picking} onClose={() => setPicking(false)} title={`Header product · ${title}`} size="md">

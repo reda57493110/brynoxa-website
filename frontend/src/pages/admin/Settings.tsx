@@ -66,7 +66,7 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
         </SettingsCard>
         <SettingsCard
           title="Shop page header"
-          description="The top of the Shop page changes with the category the customer picks; “All” shows your category photos."
+          description="The top of the Shop page changes with the category the customer picks; “All” shows one product of each category in turn."
         >
           <Link to="/admin/products" className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
             Choose them in Products → Shop page header

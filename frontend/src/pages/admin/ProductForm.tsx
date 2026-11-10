@@ -1276,7 +1276,7 @@ export function ProductForm() {
                     ? 'This product is the big picture at the top of the Shop page (“All”).'
                     : shopHeroShown.product
                       ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
-                      : 'The big picture at the top of the Shop page when “All” is chosen (instead of the category photos). Only one product can be there.'}
+                      : 'The big picture at the top of the Shop page when “All” is chosen (instead of one product per category in turn). Only one product can be there.'}
                 {canOpenSettings ? (
                   <>
                     {' '}You can also change it in{' '}

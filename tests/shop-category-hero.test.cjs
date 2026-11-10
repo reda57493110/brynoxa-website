@@ -29,7 +29,7 @@ test('server: a product id or "none" per category address; "" = automatic; other
 test('shop: the header follows the category; admin tab "Shop page header"', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   assert.ok(src('pages/store/Shop.tsx').includes('category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}'));
-  assert.ok(src('components/layout/StoreHero.tsx').includes('const { product, pending } = useHeroProduct(page, category)'));
+  assert.ok(src('components/layout/StoreHero.tsx').includes('const hero = useHeroProduct(page, category)'));
   const hook = src('hooks/useHeroProduct.ts');
   assert.ok(hook.includes("productsApi.list({ category: cat!.slug, inStock: true, sort: 'popular', limit: 12 })"), 'in stock, from that category');
   assert.ok(hook.includes("const own = cat && !categoryChoice ? '' : pick.value"), 'the shop header choice never hides the category product');
@@ -48,13 +48,17 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   }
 });
 
-test('shop "All": photos of the categories, not one laptop; a product only if chosen for All', () => {
+test('shop "All": one product per category in turn, not always the same laptop; one product only if chosen for All', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   const shop = src('pages/store/Shop.tsx');
-  assert.ok(shop.includes('mosaic={activeCategory ? undefined : allTiles}'));
-  assert.ok(shop.includes("const ALL_TILE_ORDER = ['laptops', 'gaming-pcs', 'desktop-pcs', 'monitors', 'accessories', 'components', 'cameras']"));
+  assert.ok(shop.includes('const allRotation = activeCategory ? undefined : onePerCategory(allPicks.data ?? [], categoryList)'));
+  assert.ok(shop.includes("productsApi.list({ inStock: true, sort: 'popular', limit: 60 })"), 'in stock, best sellers');
+  assert.ok(shop.includes('rotate={allRotation}'));
   const hero = src('components/layout/StoreHero.tsx');
-  assert.ok(hero.includes('<HeroMosaic tiles={mosaic!} />') && hero.includes('const shown = tiles.slice(0, 4)'));
+  assert.ok(hero.includes('<RotatingHeroCard products={rotate!} />'));
+  assert.ok(hero.includes('export const HERO_ROTATE_MS = 5000'));
+  assert.ok(hero.includes("prefers-reduced-motion: reduce") && hero.includes('onMouseEnter={() => setPaused(true)}'), 'stops for less motion and on hover');
+  assert.ok(!hero.includes('HeroMosaic'), 'no category photo collage');
   assert.ok(src('hooks/useHeroProduct.ts').includes("page !== 'shop' && !cat"), 'no automatic product on the shop');
   // Every place that chose the old Shop header product now saves the choice for All
   assert.ok(src('pages/admin/ProductForm.tsx').includes('adminApi.settings.update({ categoryHeroes: { all: savedId } })'));

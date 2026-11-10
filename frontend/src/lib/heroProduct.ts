@@ -1,4 +1,6 @@
-import type { HeroPage, Product } from '@/types'
+import type { Category, HeroPage, Product } from '@/types'
+import { canonicalCategorySlug } from './categorySlug'
+import { mainOf } from './categoryTree'
 
 /** Page-header setting meaning "no product — show the page photo". */
 export const HERO_NONE = 'none'
@@ -41,4 +43,31 @@ export function heroSettingFor(
   // The old Shop page pin (pageHeroProducts.shop) is no longer used: a category picks its own
   if (page === 'shop') return { value: '', from: 'page' }
   return { value: settings?.pageHeroProducts?.[page] || '', from: 'page' }
+}
+
+/** Main categories first in the shop's "All" header (by address) */
+export const ALL_ORDER = ['laptops', 'gaming-pcs', 'desktop-pcs', 'monitors', 'accessories', 'components', 'cameras']
+/** Products in the rotating "All" header */
+export const ALL_ROTATE_MAX = 6
+
+/**
+ * The shop's "All" header: one product per main category (in stock, featured first, the list's
+ * best-seller order otherwise), computers first, at most 6 — a laptop, a gaming PC, a screen…
+ */
+export function onePerCategory(products: Product[], categories: Category[]): Product[] {
+  const byMain = new Map<string, Product[]>()
+  for (const p of products) {
+    if (p.stock <= 0) continue
+    const id = typeof p.category === 'object' ? p.category?._id : p.category
+    const main = mainOf(categories, categories.find((c) => c._id === id))
+    if (!main) continue
+    const key = canonicalCategorySlug(main.slug)
+    byMain.set(key, [...(byMain.get(key) ?? []), p])
+  }
+  const rank = (slug: string) => (ALL_ORDER.indexOf(slug) < 0 ? 99 : ALL_ORDER.indexOf(slug))
+  return [...byMain.entries()]
+    .sort(([a], [b]) => rank(a) - rank(b))
+    .map(([, list]) => pickCategoryHero(list))
+    .filter((p): p is Product => Boolean(p))
+    .slice(0, ALL_ROTATE_MAX)
 }

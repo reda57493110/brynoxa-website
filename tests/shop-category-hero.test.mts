@@ -36,3 +36,18 @@ test('an empty category shows its own photo: Cameras a camera, a sub-category it
   assert.equal(photo.categoryPhoto({ slug: 'new-sub', parent: 'c1' }, [{ _id: 'c1', slug: 'camera' }]), '/categories/cameras.webp', 'no photo of its own: the main one');
   assert.ok(!String(photo.categoryPhoto({ slug: 'camera' })).includes('laptop'));
 });
+
+test('shop "All": one product per main category, computers first, in stock, 6 at most', () => {
+  const cats = [
+    { _id: 'acc', slug: 'accessories', name: 'Accessories' },
+    { _id: 'mice', slug: 'mice', name: 'Mice', parent: 'acc' },
+    { _id: 'lap', slug: 'laptops', name: 'Laptops' },
+    { _id: 'gp', slug: 'gaming-pcs', name: 'Gaming PCs' },
+    { _id: 'mon', slug: 'monitors', name: 'Monitors' },
+    { _id: 'desk', slug: 'desktop-pc', name: 'Desktop PC' },
+  ] as never[];
+  const p = (id: string, cat: string, stock = 3, extra: object = {}) => ({ _id: id, stock, images: [{ url: 'x' }], category: { _id: cat, slug: cat }, ...extra }) as never;
+  const out = hero.onePerCategory([p('mouse', 'mice'), p('hp', 'lap'), p('blade', 'lap', 2, { isFeatured: true }), p('pulse', 'gp'), p('screen', 'mon'), p('gone', 'desk', 0)], cats);
+  assert.deepEqual(out.map((x: { _id: string }) => x._id), ['blade', 'pulse', 'screen', 'mouse'], 'laptops, gaming PCs, monitors, then accessories (a mouse counts for Accessories); sold out skipped; featured first');
+  assert.equal(hero.ALL_ROTATE_MAX, 6);
+});

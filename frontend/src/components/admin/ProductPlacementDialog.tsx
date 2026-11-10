@@ -231,7 +231,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
           >
             {shopPinned ? (
               <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ categoryHeroes: { all: '' } })}>
-                Use category photos
+                Use one per category
               </Button>
             ) : (
               <Button size="sm" variant="outline" disabled={busy || !p.isActive} onClick={() => updateSettings.mutate({ categoryHeroes: { all: p._id } })}>
