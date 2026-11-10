@@ -164,6 +164,8 @@ export interface Product {
   /** Every product of the group, this one included (shop: active ones only). */
   variants?: ProductVariant[]
   tags: string[]
+  /** "Pick your setup" pages it shows on; none = by its category */
+  setups?: string[]
   isFeatured: boolean
   isCarousel?: boolean
   isActive: boolean
@@ -190,6 +192,8 @@ export interface ProductFilters {
   onSale?: boolean
   /** Only these products (comma separated ids, 12 at most) */
   ids?: string
+  /** "Pick your setup": gaming | study | work | creator */
+  setup?: string
   isActive?: boolean
   admin?: boolean
   condition?: ProductCondition

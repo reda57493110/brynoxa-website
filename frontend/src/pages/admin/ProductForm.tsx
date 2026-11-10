@@ -20,6 +20,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { cn } from '@/lib/cn'
+import { SETUP_ADMIN_LABEL, SETUP_CATEGORIES, SETUP_ICON, SETUP_IDS } from '@/lib/setups'
 import type { Brand, Category, Product, ProductCondition } from '@/types'
 import { RecommendedPicker } from '@/components/admin/RecommendedPicker'
 import { toPicked, type PickedProduct } from '@/lib/recommended'
@@ -192,6 +193,7 @@ export function ProductForm() {
     serialTracking: boolean
     inventoryLocation: string
     tags: string
+    setups: string[]
     isFeatured: boolean
     isCarousel: boolean
     isActive: boolean
@@ -217,6 +219,7 @@ export function ProductForm() {
     serialTracking: false,
     inventoryLocation: '',
     tags: '',
+    setups: [],
     isFeatured: false,
     isCarousel: false,
     isActive: true,
@@ -266,6 +269,7 @@ export function ProductForm() {
         serialTracking: Boolean(p.serialTracking),
         inventoryLocation: p.inventoryLocation || '',
         tags: (p.tags || []).join(', '),
+        setups: p.setups ?? [],
         isFeatured: p.isFeatured,
         isCarousel: Boolean(p.isCarousel),
         isActive: p.isActive,
@@ -297,6 +301,8 @@ export function ProductForm() {
     categoryList.find((c) => c._id === form.category) ??
     (populatedCategory?._id === form.category ? populatedCategory : null)
   const autoTemplate = templateForCategory(selectedCategory, categoryList)
+  // Setups the product shows on while none is ticked (by its category)
+  const autoSetups = SETUP_IDS.filter((s) => Boolean(selectedCategory?.slug && SETUP_CATEGORIES[s].includes(selectedCategory.slug)))
   // Wait for the category list so the type does not flip once it arrives
   const categoriesReady = Boolean(categories.data) || categories.isError
   const specTemplate = specOverride || (form.category && categoriesReady ? autoTemplate : null)
@@ -396,6 +402,7 @@ export function ProductForm() {
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
+        setups: SETUP_IDS.filter((s) => form.setups.includes(s)),
         isFeatured: form.isFeatured,
         isCarousel: form.isCarousel,
         isActive: form.isActive,
@@ -1183,6 +1190,37 @@ export function ProductForm() {
           onOnlyChange={(recommendedOnly) => setForm({ ...form, recommendedOnly })}
           excludeId={id}
         />
+        <div className="sm:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4">
+          <p className="text-sm font-medium">Setups</p>
+          <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
+            Shown on the shop page “Pick your setup”. None ticked = by its category
+            {autoSetups.length ? ` (now: ${autoSetups.map((s) => SETUP_ADMIN_LABEL[s]).join(', ')})` : ' (now: none)'}.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {SETUP_IDS.map((s) => {
+              const on = form.setups.includes(s)
+              return (
+                <label
+                  key={s}
+                  className={cn(
+                    'inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition',
+                    on ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] font-semibold' : 'border-[var(--border)] bg-[var(--bg)]'
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, setups: e.target.checked ? [...f.setups, s] : f.setups.filter((x) => x !== s) }))
+                    }
+                  />
+                  <SiteIcon name={SETUP_ICON[s]} size={14} />
+                  {SETUP_ADMIN_LABEL[s]}
+                </label>
+              )
+            })}
+          </div>
+        </div>
         <div className="sm:col-span-2 space-y-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 p-4">
           <label className="flex cursor-pointer items-start gap-3">
             <input

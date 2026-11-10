@@ -58,6 +58,7 @@ const Services = lazy(() => import('@/pages/store/Services').then((m) => ({ defa
 const ServiceDetail = lazy(() =>
   import('@/pages/store/ServiceDetail').then((m) => ({ default: m.ServiceDetail }))
 )
+const Setups = lazy(() => import('@/pages/store/Setups').then((m) => ({ default: m.Setups })))
 const Help = lazy(() => import('@/pages/store/Help').then((m) => ({ default: m.Help })))
 const Legal = lazy(() => import('@/pages/store/Legal').then((m) => ({ default: m.Legal })))
 
@@ -196,6 +197,8 @@ export function AppRouter() {
         <Route path="services" element={<S><Services /></S>} />
         <Route path="services/:slug" element={<S><ServiceDetail /></S>} />
         <Route path="help" element={<S><Help /></S>} />
+        <Route path="setups" element={<S><Setups /></S>} />
+        <Route path="setups/:kind" element={<S><Setups /></S>} />
         <Route path="privacy" element={<S><Legal page="privacy" /></S>} />
         <Route path="terms" element={<S><Legal page="terms" /></S>} />
         <Route

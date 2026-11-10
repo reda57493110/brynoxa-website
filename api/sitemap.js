@@ -74,6 +74,8 @@ module.exports = async (req, res) => {
     { path: '/', changefreq: 'daily', priority: '1.0' },
     { path: '/shop', changefreq: 'daily', priority: '0.9' },
     { path: '/services', changefreq: 'weekly', priority: '0.7' },
+    { path: '/setups', changefreq: 'weekly', priority: '0.8' },
+    ...['gaming', 'study', 'work', 'creator'].map((id) => ({ path: `/setups/${id}`, changefreq: 'weekly', priority: '0.7' })),
     { path: '/services/warranty', changefreq: 'monthly', priority: '0.6' },
     { path: '/services/returns', changefreq: 'monthly', priority: '0.6' },
     { path: '/services/cash-on-delivery', changefreq: 'monthly', priority: '0.6' },

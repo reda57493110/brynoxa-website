@@ -1,3 +1,4 @@
+import { SETUP_IDS } from '../utils/setups';
 import { z } from 'zod';
 import { DELIVERY_ISSUES, ORDER_STATUSES } from '../utils/orderStatus';
 import { MANUAL_ORDER_ORIGINS } from '../utils/orderOrigin';
@@ -157,6 +158,8 @@ export const productSchema = z.object({
   specTemplate: z.union([z.enum(SPEC_TEMPLATE_IDS), z.literal(''), z.null()]).optional(),
   variantLabel: z.string().max(120).optional(),
   tags: z.array(z.string()).optional(),
+  /** "Pick your setup" pages; [] = by its category */
+  setups: z.array(z.enum(SETUP_IDS)).max(SETUP_IDS.length).optional(),
   isFeatured: z.boolean().optional(),
   isCarousel: z.boolean().optional(),
   isActive: z.boolean().optional(),
@@ -530,6 +533,8 @@ export const paginationQuerySchema = z.object({
   onSale: queryBool,
   /** Products by id (comma separated, 12 at most): home sections chosen by staff */
   ids: z.string().max(400).optional(),
+  /** "Pick your setup": gaming | study | work | creator */
+  setup: z.enum(SETUP_IDS).optional(),
   isActive: queryBool,
   condition: z.enum(['new', 'refurbished', 'used']).optional(),
 });

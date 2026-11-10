@@ -136,7 +136,7 @@ export function Home() {
             className="order-3 mt-3 flex flex-wrap items-center gap-2 sm:mt-8 sm:gap-3"
           >
             <Link
-              to="/shop"
+              to="/setups"
               className="inline-flex h-8 items-center justify-center gap-1 rounded-full bg-[var(--brand)] px-3.5 text-[11px] font-semibold leading-none text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-12 sm:gap-2 sm:px-6 sm:text-base"
             >
               {t('home.heroCtaShop')}

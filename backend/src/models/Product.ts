@@ -75,6 +75,8 @@ export interface IProduct extends Document {
   /** false = another product of the group represents it in shop listings. */
   variantListed?: boolean;
   tags: string[];
+  /** "Pick your setup" pages it shows on (gaming, study, work, creator); none = by its category */
+  setups?: string[];
   isFeatured: boolean;
   featuredAt?: Date | null;
   isCarousel: boolean;
@@ -159,6 +161,7 @@ const productSchema = new Schema<IProduct>(
     variantLabel: { type: String, default: undefined },
     variantListed: { type: Boolean, default: undefined },
     tags: [{ type: String }],
+    setups: { type: [String], default: undefined },
     isFeatured: { type: Boolean, default: false },
     featuredAt: { type: Date, default: null },
     isCarousel: { type: Boolean, default: false },

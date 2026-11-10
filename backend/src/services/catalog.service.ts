@@ -1,3 +1,4 @@
+import { SETUP_CATEGORIES, isSetupId, sanitizeSetups } from '../utils/setups';
 import { getSettingsCached } from '../models/Settings';
 import { HIDE_PRIVATE_PRODUCT_FIELDS } from '../utils/publicProduct';
 import mongoose from 'mongoose';
@@ -374,6 +375,8 @@ type ProductQuery = {
   onSale?: boolean;
   /** Only these products (comma separated ids, 12 at most) */
   ids?: string;
+  /** "Pick your setup": products ticked for it, or untagged ones from its categories */
+  setup?: string;
   isActive?: boolean;
   admin?: boolean;
   condition?: string;
@@ -441,6 +444,13 @@ export async function listProducts(query: ProductQuery) {
   if (query.ids) {
     const ids = query.ids.split(',').map((x) => x.trim()).filter((x) => looksLikeObjectId(x)).slice(0, 12);
     filter._id = { $in: ids };
+  }
+  if (isSetupId(query.setup)) {
+    const setupCats = await Category.find({ slug: { $in: SETUP_CATEGORIES[query.setup] } }).select('_id').lean();
+    filter.$and = [
+      ...((filter.$and as unknown[]) || []),
+      { $or: [{ setups: query.setup }, { 'setups.0': { $exists: false }, category: { $in: setupCats.map((c) => c._id) } }] },
+    ];
   }
   if (query.onSale) filter.$and = [...((filter.$and as unknown[]) || []), { $expr: { $gt: ['$compareAtPrice', '$price'] } }];
   if (query.minPrice !== undefined || query.maxPrice !== undefined) {
@@ -651,6 +661,7 @@ export async function createProduct(data: Record<string, unknown>) {
     recommendedHidden: sanitizeHidden(data.recommendedHidden),
     specs: sanitizeSpecs(data.specs) ?? {},
     specTemplate: sanitizeSpecTemplate(data.specTemplate) || undefined,
+    setups: sanitizeSetups(data.setups)?.length ? sanitizeSetups(data.setups) : undefined,
     slug,
     sku,
     isFeatured,
@@ -714,6 +725,9 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   }
   // Specs are replaced as a whole (the form always sends the full set); omitted = untouched
   const specs = sanitizeSpecs(data.specs);
+  // Setups ticked in admin; none = back to "by its category"
+  const setups = sanitizeSetups(data.setups);
+  if (setups) product.set('setups', setups.length ? setups : undefined);
   if (specs) product.set('specs', specs);
   const specTemplate = sanitizeSpecTemplate(data.specTemplate);
   if (specTemplate !== undefined) product.specTemplate = specTemplate || undefined;
