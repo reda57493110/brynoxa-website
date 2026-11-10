@@ -26,3 +26,13 @@ export const BUDGETS: readonly Budget[] = [
 export function inBudget(price: number, b: { min?: number; max?: number }) {
   return (b.min === undefined || price >= b.min) && (b.max === undefined || price < b.max)
 }
+
+/**
+ * "Your own budget" typed by a customer: "5000", "5 000", "5,000" or "5.000" → 5000 DH.
+ * null when empty or below 50 DH; capped at 1,000,000 DH.
+ */
+export function ownBudgetAmount(text: string): number | null {
+  const n = Number(text.replace(/\D/g, ''))
+  if (!Number.isFinite(n) || n < 50) return null
+  return Math.min(n, 1_000_000)
+}

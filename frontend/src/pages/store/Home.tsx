@@ -1,4 +1,3 @@
-import { useSyncExternalStore } from 'react'
 import { LoadingImage } from '@/components/ui/ImageLoader'
 import { Link, useNavigate } from 'react-router-dom'
 import { useHomeDeals } from '@/hooks/useHomeDeals'
@@ -7,6 +6,7 @@ import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { HomeProductRow } from '@/components/home/HomeProductRow'
 import { HomeBudget } from '@/components/home/HomeBudget'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useHomeRows } from '@/hooks/useHomeRows'
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
@@ -42,18 +42,6 @@ function categoryTileClass(index: number, count: number) {
   const lgLeft = (count - 2) % 3 // tiles on the last desktop row (0 = full)
   const smOdd = (count - 1) % 2 === 1 // tablets: tile 0 takes a row, the rest go two by two
   return cn('min-h-[12.5rem]', last && smOdd && 'sm:col-span-2', last && lgLeft === 1 && 'lg:col-span-3', last && lgLeft === 2 && 'lg:col-span-2', last && smOdd && lgLeft === 0 && 'lg:col-span-1')
-}
-
-function useMediaQuery(query: string) {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mq = window.matchMedia(query)
-      mq.addEventListener('change', onChange)
-      return () => mq.removeEventListener('change', onChange)
-    },
-    () => window.matchMedia(query).matches,
-    () => false
-  )
 }
 
 const TRUST = [
