@@ -64,21 +64,21 @@ function SetupCard({ product }: { product: Product }) {
           </span>
         ) : null}
       </Link>
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+      <div className="flex flex-1 flex-col p-3">
         {kindKey ? (
-          <p className="truncate text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--brand-text)] sm:text-[10px]">{t(kindKey)}</p>
+          <p className="truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--brand-text)]">{t(kindKey)}</p>
         ) : null}
         <Link
           to={href}
-          className="mt-0.5 line-clamp-2 min-h-[2rem] text-[11px] font-medium leading-tight text-[var(--fg)] hover:text-[var(--brand-text)] sm:min-h-[2.5rem] sm:text-sm sm:leading-snug"
+          className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-medium leading-snug text-[var(--fg)] hover:text-[var(--brand-text)]"
         >
           {product.name}
         </Link>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <p className="min-w-0">
-            <span className="block text-[13px] font-bold tabular-nums text-[var(--fg)] sm:text-base">{formatCurrency(product.price)}</span>
+            <span className="block text-base font-bold tabular-nums text-[var(--fg)]">{formatCurrency(product.price)}</span>
             {off ? (
-              <span className="block text-[10px] tabular-nums text-[var(--fg-muted)] line-through sm:text-xs">
+              <span className="block text-xs tabular-nums text-[var(--fg-muted)] line-through">
                 {formatCurrency(product.compareAtPrice!)}
               </span>
             ) : null}
@@ -88,7 +88,7 @@ function SetupCard({ product }: { product: Product }) {
             onClick={add}
             disabled={soldOut}
             aria-label={`${t('common.addToCart')}: ${product.name}`}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110 active:scale-95 disabled:opacity-40 sm:h-9 sm:w-auto sm:px-3.5"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110 active:scale-95 disabled:opacity-40 sm:h-9 sm:w-auto sm:px-3.5"
           >
             <SiteIcon name="cart" size={14} />
             <span className="hidden sm:inline">{t('common.add')}</span>
@@ -166,12 +166,12 @@ export function CompleteSetup({ productId }: { productId: string }) {
         >
           {recommendations.data
             ? items.map((product) => (
-                <div key={product._id} className="w-[38vw] max-w-[10rem] shrink-0 snap-start">
+                <div key={product._id} className="w-[min(14rem,62vw)] shrink-0 snap-start">
                   <SetupCard product={product} />
                 </div>
               ))
             : Array.from({ length: 3 }, (_, i) => (
-                <Skeleton key={i} spinner className="aspect-[3/4.4] w-[38vw] max-w-[10rem] shrink-0 rounded-xl ring-0" />
+                <Skeleton key={i} spinner className="aspect-[3/4.2] w-[min(14rem,62vw)] shrink-0 rounded-xl ring-0" />
               ))}
         </div>
         {progress.size < 1 ? (
