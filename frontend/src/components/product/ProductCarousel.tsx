@@ -7,6 +7,9 @@ import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 
+/** The one card size of every carousel (Featured, Deals, New arrivals, Shop by budget, setups) */
+export const CAROUSEL_CARD = 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[17.5rem]'
+
 const DRAG_THRESHOLD = 8
 const AUTO_SPEED = 0.45
 /** After ‹ › the automatic scroll waits this long, so the product stays in view */
@@ -23,8 +26,11 @@ function wrapOffset(value: number, half: number) {
   return next
 }
 
-/** `size="lg"`: bigger cards on tablets and computers (home New arrivals); `sm`: small cards, about two on a phone (Grab your setup) */
-export function ProductCarousel({ products, size = 'md' }: { products: Product[]; size?: 'sm' | 'md' | 'lg' }) {
+/**
+ * Every product carousel on the site has the same card size (the one of Shop by budget): about
+ * 224 px on phones (the next product peeks in) and 280 px on tablets and computers.
+ */
+export function ProductCarousel({ products }: { products: Product[] }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -275,7 +281,7 @@ export function ProductCarousel({ products, size = 'md' }: { products: Product[]
           <div
             key={`${product._id}-${i}`}
             dir={locale === 'ar' ? 'rtl' : 'ltr'}
-            className={size === 'lg' ? 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[21.5rem]' : size === 'sm' ? 'relative w-[min(11.5rem,48vw)] shrink-0 sm:w-[15rem]' : 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[18.5rem]'}
+            className={CAROUSEL_CARD}
             aria-hidden={i >= products.length ? true : undefined}
           >
             <ProductCard product={product} />

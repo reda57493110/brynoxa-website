@@ -147,10 +147,10 @@ export function Setups() {
                       </Link>
                     </div>
                     {isPhone && n > 1 ? (
-                      <ProductCarousel products={g.items} size="sm" />
+                      <ProductCarousel products={g.items} />
                     ) : (
-                      // Phones: a group with one product shows it bigger, in the middle of the screen
-                      <div className={cn('grid grid-cols-1 gap-3 max-sm:mx-auto max-sm:w-[min(17rem,80vw)] sm:gap-4', INNER_SM[Math.min(n, 2)], INNER_LG[Math.min(n, 4)])}>
+                      // Phones: a group with one product shows it in the middle, the same size as the carousels
+                      <div className={cn('grid grid-cols-1 gap-3 max-sm:mx-auto max-sm:w-[min(14rem,62vw)] sm:gap-4', INNER_SM[Math.min(n, 2)], INNER_LG[Math.min(n, 4)])}>
                         {g.items.map((p, i) => (
                           <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
                             <ProductCard product={p} />

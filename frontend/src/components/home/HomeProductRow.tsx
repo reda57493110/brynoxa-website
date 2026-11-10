@@ -113,7 +113,7 @@ export function HomeProductRow({
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Link>
           </div>
-          <ProductCarousel products={products} size={tone === 'new' ? 'lg' : 'md'} />
+          <ProductCarousel products={products} />
         </div>
       </Container>
     </section>

@@ -197,7 +197,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                 {t('home.budgetOwnEmpty', { max: amount(own ?? 0) })}
               </p>
             ) : isPhone ? (
-              <ProductCarousel key={own ?? active.id} products={items} size="lg" />
+              <ProductCarousel key={own ?? active.id} products={items} />
             ) : (
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
                 {items.map((p, i) => (
