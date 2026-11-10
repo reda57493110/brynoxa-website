@@ -89,3 +89,14 @@ test('home categories: Desktop PC, Laptops, Gaming PCs, Monitors only, then "See
   assert.ok(i > 0 && home.slice(i - 500, i).includes('to="/shop"'), 'the button opens the shop');
   for (const l of ['en', 'fr', 'ar']) assert.ok(fs.readFileSync(path.join(root, `frontend/src/i18n/${l}.ts`), 'utf8').includes("    seeMoreCategories: '"), l);
 });
+
+test('phones: Shop by budget without its long sentence, small price ranges; a short footer', async () => {
+  const fs = await import('node:fs');
+  const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
+  const budget = src('components/home/HomeBudget.tsx');
+  assert.ok(budget.includes("hidden text-base leading-relaxed text-[var(--fg-muted)] sm:block\">{t('home.budgetBody')}"), 'the sentence only on tablets / computers');
+  assert.ok(budget.includes('block font-display text-[11px] font-semibold leading-tight sm:mt-0.5 sm:text-xl'), 'small price ranges on phones');
+  const footer = src('components/layout/Footer.tsx');
+  for (const gone of ["'footer.warranty'", "'footer.returns'", "t('footer.warrantyBadge')", "t('footer.noCard')"]) assert.ok(!footer.includes(gone), gone);
+  assert.ok(footer.includes("{ to: '/help', key: 'help.kicker' as const }"), 'Help stays (warranty and returns are there)');
+});

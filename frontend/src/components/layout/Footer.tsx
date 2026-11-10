@@ -16,11 +16,10 @@ const explore = [
   { to: '/contact', key: 'common.contact' as const },
 ]
 
+// Short on purpose: warranty and returns are in Services and the Help Center
 const support = [
   { to: '/help', key: 'help.kicker' as const },
   { to: '/track-order', key: 'orders.trackOrder' as const },
-  { to: '/services/warranty', key: 'footer.warranty' as const },
-  { to: '/services/returns', key: 'footer.returns' as const },
   { to: '/account', key: 'footer.myAccount' as const },
 ]
 
@@ -156,9 +155,6 @@ export function Footer() {
             </nav>
           </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:gap-x-3 sm:text-xs">
-            <span>{t('footer.warrantyBadge')}</span>
-            <span className="hidden h-1 w-1 rounded-full bg-[var(--border)] sm:inline" aria-hidden="true" />
-            <span className="hidden sm:inline">{t('footer.noCard')}</span>
             <button
               type="button"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

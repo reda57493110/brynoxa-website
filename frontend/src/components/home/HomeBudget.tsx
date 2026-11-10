@@ -81,7 +81,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
             <h2 id="home-budget-heading" className="mt-1 font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
               {t('home.budgetTitle')}
             </h2>
-            <p className="mt-1 text-[12.5px] leading-snug text-[var(--fg-muted)] sm:mt-2 sm:text-base sm:leading-relaxed">{t('home.budgetBody')}</p>
+            <p className="mt-2 hidden text-base leading-relaxed text-[var(--fg-muted)] sm:block">{t('home.budgetBody')}</p>
           </div>
 
           {/* Budget tiles: tap one to see its products */}
@@ -118,7 +118,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="hidden text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)] sm:block">{t(BAND_NAME[b.id])}</span>
-                    <span className="block font-display text-[12px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
+                    <span className="block font-display text-[11px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
                       {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                     </span>
                     <span className="mt-0.5 block text-[10px] text-[var(--fg-muted)] sm:mt-1 sm:text-xs">
