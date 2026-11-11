@@ -373,8 +373,8 @@ function GuideTabs({ data, selected, onSelect }: { data: HelpGuide; selected: He
         aria-labelledby={`help-tab-${guide.id}`}
         className={cn(surfaceCard, 'mt-3 p-3 sm:p-6')}
       >
-        <h3 className="font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-2xl">{guide.title}</h3>
-        <div className="mt-1">
+        {/* No title here: the selected tab already says it */}
+        <div>
           <QuickGuide guide={guide} wide moreHref={`/help#${guide.more}`} />
         </div>
       </div>

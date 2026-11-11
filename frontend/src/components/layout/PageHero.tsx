@@ -21,7 +21,8 @@ export function PageHero({
   return (
     <section aria-labelledby={titleId} className={cn('page-hero', className)}>
       <Container className="relative z-10 py-5 sm:py-10">
-        {kicker ? <p className="kicker text-reveal text-[11px] sm:text-xs">{kicker}</p> : null}
+        {/* No small label above the title: it only repeated the page name (the title says it once) */}
+        {void kicker}
         <h1
           id={titleId}
           className="text-reveal mt-1.5 font-display text-2xl font-semibold tracking-tight text-[var(--fg)] sm:mt-3 sm:text-3xl md:text-[2.75rem]"

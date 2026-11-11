@@ -18,7 +18,8 @@ import type { MessageKey } from '@/i18n'
 const BAND_ICON: Record<string, SiteIconName> = { small: 'tag', mid: 'laptop', high: 'star' }
 const BAND_NAME: Record<string, MessageKey> = { small: 'home.budgetSmallName', mid: 'home.budgetMidName', high: 'home.budgetHighName' }
 /** Products shown for a budget */
-const SHOWN = 8
+/** Two full rows of three on computers */
+const SHOWN = 6
 
 /**
  * Last home section: "Shop by budget". Three price tiles (with how many products each) or the
@@ -195,7 +196,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
             ) : isPhone ? (
               <ProductCarousel key={own ?? active.id} products={items} />
             ) : (
-              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
                 {items.map((p, i) => (
                   <div key={p._id} className="h-full" data-rise="card" style={{ animationDelay: `${Math.min(i, 7) * 40}ms` }}>
                     <ProductCard product={p} />

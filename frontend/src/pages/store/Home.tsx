@@ -177,12 +177,9 @@ export function Home() {
         <Container>
           <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
             <div className="max-w-xl">
-              <p className="kicker">
-                {t('home.featuredKicker')}
-              </p>
               <h2
                 id="home-featured-heading"
-                className="mt-2 font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+                className="font-display text-2xl font-semibold tracking-tight sm:text-4xl"
               >
                 {t('home.featuredTitle')}
               </h2>

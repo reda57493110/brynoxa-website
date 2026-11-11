@@ -72,6 +72,6 @@ test('Help Center on phones: compact guide cards, steps and "Still need help?"',
   assert.ok(guide.includes('text-[12.5px] leading-snug text-[var(--fg-muted)] sm:text-sm'), 'small step text on phones');
   const page = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Help.tsx'), 'utf8');
   assert.ok(page.includes("className={cn(surfaceCard, 'mt-3 p-3 sm:p-6')}"), 'guide box');
-  assert.ok(page.includes('font-display text-base font-semibold tracking-tight text-[var(--fg)] sm:text-2xl'), 'guide title');
+  assert.ok(!page.includes('{guide.title}</h3>'), 'no guide title: the selected tab says it');
   assert.ok(page.includes("'flex flex-col gap-3 p-3.5 sm:flex-row"), '"Still need help?" card');
 });

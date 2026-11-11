@@ -30,3 +30,19 @@ test('admin board on phones: no long explanations, short labels', () => {
   assert.ok(!board.includes('Each setup fills itself'));
   assert.ok(!board.includes('auto: ticks, category and words'));
 });
+
+test('said once: no small labels repeating the page title; no repeats on product, Help, Contact', () => {
+  assert.ok(src('components/layout/PageHero.tsx').includes('{void kicker}'), 'page headers: title only');
+  assert.ok(src('components/layout/StoreHero.tsx').includes('{void kicker}'), 'shop headers: title only');
+  assert.ok(src('components/home/HomeProductRow.tsx').includes('{void kicker}'), 'home rows: title only');
+  assert.ok(!src('pages/store/Home.tsx').includes("t('home.featuredKicker')"));
+  assert.ok(!src('pages/store/ProductDetail.tsx').includes('{p.sku}'), 'product: no SKU / category line (the path shows the category)');
+  assert.ok(!src('pages/store/Help.tsx').includes('{guide.title}</h3>'), 'Help: the tab names the guide');
+  assert.ok(!src('pages/store/Contact.tsx').includes('href="#message"'), 'Contact: the form is right there');
+});
+
+test('Shop by budget on computers: three per row, two full rows', () => {
+  const b = src('components/home/HomeBudget.tsx');
+  assert.ok(b.includes('const SHOWN = 6'));
+  assert.ok(b.includes('<div className="grid grid-cols-2 gap-4 lg:grid-cols-3">'));
+});

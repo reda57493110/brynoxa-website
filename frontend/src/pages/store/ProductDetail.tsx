@@ -247,19 +247,8 @@ function ProductDetailPage() {
 
           <div {...fade(0.1)} className="flex min-w-0 flex-col">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:text-sm">
+              {/* Just the brand: the category is in the path above, the SKU is for the shop, not the customer */}
               {brand ? <span className="font-medium text-[var(--fg)]">{brand.name}</span> : null}
-              {brand && category ? <span aria-hidden="true">·</span> : null}
-              {category ? (
-                <Link to={`/category/${category.slug}`} className="hover:text-[var(--brand-text)]">
-                  {categoryName}
-                </Link>
-              ) : null}
-              {p.sku ? (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="font-mono text-[10px] tracking-wide sm:text-xs">{p.sku}</span>
-                </>
-              ) : null}
             </div>
 
             <h1 className="mt-1 font-display text-base font-semibold leading-snug tracking-tight text-[var(--fg)] sm:mt-1.5 sm:text-2xl lg:text-3xl">

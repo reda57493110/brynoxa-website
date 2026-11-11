@@ -74,11 +74,9 @@ export function HomeProductRow({
         >
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5 sm:mb-6 sm:gap-4">
             <div className="max-w-xl">
-              <p className="kicker inline-flex items-center gap-1.5">
-                <SiteIcon name={icon} size={13} />
-                {kicker}
-              </p>
-              <h2 id={headingId} className="mt-1 font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
+              {void kicker}
+              {void icon}
+              <h2 id={headingId} className="font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
                 {title}
               </h2>
               <p className="mt-1 text-[12.5px] leading-snug text-[var(--fg-muted)] sm:mt-2 sm:text-base sm:leading-relaxed">{body}</p>

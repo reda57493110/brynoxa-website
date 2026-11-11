@@ -17,7 +17,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
-import { StoreHero, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
+import { StoreHero, heroPrimaryPill } from '@/components/layout/StoreHero'
 
 const CONTACT_HERO_IMAGE =
   'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=2560&q=80'
@@ -157,9 +157,6 @@ export function Contact() {
             {t('contact.whatsapp')}
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
           </button>
-          <a href="#message" className={heroGhostPill}>
-            {t('contact.sendMessage')}
-          </a>
         </div>
       </StoreHero>
 

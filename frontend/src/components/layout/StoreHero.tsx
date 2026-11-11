@@ -207,7 +207,8 @@ export function StoreHero({
   rotate?: Product[]
   /** The products to rotate are still loading */
   rotatePending?: boolean
-  kicker: string
+  /** Not shown any more (it repeated the page name); kept so callers need no change */
+  kicker?: string
   titleLead: ReactNode
   titleAccent?: ReactNode
   description?: ReactNode
@@ -272,12 +273,8 @@ export function StoreHero({
             )}
           >
             <div className="min-w-0 px-4 sm:px-6 md:px-0">
-              <p
-                {...fadeUp(0)}
-                className="kicker text-xs text-[var(--brand-text)] max-md:hidden! dark:text-[var(--brand)]"
-              >
-                {kicker}
-              </p>
+              {/* No small label above the title: it only repeated the page name (the title says it once) */}
+              {void kicker}
 
               <h1
                 id={titleId}
