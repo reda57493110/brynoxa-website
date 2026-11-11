@@ -23,7 +23,7 @@ import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { StoreHero, heroChip, heroInput } from '@/components/layout/StoreHero'
+import { StoreHero, heroInput } from '@/components/layout/StoreHero'
 import { onePerCategory } from '@/lib/heroProduct'
 
 const SHOP_HERO_IMAGE =
@@ -60,7 +60,8 @@ export function Shop() {
     () => ({
       page: Number(params.get('page') || 1),
       limit: 12,
-      sort: params.get('sort') || 'newest',
+      // Default: one product of each kind in turn, so the first rows show the whole shop
+      sort: params.get('sort') || 'mixed',
       q: params.get('q') || undefined,
       category: params.get('category') || undefined,
       brand: params.get('brand') || undefined,
@@ -122,7 +123,7 @@ export function Shop() {
 
   const clearFilters = () => {
     const next = new URLSearchParams()
-    if (filters.sort && filters.sort !== 'newest') next.set('sort', filters.sort)
+    if (filters.sort && filters.sort !== 'mixed') next.set('sort', filters.sort)
     setParams(next)
   }
 
@@ -300,19 +301,6 @@ export function Shop() {
             {t('shop.searchAction')}
           </button>
         </form>
-
-        <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden" aria-label={t('shop.filterNote')}>
-          {(
-            [
-              { icon: 'banknote' as const, label: t('home.heroPerkCod') },
-            ] as const
-          ).map((item) => (
-            <li key={item.label} className={heroChip}>
-              <SiteIcon name={item.icon} size={13} className="text-[var(--brand)]" />
-              {item.label}
-            </li>
-          ))}
-        </ul>
       </StoreHero>
 
       <Container className="max-w-[96rem] pb-8 pt-4 sm:pb-10 sm:pt-6">

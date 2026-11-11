@@ -1,4 +1,5 @@
 import { SETUP_CATEGORIES, isSetupId, sanitizeSetups } from '../utils/setups';
+import { mixByCategory } from '../utils/mixByCategory';
 import { getSettingsCached } from '../models/Settings';
 import { HIDE_PRIVATE_PRODUCT_FIELDS } from '../utils/publicProduct';
 import mongoose from 'mongoose';
@@ -502,6 +503,29 @@ export async function listProducts(query: ProductQuery) {
       .lean();
     const byId = new Map(docs.map((d) => [String(d._id), d]));
     const items = pageIds.map((id) => byId.get(String(id))).filter((d): d is NonNullable<typeof d> => Boolean(d));
+    return { items, total: lite.length, page: query.page, limit: query.limit };
+  }
+
+  // Shop "Recommended" (sort=mixed): one product of each main category in turn, then paged
+  if (query.sort === 'mixed' && !query.featured && !query.carousel) {
+    const [lite, cats] = await Promise.all([
+      Product.find(filter).select('_id category createdAt').lean<{ _id: unknown; category?: unknown; createdAt: Date }[]>(),
+      Category.find({}).select('_id parent').lean<{ _id: unknown; parent?: unknown }[]>(),
+    ]);
+    const parent = new Map(cats.map((c) => [String(c._id), c.parent ? String(c.parent) : null]));
+    const mainOf = (id: string | null) => (id ? (parent.get(id) ?? id) : 'none');
+    const order = mixByCategory(
+      lite.map((p) => ({ id: String(p._id), category: p.category ? String(p.category) : null, createdAt: new Date(p.createdAt).getTime() })),
+      mainOf
+    );
+    const pageIds = order.slice(skip, skip + query.limit);
+    const docs = await Product.find({ _id: { $in: pageIds } })
+      .select(query.admin ? '' : `-description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
+      .populate('category', 'name slug isActive specTemplate')
+      .populate('brand', 'name slug logo')
+      .lean();
+    const byId = new Map(docs.map((d) => [String(d._id), d]));
+    const items = pageIds.map((id) => byId.get(id)).filter((d): d is NonNullable<typeof d> => Boolean(d));
     return { items, total: lite.length, page: query.page, limit: query.limit };
   }
 

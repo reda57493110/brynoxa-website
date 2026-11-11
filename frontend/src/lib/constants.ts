@@ -1,6 +1,8 @@
 export const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 export const SORT_OPTIONS = [
+  // One product of each kind in turn (gaming PC, laptop, desktop, monitor…): the shop's default
+  { value: 'mixed', label: 'Recommended' },
   { value: 'newest', label: 'Newest' },
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },

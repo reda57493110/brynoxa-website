@@ -73,7 +73,7 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
   assert.ok(page.includes('font-display text-2xl font-semibold tracking-tight sm:text-4xl'), 'smaller title');
   // Simple page: no repeated setup box, no chips, no box around groups, no long texts
   for (const gone of ['.intro`)}</p>', "t('setups.inside')", "t('setups.from'", "t('setups.moreBody')", "t('setups.helpBody')", '.tagline`)']) assert.ok(!page.includes(gone), gone);
-  assert.ok(page.includes("{t('home.heroPerkCod')}") && !page.includes('heroPerkWarranty'), 'reassurance: cash at the door (the warranty is said elsewhere)');
+  assert.ok(!page.includes('heroPerk'), 'no repeated promises under the title');
   assert.ok(page.includes('max-sm:mx-auto max-sm:w-[min(14rem,62vw)]'), 'phones: a single product in the middle, carousel size');
   assert.ok(page.includes("SPAN_LG[Math.min(n, 4)]") && page.includes('[grid-auto-flow:row_dense]'), 'small groups sit side by side, no empty half rows');
   assert.ok(page.includes("t(n === 1 ? 'setups.countOne' : 'setups.count'"), '1 product, not 1 products');

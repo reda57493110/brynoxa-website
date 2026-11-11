@@ -217,6 +217,7 @@ export const fr: Messages = {
   sort: {
     label: 'Trier',
     aria: 'Trier les produits',
+    mixed: 'Recommandés',
     newest: 'Plus récents',
     price_asc: 'Prix : croissant',
     price_desc: 'Prix : décroissant',
@@ -642,6 +643,7 @@ export const fr: Messages = {
     moreOptions: 'Autres configurations disponibles',
   },
   contact: {
+    helpLine: 'Une question sur une commande, la livraison, un retour ou la garantie ? Voir le centre d’aide',
     heroKicker: 'Contact',
     heroTitle: 'Nous sommes là',
     heroTitleAccent: 'pour vous aider',

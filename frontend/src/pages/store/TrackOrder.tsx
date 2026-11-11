@@ -228,7 +228,7 @@ export function TrackOrder() {
 
   return (
     <>
-      <PageHero kicker={t('orders.heroKicker')} title={t('orders.trackHeading')} description={t('orders.trackBody')} />
+      <PageHero title={t('orders.trackHeading')} description={t('orders.trackBody')} />
       <Container className="py-5 sm:py-10">
         <div className="mx-auto max-w-2xl space-y-5">
           <form className={cn(surfaceCard, 'space-y-4 p-4 sm:p-6')} onSubmit={onSubmit}>

@@ -16,9 +16,8 @@ import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
-import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/cn'
-import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
+import { StoreHero, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 
 const CONTACT_HERO_IMAGE =
   'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=2560&q=80'
@@ -30,9 +29,6 @@ export function Contact() {
   const { contact } = useMessages()
   const t = useT()
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
-  // Signed in: their order list. Guests: look an order up with its number and phone.
-  const signedIn = useAuthStore((s) => Boolean(s.user))
-  const [openFaq, setOpenFaq] = useState<number | null>(0)
 
   const SUBJECT_PRESETS = [
     t('contact.subjectOrder'),
@@ -40,11 +36,6 @@ export function Contact() {
     t('contact.subjectReturn'),
     t('contact.subjectAdvice'),
     t('contact.subjectBulk'),
-  ]
-
-  const HERO_PROOF = [
-    { icon: 'chat' as const, label: t('contact.proofWhatsapp') },
-    { icon: 'clock' as const, label: t('contact.proofSameDay') },
   ]
 
   const [name, setName] = useState('')
@@ -170,14 +161,6 @@ export function Contact() {
             {t('contact.sendMessage')}
           </a>
         </div>
-        <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden">
-          {HERO_PROOF.map(({ icon, label }) => (
-            <li key={label} className={heroChip}>
-              <SiteIcon name={icon} size={13} className="text-[var(--brand)]" />
-              {label}
-            </li>
-          ))}
-        </ul>
       </StoreHero>
 
       <section
@@ -188,10 +171,9 @@ export function Contact() {
         <Container>
           <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 xl:gap-12">
             <div>
-              <p className="kicker">{t('contact.messageKicker')}</p>
               <h2
                 id="contact-form-heading"
-                className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
+                className="font-display text-xl font-semibold tracking-tight sm:text-3xl"
               >
                 {t('contact.sendMessage')}
               </h2>
@@ -374,96 +356,19 @@ export function Contact() {
         </Container>
       </section>
 
-      <section aria-labelledby="contact-faq-heading" className="py-4 sm:py-5">
+      {/* Common questions live in the Help Center (no second FAQ here) */}
+      <section aria-label={t('help.kicker')} className="py-2 sm:py-3">
         <Container>
-          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 xl:gap-12">
-            <div>
-              <p className="kicker">{t('ui.faq')}</p>
-              <h2
-                id="contact-faq-heading"
-                className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
-              >
-                {t('ui.commonQuestions')}
-              </h2>
-              <p className="mt-2 text-[13px] text-[var(--fg-muted)] sm:text-sm">{t('contact.faqBody')}</p>
-              <ul className="mt-4 space-y-2.5 sm:mt-5">
-                {contact.faqs.map((item, i) => {
-                  const open = openFaq === i
-                  const panelId = `contact-faq-${i}`
-                  return (
-                    <li
-                      key={item.q}
-                      className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]"
-                    >
-                      <button
-                        type="button"
-                        className="flex min-h-12 w-full items-center justify-between gap-4 px-4 py-3.5 text-left transition hover:bg-[var(--bg-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--brand)] sm:px-5 sm:py-4"
-                        aria-expanded={open}
-                        aria-controls={panelId}
-                        onClick={() => setOpenFaq(open ? null : i)}
-                      >
-                        <span className="text-sm font-medium sm:text-base">{item.q}</span>
-                        <span
-                          className={cn(
-                            'inline-flex shrink-0 text-[var(--fg-muted)] transition duration-300',
-                            open && 'rotate-180'
-                          )}
-                        >
-                          <SiteIcon name="chevron-down" size={16} />
-                        </span>
-                      </button>
-                      <div
-                        id={panelId}
-                        className={cn(
-                          'grid transition-[grid-template-rows] duration-300 ease-out',
-                          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                        )}
-                      >
-                        <div className="overflow-hidden">
-                          <p className="px-4 pb-4 text-sm leading-relaxed text-[var(--fg-muted)] sm:px-5">
-                            {item.a}
-                          </p>
-                        </div>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
-            <div className="lg:pt-1">
-              <p className="kicker">{t('contact.linksKicker')}</p>
-              <h2 className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
-                {t('contact.policiesTitle')}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-                {t('contact.policiesBody')}
-              </p>
-              <ul className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
-                {[
-                  { to: '/help', label: t('help.kicker') },
-                  { to: signedIn ? '/account/orders' : '/track-order', label: t('contact.trackOrder') },
-                  { to: '/services/warranty', label: t('footer.warranty') },
-                  { to: '/services/returns', label: t('footer.returns') },
-                  { to: '/shop', label: t('contact.browseShop') },
-                ].map((item) => (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      className="group flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3.5 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:px-5 sm:text-base"
-                    >
-                      {item.label}
-                      <SiteIcon
-                        name="arrow-right"
-                        size={16}
-                        className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5"
-                      />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <Link
+            to="/help"
+            className="group flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3.5 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:px-5"
+          >
+            <span className="inline-flex items-center gap-2.5">
+              <SiteIcon name="help" size={17} className="text-[var(--brand-text)]" />
+              {t('contact.helpLine')}
+            </span>
+            <SiteIcon name="arrow-right" size={16} className="shrink-0 transition group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+          </Link>
         </Container>
       </section>
 

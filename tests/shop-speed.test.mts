@@ -49,7 +49,7 @@ async function run(url: string, answers: Record<string, unknown> = {}, chunks: R
 
 test('shop: its code and first data start at once; filtered views load as usual', async () => {
   const r = await run('/shop', {}, { shop: ['assets/Shop-1.js', 'assets/Badge-2.js'] });
-  assert.deepEqual(r.fetched, ['/api/v1/settings', '/api/v1/products?page=1&limit=12&sort=newest', '/api/v1/categories', '/api/v1/brands']);
+  assert.deepEqual(r.fetched, ['/api/v1/settings', '/api/v1/products?page=1&limit=12&sort=mixed', '/api/v1/categories', '/api/v1/brands']);
   assert.deepEqual(r.links.filter((l) => l.rel === 'modulepreload').map((l) => l.href), ['/assets/Shop-1.js', '/assets/Badge-2.js']);
   const filtered = await run('/shop?category=laptops', {}, { shop: ['assets/Shop-1.js'] });
   assert.deepEqual(filtered.fetched, [], 'a filtered shop asks for other data');

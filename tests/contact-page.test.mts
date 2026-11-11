@@ -1,6 +1,5 @@
 // Contact page: the order-number example looks like a real order number (BRX-YYYYMMDD-XXXXXX, same
-// letters as the server uses), and "Track my order" works for guests (Track order page) as well as
-// signed-in customers (their order list).
+// letters as the server uses), and its questions go to the Help Center.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -23,7 +22,9 @@ test('the order-number example uses the real format in every language', async ()
   }
 });
 
-test('"Track my order" on the Contact page sends guests to the Track order page', () => {
+test('Contact page: no second list of links; questions go to the Help Center, Track order is in the footer', () => {
   const contact = fs.readFileSync(path.join(src, 'pages/store/Contact.tsx'), 'utf8');
-  assert.match(contact, /to: signedIn \? '\/account\/orders' : '\/track-order', label: t\('contact\.trackOrder'\)/);
+  assert.ok(contact.includes('to="/help"') && contact.includes("{t('contact.helpLine')}"));
+  const footer = fs.readFileSync(path.join(src, 'components/layout/Footer.tsx'), 'utf8');
+  assert.ok(footer.includes("{ to: '/track-order', key: 'orders.trackOrder' as const }"), 'Track order for everyone in the footer');
 });

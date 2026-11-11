@@ -62,13 +62,6 @@ export function Setups() {
             {t('setups.title')}
           </h1>
           <p className="mt-1.5 text-[13px] text-[var(--fg-muted)] sm:mt-2 sm:text-base">{t('setups.short')}</p>
-          {/* What makes it safe to order */}
-          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] font-medium text-[var(--fg-muted)] sm:text-sm">
-            <li className="inline-flex items-center gap-1.5">
-              <SiteIcon name="banknote" size={14} className="text-[var(--brand-text)]" />
-              {t('home.heroPerkCod')}
-            </li>
-          </ul>
         </div>
 
         {/* The setups: tap one to see what goes with it */}

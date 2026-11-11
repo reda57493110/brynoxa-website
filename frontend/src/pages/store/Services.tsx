@@ -4,7 +4,7 @@ import { m, useReducedMotion } from 'framer-motion'
 import { Container } from '@/components/ui/Container'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
-import { StoreHero, heroChip, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
+import { StoreHero, heroGhostPill, heroPrimaryPill } from '@/components/layout/StoreHero'
 import { CUSTOMER_SERVICES } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -25,11 +25,6 @@ export function Services() {
     if (legacy) navigate(`/services/${legacy.slug}`, { replace: true })
   }, [hash, navigate])
 
-  const HERO_PROOF = [
-    { icon: 'shield' as const, label: t('home.proofWarranty') },
-    { icon: 'refresh' as const, label: t('services.proofReturns') },
-  ]
-
   useSeo({
     title: t('meta.servicesTitle'),
     description: t('meta.servicesDescription'),
@@ -42,17 +37,6 @@ export function Services() {
         titleId="services-hero-title"
         image={SERVICES_HERO_IMAGE}
         imagePosition="object-[50%_55%]"
-        frameOverlay={
-          <>
-            <div className="absolute end-2.5 top-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md sm:end-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-xs">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand)] opacity-60 motion-reduce:hidden" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand)]" />
-              </span>
-              {copy.services.heroTrustChip}
-            </div>
-          </>
-        }
         kicker={copy.services.heroKicker}
         titleLead={copy.services.heroTitle}
         titleAccent={copy.services.heroTitleAccent}
@@ -67,14 +51,6 @@ export function Services() {
             {t('common.contact')}
           </Link>
         </div>
-        <ul className="mt-4 flex flex-wrap gap-2 max-md:hidden">
-          {HERO_PROOF.map(({ icon, label }) => (
-            <li key={label} className={heroChip}>
-              <SiteIcon name={icon} size={13} className="text-[var(--brand)]" />
-              {label}
-            </li>
-          ))}
-        </ul>
       </StoreHero>
 
       <section aria-labelledby="services-grid-heading" className="pb-10 pt-6 sm:pb-14 sm:pt-8">

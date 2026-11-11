@@ -86,7 +86,7 @@ test('24: Google — private pages not indexed, made-up addresses are "not found
 test('25: shoppers never get sales counts or stock locations', () => {
   const b = (p: string) => fs.readFileSync(path.join(root, 'backend/src', p), 'utf8');
   assert.match(b('utils/publicProduct.ts'), /\['soldCount', 'inventoryLocation'\]/);
-  assert.equal((b('services/catalog.service.ts').match(/HIDE_PRIVATE_PRODUCT_FIELDS/g) || []).length, 4, 'list, product page, compare / deals + import');
+  assert.equal((b('services/catalog.service.ts').match(/HIDE_PRIVATE_PRODUCT_FIELDS/g) || []).length, 5, 'list, mixed (Recommended) list, product page, compare / deals + import');
   assert.match(b('services/recommendation.service.ts'), /items = items\.map\(withoutPrivateFields\)/);
   assert.match(b('services/wishlist.service.ts'), /select: HIDE_PRIVATE_PRODUCT_FIELDS/);
 });

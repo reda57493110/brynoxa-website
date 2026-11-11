@@ -217,6 +217,7 @@ export const ar: Messages = {
   sort: {
     label: 'ترتيب',
     aria: 'ترتيب المنتجات',
+    mixed: 'مقترحة',
     newest: 'الأحدث',
     price_asc: 'السعر: من الأقل',
     price_desc: 'السعر: من الأعلى',
@@ -640,6 +641,7 @@ export const ar: Messages = {
     moreOptions: 'تتوفر خيارات أخرى',
   },
   contact: {
+    helpLine: 'أسئلة على الطلبات، التوصيل، الإرجاع أو الضمان؟ شوف مركز المساعدة',
     heroKicker: 'اتصل بنا',
     heroTitle: 'نحن هنا',
     heroTitleAccent: 'لمساعدتك',

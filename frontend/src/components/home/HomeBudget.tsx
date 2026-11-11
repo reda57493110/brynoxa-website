@@ -74,11 +74,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
       <Container>
         <div className="rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:rounded-[2rem] sm:p-7">
           <div className="max-w-xl">
-            <p className="kicker inline-flex items-center gap-1.5">
-              <SiteIcon name="banknote" size={13} />
-              {t('home.budgetKicker')}
-            </p>
-            <h2 id="home-budget-heading" className="mt-1 font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
+            <h2 id="home-budget-heading" className="font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
               {t('home.budgetTitle')}
             </h2>
             <p className="mt-2 hidden text-base leading-relaxed text-[var(--fg-muted)] sm:block">{t('home.budgetBody')}</p>

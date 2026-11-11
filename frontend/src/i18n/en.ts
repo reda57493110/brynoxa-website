@@ -215,6 +215,7 @@ export const en = {
   sort: {
     label: 'Sort',
     aria: 'Sort products',
+    mixed: 'Recommended',
     newest: 'Newest',
     price_asc: 'Price: Low to High',
     price_desc: 'Price: High to Low',
@@ -638,6 +639,7 @@ export const en = {
     moreOptions: 'More options available',
   },
   contact: {
+    helpLine: 'Questions about orders, delivery, returns or warranty? See the Help Center',
     heroKicker: 'Contact',
     heroTitle: 'We’re here',
     heroTitleAccent: 'to help you',
