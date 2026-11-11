@@ -20,6 +20,14 @@ export function Change({ now, before, days, money }: { now: number | null; befor
       </span>
     )
   }
+  // Nothing this period (for example everything was refunded): a plain note, not a red "▼ 100%"
+  if (now === 0)
+    return (
+      <span className="text-[var(--fg-muted)]">
+        <span className="sm:hidden">None this period</span>
+        <span className="max-sm:hidden">None this period (was {money ? formatCurrencyRounded(before) : before})</span>
+      </span>
+    )
   if (before === 0)
     return (
       <span className="text-[var(--success)]">

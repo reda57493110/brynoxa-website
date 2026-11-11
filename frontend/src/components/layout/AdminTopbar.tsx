@@ -3,7 +3,6 @@ import { AdminSearch } from '@/components/admin/AdminSearch'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
-import { useThemeStore } from '@/store/themeStore'
 import { useAuthStore } from '@/store/authStore'
 import { authApi } from '@/api/authApi'
 import { useAdminStats } from '@/hooks/useAdminStats'
@@ -15,8 +14,6 @@ import {
 } from '@/lib/permissions'
 
 export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
-  const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
@@ -77,14 +74,6 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
             <span className="hidden sm:inline">{stats.data.pendingOrders} pending</span>
           </Link>
         ) : null}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleTheme}
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <SiteIcon name="sun" size={16} /> : <SiteIcon name="moon" size={16} />}
-        </Button>
         <Link
           to="/"
           className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)] sm:w-auto sm:gap-1.5 sm:px-3 sm:py-2 sm:text-sm"

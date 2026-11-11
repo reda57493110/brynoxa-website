@@ -263,7 +263,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   }
 
   // The home page hides a row with fewer than 4 products: say so here
-  const rowNote = (n: number) => (n < HOME_ROW_MIN ? `auto · hidden (needs ${HOME_ROW_MIN})` : 'auto')
+  const rowNote = (n: number) => (n < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : 'auto')
   const amount = (n: number) => new Intl.NumberFormat('en-US').format(n)
   const bandTitle = (b: { min?: number; max?: number }) =>
     b.min === undefined ? `Under ${amount(b.max!)} DH` : b.max === undefined ? `Over ${amount(b.min)} DH` : `${amount(b.min)} – ${amount(b.max)} DH`
@@ -298,12 +298,12 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           step={3}
           icon="layers"
           title="Carousel"
-          note={place.rowFromCarousel ? 'your choice' : 'empty: shows featured'}
+          note={place.rowFromCarousel ? 'your choice' : 'auto'}
           products={place.rowFromCarousel ? place.row : []}
           store={{ kind: 'flag', flag: 'isCarousel' }}
           max={HOME_ROW_LIMIT}
           onOpen={onOpen}
-          empty="Empty: the home page shows your next featured products instead."
+          empty="Empty: shows the next featured products."
         />
         <Section
           step={4}
@@ -316,7 +316,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           store={{ kind: 'homeRows', key: 'deals' }}
           max={12}
           onOpen={onOpen}
-          empty="No deals: give a product an old price higher than its price, or add one."
+          empty="No deals yet."
         />
         <Section
           step={5}
@@ -329,7 +329,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           store={{ kind: 'homeRows', key: 'new' }}
           max={12}
           onOpen={onOpen}
-          empty="Nothing new that is not already shown above."
+          empty="Nothing new yet."
         />
         {rows.budgets.map((b) => (
           <Section
@@ -337,14 +337,14 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             step={6}
             icon="banknote"
             title={`Budget · ${bandTitle(b)}`}
-            note={rows.budgetTotal < HOME_ROW_MIN ? `auto · hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'tab hidden'}
+            note={rows.budgetTotal < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'hidden'}
             pinned={b.pinned}
             canReset
             products={b.items.slice(0, b.pinned ? 12 : 8)}
             store={{ kind: 'homeRows', key: b.key }}
             max={12}
             onOpen={onOpen}
-            empty="No product in stock at this price."
+            empty="No product at this price."
           />
         ))}
       </div>
@@ -389,7 +389,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
         </span>
         <p className="text-sm font-semibold">{SETUP_ADMIN_LABEL[list.id]}</p>
         <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{list.items.length}</span>
-        <StatusPill pinned={list.pinned} note="auto: ticks, category and words" />
+        <StatusPill pinned={list.pinned} note="auto" />
         {list.pinned ? (
           <button
             type="button"
@@ -408,7 +408,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
             onClick={() => setAdding(true)}
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-text)] hover:underline disabled:opacity-40"
           >
-            <SiteIcon name="plus" size={12} /> Add a product
+            <SiteIcon name="plus" size={12} /> Add
           </button>
           <a href={`/setups/${list.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
             View <SiteIcon name="external" size={11} />
@@ -436,7 +436,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-[11px] text-[var(--fg-muted)]">No products yet: add one, or tick this setup on a product.</p>
+        <p className="mt-2 text-[11px] text-[var(--fg-muted)]">No products yet.</p>
       )}
       <Modal open={adding} onClose={() => setAdding(false)} title={`Add to ${SETUP_ADMIN_LABEL[list.id]}`} size="md">
         <p className="mb-3 text-xs text-[var(--fg-muted)]">The product goes into its group (Gaming mice, Laptops…) by its category.</p>
@@ -457,10 +457,6 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   const lists = useSetupLists()
   return (
     <>
-      <p className="mb-2.5 text-[11px] text-[var(--fg-muted)]">
-        Each setup fills itself (products ticked for it, or by category and their own words). Move, remove or add a product and that setup
-        becomes your choice; groups follow each product’s category.
-      </p>
       <div className="flex flex-col gap-2.5">
         {SETUP_IDS.map((id) => (
           <SetupCard key={id} list={lists[id]} onOpen={onOpen} />
@@ -499,8 +495,8 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
   }
   const tabs: { id: BoardTab; label: string; icon: SiteIconName; href: string }[] = [
     { id: 'home', label: 'Home page', icon: 'home', href: '/' },
-    { id: 'setups', label: 'Grab your setup page', icon: 'layers', href: '/setups' },
-    { id: 'shop', label: 'Shop page header', icon: 'cart', href: '/shop' },
+    { id: 'setups', label: 'Setups page', icon: 'layers', href: '/setups' },
+    { id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
 

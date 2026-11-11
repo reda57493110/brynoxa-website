@@ -23,13 +23,13 @@ import type { Category, Product } from '@/types'
 
 /** What each row's header shows, in plain words */
 const SOURCE_TEXT: Record<HeroSource, string> = {
-  category: 'your choice',
-  main: 'same as its main category',
-  'from-category': 'auto: from this category',
-  page: 'shop header',
-  'empty-category': 'category photo (nothing in stock here)',
-  auto: 'auto: first featured product',
-  none: 'photo only (category photo)',
+  category: 'Your choice',
+  main: 'From main category',
+  'from-category': 'Auto',
+  page: 'Shop header',
+  'empty-category': 'Category photo',
+  auto: 'Auto',
+  none: 'Photo only',
 }
 
 const btn =
@@ -88,59 +88,57 @@ function HeaderRow({
   const navigate = useNavigate()
   const shown = useHeroProduct('shop', category)
   const [picking, setPicking] = useState(false)
-  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : shown.product ? 'your choice' : 'one product per category, in turn (default)'
+  const status = shown.pending ? '…' : category ? SOURCE_TEXT[shown.source] : shown.product ? 'Your choice' : 'Rotates'
   const yours = Boolean(setting)
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/25 p-2.5', depth === 1 && 'ms-6 border-dashed')}>
-      {allView && !shown.product && rotation.length ? (
-        <div className="flex flex-wrap gap-1">
-          {rotation.map((p) => (
-            <Thumb key={p._id} small product={p} />
-          ))}
-        </div>
-      ) : (
-        <Thumb product={shown.product} photo={photo} />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-center gap-1.5 text-[13px] font-semibold">
-          {depth === 1 ? <SiteIcon name="chevron-right" size={12} className="text-[var(--fg-muted)] rtl:rotate-180" /> : null}
-          {title}
-          <span
-            className={cn(
-              'rounded-full border px-2 text-[10px] font-semibold leading-[1.15rem]',
-              yours ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]' : 'border-[var(--border)] text-[var(--fg-muted)]'
-            )}
-          >
-            {status}
+    <div className={cn('rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/25 p-2.5 sm:flex sm:items-center sm:gap-3', depth === 1 && 'ms-4 border-dashed sm:ms-6')}>
+      <div className="flex min-w-0 flex-1 items-center gap-2.5">
+        {allView && !shown.product && rotation.length ? (
+          // The products that take turns, overlapping
+          <span className="flex shrink-0 -space-x-3 rtl:space-x-reverse">
+            {rotation.slice(0, 3).map((p) => (
+              <Thumb key={p._id} small product={p} />
+            ))}
           </span>
-        </p>
-        <p className="mt-0.5 truncate text-xs text-[var(--fg-muted)]">
-          {shown.product ? (
-            <>
-              <button type="button" className="font-medium text-[var(--fg)] hover:text-[var(--brand-text)] hover:underline" onClick={() => navigate(`/admin/products/${shown.product!._id}/edit`)}>
+        ) : (
+          <Thumb small product={shown.product} photo={photo} />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold">{title}</p>
+          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px]">
+            <span
+              className={cn(
+                'shrink-0 rounded-full border px-1.5 font-semibold leading-4',
+                yours ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]' : 'border-[var(--border)] text-[var(--fg-muted)]'
+              )}
+            >
+              {status}
+            </span>
+            {shown.product ? (
+              <button
+                type="button"
+                className="min-w-0 truncate text-[var(--fg-muted)] hover:text-[var(--brand-text)] hover:underline"
+                onClick={() => navigate(`/admin/products/${shown.product!._id}/edit`)}
+                title={`${shown.product.name} · ${formatCurrency(shown.product.price)}`}
+              >
                 {shown.product.name}
-              </button>{' '}
-              · {formatCurrency(shown.product.price)}
-            </>
-          ) : shown.pending ? (
-            'Loading…'
-          ) : (
-            allView ? (rotation.length ? `In turn, every 5 seconds: ${rotation.map((p) => p.name).join(' · ')}` : 'One product of each category in turn, changing every 5 seconds.') : photo ? 'The category photo is shown.' : 'The page photo is shown.'
-          )}
-        </p>
+              </button>
+            ) : null}
+          </p>
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:mt-0 sm:shrink-0">
         <button type="button" className={btn} disabled={busy} onClick={() => setPicking(true)}>
           <SiteIcon name="pencil" size={12} /> {yours && setting !== HERO_NONE ? 'Change' : 'Choose'}
         </button>
         {allView ? null : (
-          <button type="button" className={btn} disabled={busy || setting === HERO_NONE} onClick={() => save(HERO_NONE)} title="Show the page photo, no product">
-            <SiteIcon name="close" size={12} /> Photo only
+          <button type="button" className={btn} disabled={busy || setting === HERO_NONE} onClick={() => save(HERO_NONE)} title="Show the photo, no product">
+            <SiteIcon name="close" size={12} /> Photo
           </button>
         )}
         <button type="button" className={btn} disabled={busy || !yours} onClick={() => save('')} title="Pick one by itself">
-          <SiteIcon name="refresh" size={12} /> {allView ? 'One per category' : 'Automatic'}
+          <SiteIcon name="refresh" size={12} /> Auto
         </button>
       </div>
       <Modal open={picking} onClose={() => setPicking(false)} title={`Header product · ${title}`} size="md">
@@ -231,12 +229,8 @@ export function ShopHeaderBoard() {
 
   return (
     <>
-      <p className="mb-2.5 text-[11px] text-[var(--fg-muted)]">
-        The product at the top of the Shop page changes with the category the customer picks. Nothing chosen = one of that category’s own
-        products (featured first), or its photo when it has nothing in stock; a sub-category uses its main category’s choice unless it has its own.
-      </p>
       <div className="flex flex-col gap-2.5">
-        <HeaderRow title="All products (no category chosen)" allView rotation={onePerCategory(allPicks.data ?? [], list)} setting={shopSetting} save={saveFor(SHOP_ALL)} busy={save.isPending} />
+        <HeaderRow title="All products" allView rotation={onePerCategory(allPicks.data ?? [], list)} setting={shopSetting} save={saveFor(SHOP_ALL)} busy={save.isPending} />
         {mains.map((m) => (
           <MainBlock key={m._id} all={list} main={m} subs={childrenOf(list, m._id)} heroes={heroes} saveFor={saveFor} busy={save.isPending} />
         ))}

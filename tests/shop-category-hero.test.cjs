@@ -40,10 +40,10 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   assert.ok(shop.includes('photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}'));
   assert.ok(src('components/layout/StoreHero.tsx').includes("!photoCard && 'md:dark:hidden!'"), 'framed in dark mode too');
   const board = src('components/admin/HomeLayoutBoard.tsx');
-  assert.ok(board.includes("{ id: 'shop', label: 'Shop page header', icon: 'cart', href: '/shop' }"));
+  assert.ok(board.includes("{ id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' }"));
   assert.ok(board.includes('<ShopHeaderBoard />'));
   const shopBoard = src('components/admin/ShopHeaderBoard.tsx');
-  for (const t of ['All products (no category chosen)', 'Photo only', 'Automatic', "{yours && setting !== HERO_NONE ? 'Change' : 'Choose'}", 'save.mutateAsync({ categoryHeroes: { [slug]: value } })', 'sub-categories']) {
+  for (const t of ['title="All products"', '/> Photo', '/> Auto', "{yours && setting !== HERO_NONE ? 'Change' : 'Choose'}", 'save.mutateAsync({ categoryHeroes: { [slug]: value } })', 'sub-categories']) {
     assert.ok(shopBoard.includes(t), t);
   }
 });
@@ -73,5 +73,6 @@ test('admin Shop page header: reads the shop settings (not the owner-only copy);
   assert.ok(b.includes("queryKey: ['settings'], queryFn: async () => (await settingsApi.get()).data.data"), 'same data under the same name as the shop');
   assert.ok(!b.includes('adminApi.settings.get()'));
   assert.ok(b.includes('allView rotation={onePerCategory(allPicks.data ?? [], list)}'));
-  assert.ok(b.includes('In turn, every 5 seconds: '));
+  assert.ok(b.includes("shown.product ? 'Your choice' : 'Rotates'"), 'short status');
+  assert.ok(!b.includes('The product at the top of the Shop page changes'), 'no long explanation');
 });

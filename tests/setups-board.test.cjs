@@ -29,7 +29,7 @@ test('server: setups are saved like the home rows, 48 products each; home rows s
 
 test('admin board: two tabs (Home page, Grab your setup page); a card per setup with its groups', () => {
   const board = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
-  for (const t of ["label: 'Home page'", "label: 'Grab your setup page'", 'role="tablist"', 'const lists = useSetupLists()', "store={{ kind: 'setup', key, all }}", 'Add a product', 'Back to automatic', 'title="Place on the page"']) {
+  for (const t of ["label: 'Home page'", "label: 'Setups page'", 'role="tablist"', 'const lists = useSetupLists()', "store={{ kind: 'setup', key, all }}", '<SiteIcon name="plus" size={12} /> Add', 'Back to automatic', 'title="Place on the page"']) {
     assert.ok(board.includes(t), t);
   }
   assert.ok(board.includes('const list = reset ? [] : setupListAfter(store.all, ids, next).slice(0, MAX_SETUP_ROW)'), 'a group change saves the whole setup');

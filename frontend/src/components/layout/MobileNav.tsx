@@ -6,7 +6,6 @@ import { authApi } from '@/api/authApi'
 import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import { useCompareStore } from '@/store/compareStore'
-import { useThemeStore } from '@/store/themeStore'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
@@ -17,8 +16,6 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   const logout = useAuthStore((s) => s.logout)
   const cartCount = useCartStore((s) => s.itemCount())
   const compareCount = useCompareStore((s) => s.items.length)
-  const theme = useThemeStore((s) => s.theme)
-  const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const t = useT()
 
   const links: { to: string; label: string; icon: SiteIconName; end?: boolean; count?: number }[] = [
@@ -77,16 +74,6 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
         ))}
 
         <div className="mt-4 space-y-2 border-t border-[var(--border)] pt-4">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition hover:bg-[var(--bg-muted)]"
-          >
-            <SiteIcon name={theme === 'dark' ? 'sun' : 'moon'} size={20} />
-            <span className="flex-1 text-start">
-              {theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
-            </span>
-          </button>
           <div className="flex min-h-12 items-center justify-between gap-3 rounded-xl px-3 py-2">
             <span className="text-sm font-medium text-[var(--fg-muted)]">{t('nav.language')}</span>
             <LanguageSwitcher />

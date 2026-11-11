@@ -31,13 +31,18 @@ export const useThemeStore = create<ThemeState>()(
         set({ theme: next })
       },
       hydrateTheme: () => {
-        applyTheme(get().theme)
+        void get
+        applyTheme('dark')
       },
     }),
     {
       name: 'brynoxa-theme',
+      // Dark only: a light theme saved before is turned back to dark
       onRehydrateStorage: () => (state) => {
-        if (state) applyTheme(state.theme)
+        if (state) {
+          state.theme = 'dark'
+          applyTheme('dark')
+        }
       },
     }
   )
