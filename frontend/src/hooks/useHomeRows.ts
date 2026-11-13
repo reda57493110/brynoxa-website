@@ -5,7 +5,10 @@ import { BUDGETS, inBudget } from '@/lib/homeRows'
 import type { Product } from '@/types'
 
 /** Home sections staff can choose and order (Settings → homeRows); same keys as the server. */
-export type HomeRowKey = 'deals' | 'new' | 'budget-small' | 'budget-mid' | 'budget-high'
+export type HomeRowKey = 'deals' | 'new' | 'signature' | 'budget-small' | 'budget-mid' | 'budget-high'
+/** The brand of the shop's own products (Brynoxa Signature fills itself with them) */
+export const SIGNATURE_BRAND = 'brynoxa'
+
 export const budgetKey = (id: string) => `budget-${id}` as HomeRowKey
 
 /** The products staff chose for one section, in their order (sold out / hidden ones skipped). */
@@ -47,12 +50,18 @@ export function useHomeRows(shownAbove: Product[]) {
     queryKey: ['products', 'home-new-row'],
     queryFn: async () => (await productsApi.list({ sort: 'newest', inStock: true, limit: 16 })).data.data,
   })
+  // Brynoxa Signature: the shop's own Brynoxa products, unless staff chose others
+  const signatureAuto = useQuery({
+    queryKey: ['products', 'home-signature'],
+    queryFn: async () => (await productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: 12 })).data.data,
+  })
   const budget = useQuery({
     queryKey: ['products', 'home-budget'],
     queryFn: async () => (await productsApi.list({ inStock: true, sort: 'price_asc', limit: 60 })).data.data,
   })
   const pinnedDeals = usePinned('deals', chosen.deals)
   const pinnedNew = usePinned('new', chosen.new)
+  const pinnedSignature = usePinned('signature', chosen.signature)
   const pinnedSmall = usePinned('budget-small', chosen['budget-small'])
   const pinnedMid = usePinned('budget-mid', chosen['budget-mid'])
   const pinnedHigh = usePinned('budget-high', chosen['budget-high'])
@@ -64,6 +73,7 @@ export function useHomeRows(shownAbove: Product[]) {
   const newArrivals = pinnedNew.pinned
     ? pinnedNew.products
     : (newest.data ?? []).filter((p) => !above.has(p._id) && !dealIds.has(p._id)).slice(0, 12)
+  const signature = pinnedSignature.pinned ? pinnedSignature.products : (signatureAuto.data ?? []).slice(0, 12)
   const budgetAll = budget.data ?? []
   const budgets = BUDGETS.map((b) => {
     const mine = pinnedBudget[b.id]
@@ -75,6 +85,9 @@ export function useHomeRows(shownAbove: Product[]) {
     dealsPinned: pinnedDeals.pinned,
     newArrivals,
     newPinned: pinnedNew.pinned,
+    /** Brynoxa Signature: chosen by staff, else the Brynoxa-brand products */
+    signature,
+    signaturePinned: pinnedSignature.pinned,
     /** Every band, also the empty ones (the home page hides those) */
     budgets,
     budgetTotal: budgetAll.length,
@@ -83,6 +96,7 @@ export function useHomeRows(shownAbove: Product[]) {
       !onSale.isPending &&
       !newest.isPending &&
       !budget.isPending &&
-      ![pinnedDeals, pinnedNew, pinnedSmall, pinnedMid, pinnedHigh].some((p) => p.pending),
+      !signatureAuto.isPending &&
+      ![pinnedDeals, pinnedNew, pinnedSignature, pinnedSmall, pinnedMid, pinnedHigh].some((p) => p.pending),
   }
 }

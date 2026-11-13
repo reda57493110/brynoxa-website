@@ -277,7 +277,7 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
  * Sections staff can choose and order (Admin → Products): the home rows, and the four setups of
  * the 'Pick your setup' page (setup-gaming …), which hold more products (all their groups).
  */
-export const HOME_ROW_KEYS = ['deals', 'new', 'budget-small', 'budget-mid', 'budget-high', 'setup-gaming', 'setup-study', 'setup-work', 'setup-creator'] as const;
+export const HOME_ROW_KEYS = ['deals', 'new', 'signature', 'budget-small', 'budget-mid', 'budget-high', 'setup-gaming', 'setup-study', 'setup-work', 'setup-creator'] as const;
 export type HomeRowKey = (typeof HOME_ROW_KEYS)[number];
 export const MAX_HOME_ROW = 12;
 export const MAX_SETUP_ROW = 48;

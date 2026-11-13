@@ -13,6 +13,7 @@ import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT, useStorefrontPlacements } from '@/
 import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
 import { HOME_ROW_MIN } from '@/components/home/HomeProductRow'
+import { SIGNATURE_MIN } from '@/components/home/HomeSignature'
 import { ShopHeaderBoard } from '@/components/admin/ShopHeaderBoard'
 import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupListAfter, type SetupPiece } from '@/lib/setups'
 import { formatCurrency } from '@/lib/format'
@@ -305,10 +306,23 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           onOpen={onOpen}
           empty="Empty: shows the next featured products."
         />
+        <Section
+          step={4}
+          icon="star"
+          title="Brynoxa Signature"
+          note={rows.signature.length < SIGNATURE_MIN ? `hidden (needs ${SIGNATURE_MIN})` : 'auto: Brynoxa products'}
+          pinned={rows.signaturePinned}
+          canReset
+          products={rows.signature}
+          store={{ kind: 'homeRows', key: 'signature' }}
+          max={12}
+          onOpen={onOpen}
+          empty="No Brynoxa product in stock."
+        />
         {rows.budgets.map((b) => (
           <Section
             key={b.id}
-            step={4}
+            step={5}
             icon="banknote"
             title={`Budget · ${bandTitle(b)}`}
             note={rows.budgetTotal < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'hidden'}
@@ -322,7 +336,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           />
         ))}
         <Section
-          step={5}
+          step={6}
           icon="tag"
           title="Deals"
           note={rowNote(rows.deals.length)}
@@ -335,7 +349,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           empty="No deals yet."
         />
         <Section
-          step={6}
+          step={7}
           icon="clock"
           title="New arrivals"
           note={rowNote(rows.newArrivals.length)}

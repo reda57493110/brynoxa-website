@@ -6,6 +6,7 @@ import { HomeDealsShowcase } from '@/components/home/HomeDeals'
 import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { HomeProductRow } from '@/components/home/HomeProductRow'
 import { HomeBudget } from '@/components/home/HomeBudget'
+import { HomeSignature } from '@/components/home/HomeSignature'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useHomeRows } from '@/hooks/useHomeRows'
 import { useQuery } from '@tanstack/react-query'
@@ -412,6 +413,9 @@ export function Home() {
           )}
         </Container>
       </section>
+
+      {/* Brynoxa Signature: products with the Brynoxa touch, between the top picks and the budgets */}
+      <HomeSignature products={rows.signature} />
 
       {/* Products by budget: right after the top picks (price is how most people start) */}
       <HomeBudget budgets={rows.budgets} total={rows.budgetTotal} />
