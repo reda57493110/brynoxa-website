@@ -59,3 +59,15 @@ test('Complete your setup is a tab of Admin → Products (not its own menu entry
   assert.ok(router.includes('<Route path="setup" element={<SetupRedirect />} />') && router.includes('/admin/products?board=setup'), 'old address forwards');
   assert.ok(read('pages/admin/CompleteSetupAdmin.tsx').includes('{embedded ? null : ('), 'no second page title inside the tab');
 });
+
+test('admin board tabs are real buttons; Complete your setup lists every product with its manual and automatic suggestions', () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
+  const board = read('components/admin/HomeLayoutBoard.tsx');
+  assert.ok(board.includes("'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'"), 'open tab filled');
+  const setup = read('pages/admin/CompleteSetupAdmin.tsx');
+  assert.ok(setup.includes('All products and their suggestions'));
+  assert.ok(setup.includes("queryKey: ['admin-setup-all', category]"), 'every product, by category');
+  assert.ok(setup.includes('<SuggestionStrip label="Your picks" tone="manual" items={manual} />'), 'manual picks');
+  assert.ok(setup.includes('<SuggestionStrip label="Auto" tone="auto" items={auto} />'), 'automatic suggestions');
+  assert.ok(setup.includes("const autoAll = d && !d.off && (!d.items.length || d.fillWithAutomatic) ? d.automatic.items.map(toRef) : []"), 'automatic only when they really show');
+});

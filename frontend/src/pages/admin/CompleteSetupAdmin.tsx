@@ -153,6 +153,82 @@ function useRemoveSetup(onDone?: (id: string) => void) {
 
 /* ---------- A · Main product ---------- */
 
+/** Small photos of suggestions, with a label (Your picks / Auto) */
+function SuggestionStrip({ label, tone, items }: { label: string; tone: 'manual' | 'auto'; items: { _id: string; name: string; image?: string }[] }) {
+  if (!items.length) return null
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span
+        className={cn(
+          'shrink-0 rounded-full px-1.5 text-[10px] font-bold uppercase leading-4 tracking-wide',
+          tone === 'manual' ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
+        )}
+      >
+        {label} {items.length}
+      </span>
+      <span className="flex min-w-0 -space-x-1.5 overflow-hidden rtl:space-x-reverse">
+        {items.slice(0, 6).map((p) => (
+          <span key={p._id} title={p.name} className="h-7 w-7 shrink-0 overflow-hidden rounded-md border border-[var(--bg-elevated)] bg-[var(--bg-muted)]">
+            {p.image ? <SafeImage src={p.image} alt="" className="h-full w-full object-cover" /> : null}
+          </span>
+        ))}
+      </span>
+    </span>
+  )
+}
+
+/** One product of the overview: its suggestions as customers get them, manual and automatic */
+function OverviewRow({ product, onPick, onRemove, set }: { product: SetupProductRef; onPick: (id: string) => void; onRemove: () => void; set: boolean }) {
+  const detail = useQuery({
+    queryKey: ['admin-setup', product._id],
+    queryFn: async () => (await adminApi.setup.get(product._id)).data.data,
+    staleTime: 60_000,
+  })
+  const d = detail.data
+  const manual = d && !d.off ? d.items.filter((r) => r.enabled).map((r) => r.product) : []
+  const autoAll = d && !d.off && (!d.items.length || d.fillWithAutomatic) ? d.automatic.items.map(toRef) : []
+  const auto = autoAll.filter((a) => !manual.some((m) => m._id === a._id))
+  return (
+    <li className="relative">
+      <button
+        type="button"
+        onClick={() => onPick(product._id)}
+        className="flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-[var(--border)] p-2 pe-10 text-start transition hover:border-[var(--brand)]"
+      >
+        <Thumb src={product.image} size="sm" />
+        <span className="min-w-0 flex-1 basis-40">
+          <span className="block truncate text-sm font-medium">{product.name}</span>
+          <span className="block truncate text-[11px] text-[var(--fg-muted)]">{product.category || '—'} · {formatCurrency(product.price)}</span>
+        </span>
+        <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          {detail.isLoading ? (
+            <Spinner size="sm" />
+          ) : d?.off ? (
+            <span className="text-[11px] font-medium text-[var(--fg-muted)]">Shows nothing</span>
+          ) : (
+            <>
+              <SuggestionStrip label="Your picks" tone="manual" items={manual} />
+              <SuggestionStrip label="Auto" tone="auto" items={auto} />
+              {!manual.length && !auto.length ? <span className="text-[11px] text-[var(--fg-muted)]">No suggestion</span> : null}
+            </>
+          )}
+        </span>
+      </button>
+      {set ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label={`Remove ${product.name} from Complete your setup`}
+          title="Back to automatic"
+          className="absolute end-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--danger)]"
+        >
+          <SiteIcon name="close" size={14} />
+        </button>
+      ) : null}
+    </li>
+  )
+}
+
 function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('')
@@ -164,6 +240,11 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
   })
   const [confirmRemove, setConfirmRemove] = useState<{ id: string; name: string } | null>(null)
   const remove = useRemoveSetup(() => setConfirmRemove(null))
+  const all = useQuery({
+    queryKey: ['admin-setup-all', category],
+    queryFn: async () => (await adminApi.products.list({ category: category || undefined, limit: 100, sort: 'name' })).data.data,
+  })
+  const setIds = new Set((configured.data ?? []).map((r) => r._id))
 
   return (
     <div className="space-y-3">
@@ -203,46 +284,28 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
         </ul>
       ) : null}
 
+      {/* Every product with its suggestions: manual (your picks) and automatic */}
       <div>
-        <p className="mb-1.5 text-xs font-medium text-[var(--fg-muted)]">Already set up</p>
-        {configured.isLoading ? (
+        <p className="mb-1.5 flex items-center justify-between text-xs font-medium text-[var(--fg-muted)]">
+          <span>All products and their suggestions</span>
+          <span className="tabular-nums">{all.data?.length ?? ''}</span>
+        </p>
+        {all.isLoading ? (
           <div className="flex justify-center py-4"><Spinner /></div>
-        ) : configured.data?.length ? (
-          <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {configured.data.map((row) => (
-              <li key={row._id} className="relative">
-                <button
-                  type="button"
-                  onClick={() => onPick(row._id)}
-                  className="flex w-full items-center gap-2.5 rounded-xl border border-[var(--border)] p-2 pe-10 text-start transition hover:border-[var(--brand)]"
-                >
-                  <Thumb src={row.image} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{row.name}</span>
-                    <span className="block truncate text-[11px] text-[var(--fg-muted)]">
-                      {row.off
-                        ? 'Shows nothing'
-                        : row.total
-                          ? `${row.enabled} product${row.enabled === 1 ? '' : 's'}${row.fillWithAutomatic ? ' + automatic' : ''}`
-                          : 'Automatic'}
-                      {row.hidden ? ` · ${row.hidden} hidden` : ''}
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmRemove({ id: row._id, name: row.name })}
-                  aria-label={`Remove ${row.name} from Complete your setup`}
-                  title="Remove from Complete your setup"
-                  className="absolute end-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--danger)]"
-                >
-                  <SiteIcon name="close" size={14} />
-                </button>
-              </li>
+        ) : all.data?.length ? (
+          <ul className="space-y-1.5">
+            {all.data.map((p) => (
+              <OverviewRow
+                key={p._id}
+                product={toRef(p)}
+                onPick={onPick}
+                set={setIds.has(p._id)}
+                onRemove={() => setConfirmRemove({ id: p._id, name: p.name })}
+              />
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-[var(--fg-muted)]">None yet</p>
+          <p className="text-xs text-[var(--fg-muted)]">No product.</p>
         )}
       </div>
       <ConfirmDialog

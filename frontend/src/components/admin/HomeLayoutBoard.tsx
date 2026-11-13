@@ -526,7 +526,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
   return (
     <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div role="tablist" aria-label="Shop pages" className="flex flex-wrap gap-1 rounded-lg bg-[var(--bg-muted)] p-1">
+        <div role="tablist" aria-label="Shop pages" className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -535,12 +535,15 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
               aria-selected={tab === x.id}
               onClick={() => pick(x.id)}
               className={cn(
-                'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-xs font-semibold transition',
-                tab === x.id ? 'bg-[var(--bg-elevated)] text-[var(--fg)] shadow-sm' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
+                // Real buttons: the open one filled in the brand colour
+                'inline-flex h-10 items-center justify-center gap-2 rounded-full border px-4 text-[13px] font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
+                tab === x.id
+                  ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
+                  : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
               )}
             >
-              <SiteIcon name={x.icon} size={13} />
-              {x.label}
+              <SiteIcon name={x.icon} size={15} />
+              <span className="truncate">{x.label}</span>
             </button>
           ))}
         </div>
