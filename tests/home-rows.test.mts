@@ -41,7 +41,7 @@ test('New arrivals uses bigger cards; budget section has cards with count and "f
 test('phone: budget tiles are 3 small tiles in one row; products slide by themselves like the other rows', async () => {
   const fs = await import('node:fs');
   const b = fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBudget.tsx'), 'utf8');
-  assert.ok(b.includes('className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3"'), 'three tiles side by side, no sideways scroll');
+  assert.ok(b.includes('className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3 lg:mt-0 lg:grid-cols-1 lg:gap-2"'), 'three tiles side by side on phones (no sideways scroll), stacked on computers');
   assert.ok(!b.includes('w-[15.5rem]'), 'no wide budget cards');
   assert.ok(b.includes("const isPhone = !useMediaQuery('(min-width: 640px)')"), 'phone detected');
   assert.ok(b.includes('<ProductCarousel key={own ?? active.id} products={items} />'), 'phones: the moving carousel');

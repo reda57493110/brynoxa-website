@@ -46,3 +46,18 @@ test('Shop by budget on computers: three per row, two full rows', () => {
   assert.ok(b.includes('const SHOWN = 6'));
   assert.ok(b.includes('<div className="grid grid-cols-2 gap-4 lg:grid-cols-3">'));
 });
+
+test('shop filters: only Brand and Price (the 4 buttons); plain headings', () => {
+  const f = src('components/product/FilterSidebar.tsx');
+  assert.ok(!f.includes("t('shop.inStockOnly')"), 'no In stock only switch');
+  assert.ok(!f.includes("t('shop.customRange')"), 'no custom range box');
+  assert.ok(f.includes("<h3 className={cn('font-semibold text-[var(--fg)]', compact ? 'text-[13px]' : 'text-sm')}>{title}</h3>"));
+  assert.ok(f.includes('PRICE_PRESETS.map') && f.includes("t('shop.brand')"));
+});
+
+test('Shop by budget on computers: choices in a left column, products on the right', () => {
+  const b = src('components/home/HomeBudget.tsx');
+  assert.ok(b.includes('lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]'));
+  assert.ok(b.includes('lg:mt-0 lg:grid-cols-1 lg:gap-2'), 'budget tiles stacked');
+  assert.ok(b.includes('<div className="lg:sticky lg:top-24">'), 'they stay in view');
+});

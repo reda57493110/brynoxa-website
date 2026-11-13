@@ -38,30 +38,18 @@ function displayBrand(name: string) {
 
 function FilterSection({
   title,
-  icon,
   compact,
   children,
 }: {
   title: string
-  icon: 'layers' | 'boxes' | 'tag' | 'package-check'
+  /** Not shown any more (plain headings) */
+  icon?: 'layers' | 'boxes' | 'tag' | 'package-check'
   compact: boolean
   children: ReactNode
 }) {
   return (
     <section className={compact ? 'space-y-2' : 'space-y-2.5'}>
-      <div className="flex items-center gap-2">
-        <span
-          className={cn(
-            'flex items-center justify-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)]',
-            compact ? 'h-6 w-6' : 'h-7 w-7'
-          )}
-        >
-          <SiteIcon name={icon} size={compact ? 12 : 14} />
-        </span>
-        <h3 className={cn('font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)]', compact ? 'text-[11px]' : 'text-xs')}>
-          {title}
-        </h3>
-      </div>
+      <h3 className={cn('font-semibold text-[var(--fg)]', compact ? 'text-[13px]' : 'text-sm')}>{title}</h3>
       {children}
     </section>
   )
@@ -156,55 +144,6 @@ export function FilterSidebar({
           {t('ui.clear')}
         </Button>
       </div>
-
-      <button
-        type="button"
-        onClick={() => onChange({ ...values, inStock: values.inStock ? undefined : true })}
-        className={cn(
-          'flex w-full items-start gap-2.5 rounded-2xl border text-left transition',
-          compact ? 'px-2.5 py-2' : 'px-3 py-3',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-          values.inStock
-            ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_14%,transparent)]'
-            : 'border-[var(--border)] hover:border-[var(--brand)]'
-        )}
-      >
-        <span
-          className={cn(
-            'mt-0.5 flex shrink-0 items-center justify-center rounded-xl',
-            compact ? 'h-7 w-7' : 'h-8 w-8',
-            values.inStock
-              ? 'bg-[var(--brand)] text-[var(--brand-fg)]'
-              : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]'
-          )}
-        >
-          <SiteIcon name="package-check" size={compact ? 13 : 15} />
-        </span>
-        <span className="min-w-0 flex-1 pe-1">
-          <span className={cn('block font-semibold leading-snug', compact ? 'text-[13px]' : 'text-sm')}>{t('shop.inStockOnly')}</span>
-          <span className={cn('block leading-snug text-[var(--fg-muted)]', compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-xs')}>
-            {values.inStock ? t('stock.inStock') : t('shop.any')}
-          </span>
-        </span>
-        <span
-          className={cn(
-            'relative mt-0.5 shrink-0 rounded-full transition',
-            compact ? 'h-5 w-9' : 'h-6 w-11',
-            values.inStock ? 'bg-[var(--brand)]' : 'bg-[var(--bg-muted)]'
-          )}
-          aria-hidden
-        >
-          <span
-            className={cn(
-              'absolute top-0.5 rounded-full bg-white shadow transition',
-              compact ? 'h-4 w-4' : 'h-5 w-5',
-              values.inStock ? (compact ? 'start-[1.15rem]' : 'start-[1.35rem]') : 'start-0.5'
-            )}
-          />
-        </span>
-      </button>
-
-      <div className="h-px bg-[var(--border)]" />
 
       {!hideCategories ? (
         <FilterSection compact={compact} title={t('shop.category')} icon="layers">
@@ -312,40 +251,6 @@ export function FilterSidebar({
           })}
         </div>
 
-        <div className={cn('rounded-2xl border border-[var(--border)] bg-[var(--bg)]/40', compact ? 'p-2.5' : 'p-3')}>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--fg-muted)]">
-            {t('shop.customRange')}
-          </p>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-            <label className="min-w-0 space-y-1 text-xs">
-              <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.min')}</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={values.minPrice || ''}
-                onChange={(e) => onChange({ ...values, minPrice: e.target.value || undefined })}
-                placeholder="0"
-                className={cn('w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand', compact ? 'h-9 text-[13px]' : 'h-11 text-base sm:text-sm')}
-              />
-            </label>
-            <span className={cn('text-sm leading-none text-[var(--fg-muted)]', compact ? 'mb-2' : 'mb-2.5')} aria-hidden>
-              –
-            </span>
-            <label className="min-w-0 space-y-1 text-xs">
-              <span className="block font-medium leading-4 text-[var(--fg-muted)]">{t('shop.max')}</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={values.maxPrice || ''}
-                onChange={(e) => onChange({ ...values, maxPrice: e.target.value || undefined })}
-                placeholder={t('shop.any')}
-                className={cn('w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 outline-none ring-brand', compact ? 'h-9 text-[13px]' : 'h-11 text-base sm:text-sm')}
-              />
-            </label>
-          </div>
-        </div>
       </FilterSection>
     </aside>
   )

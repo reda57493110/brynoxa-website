@@ -81,8 +81,11 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
             <p className="mt-2 hidden text-base leading-relaxed text-[var(--fg-muted)] sm:block">{t('home.budgetBody')}</p>
           </div>
 
+          {/* Computers: the budget choices in a column on the left, the products on the right */}
+          <div className="lg:mt-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+          <div className="lg:sticky lg:top-24">
           {/* Budget tiles: tap one to see its products */}
-          <div role="tablist" aria-label={t('home.budgetTitle')} className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3">
+          <div role="tablist" aria-label={t('home.budgetTitle')} className="mt-3 grid grid-cols-3 gap-1.5 sm:mt-6 sm:gap-3 lg:mt-0 lg:grid-cols-1 lg:gap-2">
             {tabs.map((b) => {
               const on = own === null && b.id === active.id
               const from = Math.min(...b.items.map((p) => p.price))
@@ -98,7 +101,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                     clearOwn()
                   }}
                   className={cn(
-                    'group relative flex min-w-0 flex-col items-start gap-2 overflow-hidden rounded-xl border p-2.5 text-start transition sm:gap-3 sm:rounded-2xl sm:p-4',
+                    'group relative flex min-w-0 flex-col items-start gap-2 overflow-hidden rounded-xl border p-2.5 text-start transition sm:gap-3 sm:rounded-2xl sm:p-4 lg:flex-row lg:items-center lg:p-3',
                     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
                     on
                       ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
@@ -115,7 +118,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="hidden text-[11px] font-semibold uppercase tracking-wider text-[var(--fg-muted)] sm:block">{t(BAND_NAME[b.id])}</span>
-                    <span className="block font-display text-[11px] font-semibold leading-tight sm:mt-0.5 sm:text-xl">
+                    <span className="block font-display text-[11px] font-semibold leading-tight sm:mt-0.5 sm:text-xl lg:text-base">
                       {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                     </span>
                     <span className="mt-0.5 block text-[10px] text-[var(--fg-muted)] sm:mt-1 sm:text-xs">
@@ -133,7 +136,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
           <form
             onSubmit={submitOwn}
             className={cn(
-              'mt-2 flex flex-col gap-2 rounded-xl border p-2.5 transition sm:mt-3 sm:flex-row sm:items-center sm:gap-4 sm:rounded-2xl sm:p-4',
+              'mt-2 flex flex-col gap-2 rounded-xl border p-2.5 transition sm:mt-3 sm:flex-row sm:items-center sm:gap-4 sm:rounded-2xl sm:p-4 lg:mt-2 lg:flex-col lg:items-stretch lg:gap-2.5 lg:p-3',
               own !== null
                 ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_12%,var(--bg))] shadow-glow'
                 : 'border-dashed border-[var(--border)] bg-[var(--bg)]'
@@ -181,9 +184,10 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
               ) : null}
             </div>
           </form>
+          </div>
 
-          {/* The chosen budget: up to 8 products */}
-          <div id="home-budget-panel" role="tabpanel" className="mt-4 sm:mt-6">
+          {/* The chosen budget: up to 6 products */}
+          <div id="home-budget-panel" role="tabpanel" className="mt-4 sm:mt-6 lg:mt-0">
             {own !== null ? (
               <p className="mb-2 text-[13px] font-semibold sm:mb-3 sm:text-sm">{t('home.budgetOwnLabel', { max: amount(own) })}</p>
             ) : null}
@@ -216,6 +220,7 @@ export function HomeBudget({ budgets, total }: { budgets: (Budget & { items: Pro
                 </Link>
               </div>
             ) : null}
+          </div>
           </div>
         </div>
       </Container>
