@@ -305,8 +305,24 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           onOpen={onOpen}
           empty="Empty: shows the next featured products."
         />
+        {rows.budgets.map((b) => (
+          <Section
+            key={b.id}
+            step={4}
+            icon="banknote"
+            title={`Budget · ${bandTitle(b)}`}
+            note={rows.budgetTotal < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'hidden'}
+            pinned={b.pinned}
+            canReset
+            products={b.items.slice(0, b.pinned ? 12 : 6)}
+            store={{ kind: 'homeRows', key: b.key }}
+            max={12}
+            onOpen={onOpen}
+            empty="No product at this price."
+          />
+        ))}
         <Section
-          step={4}
+          step={5}
           icon="tag"
           title="Deals"
           note={rowNote(rows.deals.length)}
@@ -319,7 +335,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           empty="No deals yet."
         />
         <Section
-          step={5}
+          step={6}
           icon="clock"
           title="New arrivals"
           note={rowNote(rows.newArrivals.length)}
@@ -331,22 +347,6 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           onOpen={onOpen}
           empty="Nothing new yet."
         />
-        {rows.budgets.map((b) => (
-          <Section
-            key={b.id}
-            step={6}
-            icon="banknote"
-            title={`Budget · ${bandTitle(b)}`}
-            note={rows.budgetTotal < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'hidden'}
-            pinned={b.pinned}
-            canReset
-            products={b.items.slice(0, b.pinned ? 12 : 8)}
-            store={{ kind: 'homeRows', key: b.key }}
-            max={12}
-            onOpen={onOpen}
-            empty="No product at this price."
-          />
-        ))}
       </div>
     </>
   )

@@ -24,7 +24,9 @@ test('budget bands: under 3,000 / 3,000–8,000 / over 8,000 DH; the closing ban
   assert.equal(band(8000), 'high');
   const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
   assert.ok(!home.includes('home-cta-heading') && !home.includes('CTA_STEPS'), 'closing banner removed');
-  assert.match(home, /<HomeBudget budgets=\{rows\.budgets\} total=\{rows\.budgetTotal\} \/>\n    <\/>\n  \)\n\}\s*$/, 'budget is the last section before the footer');
+  // Order: header, categories, top picks, budget, deals, new arrivals (then the footer)
+  const pos = ['{/* Categories:', '{/* Featured */}', '<HomeBudget budgets', 'id="deals"', 'id="new-arrivals"'].map((m) => home.indexOf(m));
+  assert.ok(pos.every((p, i) => p > 0 && (i === 0 || p > pos[i - 1])), 'home order: ' + pos.join(','));
 });
 
 test('New arrivals uses bigger cards; budget section has cards with count and "from" price', async () => {
@@ -99,4 +101,15 @@ test('phones: Shop by budget without its long sentence, small price ranges; a sh
   const footer = src('components/layout/Footer.tsx');
   for (const gone of ["'footer.warranty'", "'footer.returns'", "t('footer.warrantyBadge')", "t('footer.noCard')"]) assert.ok(!footer.includes(gone), gone);
   assert.ok(footer.includes("{ to: '/help', key: 'help.kicker' as const }"), 'Help stays (warranty and returns are there)');
+});
+
+test('phones: home categories are a compact 2×2 (small photo, name only); admin board follows the page order', async () => {
+  const fs = await import('node:fs');
+  const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
+  assert.ok(home.includes('<div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">'));
+  assert.ok(home.includes("featuredTile ? 'h-24 sm:h-auto sm:min-h-[10.5rem] sm:flex-1' : 'h-24 sm:h-48'"));
+  assert.ok(home.includes('mt-1.5 line-clamp-2 hidden max-w-sm'), 'descriptions from tablets up');
+  const board = fs.readFileSync(path.join(root, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
+  const order = ['title="Hero"', 'title="Featured (#1 = big card)"', 'title="Carousel"', 'title={`Budget · ', 'title="Deals"', 'title="New arrivals"'].map((m) => board.indexOf(m));
+  assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), 'board order: ' + order.join(','));
 });
