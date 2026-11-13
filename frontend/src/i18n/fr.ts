@@ -23,6 +23,7 @@ export const fr: Messages = {
     categoryDescription: '{name} aux meilleurs prix en DH, livrés partout au Maroc. Paiement à la livraison, garantie sur chaque produit et retour sous 14 jours.',
   },
   common: {
+    setups: 'Setups',
     shop: 'Boutique',
     services: 'Services',
     contact: 'Contact',
@@ -779,6 +780,8 @@ export const fr: Messages = {
     ],
   },
   setups: {
+    hintQuestion: 'Vous hésitez ?',
+    hintLink: 'Choisissez votre setup',
     metaTitle: 'Choisissez votre setup',
     kicker: 'Choisissez votre setup',
     title: 'Pour quoi allez-vous l’utiliser ?',

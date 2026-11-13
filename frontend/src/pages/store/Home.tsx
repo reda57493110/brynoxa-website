@@ -7,6 +7,7 @@ import { HomeSpotlightSkeleton } from '@/components/home/HomeSpotlight'
 import { HomeProductRow } from '@/components/home/HomeProductRow'
 import { HomeBudget } from '@/components/home/HomeBudget'
 import { HomeSignature } from '@/components/home/HomeSignature'
+import { HomeSetups } from '@/components/home/HomeSetups'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useHomeRows } from '@/hooks/useHomeRows'
 import { useQuery } from '@tanstack/react-query'
@@ -333,6 +334,9 @@ export function Home() {
           ) : null}
         </Container>
       </section>
+
+      {/* The four setups: another way to the Grab your setup page */}
+      <HomeSetups />
 
       {/* Featured */}
       <section

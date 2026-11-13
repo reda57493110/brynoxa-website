@@ -12,6 +12,7 @@ import { useWhatsAppStore } from '@/store/whatsappStore'
 
 const explore = [
   { to: '/shop', key: 'common.shop' as const },
+  { to: '/setups', key: 'common.setups' as const },
   { to: '/services', key: 'common.services' as const },
   { to: '/contact', key: 'common.contact' as const },
 ]

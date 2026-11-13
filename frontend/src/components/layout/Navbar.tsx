@@ -30,6 +30,7 @@ export function Navbar() {
   const t = useT()
   const links = [
     { to: '/shop', label: t('common.shop') },
+    { to: '/setups', label: t('common.setups') },
     { to: '/services', label: t('common.services') },
     { to: '/contact', label: t('common.contact') },
   ]

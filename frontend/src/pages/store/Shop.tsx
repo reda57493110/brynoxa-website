@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
@@ -466,6 +466,22 @@ export function Shop() {
               />
             ) : (
               <>
+                {/* Not sure what to pick? Setups show what goes together (gaming, study, work…) */}
+                {!filters.q && filters.page === 1 ? (
+                  <Link
+                    to="/setups"
+                    className="group mb-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[color-mix(in_srgb,var(--brand)_45%,var(--border))] bg-[color-mix(in_srgb,var(--brand)_6%,var(--bg-elevated))] px-3 py-2.5 text-[13px] transition hover:border-[var(--brand)] sm:mb-4 sm:px-4 sm:text-sm"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <SiteIcon name="monitor" size={16} className="shrink-0 text-[var(--brand-text)]" />
+                      <span className="truncate text-[var(--fg-muted)]">{t('setups.hintQuestion')}</span>
+                    </span>
+                    <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-[var(--brand-text)]">
+                      {t('setups.hintLink')}
+                      <SiteIcon name="arrow-right" size={14} className="transition group-hover:translate-x-0.5 rtl:rotate-180" />
+                    </span>
+                  </Link>
+                ) : null}
                 <ProductGrid
                   products={products.data?.items}
                   loading={productsLoading}

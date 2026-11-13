@@ -21,6 +21,7 @@ export const en = {
     categoryDescription: '{name} at the best prices in DH, delivered across Morocco. Pay cash at your door, warranty on every product and 14-day returns.',
   },
   common: {
+    setups: 'Setups',
     shop: 'Shop',
     services: 'Services',
     contact: 'Contact',
@@ -775,6 +776,8 @@ export const en = {
     ],
   },
   setups: {
+    hintQuestion: 'Not sure what to pick?',
+    hintLink: 'Choose your setup',
     metaTitle: 'Pick your setup',
     kicker: 'Pick your setup',
     title: 'What will you use it for?',

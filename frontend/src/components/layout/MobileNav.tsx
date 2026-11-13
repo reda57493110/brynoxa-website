@@ -21,6 +21,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   const links: { to: string; label: string; icon: SiteIconName; end?: boolean; count?: number }[] = [
     { to: '/', label: t('common.home'), icon: 'home', end: true },
     { to: '/shop', label: t('common.shop'), icon: 'search' },
+    { to: '/setups', label: t('common.setups'), icon: 'monitor' },
     { to: '/services', label: t('common.services'), icon: 'shield' },
     { to: '/contact', label: t('common.contact'), icon: 'mail' },
     { to: '/help', label: t('help.menuLabel'), icon: 'help' },

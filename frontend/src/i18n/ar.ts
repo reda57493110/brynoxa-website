@@ -23,6 +23,7 @@ export const ar: Messages = {
     categoryDescription: '{name} بأفضل الأثمنة بالدرهم، مع التوصيل لجميع مدن المغرب. الدفع عند الاستلام، ضمان على كل منتج وإرجاع خلال 14 يوماً.',
   },
   common: {
+    setups: 'التجهيزات',
     shop: 'المتجر',
     services: 'الخدمات',
     contact: 'اتصل بنا',
@@ -777,6 +778,8 @@ export const ar: Messages = {
     ],
   },
   setups: {
+    hintQuestion: 'محتار في الاختيار؟',
+    hintLink: 'اختر تجهيزك',
     metaTitle: 'اختر تجهيزك',
     kicker: 'اختر تجهيزك',
     title: 'لأي استعمال تحتاجه؟',
