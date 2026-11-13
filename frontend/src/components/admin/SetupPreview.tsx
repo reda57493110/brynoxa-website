@@ -90,7 +90,7 @@ export function SetupPreview({
         </div>
         {draft.productId ? (
           <Link
-            to={`/admin/setup?product=${draft.productId}`}
+            to={`/admin/products?board=setup&product=${draft.productId}`}
             className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] px-3 text-xs font-medium text-[var(--brand-text)] hover:border-[var(--brand)]"
           >
             <SiteIcon name="sliders" size={12} /> Order, on/off & more

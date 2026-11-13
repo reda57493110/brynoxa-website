@@ -31,7 +31,6 @@ const items: {
   { to: '/admin/customers', label: 'Customers', icon: 'users', group: 'Daily work' },
   { to: '/admin/products', label: 'Products', icon: 'package', group: 'Catalog' },
   { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock', group: 'Catalog' },
-  { to: '/admin/setup', label: 'Complete your setup', icon: 'layers', group: 'Catalog' },
   { to: '/admin/profit', label: 'Profit', icon: 'banknote', group: 'Money' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'sliders', group: 'Money' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'ticket', group: 'Marketing' },

@@ -260,7 +260,8 @@ function MainProductPicker({ onPick }: { onPick: (id: string) => void }) {
 
 /* ---------- Page ---------- */
 
-export function CompleteSetupAdmin() {
+/** `embedded`: shown as the "Complete your setup" tab of Admin → Products (no page title) */
+export function CompleteSetupAdmin({ embedded = false }: { embedded?: boolean } = {}) {
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
   const productId = params.get('product') || ''
@@ -374,10 +375,12 @@ export function CompleteSetupAdmin() {
 
   return (
     <div className={cn('min-w-0 space-y-3 sm:space-y-4', dirty && 'pb-20')}>
-      <AdminHeader
-        title="Complete your setup"
-        description="Pick the products shown with each product."
-      />
+      {embedded ? null : (
+        <AdminHeader
+          title="Complete your setup"
+          description="Pick the products shown with each product."
+        />
+      )}
 
       {/* A · Main product */}
       <SectionCard

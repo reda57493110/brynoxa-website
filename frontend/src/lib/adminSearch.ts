@@ -29,7 +29,7 @@ export const ADMIN_PAGES: AdminPageEntry[] = [
   { label: 'Returns', hint: 'Inventory → returned products to check', to: '/admin/inventory/returns', icon: 'refresh', words: 'returned items assess inspection retour retours' },
   { label: 'Repairs', hint: 'Inventory → products being repaired', to: '/admin/inventory/repairs', icon: 'wrench', words: 'repair fix technician broken reparation panne' },
   { label: 'Stock movements', hint: 'Inventory → every stock change', to: '/admin/inventory/movements', icon: 'sliders', words: 'history ledger log write off historique mouvements' },
-  { label: 'Complete your setup', hint: 'Accessories suggested with each product', to: '/admin/setup', icon: 'layers', words: 'recommendations accessories accessoires bundle upsell suggestions' },
+  { label: 'Complete your setup', hint: 'Accessories suggested with each product', to: '/admin/products?board=setup', icon: 'layers', words: 'recommendations accessories accessoires bundle upsell suggestions' },
   { label: 'Profit', hint: 'What the shop really earned', to: '/admin/profit', icon: 'banknote', words: 'money earnings margin benefit net benefice marge argent gains' },
   { label: 'Expenses', hint: 'Profit → ads, rent, packaging…', to: '/admin/profit?tab=expenses', icon: 'banknote', words: 'spending ads facebook rent salary costs depenses loyer pub' },
   { label: 'Product costs', hint: 'Profit → what each product cost you', to: '/admin/profit?tab=costs', icon: 'banknote', words: 'purchase price cost price buying prix achat cout' },

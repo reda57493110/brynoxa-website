@@ -86,9 +86,11 @@ const AdminProducts = lazy(() =>
 const AdminProductForm = lazy(() =>
   import('@/pages/admin/ProductForm').then((m) => ({ default: m.ProductForm }))
 )
-const AdminCompleteSetup = lazy(() =>
-  import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin }))
-)
+/** Old address of Complete your setup → its tab in Admin → Products (keeps ?product=) */
+function SetupRedirect() {
+  const product = new URLSearchParams(window.location.search).get('product')
+  return <Navigate to={`/admin/products?board=setup${product ? `&product=${product}` : ''}`} replace />
+}
 const AdminInventory = lazy(() =>
   import('@/pages/admin/Inventory').then((m) => ({ default: m.Inventory }))
 )
@@ -295,7 +297,8 @@ export function AppRouter() {
         <Route path="products" element={<S><AdminProducts /></S>} />
         <Route path="products/new" element={<S><AdminProductForm /></S>} />
         <Route path="products/:id/edit" element={<S><AdminProductForm /></S>} />
-        <Route path="setup" element={<S><AdminCompleteSetup /></S>} />
+        {/* Complete your setup is a tab of Admin → Products now */}
+        <Route path="setup" element={<SetupRedirect />} />
         <Route path="inventory" element={<S><AdminInventory /></S>} />
         <Route path="inventory/products/:id" element={<S><AdminInventoryProduct /></S>} />
         <Route path="inventory/receive" element={<S><AdminInventoryReceive /></S>} />

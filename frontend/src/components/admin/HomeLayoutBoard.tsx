@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { lazy, Suspense, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
@@ -15,6 +15,9 @@ import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hoo
 import { HOME_ROW_MIN } from '@/components/home/HomeProductRow'
 import { SIGNATURE_MIN } from '@/components/home/HomeSignature'
 import { ShopHeaderBoard } from '@/components/admin/ShopHeaderBoard'
+
+/** The "Complete your setup" editor (its own code, loaded when its tab is opened) */
+const CompleteSetupAdmin = lazy(() => import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin })))
 import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupListAfter, type SetupPiece } from '@/lib/setups'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
@@ -480,7 +483,8 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   )
 }
 
-type BoardTab = 'home' | 'setups' | 'shop'
+type BoardTab = 'home' | 'setups' | 'shop' | 'setup'
+const BOARD_TABS: BoardTab[] = ['home', 'setups', 'shop', 'setup']
 const TAB_KEY = 'brynoxa-admin-board-tab'
 
 /**
@@ -491,10 +495,14 @@ const TAB_KEY = 'brynoxa-admin-board-tab'
  * Automatic sections become "your choice" once changed.
  */
 export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Product) => void }) {
+  const [params] = useSearchParams()
   const [tab, setTab] = useState<BoardTab>(() => {
+    // A link asking for a tab (?board=setup) wins over the last one used
+    const asked = params.get('board') as BoardTab | null
+    if (asked && BOARD_TABS.includes(asked)) return asked
     try {
-      const saved = localStorage.getItem(TAB_KEY)
-      return saved === 'setups' || saved === 'shop' ? saved : 'home'
+      const saved = localStorage.getItem(TAB_KEY) as BoardTab | null
+      return saved && BOARD_TABS.includes(saved) ? saved : 'home'
     } catch {
       return 'home'
     }
@@ -511,6 +519,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
     { id: 'home', label: 'Home page', icon: 'home', href: '/' },
     { id: 'setups', label: 'Setups page', icon: 'layers', href: '/setups' },
     { id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' },
+    { id: 'setup', label: 'Complete your setup', icon: 'plus', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
 
@@ -535,11 +544,24 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
             </button>
           ))}
         </div>
-        <a href={current.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
-          View <SiteIcon name="external" size={11} />
-        </a>
+        {/* Complete your setup is per product: nothing single to view */}
+        {tab !== 'setup' ? (
+          <a href={current.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
+            View <SiteIcon name="external" size={11} />
+          </a>
+        ) : null}
       </div>
-      {tab === 'home' ? <HomeBoard onOpen={onOpen} /> : tab === 'setups' ? <SetupsBoard onOpen={onOpen} /> : <ShopHeaderBoard />}
+      {tab === 'home' ? (
+        <HomeBoard onOpen={onOpen} />
+      ) : tab === 'setups' ? (
+        <SetupsBoard onOpen={onOpen} />
+      ) : tab === 'shop' ? (
+        <ShopHeaderBoard />
+      ) : (
+        <Suspense fallback={<div className="flex justify-center py-6"><Spinner /></div>}>
+          <CompleteSetupAdmin embedded />
+        </Suspense>
+      )}
     </section>
   )
 }

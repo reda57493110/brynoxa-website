@@ -45,3 +45,17 @@ test('admin board: one section per line (Home page sections, setups and their gr
   assert.equal((board.match(/className="flex flex-col gap-2.5"/g) || []).length, 2, 'home sections and setup cards stacked');
   assert.ok(board.includes('mt-3 flex flex-col gap-3 divide-y'), 'groups of a setup stacked, with a line between');
 });
+
+test('Complete your setup is a tab of Admin → Products (not its own menu entry); old links still work', () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
+  const board = read('components/admin/HomeLayoutBoard.tsx');
+  assert.ok(board.includes("{ id: 'setup', label: 'Complete your setup', icon: 'plus', href: '/shop' },"));
+  assert.ok(board.includes('<CompleteSetupAdmin embedded />'));
+  assert.ok(board.includes("const asked = params.get('board') as BoardTab | null"), '?board=setup opens the tab');
+  assert.ok(!read('components/layout/AdminSidebar.tsx').includes("'/admin/setup'"), 'no sidebar entry');
+  assert.ok(read('lib/adminSearch.ts').includes("to: '/admin/products?board=setup'"), 'admin search');
+  assert.ok(read('components/admin/SetupPreview.tsx').includes('to={`/admin/products?board=setup&product=${draft.productId}`}'), 'product form link');
+  const router = read('app/router.tsx');
+  assert.ok(router.includes('<Route path="setup" element={<SetupRedirect />} />') && router.includes('/admin/products?board=setup'), 'old address forwards');
+  assert.ok(read('pages/admin/CompleteSetupAdmin.tsx').includes('{embedded ? null : ('), 'no second page title inside the tab');
+});
