@@ -40,6 +40,8 @@ const RULES: Rule[] = [
   { rx: /^admin\/(inventory|stock)/, action: 'Changed stock', kind: 'inventory' },
   { rx: /^admin\/(customers|wholesale)\/([^/]+)/, action: 'Updated a customer', kind: 'customer' },
   { rx: /^admin\/(customers|wholesale)/, action: 'Updated customers', kind: 'customer' },
+  { rx: /^admin\/ads\/([^/]+)\/spend/, action: crud('ad spending'), kind: 'money' },
+  { rx: /^admin\/ads/, action: crud('an ad campaign'), kind: 'marketing' },
   { rx: /^admin\/coupons/, action: crud('a coupon'), kind: 'marketing' },
   { rx: /^admin\/push/, action: 'Sent a push notification', kind: 'marketing' },
   { rx: /^admin\/emails/, action: 'Sent an email to a customer', kind: 'message' },

@@ -18,6 +18,8 @@ export type Permission =
   | 'reviews'
   | 'coupons'
   | 'push'
+  /** Ads & social media: campaigns, their spending and results */
+  | 'ads'
   | 'settings'
   /** Cost, profit and margin figures (owner/admin by default). */
   | 'reports'
@@ -29,7 +31,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   orders: ['orders:read', 'orders:write', 'customers:read'],
   catalog: ['products:read', 'products:write', 'products:delete', 'inventory:write'],
   support: ['orders:read', 'orders:write', 'messages', 'customers:read'],
-  marketing: ['coupons', 'reviews', 'push'],
+  marketing: ['coupons', 'reviews', 'push', 'ads'],
 };
 
 export function isStaffRole(role: string | undefined | null): role is StaffRole {

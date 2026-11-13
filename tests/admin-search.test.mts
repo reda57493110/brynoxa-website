@@ -63,3 +63,8 @@ test('one search in the top bar; each group only for staff who can open it', () 
   assert.match(search, /\.filter\(\(p\) => can\(p\.to\)\)/, 'pages too');
   assert.match(search, /\(e\.key === 'k' \|\| e\.key === 'K'\) && \(e\.ctrlKey \|\| e\.metaKey\)/);
 });
+
+test('Ads & social media is found by what people type', async () => {
+  const { matchPages } = await load('frontend/src/lib/adminSearch.ts');
+  for (const q of ['ads', 'facebook ads', 'publicite', 'campaign']) assert.equal(matchPages(q)[0]?.to, '/admin/ads', q);
+});

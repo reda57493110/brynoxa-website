@@ -390,6 +390,8 @@ export interface CreateOrderPayload {
   customerNote?: string
   email?: string
   password?: string
+  /** Tracking link the customer came through (Admin → Ads & social media) */
+  utm?: { source?: string; medium?: string; campaign?: string }
 }
 
 export interface CreateOrderResult {

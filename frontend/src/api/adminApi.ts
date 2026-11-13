@@ -1,4 +1,5 @@
 import api from './client'
+import type { AdCampaign, AdCampaignDetail, AdCampaignPayload, AdRange, AdsOverview } from '@/types/ads'
 import type {
   AnalyticsReport,
   ExpenseCategory,
@@ -304,6 +305,17 @@ export const adminApi = {
       api.post<ApiResponse<User>>(`/admin/users/${id}/verify-email`, { action }),
     setRole: (id: string, role: Exclude<User['role'], 'admin'>) =>
       api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }),
+  },
+
+  ads: {
+    overview: (days: AdRange) => api.get<ApiResponse<AdsOverview>>('/admin/ads', { params: { days } }),
+    get: (id: string) => api.get<ApiResponse<AdCampaignDetail>>(`/admin/ads/${id}`),
+    create: (payload: AdCampaignPayload) => api.post<ApiResponse<AdCampaign>>('/admin/ads', payload),
+    update: (id: string, payload: Partial<AdCampaignPayload>) => api.patch<ApiResponse<AdCampaign>>(`/admin/ads/${id}`, payload),
+    remove: (id: string) => api.delete<ApiResponse<null>>(`/admin/ads/${id}`),
+    addSpend: (id: string, payload: { amount: number; day: string; note?: string }) =>
+      api.post<ApiResponse<{ id: string }>>(`/admin/ads/${id}/spend`, payload),
+    removeSpend: (id: string, spendId: string) => api.delete<ApiResponse<null>>(`/admin/ads/${id}/spend/${spendId}`),
   },
 
   coupons: {

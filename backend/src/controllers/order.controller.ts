@@ -27,6 +27,7 @@ export const createOrder = asyncHandler(async (req: AuthRequest, res: Response) 
     shippingAddress,
     couponCode: req.body.couponCode,
     customerNote: req.body.customerNote,
+    utm: req.body.utm,
   });
 
   if (auth) {

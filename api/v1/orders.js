@@ -145,6 +145,7 @@ module.exports = async (req, res) => {
         shippingAddress,
         couponCode: body.couponCode,
         customerNote: body.customerNote,
+        utm: body.utm,
       });
 
       if (auth) {

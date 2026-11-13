@@ -12,6 +12,8 @@ export interface IExpense extends Document {
   date: Date;
   note?: string;
   by?: Types.ObjectId;
+  /** Money spent on an ad (Admin → Ads & social media) */
+  campaign?: Types.ObjectId;
 }
 
 const expenseSchema = new Schema<IExpense>(
@@ -22,8 +24,11 @@ const expenseSchema = new Schema<IExpense>(
     date: { type: Date, required: true, index: true },
     note: { type: String, trim: true, maxlength: 300 },
     by: { type: Schema.Types.ObjectId, ref: 'User' },
+    campaign: { type: Schema.Types.ObjectId, ref: 'AdCampaign' },
   },
   { timestamps: true }
 );
+
+expenseSchema.index({ campaign: 1, date: -1 }, { sparse: true });
 
 export const Expense = mongoose.model<IExpense>('Expense', expenseSchema);

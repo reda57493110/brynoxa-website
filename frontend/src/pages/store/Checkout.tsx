@@ -36,6 +36,7 @@ import type { Address, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
 import { HelpLink } from '@/components/help/HelpLink'
+import { readUtm } from '@/lib/adTracking'
 
 export function Checkout() {
   const t = useT()
@@ -234,6 +235,7 @@ export function Checkout() {
         customerNote: note || undefined,
         email: !isAuth && createAccount ? email.trim() : undefined,
         password: !isAuth && createAccount ? password : undefined,
+        utm: readUtm(),
       }),
     onSuccess: (res) => {
       const payload = res.data.data

@@ -25,6 +25,7 @@ import {
 } from './orderNotify.service';
 import { invalidateDashboardCache } from './admin.service';
 import { User } from '../models/User';
+import { cleanUtm } from '../utils/adTracking';
 import { ORDER_ORIGIN_LABEL, guestLabel, originFilter, type OrderOrigin } from '../utils/orderOrigin';
 import {
   DELIVERY_ISSUES,
@@ -305,6 +306,8 @@ export async function createCodOrder(input: {
   shippingAddress: IAddress;
   couponCode?: string;
   customerNote?: string;
+  /** utm values the shop remembered (Admin → Ads & social media) */
+  utm?: unknown;
 }) {
   // Wholesale prices only for approved accounts; the channel is fixed on the order from now on
   const terms = await getWholesaleTerms(input.userId);
@@ -380,6 +383,7 @@ export async function createCodOrder(input: {
         },
       ],
       customerNote: input.customerNote,
+      marketing: cleanUtm(input.utm),
       stockReserved: false,
     });
   }

@@ -33,6 +33,7 @@ const items: {
   { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock', group: 'Catalog' },
   { to: '/admin/profit', label: 'Profit', icon: 'banknote', group: 'Money' },
   { to: '/admin/analytics', label: 'Analytics', icon: 'sliders', group: 'Money' },
+  { to: '/admin/ads', label: 'Ads & social media', icon: 'megaphone', group: 'Marketing' },
   { to: '/admin/coupons', label: 'Coupons', icon: 'ticket', group: 'Marketing' },
   { to: '/admin/notifications', label: 'Notifications', icon: 'bell', group: 'Marketing' },
   { to: '/admin/emails', label: 'Emails', icon: 'mail', group: 'Marketing' },

@@ -130,6 +130,8 @@ export interface IOrder extends Document {
   origin: OrderOrigin;
   /** Staff member who entered it (orders not placed on the website). */
   createdBy?: Types.ObjectId;
+  /** Tracking link the customer came through (Admin → Ads & social media) */
+  marketing?: { source?: string; medium?: string; campaign?: string };
   wholesaleTier?: { id: string; name: string; discountPercent: number };
   refunds: IOrderRefund[];
   coupon?: {
@@ -275,6 +277,10 @@ const orderSchema = new Schema<IOrder>(
     channel: { type: String, enum: ['retail', 'wholesale'], default: 'retail' },
     origin: { type: String, enum: ORDER_ORIGINS, default: 'website' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    marketing: {
+      type: new Schema({ source: String, medium: String, campaign: String }, { _id: false }),
+      default: undefined,
+    },
     wholesaleTier: {
       type: new Schema({ id: String, name: String, discountPercent: Number }, { _id: false }),
       default: undefined,
@@ -360,6 +366,7 @@ orderSchema.index({ 'coupon.couponId': 1, 'coupon.phoneKey': 1 }, { sparse: true
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ origin: 1, createdAt: -1 });
+orderSchema.index({ 'marketing.campaign': 1, createdAt: -1 }, { sparse: true });
 // Staff activity (Admin → Roles): who made each step / call, and orders they added
 orderSchema.index({ 'timeline.by': 1, 'timeline.at': -1 });
 orderSchema.index({ 'contactAttempts.by': 1, 'contactAttempts.at': -1 });

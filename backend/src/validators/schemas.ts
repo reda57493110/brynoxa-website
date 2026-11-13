@@ -4,6 +4,7 @@ import { DELIVERY_ISSUES, ORDER_STATUSES } from '../utils/orderStatus';
 import { MANUAL_ORDER_ORIGINS } from '../utils/orderOrigin';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
+import { AD_KINDS, AD_PLATFORMS } from '../utils/adTracking';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
@@ -182,6 +183,14 @@ export const createOrderSchema = z.object({
   email: z.union([z.string().trim().email(), z.literal('')]).optional(),
   /** Optional: create / upgrade account at checkout */
   password: customerPassword.optional(),
+  /** Tracking link the customer came through (utm_source / utm_medium / utm_campaign) */
+  utm: z
+    .object({
+      source: z.string().max(100).optional(),
+      medium: z.string().max(100).optional(),
+      campaign: z.string().max(100).optional(),
+    })
+    .optional(),
 });
 
 const money = (max: number) => z.number().min(0).max(max);
@@ -803,4 +812,32 @@ export const depositMethodsSchema = z.object({
     )
     .max(8),
   depositInstructions: z.string().max(2000).optional(),
+});
+
+const dayString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');
+
+/** Admin → Ads & social media: a campaign (ad or free post). */
+export const adCampaignSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  platform: z.enum(AD_PLATFORMS),
+  kind: z.enum(AD_KINDS).optional(),
+  /** Page the tracking link opens: a path of this shop ("/", "/shop", "/products/…") */
+  landingPath: z
+    .string()
+    .trim()
+    .max(300)
+    .regex(/^\/(?!\/)[^\s]*$/, 'Start with / (a page of this shop)')
+    .optional(),
+  startDate: z.union([dayString, z.literal('')]).optional(),
+  endDate: z.union([dayString, z.literal('')]).optional(),
+  budget: z.number().min(0).max(10_000_000).optional(),
+  notes: z.string().trim().max(1000).optional(),
+  isActive: z.boolean().optional(),
+});
+
+/** Money spent on a campaign, one day. Saved as an "ads" expense, so it counts in Profit. */
+export const adSpendSchema = z.object({
+  amount: z.number().positive().max(10_000_000),
+  day: dayString,
+  note: z.string().trim().max(300).optional(),
 });
