@@ -61,6 +61,24 @@ export function InstagramIcon({ size = 22, className, ...props }: IconProps) {
   )
 }
 
+export function TikTokIcon({ size = 22, className, ...props }: IconProps) {
+  return (
+    <StrokeIcon size={size} className={className} {...props}>
+      <path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5" />
+      <path d="M14 3c.4 2.8 2.2 4.6 5 5" />
+    </StrokeIcon>
+  )
+}
+
+export function YouTubeIcon({ size = 22, className, ...props }: IconProps) {
+  return (
+    <StrokeIcon size={size} className={className} {...props}>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="4" />
+      <path d="M10.5 9.5v5l4-2.5z" fill="currentColor" />
+    </StrokeIcon>
+  )
+}
+
 export function SocialGlyph({
   id,
   size = 16,
@@ -71,5 +89,7 @@ export function SocialGlyph({
   if (id === 'whatsapp') return <WhatsAppIcon size={size} />
   if (id === 'facebook') return <FacebookIcon size={size} />
   if (id === 'instagram') return <InstagramIcon size={size} />
+  if (id === 'tiktok') return <TikTokIcon size={size} />
+  if (id === 'youtube') return <YouTubeIcon size={size} />
   return null
 }

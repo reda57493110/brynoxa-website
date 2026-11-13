@@ -43,6 +43,9 @@ export const ADMIN_PAGES: AdminPageEntry[] = [
   { label: 'General settings', hint: 'Settings → store name, storage', to: '/admin/settings?tab=general', icon: 'settings', words: 'store name support email storage database cloudinary stockage boutique nom' },
   { label: 'Payment options', hint: 'Orders → Deposits & payments → your payment details', to: '/admin/orders?view=deposits', icon: 'banknote', words: 'payment methods bank rib cash plus wafacash deposit instructions paiement' },
   { label: 'Home page & shop header', hint: 'Products → Home page, Setups, Shop header', to: '/admin/products?board=home', icon: 'monitor', words: 'home page deals hero banner shop header storefront accueil vitrine' },
+  { label: 'Contact & business', hint: 'Settings → WhatsApp, phone, social pages, legal details', to: '/admin/settings?tab=contact', icon: 'phone', words: 'contact whatsapp phone number telephone numero social pages links reseaux business name ice rc address legal adresse entreprise' },
+  { label: 'Delivery prices', hint: 'Settings → delivery price, free from, by city', to: '/admin/settings?tab=delivery', icon: 'truck', words: 'delivery fee shipping price free shipping city cities frais livraison gratuite ville' },
+  { label: 'Brands', hint: 'Settings → Catalog → brands and logos', to: '/admin/settings?tab=catalog', icon: 'tag', words: 'brands brand logo marque marques rename' },
   { label: 'Catalog settings', hint: 'Settings → categories and brands', to: '/admin/settings?tab=catalog', icon: 'layers', words: 'categories brands marques specs templates' },
   { label: 'Inventory settings', hint: 'Inventory → Settings: storage places, statuses, inspection', to: '/admin/inventory/settings', icon: 'warehouse', words: 'locations statuses inspection emplacements' },
   { label: 'Customers & pricing settings', hint: 'Settings → wholesale tiers, segments', to: '/admin/settings?tab=customers', icon: 'users', words: 'wholesale tiers business segments vip grossiste' },
@@ -64,6 +67,8 @@ export const ADMIN_PAGES: AdminPageEntry[] = [
   { label: 'Send a push notification', hint: 'Push notifications → new message', to: '/admin/notifications', icon: 'bell', words: 'send push notification campaign envoyer', action: true },
   { label: 'Change my password', hint: 'Security', to: '/admin/security', icon: 'shield', words: 'change password mot de passe changer', action: true },
   { label: 'Change home page deals', hint: 'Products → Home page → Deals', to: '/admin/products?board=home', icon: 'monitor', words: 'home page deals accueil offres change banner hero', action: true },
+  { label: 'Set the delivery fee', hint: 'Settings → Delivery', to: '/admin/settings?tab=delivery', icon: 'truck', words: 'delivery fee shipping price frais livraison set change', action: true },
+  { label: 'Change the WhatsApp number', hint: 'Settings → Contact & business', to: '/admin/settings?tab=contact', icon: 'phone', words: 'change whatsapp phone number numero changer', action: true },
   { label: 'Add a category', hint: 'Settings → Catalog', to: '/admin/settings?tab=catalog', icon: 'layers', words: 'add category categorie brand marque ajouter', action: true },
 ]
 

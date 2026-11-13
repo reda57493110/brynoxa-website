@@ -18,7 +18,7 @@ test('public brand list only has brands used by visible products', async () => {
   };
   Brand.find = (filter) => {
     brandFilter = filter;
-    return { sort: async () => [] };
+    return { sort: () => ({ lean: async () => [] }) };
   };
   await catalog.listBrands(true);
   assert.equal(productFilter.isActive, true, 'hidden products do not count');
@@ -32,8 +32,9 @@ test('staff list has every brand (to pick one for a new product)', async () => {
   };
   Brand.find = (filter) => {
     brandFilter = filter;
-    return { sort: async () => [] };
+    return { sort: () => ({ lean: async () => [] }) };
   };
+  Product.aggregate = async () => [];
   await catalog.listBrands(false);
   assert.deepEqual(brandFilter, {});
 });

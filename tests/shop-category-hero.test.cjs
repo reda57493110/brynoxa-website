@@ -21,7 +21,7 @@ test('server: a product id or "none" per category address; "" = automatic; other
   const { STOREFRONT_SETTINGS } = require(dist('middleware/auth.js'));
   assert.ok(STOREFRONT_SETTINGS.includes('categoryHeroes'), 'catalog staff can choose them');
   const fn = fs.readFileSync(api('v1/settings.js'), 'utf8');
-  assert.ok(fn.includes("  'categoryHeroes',\n];"), 'the live-site function accepts it');
+  assert.ok(fn.includes("  'categoryHeroes',\n"), 'the live-site function accepts it');
   assert.ok(fn.includes('settings[key] = sanitizeCategoryHeroes(body[key], settings.categoryHeroes);'));
   assert.ok(fs.readFileSync(path.join(ROOT, 'backend/src/controllers/misc.controller.ts'), 'utf8').includes('body.categoryHeroes = sanitizeCategoryHeroes(body.categoryHeroes, settings.categoryHeroes);'));
 });

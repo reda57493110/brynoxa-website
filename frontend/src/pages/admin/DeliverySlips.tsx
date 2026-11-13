@@ -10,6 +10,7 @@ import { formatCurrency } from '@/lib/format'
 import { feesCovered, toCollect } from '@/lib/deposit'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
+import { useSiteContactSync } from '@/hooks/useSiteContactSync'
 
 type Lang = 'fr' | 'ar' | 'en'
 
@@ -258,6 +259,7 @@ function Sheet({ order, lang }: { order: Order; lang: Lang }) {
  * Opened from Orders (bulk) or an order's page; prints automatically once loaded.
  */
 export function DeliverySlips() {
+  useSiteContactSync()
   const [params] = useSearchParams()
   const ids = (params.get('ids') || '').split(',').filter((id) => /^[a-f0-9]{24}$/i.test(id)).slice(0, 50)
   const [lang, setLang] = useState<Lang>(() => {

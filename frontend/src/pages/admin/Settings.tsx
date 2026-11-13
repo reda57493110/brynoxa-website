@@ -10,17 +10,22 @@ import { EmailNotificationsSettings } from '@/components/admin/EmailNotification
 import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
 import { CategoriesSettings } from '@/components/admin/settings/CategoriesSettings'
+import { BrandsSettings } from '@/components/admin/settings/BrandsSettings'
+import { ContactSettings } from '@/components/admin/settings/ContactSettings'
+import { DeliverySettings } from '@/components/admin/settings/DeliverySettings'
 import { GeneralSettings } from '@/components/admin/settings/StoreSettings'
 import { StorageCard } from '@/components/admin/settings/StorageCard'
 import { DirtyContext } from '@/components/admin/settings/dirty'
 import { cn } from '@/lib/cn'
 import type { StoreSettings } from '@/types'
 
-type SectionId = 'general' | 'catalog' | 'customers' | 'notifications'
+type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'notifications'
 
 const SECTIONS: { id: SectionId; label: string; icon: SiteIconName; description: string }[] = [
   { id: 'general', label: 'General', icon: 'settings', description: 'Store identity and storage' },
-  { id: 'catalog', label: 'Catalog', icon: 'layers', description: 'Categories and spec types' },
+  { id: 'contact', label: 'Contact & business', icon: 'phone', description: 'Numbers, social pages and legal details shown in the shop' },
+  { id: 'delivery', label: 'Delivery', icon: 'truck', description: 'What customers pay for delivery' },
+  { id: 'catalog', label: 'Catalog', icon: 'layers', description: 'Categories, spec types and brands' },
   { id: 'customers', label: 'Customers & pricing', icon: 'users', description: 'Wholesale tiers and segments' },
   { id: 'notifications', label: 'Notifications', icon: 'mail', description: 'Automatic emails' },
 ]
@@ -42,8 +47,17 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
           <StorageCard />
         </div>
       )
+    case 'contact':
+      return <ContactSettings settings={settings} />
+    case 'delivery':
+      return <DeliverySettings settings={settings} />
     case 'catalog':
-      return <CategoriesSettings />
+      return (
+        <div className="space-y-4">
+          <CategoriesSettings />
+          <BrandsSettings />
+        </div>
+      )
     case 'customers':
       return (
         <>

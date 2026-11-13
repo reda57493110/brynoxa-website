@@ -20,6 +20,7 @@ import {
   sanitizeSegmentSettings,
   sanitizeInventoryStatuses,
   sanitizeLocations,
+  sanitizeSiteContact,
   publicSettings,
   Settings,
 } from '../models/Settings';
@@ -264,6 +265,9 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.emailMessages !== undefined) {
     body.emailMessages = sanitizeEmailMessages(body.emailMessages, settings.emailMessages);
+  }
+  if (body.siteContact !== undefined) {
+    body.siteContact = sanitizeSiteContact(body.siteContact, settings.siteContact);
   }
   Object.assign(settings, body);
   await settings.save();

@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import type { WholesaleTier } from '../utils/wholesale';
 import { isEmailConfigured } from '../config/env';
+import type { SiteContact } from '../utils/siteContact';
+export { sanitizeSiteContact } from '../utils/siteContact';
 
 export interface IShippingCityRate {
   city: string;
@@ -90,6 +92,8 @@ export interface ISettings extends Document {
   shippingByCity: IShippingCityRate[];
   taxRate: number;
   supportEmail: string;
+  /** Settings → Contact & business: numbers, social pages, legal details (public) */
+  siteContact: SiteContact;
   codEnabled: boolean;
   /** Shown to customers whose order needs a deposit: how to pay it (bank RIB, transfer agency…). */
   depositInstructions: string;
@@ -142,6 +146,24 @@ const settingsSchema = new Schema<ISettings>(
     },
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: () => DEFAULT_SUPPORT_EMAIL },
+    siteContact: {
+      type: new Schema(
+        {
+          whatsapp: { type: String, default: '' },
+          phone: { type: String, default: '' },
+          facebook: { type: String, default: '' },
+          instagram: { type: String, default: '' },
+          tiktok: { type: String, default: '' },
+          youtube: { type: String, default: '' },
+          businessName: { type: String, default: '' },
+          address: { type: String, default: '' },
+          ice: { type: String, default: '' },
+          rc: { type: String, default: '' },
+        },
+        { _id: false }
+      ),
+      default: () => ({}),
+    },
     codEnabled: { type: Boolean, default: true },
     depositInstructions: { type: String, default: '', maxlength: 2000 },
     paymentDetailsChangedAt: { type: Date },

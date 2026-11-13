@@ -104,6 +104,8 @@ export interface Brand {
   slug: string
   logo?: string
   isActive: boolean
+  /** Staff list only: products using this brand */
+  productCount?: number
   createdAt?: string
   updatedAt?: string
 }
@@ -449,6 +451,8 @@ export interface StoreSettings {
   shippingByCity?: { city: string; rate: number }[]
   taxRate: number
   supportEmail: string
+  /** Settings → Contact & business ('' = built-in number / not shown) */
+  siteContact?: import('@/lib/siteContact').SiteContact
   /** Public settings only: false when the shop cannot send emails (no Resend key) */
   emailEnabled?: boolean
   codEnabled: boolean

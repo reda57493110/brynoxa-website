@@ -6,10 +6,12 @@ import { AdminTopbar } from '@/components/layout/AdminTopbar'
 import { Drawer } from '@/components/ui/Drawer'
 import { hasPermission, requiredPermissionForPath, staffHomePath } from '@/lib/permissions'
 import { useAuthStore } from '@/store/authStore'
+import { useSiteContactSync } from '@/hooks/useSiteContactSync'
 
 const adminScrollPositions = new Map<string, number>()
 
 export function AdminLayout() {
+  useSiteContactSync()
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const navigationType = useNavigationType()

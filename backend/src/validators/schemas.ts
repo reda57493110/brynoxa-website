@@ -5,6 +5,7 @@ import { MANUAL_ORDER_ORIGINS } from '../utils/orderOrigin';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { AD_KINDS, AD_PLATFORMS } from '../utils/adTracking';
+import { siteContactIssue } from '../utils/siteContact';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
@@ -328,13 +329,33 @@ export const settingsSchema = z.object({
     .array(
       z.object({
         city: z.string().trim().min(2).max(80),
-        rate: z.number().min(0),
+        rate: z.number().min(0).max(100_000),
       })
     )
     .max(200)
     .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
+  /** Settings → Contact & business ('' = built-in number / not shown) */
+  siteContact: z
+    .object({
+      whatsapp: z.string().max(40),
+      phone: z.string().max(40),
+      facebook: z.string().max(300),
+      instagram: z.string().max(300),
+      tiktok: z.string().max(300),
+      youtube: z.string().max(300),
+      businessName: z.string().max(120),
+      address: z.string().max(300),
+      ice: z.string().max(30),
+      rc: z.string().max(60),
+    })
+    .partial()
+    .superRefine((v, ctx) => {
+      const issue = siteContactIssue(v);
+      if (issue) ctx.addIssue({ code: 'custom', message: issue });
+    })
+    .optional(),
   depositInstructions: z.string().max(2000).optional(),
   depositMethods: z
     .array(

@@ -321,8 +321,16 @@ export async function deleteCategory(id: string, { canDeleteProducts = false } =
  * Public list: active brands that at least one visible product uses (the shop filter only offers
  * brands the owner actually sells). Staff (`activeOnly = false`) get every brand, to pick from.
  */
-export async function listBrands(activeOnly = true) {
-  if (!activeOnly) return Brand.find({}).sort({ name: 1 });
+export async function listBrands(activeOnly = true): Promise<unknown[]> {
+  if (!activeOnly) {
+    // Staff (Settings → Catalog → Brands, product form): every brand, with how many products use it
+    const [brands, counts] = await Promise.all([
+      Brand.find({}).sort({ name: 1 }).lean(),
+      Product.aggregate<{ _id: unknown; n: number }>([{ $match: { brand: { $ne: null } } }, { $group: { _id: '$brand', n: { $sum: 1 } } }]),
+    ]);
+    const countOf = new Map(counts.map((c) => [String(c._id), c.n]));
+    return brands.map((b) => ({ ...b, productCount: countOf.get(String(b._id)) ?? 0 }));
+  }
   const used = await Product.distinct('brand', { isActive: true, brand: { $ne: null } });
   return Brand.find({ isActive: true, _id: { $in: used } }).sort({ name: 1 });
 }

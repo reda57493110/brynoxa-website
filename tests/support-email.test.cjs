@@ -37,7 +37,8 @@ test("an email the owner chose is kept as it is", async () => {
 test('new shops start with the real inbox; customers see it; the owner can edit it', () => {
   assert.equal(new S.Settings({}).supportEmail, 'brynoxa.shop@gmail.com');
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
-  assert.match(src('lib/site.ts'), /value: 'brynoxa\.shop@gmail\.com'/);
+  // built-in until a support email is saved (Settings → General), which then shows everywhere
+  assert.match(src('lib/site.ts'), /email: 'brynoxa\.shop@gmail\.com'/);
   assert.match(src('components/admin/settings/StoreSettings.tsx'), /label="Support email"/);
   assert.match(src('components/admin/settings/StoreSettings.tsx'), /supportEmail: supportEmail\.trim\(\)/);
 });

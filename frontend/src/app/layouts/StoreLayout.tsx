@@ -9,6 +9,7 @@ import { PushPrompt } from '@/components/push/PushPrompt'
 import { CartNotice } from '@/components/cart/CartNotice'
 import { HelpWidget } from '@/components/help/HelpWidget'
 import { useT } from '@/hooks/useT'
+import { useSiteContactSync } from '@/hooks/useSiteContactSync'
 
 const scrollPositions = new Map<string, number>()
 
@@ -21,6 +22,7 @@ function jumpTo(y: number) {
 }
 
 export function StoreLayout() {
+  useSiteContactSync()
   const location = useLocation()
   const navigationType = useNavigationType()
   const reduceMotion = useReducedMotion()

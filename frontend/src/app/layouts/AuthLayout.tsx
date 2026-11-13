@@ -2,11 +2,13 @@ import { useMemo, useState } from 'react'
 import { Link, Outlet } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useT } from '@/hooks/useT'
+import { useSiteContactSync } from '@/hooks/useSiteContactSync'
 
 /** Pages can hide the shop slogan under the card (e.g. the 2-step security check). */
 export type AuthLayoutContext = { setHideHint: (hide: boolean) => void }
 
 export function AuthLayout() {
+  useSiteContactSync()
   const t = useT()
   const [hideHint, setHideHint] = useState(false)
   // Stable, so pages can depend on it without redrawing in a loop
