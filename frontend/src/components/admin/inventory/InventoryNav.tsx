@@ -1,5 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/cn'
+import { canOpenAdminPath } from '@/lib/permissions'
+import { useAuthStore } from '@/store/authStore'
 
 const TABS = [
   { to: '/admin/inventory', label: 'Overview', end: true },
@@ -7,16 +9,20 @@ const TABS = [
   { to: '/admin/inventory/returns', label: 'Returns' },
   { to: '/admin/inventory/repairs', label: 'Repairs' },
   { to: '/admin/inventory/movements', label: 'Stock log' },
+  // Inspection, storage places, statuses (owner / staff allowed to change settings)
+  { to: '/admin/inventory/settings', label: 'Settings' },
 ]
 
 /** Tabs shared by all inventory pages. */
 export function InventoryNav() {
+  const role = useAuthStore((st) => st.user?.role)
+  const tabs = TABS.filter((tab) => canOpenAdminPath(role, tab.to))
   return (
     <nav
       aria-label="Inventory sections"
       className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden"
     >
-      {TABS.map((tab) => (
+      {tabs.map((tab) => (
         <NavLink
           key={tab.to}
           to={tab.to}

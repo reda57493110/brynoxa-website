@@ -15,7 +15,7 @@ test('pages and settings are found by the words people type', async () => {
   const { matchPages, ADMIN_PAGES } = await load('frontend/src/lib/adminSearch.ts');
   const first = (q: string) => matchPages(q)[0]?.to;
   assert.equal(first('profit'), '/admin/profit');
-  assert.equal(first('delivery fee'), '/admin/settings?tab=orders');
+  assert.equal(first('payment methods'), '/admin/orders?view=deposits');
   assert.equal(first('wafacash'), '/admin/orders?view=deposits');
   assert.equal(first('retour'), '/admin/inventory/returns');
   assert.equal(first('instagram'), '/admin/orders/new');

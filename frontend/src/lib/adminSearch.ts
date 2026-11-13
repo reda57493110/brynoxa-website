@@ -41,10 +41,10 @@ export const ADMIN_PAGES: AdminPageEntry[] = [
   { label: 'Emails', hint: 'Emails sent and sending one', to: '/admin/emails', icon: 'mail', words: 'send email mail customers courriel' },
   { label: 'Settings', hint: 'Store settings', to: '/admin/settings', icon: 'settings', words: 'options configuration parametres reglages' },
   { label: 'General settings', hint: 'Settings → store name, storage', to: '/admin/settings?tab=general', icon: 'settings', words: 'store name support email storage database cloudinary stockage boutique nom' },
-  { label: 'Orders & payments settings', hint: 'Settings → cash on delivery, deposits, payment options', to: '/admin/settings?tab=orders', icon: 'banknote', words: 'payment methods bank rib cash plus wafacash deposit shipping delivery fee free shipping tax frais livraison paiement' },
-  { label: 'Storefront settings', hint: 'Settings → what customers see first', to: '/admin/settings?tab=storefront', icon: 'monitor', words: 'home page deals hero banner shop header accueil vitrine' },
+  { label: 'Payment options', hint: 'Orders → Deposits & payments → your payment details', to: '/admin/orders?view=deposits', icon: 'banknote', words: 'payment methods bank rib cash plus wafacash deposit instructions paiement' },
+  { label: 'Home page & shop header', hint: 'Products → Home page, Setups, Shop header', to: '/admin/products?board=home', icon: 'monitor', words: 'home page deals hero banner shop header storefront accueil vitrine' },
   { label: 'Catalog settings', hint: 'Settings → categories and brands', to: '/admin/settings?tab=catalog', icon: 'layers', words: 'categories brands marques specs templates' },
-  { label: 'Inventory settings', hint: 'Settings → storage places, receiving', to: '/admin/settings?tab=inventory', icon: 'warehouse', words: 'locations statuses inspection emplacements' },
+  { label: 'Inventory settings', hint: 'Inventory → Settings: storage places, statuses, inspection', to: '/admin/inventory/settings', icon: 'warehouse', words: 'locations statuses inspection emplacements' },
   { label: 'Customers & pricing settings', hint: 'Settings → wholesale tiers, segments', to: '/admin/settings?tab=customers', icon: 'users', words: 'wholesale tiers business segments vip grossiste' },
   { label: 'Automatic emails', hint: 'Settings → notifications', to: '/admin/settings?tab=notifications', icon: 'mail', words: 'email notifications messages templates resend' },
   { label: 'Roles', hint: 'Staff and what they can do', to: '/admin/roles', icon: 'shield', words: 'staff team employees permissions users access activity equipe employes' },
@@ -63,9 +63,8 @@ export const ADMIN_PAGES: AdminPageEntry[] = [
   { label: 'Add a staff member', hint: 'Roles → add staff', to: '/admin/roles', icon: 'users', words: 'add staff employee user team ajouter employe membre', action: true },
   { label: 'Send a push notification', hint: 'Push notifications → new message', to: '/admin/notifications', icon: 'bell', words: 'send push notification campaign envoyer', action: true },
   { label: 'Change my password', hint: 'Security', to: '/admin/security', icon: 'shield', words: 'change password mot de passe changer', action: true },
-  { label: 'Change home page deals', hint: 'Settings → Storefront', to: '/admin/settings?tab=storefront', icon: 'monitor', words: 'home page deals accueil offres change banner hero', action: true },
+  { label: 'Change home page deals', hint: 'Products → Home page → Deals', to: '/admin/products?board=home', icon: 'monitor', words: 'home page deals accueil offres change banner hero', action: true },
   { label: 'Add a category', hint: 'Settings → Catalog', to: '/admin/settings?tab=catalog', icon: 'layers', words: 'add category categorie brand marque ajouter', action: true },
-  { label: 'Set the delivery fee', hint: 'Settings → Orders & payments', to: '/admin/settings?tab=orders', icon: 'truck', words: 'delivery fee shipping price frais livraison set change', action: true },
 ]
 
 /** Words that only say what to do or are filler: not looked up in orders, customers, products. */

@@ -1154,8 +1154,8 @@ export function ProductForm() {
               {canOpenSettings ? (
                 <>
                   {' '}Storage locations are managed in{' '}
-                  <Link to="/admin/settings?tab=inventory" className="text-[var(--brand-text)] hover:underline">
-                    Settings
+                  <Link to="/admin/inventory/settings" className="text-[var(--brand-text)] hover:underline">
+                    Inventory → Settings
                   </Link>
                   .
                 </>
@@ -1280,8 +1280,8 @@ export function ProductForm() {
                 {canOpenSettings ? (
                   <>
                     {' '}You can also change it in{' '}
-                    <Link to="/admin/settings?tab=storefront" className="text-[var(--brand-text)] hover:underline">
-                      Settings
+                    <Link to="/admin/products?board=shop" className="text-[var(--brand-text)] hover:underline">
+                      Products → Shop header
                     </Link>
                     .
                   </>

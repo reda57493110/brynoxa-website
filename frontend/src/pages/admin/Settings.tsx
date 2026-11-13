@@ -1,36 +1,37 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
 import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
-import { HomeDealsSettings } from '@/components/admin/HomeDealsSettings'
 import { EmailNotificationsSettings } from '@/components/admin/EmailNotificationsSettings'
 import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSettings'
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
-import { InventorySettings } from '@/components/admin/InventorySettings'
 import { CategoriesSettings } from '@/components/admin/settings/CategoriesSettings'
 import { GeneralSettings } from '@/components/admin/settings/StoreSettings'
 import { StorageCard } from '@/components/admin/settings/StorageCard'
-import { SettingsCard } from '@/components/admin/settings/SettingsUi'
 import { DirtyContext } from '@/components/admin/settings/dirty'
 import { cn } from '@/lib/cn'
 import type { StoreSettings } from '@/types'
 
-type SectionId = 'general' | 'orders' | 'storefront' | 'catalog' | 'inventory' | 'customers' | 'notifications' | 'security'
+type SectionId = 'general' | 'catalog' | 'customers' | 'notifications'
 
 const SECTIONS: { id: SectionId; label: string; icon: SiteIconName; description: string }[] = [
   { id: 'general', label: 'General', icon: 'settings', description: 'Store identity and storage' },
-  { id: 'orders', label: 'Orders & payments', icon: 'banknote', description: 'Cash on delivery and deposits' },
-  { id: 'storefront', label: 'Storefront', icon: 'monitor', description: 'What customers see first' },
   { id: 'catalog', label: 'Catalog', icon: 'layers', description: 'Categories and spec types' },
-  { id: 'inventory', label: 'Inventory', icon: 'warehouse', description: 'Receiving and storage' },
   { id: 'customers', label: 'Customers & pricing', icon: 'users', description: 'Wholesale tiers and segments' },
   { id: 'notifications', label: 'Notifications', icon: 'mail', description: 'Automatic emails' },
-  { id: 'security', label: 'Security', icon: 'shield', description: 'Your account protection' },
 ]
+
+/** Old Settings tabs that only repeated another page: their links open that page now */
+const MOVED_SETTINGS_TABS: Record<string, string> = {
+  orders: '/admin/orders?view=deposits',
+  storefront: '/admin/products?board=home',
+  inventory: '/admin/inventory/settings',
+  security: '/admin/security',
+}
 
 function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings }): ReactNode {
   switch (id) {
@@ -41,43 +42,8 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
           <StorageCard />
         </div>
       )
-    case 'orders':
-      return (
-        <SettingsCard
-          title="Deposits & payment options"
-          description="Your bank / Cash Plus / Wafacash details, deposit requests and payments are managed in Orders."
-        >
-          <Link
-            to="/admin/orders?view=deposits"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] hover:brightness-110"
-          >
-            <SiteIcon name="banknote" size={14} /> Open Orders → Deposits & payments
-          </Link>
-        </SettingsCard>
-      )
-    case 'storefront':
-      return (
-        <>
-        <SettingsCard
-          title="Home page deals"
-          description="Up to 4 products shown at the top of the home page, in this order. Saved immediately."
-        >
-          <HomeDealsSettings value={settings?.homeDeals} />
-        </SettingsCard>
-        <SettingsCard
-          title="Shop page header"
-          description="The top of the Shop page changes with the category the customer picks; “All” shows one product of each category in turn."
-        >
-          <Link to="/admin/products" className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
-            Choose them in Products → Shop page header
-          </Link>
-        </SettingsCard>
-        </>
-      )
     case 'catalog':
       return <CategoriesSettings />
-    case 'inventory':
-      return <InventorySettings settings={settings} />
     case 'customers':
       return (
         <>
@@ -87,24 +53,13 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
       )
     case 'notifications':
       return <EmailNotificationsSettings settings={settings} />
-    case 'security':
-      return (
-        <SettingsCard title="Account security" description="Password and two-step sign-in.">
-          <Link
-            to="/admin/security"
-            className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
-          >
-            <SiteIcon name="shield" size={14} /> Open security settings
-          </Link>
-          <p className="text-xs text-[var(--fg-muted)]">Staff roles and permissions are managed in Roles.</p>
-        </SettingsCard>
-      )
   }
 }
 
 export function Settings() {
   const [params, setParams] = useSearchParams()
   const requested = params.get('tab') as SectionId | null
+  const moved = requested ? MOVED_SETTINGS_TABS[requested] : undefined
   const active: SectionId = SECTIONS.some((s) => s.id === requested) ? requested! : 'general'
   const current = SECTIONS.find((s) => s.id === active)!
 
@@ -142,6 +97,8 @@ export function Settings() {
     if (dirtyCount > 0) setPendingTab(id)
     else go(id)
   }
+
+  if (moved) return <Navigate to={moved} replace />
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">

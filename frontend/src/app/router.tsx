@@ -112,6 +112,9 @@ const AdminInventoryRepairs = lazy(() =>
 const AdminInventoryRepair = lazy(() =>
   import('@/pages/admin/InventoryRepair').then((m) => ({ default: m.InventoryRepair }))
 )
+const AdminInventorySettings = lazy(() =>
+  import('@/pages/admin/InventorySettingsPage').then((m) => ({ default: m.InventorySettingsPage }))
+)
 const AdminInventoryMovements = lazy(() =>
   import('@/pages/admin/InventoryMovements').then((m) => ({ default: m.InventoryMovements }))
 )
@@ -308,6 +311,7 @@ export function AppRouter() {
         <Route path="inventory/repairs" element={<S><AdminInventoryRepairs /></S>} />
         <Route path="inventory/repairs/:id" element={<S><AdminInventoryRepair /></S>} />
         <Route path="inventory/movements" element={<S><AdminInventoryMovements /></S>} />
+        <Route path="inventory/settings" element={<S><AdminInventorySettings /></S>} />
         <Route path="orders" element={<S><AdminOrders /></S>} />
         <Route path="orders/new" element={<S><AdminNewOrder /></S>} />
         <Route path="orders/:id" element={<S><AdminOrderDetail /></S>} />
