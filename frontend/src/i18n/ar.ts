@@ -57,6 +57,14 @@ export const ar: Messages = {
     social: 'التواصل',
     socialOpens: '{name} — يفتح في تبويب جديد',
   },
+  consent: {
+    title: 'ملفات الارتباط',
+    body: 'نستخدم ملفات الارتباط لقياس الزيارات ومعرفة الإعلانات التي تجلب الطلبات (Google وMeta وTikTok). فقط إذا وافقت.',
+    accept: 'أوافق',
+    refuse: 'أرفض',
+    more: 'سياسة الخصوصية',
+    settings: 'ملفات الارتباط',
+  },
   footer: {
     explore: 'استكشف',
     support: 'الدعم',

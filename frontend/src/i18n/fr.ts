@@ -57,6 +57,14 @@ export const fr: Messages = {
     social: 'Réseaux sociaux',
     socialOpens: '{name} — s’ouvre dans un nouvel onglet',
   },
+  consent: {
+    title: 'Cookies',
+    body: 'Nous utilisons des cookies pour mesurer les visites et savoir quelles publicités amènent des commandes (Google, Meta, TikTok). Seulement si vous acceptez.',
+    accept: 'Accepter',
+    refuse: 'Refuser',
+    more: 'Politique de confidentialité',
+    settings: 'Cookies',
+  },
   footer: {
     explore: 'Explorer',
     support: 'Assistance',

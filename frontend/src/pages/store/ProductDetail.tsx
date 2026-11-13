@@ -103,7 +103,7 @@ function ProductDetailPage() {
     description: seoText?.description ?? productDescription,
     // A product that is gone (or still loading) is not a page for Google
     noIndex: !product.data,
-    image: productImage || '/brand/brynoxa-logo-social.png',
+    image: productImage || '/brand/brynoxa-social.png',
     type: product.data ? 'product' : 'website',
     path: slug ? `/product/${slug}` : undefined,
     jsonLd: product.data ? productData(product.data, productDescription) : null,

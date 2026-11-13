@@ -18,8 +18,32 @@ Object.defineProperty(g, 'document', {
   configurable: true,
 });
 (g.window as { location: unknown }).location = loc;
+const store = new Map<string, string>();
+g.localStorage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) };
+const events: string[] = [];
+g.dispatchEvent = (e: { type: string }) => { events.push(e.type); return true };
+g.CustomEvent = class { type: string; detail: unknown; constructor(type: string, o?: { detail?: unknown }) { this.type = type; this.detail = o?.detail } };
 
 const a = await import(pathToFileURL(path.join(root, 'frontend/src/lib/analytics.ts')).href);
+const consent = await import(pathToFileURL(path.join(root, 'frontend/src/lib/consent.ts')).href);
+
+test('nothing loads before the visitor accepts; Accept starts what the shop configured', () => {
+  const ids = { metaPixelId: '1234567890123456', tiktokPixelId: 'CABCD1234EFGH5678IJK' };
+  assert.equal(a.trackingWanted(ids), true, 'the banner is shown');
+  assert.equal(a.trackingWanted({}), false, 'no pixel set: no banner');
+  a.configureTracking(ids);
+  a.trackViewItem({ item_id: 'p0', item_name: 'x', price: 1 });
+  assert.deepEqual(added, [], 'no consent yet: no script');
+  consent.saveConsent('denied');
+  a.configureTracking(ids);
+  assert.deepEqual(added, [], 'refused: no script');
+  assert.equal(consent.readConsent(), 'denied');
+  consent.saveConsent('granted');
+  a.applyConsent();
+  assert.equal(added.length, 2, 'accepted: Meta and TikTok load');
+  assert.ok(events.includes('brx-consent-change'));
+});
+
 
 test('never on admin pages or addresses with a private key', () => {
   assert.equal(a.pixelsAllowedOn('/shop?category=laptops'), true);
@@ -39,7 +63,6 @@ test('only well-formed ids are used', () => {
 });
 
 test('loads the official scripts once, then sends the shop events in their names', () => {
-  a.configureTracking({ metaPixelId: '1234567890123456', tiktokPixelId: 'CABCD1234EFGH5678IJK' });
   a.configureTracking({ metaPixelId: '1234567890123456', tiktokPixelId: 'CABCD1234EFGH5678IJK' });
   assert.deepEqual(added, ['https://connect.facebook.net/en_US/fbevents.js', 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=CABCD1234EFGH5678IJK&lib=ttq'], 'once each');
   const w = g as unknown as { fbq: { queue: unknown[][]; disablePushState: boolean }; ttq: unknown[][] };

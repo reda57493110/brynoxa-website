@@ -157,6 +157,7 @@ const en: Record<LegalPage, LegalDocument> = {
         list: [
           'Delivery companies: your name, phone number and address, so they can deliver your package.',
           'Technical providers that host the website, store its data and send its emails, under confidentiality and security obligations.',
+          'Only if you accept measurement and advertising cookies: Google, Meta and TikTok receive the pages you visit and what you do in the shop (product viewed, added to the cart, order and its amount), never your name, phone or address.',
           'Public authorities, only when the law requires it.',
         ],
       },
@@ -164,7 +165,9 @@ const en: Record<LegalPage, LegalDocument> = {
         id: 'cookies',
         title: '5. Cookies and local storage',
         paragraphs: [
-          'We use only what the website needs to work: a secure cookie that keeps you signed in, and storage in your browser for your cart, language and theme. We do not use advertising cookies. If we ever add audience measurement, we will ask for your consent first.',
+          'Always on, because the website needs them to work: a secure cookie that keeps you signed in, and storage in your browser for your cart, language and theme.',
+          'Only if you accept: audience measurement and advertising cookies from Google Analytics, Meta (Facebook, Instagram) and TikTok. They tell us which pages are visited and which of our ads lead to orders, and help these platforms show our ads to people likely to be interested. When you visit the shop for the first time we ask you; if you refuse, none of them is loaded.',
+          'You can change your choice at any time with the “Cookie settings” link at the bottom of every page.',
         ],
       },
       {
@@ -353,6 +356,7 @@ const fr: Record<LegalPage, LegalDocument> = {
         list: [
           'Les sociétés de livraison : votre nom, téléphone et adresse, pour livrer votre colis.',
           'Les prestataires techniques qui hébergent le site, stockent ses données et envoient ses e-mails, soumis à des obligations de confidentialité et de sécurité.',
+          'Seulement si vous acceptez les cookies de mesure et de publicité : Google, Meta et TikTok reçoivent les pages visitées et vos actions dans la boutique (produit vu, ajout au panier, commande et son montant), jamais votre nom, téléphone ou adresse.',
           'Les autorités publiques, uniquement lorsque la loi l’exige.',
         ],
       },
@@ -360,7 +364,9 @@ const fr: Record<LegalPage, LegalDocument> = {
         id: 'cookies',
         title: '5. Cookies et stockage local',
         paragraphs: [
-          'Nous utilisons uniquement ce dont le site a besoin pour fonctionner : un cookie sécurisé qui vous garde connecté, et un stockage dans votre navigateur pour votre panier, votre liste d’envies, la langue et le thème. Nous n’utilisons pas de cookies publicitaires. Si nous ajoutons un jour une mesure d’audience, nous vous demanderons d’abord votre accord.',
+          'Toujours actifs, car le site en a besoin pour fonctionner : un cookie sécurisé qui vous garde connecté, et un stockage dans votre navigateur pour votre panier, votre liste d’envies, la langue et le thème.',
+          'Seulement si vous acceptez : des cookies de mesure d’audience et de publicité de Google Analytics, Meta (Facebook, Instagram) et TikTok. Ils nous indiquent les pages visitées et quelles publicités mènent à des commandes, et aident ces plateformes à montrer nos publicités aux personnes susceptibles d’être intéressées. Lors de votre première visite, nous vous demandons votre choix ; si vous refusez, aucun d’eux n’est chargé.',
+          'Vous pouvez changer votre choix à tout moment avec le lien « Cookies » en bas de chaque page.',
         ],
       },
       {
@@ -547,6 +553,7 @@ const ar: Record<LegalPage, LegalDocument> = {
         list: [
           'شركات التوصيل: اسمك ورقم هاتفك وعنوانك، لتوصيل طردك.',
           'مزوّدي الخدمات التقنية الذين يستضيفون الموقع ويخزّنون بياناته ويرسلون رسائله الإلكترونية، مع التزامهم بالسرية والأمان.',
+          'فقط إذا وافقت على ملفات ارتباط القياس والإعلانات: تتلقى Google وMeta وTikTok الصفحات التي تزورها وما تفعله في المتجر (منتج شاهدته، إضافة إلى السلة، الطلب ومبلغه)، ولا تتلقى أبدًا اسمك أو هاتفك أو عنوانك.',
           'السلطات العمومية، فقط عندما يفرض القانون ذلك.',
         ],
       },
@@ -554,7 +561,9 @@ const ar: Record<LegalPage, LegalDocument> = {
         id: 'cookies',
         title: '5. ملفات تعريف الارتباط والتخزين المحلي',
         paragraphs: [
-          'نستخدم فقط ما يحتاجه الموقع للعمل: ملف ارتباط آمن يبقيك مسجّل الدخول، وتخزين في متصفحك للسلة وقائمة الأمنيات واللغة والمظهر. لا نستخدم ملفات ارتباط إعلانية. وإذا أضفنا يومًا أداة لقياس الزيارات، فسنطلب موافقتك أولًا.',
+          'مفعّلة دائمًا لأن الموقع يحتاجها ليعمل: ملف ارتباط آمن يبقيك مسجّل الدخول، وتخزين في متصفحك للسلة وقائمة الأمنيات واللغة والمظهر.',
+          'فقط إذا وافقت: ملفات ارتباط لقياس الزيارات وللإعلانات من Google Analytics وMeta (فيسبوك، إنستغرام) وTikTok. تخبرنا بالصفحات التي تُزار وبالإعلانات التي تؤدي إلى طلبات، وتساعد هذه المنصات على عرض إعلاناتنا لمن قد يهتم بها. نسألك عن اختيارك عند زيارتك الأولى؛ وإذا رفضت فلن يُحمَّل أيٌّ منها.',
+          'يمكنك تغيير اختيارك في أي وقت من رابط «ملفات الارتباط» أسفل كل صفحة.',
         ],
       },
       {

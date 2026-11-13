@@ -4,7 +4,7 @@ import { ALL_PATH_LOCALES, currentPathLocale, localizedPath, stripLocale } from 
 export type SeoInput = {
   title: string
   description?: string
-  /** Absolute URL or site-relative path (e.g. /brand/brynoxa-logo-social.png) */
+  /** Absolute URL or site-relative path (e.g. /brand/brynoxa-social.png) */
   image?: string
   type?: 'website' | 'product' | 'article'
   /** Path override; defaults to current location */
@@ -16,7 +16,8 @@ export type SeoInput = {
 
 const DEFAULT_DESCRIPTION =
   'Gaming PCs, laptops, monitors and components at the best prices in DH. Delivered across Morocco, pay cash at your door, every product under warranty.'
-const DEFAULT_IMAGE = '/brand/brynoxa-logo-social.png'
+/** 1200 × 630, the size link previews expect */
+const DEFAULT_IMAGE = '/brand/brynoxa-social.png'
 
 function siteOrigin() {
   const fromEnv = import.meta.env.VITE_SITE_URL as string | undefined

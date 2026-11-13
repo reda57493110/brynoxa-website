@@ -8,6 +8,7 @@ import { WhatsAppHost } from '@/components/contact/WhatsAppHost'
 import { PushPrompt } from '@/components/push/PushPrompt'
 import { CartNotice } from '@/components/cart/CartNotice'
 import { HelpWidget } from '@/components/help/HelpWidget'
+import { CookieBanner } from '@/components/legal/CookieBanner'
 import { useT } from '@/hooks/useT'
 import { useSiteContactSync } from '@/hooks/useSiteContactSync'
 import { useTrackingSync } from '@/hooks/useTrackingSync'
@@ -125,6 +126,7 @@ export function StoreLayout() {
       <CartNotice />
       <PushPrompt />
       <HelpWidget />
+      <CookieBanner />
     </div>
   )
 }

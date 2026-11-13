@@ -28,6 +28,29 @@ window.__vite_plugin_react_preamble_installed__ = true;`,
   }
 }
 
+/** The live site's address: VITE_SITE_URL once the shop has its own domain */
+const DEFAULT_SITE_URL = 'https://brynoxa-website-lime.vercel.app'
+
+/**
+ * Link previews: WhatsApp / Facebook / Instagram read the og: tags of index.html without running
+ * the app, and need complete addresses ("/brand/…" shows no picture). Made complete at build time.
+ */
+function absoluteShareLinks() {
+  let site = DEFAULT_SITE_URL
+  return {
+    name: 'absolute-share-links',
+    configResolved(config: { env: Record<string, string> }) {
+      site = String(config.env.VITE_SITE_URL || process.env.VITE_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, '')
+    },
+    transformIndexHtml(html: string) {
+      return html.replace(
+        /(<meta (?:property="og:(?:image|url)"|name="twitter:image") content=")\/([^"]*)"/g,
+        (_m, start: string, rest: string) => `${start}${site}/${rest}"`
+      )
+    },
+  }
+}
+
 type BundleChunk = { type: 'chunk'; fileName: string; imports: string[]; isEntry: boolean; facadeModuleId: string | null }
 
 /**
@@ -99,7 +122,7 @@ function notFoundPage() {
 }
 
 export default defineConfig({
-  plugins: [reactRefreshPreamble(), react(), tailwindcss(), routeChunks(), notFoundPage()],
+  plugins: [reactRefreshPreamble(), react(), tailwindcss(), absoluteShareLinks(), routeChunks(), notFoundPage()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

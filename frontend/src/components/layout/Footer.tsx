@@ -9,6 +9,7 @@ import { CONTACT, SOCIAL_LINKS } from '@/lib/site'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useWhatsAppStore } from '@/store/whatsappStore'
+import { openConsent } from '@/lib/consent'
 
 const explore = [
   { to: '/shop', key: 'common.shop' as const },
@@ -153,6 +154,9 @@ export function Footer() {
               <Link to="/privacy" className="transition hover:text-[var(--brand-text)]">
                 {t('legal.privacyTitle')}
               </Link>
+              <button type="button" onClick={openConsent} className="transition hover:text-[var(--brand-text)]">
+                {t('consent.settings')}
+              </button>
             </nav>
           </div>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[var(--fg-muted)] sm:gap-x-3 sm:text-xs">

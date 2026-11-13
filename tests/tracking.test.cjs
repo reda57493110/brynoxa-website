@@ -51,3 +51,27 @@ test('admin: Tracking codes section; the shop layout loads them (not admin)', ()
   assert.ok(!f('app/layouts/AdminLayout.tsx').includes('useTrackingSync'));
   assert.ok(f('pages/admin/Ads.tsx').includes('to="/admin/settings?tab=tracking"'), 'Ads page points to it');
 });
+
+test('cookie consent: banner on shop pages, footer link, privacy policy says it in 3 languages', () => {
+  const f = (p) => read(path.join('frontend/src', p));
+  assert.ok(f('app/layouts/StoreLayout.tsx').includes('<CookieBanner />'));
+  assert.ok(f('components/layout/Footer.tsx').includes("{t('consent.settings')}"));
+  const banner = f('components/legal/CookieBanner.tsx');
+  assert.ok(banner.includes("onClick={() => choose('denied')}") && banner.includes("onClick={() => choose('granted')}"), 'refuse as easy as accept');
+  const legal = f('lib/legal.ts');
+  assert.ok(!legal.includes('We do not use advertising cookies'), 'the old promise is gone');
+  for (const t of ['Only if you accept: audience measurement and advertising cookies', 'Seulement si vous acceptez : des cookies de mesure', 'فقط إذا وافقت: ملفات ارتباط لقياس الزيارات']) assert.ok(legal.includes(t), t);
+  for (const l of ['en', 'fr', 'ar']) assert.ok(f(`i18n/${l}.ts`).includes('  consent: {'), l);
+  assert.ok(f('lib/analytics.ts').includes('  if (!hasAdConsent()) return\n'), 'Google too waits for consent');
+});
+
+test('link previews: complete addresses and a 1200 × 630 picture', () => {
+  const html = read('frontend/index.html');
+  assert.ok(html.includes('<meta property="og:image" content="/brand/brynoxa-social.png" />'));
+  assert.ok(html.includes('<meta property="og:image:width" content="1200" />'));
+  const vite = read('frontend/vite.config.ts');
+  assert.ok(vite.includes('absoluteShareLinks(), routeChunks()'), 'made complete at build time');
+  const png = fs.readFileSync(path.join(ROOT, 'frontend/public/brand/brynoxa-social.png'));
+  assert.equal(png.toString('ascii', 1, 4), 'PNG', 'a real PNG');
+  assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630]);
+});

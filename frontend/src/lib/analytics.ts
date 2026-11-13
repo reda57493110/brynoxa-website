@@ -22,6 +22,7 @@ declare global {
 }
 
 import { safePath } from './safePath'
+import { hasAdConsent } from './consent'
 
 /**
  * Shop analytics: Google Analytics 4, Meta Pixel (Facebook / Instagram ads) and TikTok Pixel.
@@ -29,6 +30,8 @@ import { safePath } from './safePath'
  * layout once settings arrive); VITE_GA_MEASUREMENT_ID still works for Google as before.
  * Same id checks as backend/src/utils/tracking.ts — keep both in sync.
  *
+ * Nothing loads before the visitor accepts measurement / ad cookies (lib/consent.ts, the cookie
+ * banner): configureTracking keeps the ids and starts them on "Accept" (applyConsent).
  * Never on admin pages, and never on a page whose address carries a secret (reset / verify /
  * receipt keys): the ad platforms read the page address themselves, so nothing is sent there.
  */
@@ -150,6 +153,7 @@ export function initAnalytics() {
   if (typeof window === 'undefined' || !ENV_GA) return
   // Not on admin pages (staff visits are not shop traffic)
   if (/(^|\/)admin(-print)?(\/|$)/.test(window.location.pathname)) return
+  if (!hasAdConsent()) return
   startGa(ENV_GA)
 }
 
@@ -166,8 +170,24 @@ export function cleanTrackingIds(t?: TrackingIds | null) {
 }
 
 /** Shop layout: starts what is configured (once each; a changed id is used from the next visit) */
+/** Ids waiting for the visitor's consent */
+let pendingIds: TrackingIds | null = null
+
+/** True when something would be loaded after consent (the banner is only shown then) */
+export function trackingWanted(t?: TrackingIds | null) {
+  const ids = cleanTrackingIds(t)
+  return Boolean(ids.meta || ids.tiktok || ids.ga || ENV_GA)
+}
+
+/** Cookie banner "Accept": starts what the shop has configured */
+export function applyConsent() {
+  configureTracking(pendingIds)
+}
+
 export function configureTracking(t?: TrackingIds | null) {
   if (typeof window === 'undefined') return
+  pendingIds = t ?? pendingIds
+  if (!hasAdConsent()) return
   const path = currentPath()
   if (!pixelsAllowedOn(path)) return
   const ids = cleanTrackingIds(t)

@@ -117,6 +117,7 @@ export function TrackingSettings({ settings }: { settings?: StoreSettings }) {
       <div className="mt-4 rounded-xl bg-[var(--bg-muted)] p-3 text-xs text-[var(--fg-muted)]">
         <p className="font-medium text-[var(--fg)]">Good to know</p>
         <ul className="mt-1 list-disc space-y-0.5 ps-4">
+          <li>Loaded only for visitors who press “Accept” on the cookie banner (the shop asks them once; your privacy page says so).</li>
           <li>Not loaded on admin pages, nor on pages whose address carries a private key (password reset, email check, receipt).</li>
           <li>An order is sent as “Purchase” (Meta) / “Place an order” (TikTok) with its value in DH and its number, so a repeat is not counted twice.</li>
           <li>

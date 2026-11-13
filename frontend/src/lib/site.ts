@@ -82,7 +82,7 @@ export function siteInfoFrom(settings?: SiteSettingsLike | null) {
     /** Registre du Commerce number and city, e.g. "RC 12345 Casablanca". */
     rc: c.rc,
     /** Date the legal pages were last changed (YYYY-MM-DD). */
-    updated: '2026-10-03',
+    updated: '2026-11-13',
   }
   return { contact, legal, social: buildSocial(c, contact) }
 }

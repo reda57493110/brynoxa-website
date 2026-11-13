@@ -55,6 +55,14 @@ export const en = {
     social: 'Social',
     socialOpens: '{name} — opens in a new tab',
   },
+  consent: {
+    title: 'Cookies',
+    body: 'We use cookies to measure visits and to know which of our ads bring orders (Google, Meta, TikTok). Only if you accept.',
+    accept: 'Accept',
+    refuse: 'Refuse',
+    more: 'Privacy policy',
+    settings: 'Cookie settings',
+  },
   footer: {
     explore: 'Explore',
     support: 'Support',
