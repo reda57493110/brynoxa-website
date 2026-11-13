@@ -129,6 +129,9 @@ module.exports = async (req, res) => {
       if (emailKey && !(await rateLimit(req, res, 'orderPerCustomer', emailKey, { perIp: false }))) return;
       if (phoneKey.length >= 8 && !(await rateLimit(req, res, 'orderPerCustomer', `phone:${phoneKey}`, { perIp: false }))) return;
 
+      // Blocked numbers (fake orders): refused before an account is made
+      await require('../../backend/dist/services/phoneGuard.service').assertPhoneAllowed(shippingAddress?.phone);
+
       const { userId, auth } = await authService.resolveCheckoutCustomer({
         // Match Express optionalAuth: guest sessions do not count as signed-in checkout.
         authenticatedUserId: user && !user.isGuest ? user._id.toString() : undefined,

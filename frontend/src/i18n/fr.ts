@@ -1187,6 +1187,7 @@ export const fr: Messages = {
     productUnavailable: 'Un produit de votre panier n’est plus disponible.',
     notEnoughStock: 'Stock insuffisant pour {name}.',
     orderNotFound: 'Aucune commande ne correspond à ces informations.',
+    orderBlocked: 'Cette commande ne peut pas être passée en ligne. Contactez-nous sur WhatsApp.',
     onlyPendingCancel: 'Seules les commandes non confirmées peuvent être annulées.',
     cannotEdit: 'Cette commande ne peut plus être modifiée.',
     depositReceivedCancel: 'Votre acompte a été reçu. Contactez-nous pour annuler et organiser le remboursement.',

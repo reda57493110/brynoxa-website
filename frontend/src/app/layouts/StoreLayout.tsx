@@ -10,6 +10,7 @@ import { CartNotice } from '@/components/cart/CartNotice'
 import { HelpWidget } from '@/components/help/HelpWidget'
 import { useT } from '@/hooks/useT'
 import { useSiteContactSync } from '@/hooks/useSiteContactSync'
+import { useTrackingSync } from '@/hooks/useTrackingSync'
 
 const scrollPositions = new Map<string, number>()
 
@@ -23,6 +24,7 @@ function jumpTo(y: number) {
 
 export function StoreLayout() {
   useSiteContactSync()
+  useTrackingSync()
   const location = useLocation()
   const navigationType = useNavigationType()
   const reduceMotion = useReducedMotion()

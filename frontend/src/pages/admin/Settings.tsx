@@ -11,6 +11,8 @@ import { WholesaleTiersSettings } from '@/components/admin/WholesaleTiersSetting
 import { CustomerSegmentSettings } from '@/components/admin/CustomerSegmentSettings'
 import { CategoriesSettings } from '@/components/admin/settings/CategoriesSettings'
 import { BrandsSettings } from '@/components/admin/settings/BrandsSettings'
+import { BlockedPhonesSettings } from '@/components/admin/settings/BlockedPhonesSettings'
+import { TrackingSettings } from '@/components/admin/settings/TrackingSettings'
 import { ContactSettings } from '@/components/admin/settings/ContactSettings'
 import { DeliverySettings } from '@/components/admin/settings/DeliverySettings'
 import { GeneralSettings } from '@/components/admin/settings/StoreSettings'
@@ -19,14 +21,15 @@ import { DirtyContext } from '@/components/admin/settings/dirty'
 import { cn } from '@/lib/cn'
 import type { StoreSettings } from '@/types'
 
-type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'notifications'
+type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'tracking' | 'notifications'
 
 const SECTIONS: { id: SectionId; label: string; icon: SiteIconName; description: string }[] = [
   { id: 'general', label: 'General', icon: 'settings', description: 'Store identity and storage' },
   { id: 'contact', label: 'Contact & business', icon: 'phone', description: 'Numbers, social pages and legal details shown in the shop' },
   { id: 'delivery', label: 'Delivery', icon: 'truck', description: 'What customers pay for delivery' },
   { id: 'catalog', label: 'Catalog', icon: 'layers', description: 'Categories, spec types and brands' },
-  { id: 'customers', label: 'Customers & pricing', icon: 'users', description: 'Wholesale tiers and segments' },
+  { id: 'customers', label: 'Customers & pricing', icon: 'users', description: 'Wholesale tiers, segments and blocked numbers' },
+  { id: 'tracking', label: 'Tracking codes', icon: 'megaphone', description: 'Meta Pixel, TikTok Pixel and Google Analytics for your ads' },
   { id: 'notifications', label: 'Notifications', icon: 'mail', description: 'Automatic emails' },
 ]
 
@@ -63,8 +66,11 @@ function SectionBody({ id, settings }: { id: SectionId; settings?: StoreSettings
         <>
           <WholesaleTiersSettings settings={settings} />
           <CustomerSegmentSettings settings={settings} />
+          <BlockedPhonesSettings />
         </>
       )
+    case 'tracking':
+      return <TrackingSettings settings={settings} />
     case 'notifications':
       return <EmailNotificationsSettings settings={settings} />
   }

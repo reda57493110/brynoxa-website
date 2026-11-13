@@ -1183,6 +1183,7 @@ export const en = {
     productUnavailable: 'A product in your cart is no longer available.',
     notEnoughStock: 'Not enough stock for {name}.',
     orderNotFound: 'We could not find an order with those details.',
+    orderBlocked: 'This order cannot be placed online. Please contact us on WhatsApp.',
     onlyPendingCancel: 'Only orders that are not confirmed yet can be cancelled.',
     cannotEdit: 'This order can no longer be changed.',
     depositReceivedCancel: 'Your deposit has been received. Contact us to cancel and arrange the refund.',

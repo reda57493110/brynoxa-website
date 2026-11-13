@@ -19,6 +19,8 @@ import { toast } from '@/store/toastStore'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { absolute } from '@/lib/structuredData'
 import { cn } from '@/lib/cn'
+import { hasPermission } from '@/lib/permissions'
+import { useAuthStore } from '@/store/authStore'
 import {
   AD_KINDS,
   AD_KIND_LABEL,
@@ -470,6 +472,14 @@ export function Ads() {
   })
 
   const data = overview.data
+  const role = useAuthStore((st) => st.user?.role)
+  const canSettings = hasPermission(role, 'settings')
+  const adminSettings = useQuery({
+    queryKey: ['admin-settings'],
+    queryFn: async () => (await adminApi.settings.get()).data.data,
+    enabled: canSettings,
+  })
+  const pixelsSet = Boolean(adminSettings.data?.tracking?.metaPixelId || adminSettings.data?.tracking?.tiktokPixelId) || !adminSettings.data
   const t = data?.totals
   const campaigns = (data?.campaigns ?? []).filter((c) => platform === 'all' || c.platform === platform)
 
@@ -515,6 +525,16 @@ export function Ads() {
               <Figure label="For 1 DH spent" value={roasLabel(t.roas)} hint="of sales come back" tone={roasTone(t)} />
             </div>
           </div>
+
+          {canSettings && !pixelsSet ? (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-dashed border-[var(--border)] px-3 py-2.5 text-xs text-[var(--fg-muted)]">
+              <SiteIcon name="alert" size={14} className="text-[var(--warning)]" />
+              Facebook, Instagram and TikTok do not see your orders yet, so they cannot aim your ads at buyers.
+              <Link to="/admin/settings?tab=tracking" className="font-semibold text-[var(--brand-text)] hover:underline">
+                Add your pixels →
+              </Link>
+            </p>
+          ) : null}
 
           {data.platforms.length ? (
             <Panel title="By platform" description="Where your money and your orders come from." compact>

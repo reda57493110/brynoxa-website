@@ -10,7 +10,7 @@ const read = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
 
 test('Settings: only sections of its own, no repeated pages', () => {
   const s = read('pages/admin/Settings.tsx');
-  assert.ok(s.includes("type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'notifications'"));
+  assert.ok(s.includes("type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'tracking' | 'notifications'"));
   for (const gone of ["label: 'Orders & payments'", "label: 'Storefront'", "label: 'Inventory'", "label: 'Security'", 'HomeDealsSettings', 'InventorySettings']) {
     assert.ok(!s.includes(gone), gone);
   }

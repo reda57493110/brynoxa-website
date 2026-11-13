@@ -1185,6 +1185,7 @@ export const ar: Messages = {
     productUnavailable: 'أحد المنتجات في سلتك لم يعد متوفرًا.',
     notEnoughStock: 'المخزون غير كافٍ لـ {name}.',
     orderNotFound: 'لم نجد طلبًا بهذه المعلومات.',
+    orderBlocked: 'لا يمكن تسجيل هذا الطلب عبر الموقع. تواصل معنا عبر واتساب.',
     onlyPendingCancel: 'يمكن إلغاء الطلبات غير المؤكدة فقط.',
     cannotEdit: 'لم يعد بالإمكان تعديل هذا الطلب.',
     depositReceivedCancel: 'تم استلام العربون. تواصل معنا للإلغاء وترتيب الاسترجاع.',

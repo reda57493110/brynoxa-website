@@ -9,9 +9,11 @@ import * as authService from '../services/auth.service';
 import * as depositPayment from '../services/depositPayment.service';
 import { param } from '../utils/params';
 import { AuthRequest } from '../types/express';
+import { assertPhoneAllowed } from '../services/phoneGuard.service';
 
 export const createOrder = asyncHandler(async (req: AuthRequest, res: Response) => {
   const shippingAddress = req.body.shippingAddress;
+  await assertPhoneAllowed(shippingAddress?.phone);
   const { userId, auth } = await authService.resolveCheckoutCustomer({
     authenticatedUserId: req.user?.userId,
     email: req.body.email,

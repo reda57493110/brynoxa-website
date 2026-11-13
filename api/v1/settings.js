@@ -31,6 +31,7 @@ const ALLOWED_FIELDS = [
   'homeRows',
   'categoryHeroes',
   'siteContact',
+  'tracking',
 ];
 
 module.exports = async (req, res) => {
@@ -81,6 +82,7 @@ module.exports = async (req, res) => {
         sanitizeInventoryStatuses,
         sanitizeLocations,
         sanitizeSiteContact,
+        sanitizeTracking,
       } = require('../../backend/dist/models/Settings');
       const { sanitizeWholesaleTiers } = require('../../backend/dist/utils/wholesale');
       const settings = await getSettings();
@@ -115,6 +117,9 @@ module.exports = async (req, res) => {
         } else if (key === 'categoryHeroes') {
           settings[key] = sanitizeCategoryHeroes(body[key], settings.categoryHeroes);
           settings.markModified('categoryHeroes');
+        } else if (key === 'tracking') {
+          const current = settings.tracking && typeof settings.tracking.toObject === 'function' ? settings.tracking.toObject() : settings.tracking;
+          settings[key] = sanitizeTracking(body[key], current);
         } else if (key === 'siteContact') {
           const current = settings.siteContact && typeof settings.siteContact.toObject === 'function' ? settings.siteContact.toObject() : settings.siteContact;
           settings[key] = sanitizeSiteContact(body[key], current);

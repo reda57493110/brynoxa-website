@@ -6,6 +6,7 @@ import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { AD_KINDS, AD_PLATFORMS } from '../utils/adTracking';
 import { siteContactIssue } from '../utils/siteContact';
+import { trackingIssue } from '../utils/tracking';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
@@ -336,6 +337,15 @@ export const settingsSchema = z.object({
     .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
+  /** Settings → Tracking codes ('' = not loaded) */
+  tracking: z
+    .object({ metaPixelId: z.string().max(40), tiktokPixelId: z.string().max(40), gaMeasurementId: z.string().max(40) })
+    .partial()
+    .superRefine((v, ctx) => {
+      const issue = trackingIssue(v);
+      if (issue) ctx.addIssue({ code: 'custom', message: issue });
+    })
+    .optional(),
   /** Settings → Contact & business ('' = built-in number / not shown) */
   siteContact: z
     .object({
@@ -833,6 +843,12 @@ export const depositMethodsSchema = z.object({
     )
     .max(8),
   depositInstructions: z.string().max(2000).optional(),
+});
+
+/** Admin: block a phone number from ordering on the website */
+export const blockPhoneSchema = z.object({
+  phone: z.string().trim().min(6).max(40),
+  reason: z.string().trim().max(300).optional(),
 });
 
 const dayString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a date');

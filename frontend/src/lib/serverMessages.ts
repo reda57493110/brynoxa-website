@@ -38,6 +38,7 @@ const EXACT: Record<string, MessageKey> = {
   'One or more products are unavailable': 'server.productUnavailable',
   'Product not found': 'server.productUnavailable',
   'Order not found': 'server.orderNotFound',
+  'This order cannot be placed online. Please contact us on WhatsApp.': 'server.orderBlocked',
   'We could not find an order with those details': 'server.orderNotFound',
   'Only pending orders can be cancelled': 'server.onlyPendingCancel',
   'Only pending orders can be edited': 'server.cannotEdit',

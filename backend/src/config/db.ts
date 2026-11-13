@@ -31,6 +31,7 @@ async function syncIndexesWhenChanged() {
     import('../models/DepositReceipt'),
     import('../models/Expense'),
     import('../models/AdCampaign'),
+    import('../models/BlockedPhone'),
     import('../models/Inventory'),
     import('../models/Notification'),
     import('../models/Order'),

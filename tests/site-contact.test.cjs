@@ -85,7 +85,7 @@ test('brands: staff list says how many products use each brand', async () => {
 test('admin: Contact & business, Delivery sections; Brands in Catalog; search finds them', () => {
   const f = (p) => read(path.join('frontend/src', p));
   const s = f('pages/admin/Settings.tsx');
-  assert.ok(s.includes("type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'notifications'"));
+  assert.ok(s.includes("type SectionId = 'general' | 'contact' | 'delivery' | 'catalog' | 'customers' | 'tracking' | 'notifications'"));
   assert.ok(s.includes('<ContactSettings settings={settings} />') && s.includes('<DeliverySettings settings={settings} />') && s.includes('<BrandsSettings />'));
   const search = f('lib/adminSearch.ts');
   for (const to of ["to: '/admin/settings?tab=contact'", "to: '/admin/settings?tab=delivery'"]) assert.ok(search.includes(to), to);

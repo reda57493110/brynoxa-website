@@ -3,6 +3,8 @@ import type { WholesaleTier } from '../utils/wholesale';
 import { isEmailConfigured } from '../config/env';
 import type { SiteContact } from '../utils/siteContact';
 export { sanitizeSiteContact } from '../utils/siteContact';
+import type { TrackingIds } from '../utils/tracking';
+export { sanitizeTracking } from '../utils/tracking';
 
 export interface IShippingCityRate {
   city: string;
@@ -94,6 +96,8 @@ export interface ISettings extends Document {
   supportEmail: string;
   /** Settings → Contact & business: numbers, social pages, legal details (public) */
   siteContact: SiteContact;
+  /** Settings → Tracking codes: Meta Pixel, TikTok Pixel, Google Analytics ids (public) */
+  tracking: TrackingIds;
   codEnabled: boolean;
   /** Shown to customers whose order needs a deposit: how to pay it (bank RIB, transfer agency…). */
   depositInstructions: string;
@@ -146,6 +150,17 @@ const settingsSchema = new Schema<ISettings>(
     },
     taxRate: { type: Number, default: 0 },
     supportEmail: { type: String, default: () => DEFAULT_SUPPORT_EMAIL },
+    tracking: {
+      type: new Schema(
+        {
+          metaPixelId: { type: String, default: '' },
+          tiktokPixelId: { type: String, default: '' },
+          gaMeasurementId: { type: String, default: '' },
+        },
+        { _id: false }
+      ),
+      default: () => ({}),
+    },
     siteContact: {
       type: new Schema(
         {

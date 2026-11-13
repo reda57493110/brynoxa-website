@@ -310,6 +310,17 @@ export const adminApi = {
       api.patch<ApiResponse<User>>(`/admin/users/${id}/role`, { role }),
   },
 
+  /** Fake-order protection: a number's order history, blocked numbers */
+  phoneGuard: {
+    history: (phone: string, exclude?: string) =>
+      api.get<ApiResponse<PhoneHistory>>('/admin/phone-history', { params: { phone, exclude } }),
+    list: () => api.get<ApiResponse<BlockedPhoneRow[]>>('/admin/blocked-phones'),
+    block: (phone: string, reason?: string) =>
+      api.post<ApiResponse<{ _id: string; already: boolean }>>('/admin/blocked-phones', { phone, reason }),
+    /** By the row id or by the phone number itself */
+    unblock: (idOrPhone: string) => api.delete<ApiResponse<null>>(`/admin/blocked-phones/${encodeURIComponent(idOrPhone)}`),
+  },
+
   ads: {
     overview: (days: AdRange) => api.get<ApiResponse<AdsOverview>>('/admin/ads', { params: { days } }),
     get: (id: string) => api.get<ApiResponse<AdCampaignDetail>>(`/admin/ads/${id}`),
@@ -372,6 +383,19 @@ export const adminApi = {
   emailTest: (type: EmailMessageEvent) =>
     api.post<ApiResponse<{ sentTo: string }>>('/admin/email-test', { type }),
 }
+
+export type PhoneHistory = {
+  blocked: { _id: string; reason: string; createdAt: string } | null
+  orders: number
+  delivered: number
+  refused: number
+  cancelled: number
+  failedAttempts: number
+  risk: 'blocked' | 'high' | 'watch' | 'good' | 'new'
+  recent: { _id: string; orderNumber: string; status: string; total: number; createdAt: string }[]
+}
+
+export type BlockedPhoneRow = { _id: string; phone: string; reason: string; by: string; createdAt: string }
 
 export type ReturnRefundPayload = {
   lines: { productId: string; qty: number; serials?: string[] }[]

@@ -26,6 +26,7 @@ import {
 import { invalidateDashboardCache } from './admin.service';
 import { User } from '../models/User';
 import { cleanUtm } from '../utils/adTracking';
+import { assertPhoneAllowed } from './phoneGuard.service';
 import { ORDER_ORIGIN_LABEL, guestLabel, originFilter, type OrderOrigin } from '../utils/orderOrigin';
 import {
   DELIVERY_ISSUES,
@@ -309,6 +310,7 @@ export async function createCodOrder(input: {
   /** utm values the shop remembered (Admin → Ads & social media) */
   utm?: unknown;
 }) {
+  await assertPhoneAllowed(input.shippingAddress?.phone);
   // Wholesale prices only for approved accounts; the channel is fixed on the order from now on
   const terms = await getWholesaleTerms(input.userId);
   const { orderItems, subtotal, wholesaleDiscount, depositTotal } = await buildOrderLines(input.items, terms);

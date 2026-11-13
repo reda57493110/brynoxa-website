@@ -5,6 +5,7 @@ import commerceRoutes from './commerce.routes';
 import customerRoutes from './customer.routes';
 import inventoryRoutes from './inventory.routes';
 import adsRoutes from './ads.routes';
+import phoneGuardRoutes from './phoneGuard.routes';
 
 const router = Router();
 
@@ -13,6 +14,7 @@ router.use(catalogRoutes);
 router.use(customerRoutes);
 router.use(inventoryRoutes);
 router.use(adsRoutes);
+router.use(phoneGuardRoutes);
 router.use(commerceRoutes);
 
 router.get('/health', (_req, res) => {

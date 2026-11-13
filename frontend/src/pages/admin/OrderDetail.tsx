@@ -31,6 +31,7 @@ import {
 import type { User } from '@/types'
 import { customerWhatsAppHref, telHref } from '@/lib/customerContact'
 import { cn } from '@/lib/cn'
+import { PhoneRiskCard } from '@/components/admin/PhoneRiskCard'
 
 const PAYMENT_LABEL: Record<string, string> = { pending: 'Unpaid', paid: 'Paid', failed: 'Not collected', refunded: 'Refunded' }
 
@@ -285,6 +286,9 @@ export function OrderDetail() {
           </div>
         ) : null}
       </div>
+
+      {/* This number's other orders (refused, cancelled…) and Block / Unblock */}
+      <PhoneRiskCard phone={o.shippingAddress?.phone || phone || undefined} orderId={o._id} />
 
       {/* Phones: what was ordered and where it goes come first */}
       <div className="space-y-4 lg:hidden">

@@ -1,0 +1,53 @@
+// Settings → Tracking codes: only well-formed ids are saved (never a script), on both save paths;
+// the browser is allowed to load Meta's and TikTok's official scripts.
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('fs');
+const path = require('path');
+const { dist, ROOT, setTestEnv } = require('./_helpers.cjs');
+setTestEnv();
+const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
+
+test('ids are checked and tidied; pasted code is refused', () => {
+  const { sanitizeTracking, trackingIssue } = require(dist('utils/tracking.js'));
+  assert.deepEqual(sanitizeTracking({ metaPixelId: ' 1234567890123456 ', tiktokPixelId: 'cabcd1234efgh5678ijk', gaMeasurementId: 'g-ab12cd34ef' }), {
+    metaPixelId: '1234567890123456',
+    tiktokPixelId: 'CABCD1234EFGH5678IJK',
+    gaMeasurementId: 'G-AB12CD34EF',
+  });
+  assert.equal(sanitizeTracking({ gaMeasurementId: '' }, { metaPixelId: '1234567890' }).metaPixelId, '1234567890', 'fields not sent are kept');
+  assert.match(trackingIssue({ metaPixelId: "<script>fbq('init','1')</script>" }), /Meta Pixel ID/);
+  assert.match(trackingIssue({ gaMeasurementId: 'UA-1234-1' }), /G-/);
+  assert.equal(trackingIssue({ metaPixelId: '', tiktokPixelId: '' }), null, 'empty = not loaded');
+  const { settingsUpdateSchema } = require(dist('validators/schemas.js'));
+  assert.ok(!settingsUpdateSchema.safeParse({ tracking: { tiktokPixelId: 'javascript:alert(1)' } }).success);
+  assert.ok(settingsUpdateSchema.safeParse({ tracking: { metaPixelId: '1234567890123456' } }).success);
+});
+
+test('saved on both paths, public for the shop, same checks in the shop', () => {
+  const { Settings, publicSettings } = require(dist('models/Settings.js'));
+  assert.equal(publicSettings(new Settings({ tracking: { metaPixelId: '1234567890' } })).tracking.metaPixelId, '1234567890');
+  assert.ok(read('api/v1/settings.js').includes('settings[key] = sanitizeTracking(body[key], current);'));
+  assert.ok(read('backend/src/controllers/misc.controller.ts').includes('body.tracking = sanitizeTracking(body.tracking, settings.tracking);'));
+  const back = read('backend/src/utils/tracking.ts');
+  const front = read('frontend/src/lib/analytics.ts');
+  for (const rx of ['/^\\d{10,20}$/', '/^[A-Z0-9]{15,30}$/', '/^G-[A-Z0-9]{4,16}$/']) assert.ok(back.includes(rx) && front.includes(rx), rx);
+});
+
+test('security rules allow only the official Meta / TikTok / Google addresses', () => {
+  const vercel = JSON.parse(read('vercel.json'));
+  const csp = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy').value;
+  const script = csp.split(';').find((d) => d.trim().startsWith('script-src'));
+  assert.equal(script.trim(), "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://analytics.tiktok.com");
+  assert.ok(!script.includes('unsafe'), 'still no inline scripts');
+  const connect = csp.split(';').find((d) => d.trim().startsWith('connect-src'));
+  for (const host of ['https://www.facebook.com', 'https://analytics.tiktok.com']) assert.ok(connect.includes(host), host);
+});
+
+test('admin: Tracking codes section; the shop layout loads them (not admin)', () => {
+  const f = (p) => read(path.join('frontend/src', p));
+  assert.ok(f('pages/admin/Settings.tsx').includes('<TrackingSettings settings={settings} />'));
+  assert.ok(f('app/layouts/StoreLayout.tsx').includes('  useTrackingSync()'));
+  assert.ok(!f('app/layouts/AdminLayout.tsx').includes('useTrackingSync'));
+  assert.ok(f('pages/admin/Ads.tsx').includes('to="/admin/settings?tab=tracking"'), 'Ads page points to it');
+});

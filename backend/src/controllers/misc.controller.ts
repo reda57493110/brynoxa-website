@@ -21,6 +21,7 @@ import {
   sanitizeInventoryStatuses,
   sanitizeLocations,
   sanitizeSiteContact,
+  sanitizeTracking,
   publicSettings,
   Settings,
 } from '../models/Settings';
@@ -265,6 +266,9 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   if (body.emailMessages !== undefined) {
     body.emailMessages = sanitizeEmailMessages(body.emailMessages, settings.emailMessages);
+  }
+  if (body.tracking !== undefined) {
+    body.tracking = sanitizeTracking(body.tracking, settings.tracking);
   }
   if (body.siteContact !== undefined) {
     body.siteContact = sanitizeSiteContact(body.siteContact, settings.siteContact);
