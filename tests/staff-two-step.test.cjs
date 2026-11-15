@@ -45,10 +45,14 @@ test('code guessing: wrong tries counted atomically; limits per account and per 
   const svc = fs.readFileSync(dist('services/auth.service.js'), 'utf8');
   assert.match(svc, /recordLoginFailure\)\(user\._id, meta\.ip\)/);
   const guard = fs.readFileSync(dist('services/loginGuard.service.js'), 'utf8');
-  assert.match(guard, /findOneAndUpdate\(\{ _id: userId \}, \{ \$inc: \{ failedLoginAttempts: 1 \} \}/);
+  // whole-account count: an hourly record that expires (never adds up forever)
+  assert.match(guard, /_id: accountKey\(userId\)/);
   const account = fs.readFileSync(api('_lib/auth-routes/account.js'), 'utf8');
   assert.match(account, /rateLimit\(req, res, 'mfaChallenge', challenge, \{ perIp: false \}\)/);
   assert.match(account, /perKey = claimed && typeof claimed\.userId === 'string'/);
+  // only a genuine (signed) challenge counts against an account
+  assert.match(account, /verifyMfaChallenge\(body\.mfaToken\)/);
+  assert.ok(!/jwt\.decode\(body\.mfaToken\)/.test(account));
   const login = fs.readFileSync(api('_lib/auth-routes/login.js'), 'utf8');
   // Per connection only: a per-email limit would let anyone block the owner
   assert.match(login, /rateLimit\(req, res, 'login'\)/);

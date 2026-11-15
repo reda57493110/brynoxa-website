@@ -68,13 +68,16 @@ module.exports = async (req, res) => {
     // many places), so nobody can lock the owner out by trying their email
     const guard = require('../../../backend/dist/services/loginGuard.service');
     const ip = getClientIp(req);
-    if (user && (guard.accountLocked(user) || (await guard.visitorBlocked(user._id, ip, conn.db)))) {
+    // The old published default never signs anyone in (counted as a wrong password)
+    const passwordOk = passwordMatches && !isPublishedDefaultPassword(password);
+    // A lock caused by strangers never keeps out the right password of a 2-step account (the code
+    // step follows, with its own limits)
+    const secondFactor = Boolean(user && user.mfaEnabled && STAFF_ROLES.has(user.role));
+    if (user && (guard.lockRefuses(user, passwordOk, secondFactor) || (await guard.visitorBlocked(user._id, ip, conn.db)))) {
       sendJson(res, 429, { success: false, message: 'Account temporarily locked. Try again later.' });
       return;
     }
 
-    // The old published default never signs anyone in (counted as a wrong password)
-    const passwordOk = passwordMatches && !isPublishedDefaultPassword(password);
     if (!user?.password || !passwordOk) {
       if (user) await guard.recordLoginFailure(user._id, ip, conn.db);
       sendJson(res, 401, { success: false, message: 'Invalid email or password' });

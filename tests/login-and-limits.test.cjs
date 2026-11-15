@@ -37,13 +37,13 @@ test('5 wrong passwords block that visitor for 15 minutes — not the owner sign
   assert.equal(u.lockedUntil, undefined, 'the account itself is not locked');
 });
 
-test('an attack spread over many connections still locks the whole account', async () => {
+test('an attack spread over many connections still locks the whole account (counted per hour)', async () => {
   const u = users()[0];
-  u.failedLoginAttempts = 99;
-  assert.equal((await signIn('shop@x.com', 'wrong', '7.7.7.7')).status, 401);
-  assert.ok(u.lockedUntil > Date.now());
-  assert.equal(u.failedLoginAttempts, 0, 'counter starts over after the lock');
-  assert.equal((await signIn('shop@x.com', 'RightPass123', '6.6.6.6')).status, 429);
+  // 100 wrong passwords in the hour, each from another connection
+  for (let i = 0; i < 100 && !(u.lockedUntil > Date.now()); i++) await signIn('shop@x.com', 'wrong', '7.7.' + Math.floor(i / 250) + '.' + (i % 250));
+  assert.ok(u.lockedUntil > Date.now(), 'locked');
+  assert.ok(fake.cols.rate_limits.some((d) => String(d._id).startsWith('loginFailAccount:u1:')), 'the count lives in an hourly record that expires');
+  assert.equal((await signIn('shop@x.com', 'RightPass123', '6.6.6.6')).status, 429, 'no 2-step: the lock holds');
   u.lockedUntil = new Date(Date.now() - 1000);
   assert.equal((await signIn('shop@x.com', 'RightPass123', '6.6.6.6')).status, 200);
 });
@@ -63,7 +63,7 @@ test('an unknown email gets the same answer as a wrong password', async () => {
 test('the old published admin password never signs in (and counts as a wrong try)', async () => {
   const r = await signIn('old@x.com', ['Admin', '123', '!'].join(''), '5.5.5.5');
   assert.equal(r.status, 401);
-  assert.equal(users()[1].failedLoginAttempts, 1);
+  assert.equal(fake.cols.rate_limits.find((d) => String(d._id).startsWith('loginFailAccount:u2:')).count, 1, 'counted as a wrong try');
 });
 
 test('one connection: 20 sign-in tries per 15 minutes, then blocked; others unaffected', async () => {

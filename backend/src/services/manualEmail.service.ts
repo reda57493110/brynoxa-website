@@ -13,6 +13,9 @@ import { orderLink, orderSummaryHtml, resolveCustomer } from './orderNotify.serv
  * Staff-written email to one customer, in the Brynoxa layout.
  * Optionally attaches an order (summary + "View your order" button). Every send is logged.
  */
+/** Emails one staff member can send from Admin → Emails in an hour */
+export const STAFF_EMAILS_PER_HOUR = 30;
+
 export async function sendManualEmail(input: {
   to: string;
   subject: string;
@@ -22,6 +25,12 @@ export async function sendManualEmail(input: {
 }) {
   if (!isEmailConfigured()) {
     throw new ApiError(503, 'Email is not set up on the server (RESEND_API_KEY and EMAIL_FROM).');
+  }
+  // A stolen staff account must not be able to send floods of emails in the shop's name
+  const since = new Date(Date.now() - 60 * 60 * 1000);
+  const sentLastHour = await SentEmail.countDocuments({ sentBy: input.sentBy, createdAt: { $gte: since } });
+  if (sentLastHour >= STAFF_EMAILS_PER_HOUR) {
+    throw new ApiError(429, `You sent ${STAFF_EMAILS_PER_HOUR} emails in the last hour. Please wait a little before sending more.`);
   }
   const to = input.to.trim().toLowerCase();
 

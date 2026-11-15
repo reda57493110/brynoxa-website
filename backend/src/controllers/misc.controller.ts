@@ -279,7 +279,9 @@ export const updateStoreSettings = asyncHandler(async (req: Request, res: Respon
   }
   Object.assign(settings, body);
   await settings.save();
-  sendSuccess(res, settings, 'Settings updated');
+  // Staff without the Settings permission (catalog) only get back the shop's public settings
+  const canSeeAll = hasPermission((req as AuthRequest).user?.role ?? '', 'settings');
+  sendSuccess(res, canSeeAll ? settings : publicSettings(settings), 'Settings updated');
 });
 
 function sanitizeShippingByCity(rows: unknown): { city: string; rate: number }[] {

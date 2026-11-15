@@ -17,7 +17,7 @@ import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep,
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
 import { recordStaffSignIn } from './staffActivity.service';
-import { accountLocked, clearLoginFailures, recordLoginFailure, visitorBlocked } from './loginGuard.service';
+import { clearLoginFailures, lockRefuses, recordLoginFailure, visitorBlocked } from './loginGuard.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
 
 function scheduleStaffLoginNotify(
@@ -444,14 +444,24 @@ export async function verifyMfaSetup(userId: string, code: string, shownSecret?:
   return { recoveryCodes: [] as string[] };
 }
 
+/** Wrong codes when turning 2-step off are counted under this name (not a visitor address) */
+const MFA_DISABLE_KEY = 'mfa-disable';
+
 export async function disableMfa(userId: string, code: string) {
   const user = await User.findById(userId).select('+mfaSecretEncrypted +mfaRecoveryCodeHashes +mfaClockSkewSteps');
   if (!user?.mfaEnabled || !user.mfaSecretEncrypted) {
     throw new ApiError(400, 'MFA is not enabled');
   }
 
+  // A stolen session must not be able to guess the code: 5 wrong codes, then wait 15 minutes
+  if (await visitorBlocked(user._id, MFA_DISABLE_KEY)) {
+    throw new ApiError(429, 'Too many wrong codes. Please wait 15 minutes and try again.');
+  }
   const valid = await consumeTotp(user, code);
-  if (!valid) throw new ApiError(400, 'Invalid authentication code');
+  if (!valid) {
+    await recordLoginFailure(user._id, MFA_DISABLE_KEY);
+    throw new ApiError(400, 'Invalid authentication code');
+  }
 
   user.mfaEnabled = false;
   user.mfaSecretEncrypted = undefined;
@@ -682,13 +692,16 @@ export async function loginUser(
   );
   // The password is always checked (against a dummy when the email is unknown, and also while
   // locked), so the time taken never tells whether an email has an account
-  const passwordOk = await checkPasswordEvenTime(password, user?.password);
-  // Blocked: this visitor after too many wrong tries, or the account after an attack from many places
-  if (user && (accountLocked(user) || (await visitorBlocked(user._id, meta.ip)))) {
+  const passwordMatches = await checkPasswordEvenTime(password, user?.password);
+  // The old published default never signs anyone in (counted as a wrong password)
+  const passwordOk = passwordMatches && !isPublishedDefaultPassword(password);
+  // Blocked: this visitor after too many wrong tries, or the account after an attack from many
+  // places — except the right password of a 2-step account, which goes on to the code step
+  const secondFactor = Boolean(user?.mfaEnabled && isStaffRole(user.role));
+  if (user && (lockRefuses(user, passwordOk, secondFactor) || (await visitorBlocked(user._id, meta.ip)))) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
-  // The old published default never signs anyone in (counted as a wrong password)
-  if (!user || isPublishedDefaultPassword(password) || !passwordOk) {
+  if (!user || !passwordOk) {
     if (user) await recordLoginFailure(user._id, meta.ip);
     throw new ApiError(401, 'Invalid email or password');
   }
@@ -739,7 +752,8 @@ export async function completeMfaLogin(
   if (!user || !user.isActive || !user.mfaEnabled || !isStaffRole(user.role)) {
     throw new ApiError(401, 'MFA challenge is no longer valid');
   }
-  if (accountLocked(user) || (await visitorBlocked(user._id, meta.ip))) {
+  // Not the whole-account lock here: the right password was given; codes are limited per visitor
+  if (await visitorBlocked(user._id, meta.ip)) {
     throw new ApiError(429, 'Account temporarily locked. Try again later.');
   }
 

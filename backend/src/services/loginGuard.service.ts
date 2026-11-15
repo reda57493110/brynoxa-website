@@ -13,6 +13,25 @@ import mongoose, { Types } from 'mongoose';
 export const VISITOR_MAX_FAILURES = 5;
 export const ACCOUNT_MAX_FAILURES = 100;
 export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
+/** The whole-account count covers one hour, then starts over (old failures never add up forever) */
+export const ACCOUNT_WINDOW_MS = 60 * 60 * 1000;
+
+/**
+ * The visitor's network: an IPv4 address as is, an IPv6 address by its /64 block (one person
+ * easily has millions of addresses in it, which must not count as millions of visitors).
+ */
+export function visitorNetwork(ip?: string) {
+  let v = String(ip || 'unknown').trim().toLowerCase();
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v);
+  if (mapped) return mapped[1];
+  if (!v.includes(':')) return v.slice(0, 64);
+  v = v.split('%')[0];
+  const [head, tail = ''] = v.split('::');
+  const h = head ? head.split(':') : [];
+  const t = v.includes('::') && tail ? tail.split(':') : [];
+  const groups = v.includes('::') ? [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t] : h;
+  return `${groups.slice(0, 4).map((g) => g.replace(/^0+(?=.)/, '') || '0').join(':')}::/64`;
+}
 
 type Db = { collection: (name: string) => any };
 type Id = Types.ObjectId | string;
@@ -21,7 +40,9 @@ type Id = Types.ObjectId | string;
 const defaultDb = (): Db | undefined => mongoose.connection.db as unknown as Db | undefined;
 const windowStart = () => Math.floor(Date.now() / LOGIN_LOCKOUT_MS) * LOGIN_LOCKOUT_MS;
 const visitorKey = (userId: Id, ip?: string) =>
-  `loginFail:${String(userId)}:${String(ip || 'unknown').slice(0, 64)}:${windowStart()}`;
+  `loginFail:${String(userId)}:${visitorNetwork(ip)}:${windowStart()}`;
+const accountWindow = () => Math.floor(Date.now() / ACCOUNT_WINDOW_MS) * ACCOUNT_WINDOW_MS;
+const accountKey = (userId: Id) => `loginFailAccount:${String(userId)}:${accountWindow()}`;
 
 /** This visitor already gave too many wrong passwords / codes for this account. */
 export async function visitorBlocked(userId: Id, ip?: string, db: Db | undefined = defaultDb()) {
@@ -35,6 +56,19 @@ export function accountLocked(user: { lockedUntil?: Date | string | null } | nul
   return Boolean(user?.lockedUntil && new Date(user.lockedUntil).getTime() > Date.now());
 }
 
+/**
+ * Whether the account lock refuses this sign-in. A lock caused by strangers must not keep the
+ * owner out: with 2-step sign-in on, the right password still goes on to the code step (the code is
+ * the second lock, with its own limits), so only accounts without 2-step stay fully locked.
+ */
+export function lockRefuses(
+  user: { lockedUntil?: Date | string | null } | null | undefined,
+  passwordOk: boolean,
+  hasSecondFactor: boolean
+) {
+  return accountLocked(user) && !(passwordOk && hasSecondFactor);
+}
+
 /** Counts a wrong password / code, atomically (a burst of attempts all count). */
 export async function recordLoginFailure(userId: Id, ip?: string, db: Db | undefined = defaultDb()) {
   if (!db) return;
@@ -43,12 +77,16 @@ export async function recordLoginFailure(userId: Id, ip?: string, db: Db | undef
     { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(windowStart() + LOGIN_LOCKOUT_MS) } },
     { upsert: true, returnDocument: 'after' }
   );
-  const users = db.collection('users');
-  const updated = await users.findOneAndUpdate({ _id: userId }, { $inc: { failedLoginAttempts: 1 } }, { returnDocument: 'after' });
+  // Whole account: failures of the last hour from everywhere (starts over each hour)
+  const counted = await db.collection('rate_limits').findOneAndUpdate(
+    { _id: accountKey(userId) },
+    { $inc: { count: 1 }, $setOnInsert: { expiresAt: new Date(accountWindow() + ACCOUNT_WINDOW_MS) } },
+    { upsert: true, returnDocument: 'after' }
+  );
   // Driver v6 returns the document; older versions wrap it in { value }
-  const after = updated && typeof updated.failedLoginAttempts === 'number' ? updated : updated?.value;
-  if ((after?.failedLoginAttempts || 0) >= ACCOUNT_MAX_FAILURES) {
-    await users.updateOne({ _id: userId }, { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS), failedLoginAttempts: 0 } });
+  const doc = counted && typeof counted.count === 'number' ? counted : counted?.value;
+  if ((doc?.count || 0) >= ACCOUNT_MAX_FAILURES) {
+    await db.collection('users').updateOne({ _id: userId }, { $set: { lockedUntil: new Date(Date.now() + LOGIN_LOCKOUT_MS) } });
   }
 }
 

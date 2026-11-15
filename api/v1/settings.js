@@ -141,10 +141,12 @@ module.exports = async (req, res) => {
       }
       await settings.save();
 
+      // Staff without the Settings permission (catalog) only get back the shop's public settings
+      const { publicSettings } = require('../../backend/dist/models/Settings');
       sendJson(res, 200, {
         success: true,
         message: 'Settings updated',
-        data: settings,
+        data: hasPermission(user.role, 'settings') ? settings : publicSettings(settings),
       });
       return;
     }

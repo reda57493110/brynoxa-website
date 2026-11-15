@@ -44,8 +44,14 @@ module.exports = async (req, res) => {
       // Count code tries per account (from any address) and per sign-in challenge; the token is
       // checked properly afterwards, here it only names the account / the challenge
       const crypto = require('crypto');
-      const jwt = require('jsonwebtoken');
-      const claimed = jwt.decode(body.mfaToken);
+      // Only a genuine challenge (signed by us) counts against an account: a forged token naming
+      // the owner must not use up the owner's tries — it is limited per connection only
+      let claimed = null;
+      try {
+        claimed = require('../../../backend/dist/utils/tokens').verifyMfaChallenge(body.mfaToken);
+      } catch {
+        claimed = null;
+      }
       perKey = claimed && typeof claimed.userId === 'string' ? `user:${claimed.userId}` : undefined;
       const challenge = crypto.createHash('sha256').update(body.mfaToken).digest('hex');
       if (!(await rateLimit(req, res, 'mfaChallenge', challenge, { perIp: false }))) return;

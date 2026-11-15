@@ -67,7 +67,9 @@ async function rateLimit(req, res, name, extraKey, { perIp = true } = {}) {
   const rule = LIMITS[name];
   if (!rule) return true;
   try {
-    const keys = perIp ? [`${name}:ip:${clientIp(req)}`] : [];
+    // IPv6 by its /64 block: one person can use millions of addresses inside it
+    const { visitorNetwork } = require('../../backend/dist/services/loginGuard.service');
+    const keys = perIp ? [`${name}:ip:${visitorNetwork(clientIp(req))}`] : [];
     if (extraKey) keys.push(`${name}:k:${String(extraKey).trim().toLowerCase().slice(0, 200)}`);
     const results = await Promise.all(keys.map((k) => hit(k, rule.windowMs)));
     const over = results.find((r) => r.count > rule.max);
