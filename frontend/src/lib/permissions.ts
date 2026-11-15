@@ -90,6 +90,7 @@ export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin/coupons': 'coupons',
   '/admin/notifications': 'push',
   '/admin/ads': 'ads',
+  '/admin/social': 'ads',
   '/admin/settings': 'settings',
 }
 

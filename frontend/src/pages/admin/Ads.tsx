@@ -486,7 +486,7 @@ export function Ads() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader
-        title="Ads & social media"
+        title="Ads & campaigns"
         description="Your ads and posts, what they cost you and the orders they bring."
         actions={
           <div className="flex flex-wrap items-center gap-2">

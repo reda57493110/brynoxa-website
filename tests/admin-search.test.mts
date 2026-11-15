@@ -18,7 +18,8 @@ test('pages and settings are found by the words people type', async () => {
   assert.equal(first('payment methods'), '/admin/orders?view=deposits');
   assert.equal(first('wafacash'), '/admin/orders?view=deposits');
   assert.equal(first('retour'), '/admin/inventory/returns');
-  assert.equal(first('instagram'), '/admin/orders/new');
+  assert.equal(first('instagram'), '/admin/social');
+  assert.equal(first('instagram order'), '/admin/orders/new');
   assert.equal(first('mot de passe'), '/admin/security', 'French words too');
   assert.equal(first('password'), '/admin/security');
   assert.deepEqual(matchPages(''), []);

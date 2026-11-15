@@ -174,7 +174,7 @@ test('spending is an "ads" expense of the campaign (so Profit counts it); deleti
 
 test('admin: page, menu entry under Marketing, search; the shop remembers the link and sends it with the order', () => {
   const f = (p) => read(path.join('frontend/src', p));
-  assert.ok(f('components/layout/AdminSidebar.tsx').includes("{ to: '/admin/ads', label: 'Ads & social media', icon: 'megaphone', group: 'Marketing' },"));
+  assert.ok(f('components/layout/AdminSidebar.tsx').includes("{ to: '/admin/ads', label: 'Ads & campaigns', icon: 'megaphone', group: 'Marketing' },"));
   assert.ok(f('app/router.tsx').includes('<Route path="ads" element={<S><AdminAds /></S>} />'));
   assert.ok(f('lib/adminSearch.ts').includes("to: '/admin/ads'"));
   assert.ok(f('components/analytics/AnalyticsListener.tsx').includes("if (!location.pathname.includes('/admin')) captureUtm(location.search)"));
