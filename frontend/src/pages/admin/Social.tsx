@@ -381,6 +381,9 @@ function Inbox({ platforms }: { platforms: PlatformStats[] }) {
   )
 }
 
+/** Metricool (the owner's account): followers of Facebook, Instagram and TikTok tracked every day */
+const METRICOOL_URL = 'https://app.metricool.com/'
+
 /** Official tools of each platform, where messages and full stats already live */
 const SHORTCUTS: { group: string; items: { label: string; hint: string; href: string; icon: string }[] }[] = [
   {
@@ -393,6 +396,7 @@ const SHORTCUTS: { group: string; items: { label: string; hint: string; href: st
   {
     group: 'Stats',
     items: [
+      { label: 'All 3 platforms, every day', hint: 'Metricool · followers, best posts, reports', href: 'https://app.metricool.com/', icon: 'metricool' },
       { label: 'Facebook + Instagram insights', hint: 'Meta Business Suite', href: 'https://business.facebook.com/latest/insights', icon: 'instagram' },
       { label: 'TikTok analytics', hint: 'TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/analytics', icon: 'tiktok' },
     ],
@@ -408,7 +412,7 @@ const SHORTCUTS: { group: string; items: { label: string; hint: string; href: st
 
 function Shortcuts() {
   return (
-    <Panel title="Shortcuts" description="Your messages and full stats are in Meta Business Suite and TikTok Studio (also as phone apps). One click from here; they open in a new tab." compact>
+    <Panel title="Shortcuts" description="Messages and full stats are in Meta Business Suite and TikTok Studio (also as phone apps); Metricool follows the followers of all 3 every day. One click from here; they open in a new tab." compact>
       <div className="grid gap-4 sm:grid-cols-3">
         {SHORTCUTS.map((g) => (
           <div key={g.group} className="min-w-0">
@@ -423,7 +427,7 @@ function Shortcuts() {
                     className="flex min-w-0 items-center gap-2.5 rounded-xl border border-[var(--border)] px-3 py-2 transition hover:border-[var(--brand)]"
                   >
                     <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)]">
-                      <SocialGlyph id={s.icon} size={13} />
+                      {s.icon === 'metricool' ? <SiteIcon name="sliders" size={13} className="text-[var(--brand-text)]" /> : <SocialGlyph id={s.icon} size={13} />}
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-medium">{s.label}</span>
@@ -726,9 +730,21 @@ export function Social() {
         title="Social media"
         description="Your Facebook, Instagram and TikTok in one place: followers, growth, latest posts and messages."
         actions={
-          <Button onClick={() => setNumbersOpen(true)}>
-            <SiteIcon name="pencil" size={14} /> Update my numbers
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {/* Followers of the 3 platforms tracked every day, automatically (the owner's Metricool account) */}
+            <a
+              href={METRICOOL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-sm font-semibold text-[var(--brand-fg)] transition hover:brightness-110"
+            >
+              <SiteIcon name="sliders" size={14} /> Metricool: automatic stats
+              <SiteIcon name="external" size={12} />
+            </a>
+            <Button variant="outline" onClick={() => setNumbersOpen(true)}>
+              <SiteIcon name="pencil" size={14} /> Update my numbers
+            </Button>
+          </div>
         }
       />
 
