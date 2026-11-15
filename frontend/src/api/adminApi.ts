@@ -331,6 +331,10 @@ export const adminApi = {
     inbox: (platform: 'facebook' | 'instagram') => api.get<ApiResponse<SocialConversation[]>>(`/admin/social/inbox/${platform}`),
     thread: (id: string) => api.get<ApiResponse<SocialMessage[]>>(`/admin/social/thread/${encodeURIComponent(id)}`),
     reply: (customerId: string, text: string) => api.post<ApiResponse<{ sent: boolean }>>('/admin/social/reply', { customerId, text }),
+    /** Update my numbers: followers (and posts) typed for a day */
+    saveNumbers: (day: string, entries: { platform: 'facebook' | 'instagram' | 'tiktok'; followers: number; posts?: number }[]) =>
+      api.post<ApiResponse<{ saved: number }>>('/admin/social/numbers', { day, entries }),
+    deleteNumbers: (platform: string, day: string) => api.delete<ApiResponse<null>>(`/admin/social/numbers/${platform}/${day}`),
   },
 
   ads: {

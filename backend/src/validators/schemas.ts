@@ -857,6 +857,21 @@ export const depositMethodsSchema = z.object({
   depositInstructions: z.string().max(2000).optional(),
 });
 
+/** Admin → Social media → Update my numbers (accounts not connected) */
+export const socialNumbersSchema = z.object({
+  day: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  entries: z
+    .array(
+      z.object({
+        platform: z.enum(['facebook', 'instagram', 'tiktok']),
+        followers: z.number().int().min(0).max(1_000_000_000),
+        posts: z.number().int().min(0).max(1_000_000).optional(),
+      })
+    )
+    .min(1)
+    .max(3),
+});
+
 /** Admin → Social media: a reply to a Facebook / Instagram message */
 export const socialReplySchema = z.object({
   customerId: z.string().regex(/^\d{5,30}$/),

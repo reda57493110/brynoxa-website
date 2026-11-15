@@ -279,6 +279,8 @@ export type PlatformStats = {
   reach28?: number;
   recent: SocialPost[];
   error?: string;
+  /** Not connected: the day of the numbers typed by staff */
+  typedOn?: string;
 };
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0);
@@ -410,17 +412,48 @@ async function snapshot(platform: SocialPlatform, followers: number, posts?: num
 export async function growth(days = 90) {
   const since = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
   const rows = await SocialSnapshot.find({ day: { $gte: since } }).sort({ day: 1 }).lean();
-  return rows.map((r) => ({ platform: r.platform, day: r.day, followers: r.followers }));
+  return rows.map((r) => ({ platform: r.platform, day: r.day, followers: r.followers, posts: r.posts, manual: Boolean(r.manual) }));
+}
+
+/**
+ * "Update my numbers": followers (and posts) typed by staff for accounts that are not connected.
+ * One row per platform and day (typing again the same day replaces it). Feeds the growth chart.
+ */
+export async function saveNumbers(input: { day: string; entries: { platform: SocialPlatform; followers: number; posts?: number }[] }) {
+  if (input.day > today()) throw new ApiError(400, 'Pick today or a past day');
+  for (const e of input.entries) {
+    await SocialSnapshot.updateOne(
+      { platform: e.platform, day: input.day },
+      { $set: { followers: Math.round(e.followers), posts: e.posts === undefined ? undefined : Math.round(e.posts), manual: true } },
+      { upsert: true }
+    );
+  }
+  return { saved: input.entries.length };
+}
+
+export async function deleteNumbers(platform: string, day: string) {
+  if (!['facebook', 'instagram', 'tiktok'].includes(platform) || !/^\d{4}-\d{2}-\d{2}$/.test(day)) throw new ApiError(404, 'Not found');
+  await SocialSnapshot.deleteOne({ platform, day, manual: true });
+}
+
+/** The last numbers typed for a platform that is not connected */
+function lastTyped(rows: Awaited<ReturnType<typeof growth>>, platform: SocialPlatform) {
+  const mine = rows.filter((r) => r.platform === platform);
+  const last = mine[mine.length - 1];
+  return last ? { followers: last.followers, posts: last.posts, day: last.day } : undefined;
 }
 
 /** Everything on the page: setup state, each platform's numbers and posts, growth */
 export async function overview() {
-  const accounts = await SocialAccount.find().lean<ISocialAccount[]>();
+  const [accounts, history] = await Promise.all([SocialAccount.find().lean<ISocialAccount[]>(), growth(365)]);
   const byPlatform = new Map(accounts.map((a) => [a.platform, a]));
   const platforms = await Promise.all(
     (['facebook', 'instagram', 'tiktok'] as SocialPlatform[]).map(async (platform): Promise<PlatformStats> => {
       const acc = byPlatform.get(platform);
-      if (!acc) return { platform, connected: false, recent: [] };
+      if (!acc) {
+        const typed = lastTyped(history, platform);
+        return { platform, connected: false, recent: [], followers: typed?.followers, posts: typed?.posts, typedOn: typed?.day };
+      }
       try {
         // TikTok may renew its key: work on a real document
         const doc = platform === 'tiktok' ? await SocialAccount.findById(acc._id) : (acc as ISocialAccount);
@@ -441,7 +474,9 @@ export async function overview() {
       tiktok: { configured: tiktokConfigured(), callbackUrl: callbackUrl('tiktok') },
     },
     platforms,
-    growth: await growth(90),
+    growth: history.filter((r) => r.day >= new Date(Date.now() - 90 * 86_400_000).toISOString().slice(0, 10)),
+    /** Numbers typed by staff, newest first (to correct a mistake) */
+    typed: history.filter((r) => r.manual).reverse().slice(0, 30),
   };
 }
 

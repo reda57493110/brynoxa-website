@@ -5,6 +5,9 @@ import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
+import { Modal } from '@/components/ui/Modal'
+import { Input } from '@/components/ui/Input'
+import { SOCIAL_LINKS } from '@/lib/site'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -66,6 +69,7 @@ function AccountCard({
   onConnect,
   onDisconnect,
   connecting,
+  profileLink,
 }: {
   p: PlatformStats
   growth: SocialOverview['growth']
@@ -74,6 +78,8 @@ function AccountCard({
   onConnect: () => void
   onDisconnect: () => void
   connecting: boolean
+  /** The page address from Settings → Contact & business (when not connected) */
+  profileLink?: string
 }) {
   return (
     <div className="flex min-w-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
@@ -115,19 +121,23 @@ function AccountCard({
         <p className="mt-4 rounded-lg bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] p-2.5 text-xs text-[var(--danger)]">
           Could not read this account: {p.error}. {canConnect ? 'Connecting again usually fixes it.' : 'Ask the owner to connect it again.'}
         </p>
+      ) : typeof p.followers === 'number' ? (
+        <>
+          <p className="mt-4 font-display text-3xl font-bold tabular-nums">{compact(p.followers)}</p>
+          <p className="text-xs text-[var(--fg-muted)]">followers{typeof p.posts === 'number' ? ` · ${compact(p.posts)} posts` : ''}</p>
+          <div className="mt-1 flex flex-wrap gap-x-3">
+            <Delta value={change(growth, p.platform, p.followers, 7)} label="7 days" />
+            <Delta value={change(growth, p.platform, p.followers, 30)} label="30 days" />
+          </div>
+          <p className="mt-2 text-[11px] text-[var(--fg-muted)]">Typed on {p.typedOn ? formatDate(p.typedOn) : '—'}</p>
+        </>
       ) : (
-        <p className="mt-4 text-xs text-[var(--fg-muted)]">
-          {p.platform === 'instagram'
-            ? 'Connected together with Facebook (Instagram professional account linked to your Page).'
-            : configured
-              ? 'Press Connect and sign in to allow Brynoxa to read your stats.'
-              : 'Needs the setup below first.'}
-        </p>
+        <p className="mt-4 text-xs text-[var(--fg-muted)]">No numbers yet: press “Update my numbers” and type your followers.</p>
       )}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-4">
-        {p.link ? (
-          <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
+        {p.link || profileLink ? (
+          <a href={p.link || profileLink} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
             <SiteIcon name="external" size={12} /> Open
           </a>
         ) : null}
@@ -159,7 +169,7 @@ function GrowthChart({ growth }: { growth: SocialOverview['growth'] }) {
   const days = [...new Set(growth.map((g) => g.day))].sort()
   const platforms = (['facebook', 'instagram', 'tiktok'] as SocialPlatform[]).filter((p) => growth.some((g) => g.platform === p))
   if (days.length < 2) {
-    return <p className="text-xs text-[var(--fg-muted)]">The chart fills in day by day: each day you open this page, the followers of the day are saved.</p>
+    return <p className="text-xs text-[var(--fg-muted)]">The chart appears once you have typed your numbers on two different days (e.g. once a week).</p>
   }
   const W = 600
   const H = 160
@@ -440,6 +450,186 @@ function SetupGuide({ setup, shop }: { setup: SocialOverview['setup']; shop: str
   )
 }
 
+/** Official tools of each platform, where messages and full stats already live */
+const SHORTCUTS: { group: string; items: { label: string; hint: string; href: string; icon: string }[] }[] = [
+  {
+    group: 'Messages',
+    items: [
+      { label: 'Facebook + Instagram inbox', hint: 'Meta Business Suite', href: 'https://business.facebook.com/latest/inbox/all', icon: 'facebook' },
+      { label: 'TikTok messages', hint: 'TikTok', href: 'https://www.tiktok.com/messages', icon: 'tiktok' },
+    ],
+  },
+  {
+    group: 'Stats',
+    items: [
+      { label: 'Facebook + Instagram insights', hint: 'Meta Business Suite', href: 'https://business.facebook.com/latest/insights', icon: 'instagram' },
+      { label: 'TikTok analytics', hint: 'TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/analytics', icon: 'tiktok' },
+    ],
+  },
+  {
+    group: 'Post',
+    items: [
+      { label: 'Plan a post', hint: 'Meta Business Suite → Planner', href: 'https://business.facebook.com/latest/content_calendar', icon: 'facebook' },
+      { label: 'Upload a video', hint: 'TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/upload', icon: 'tiktok' },
+    ],
+  },
+]
+
+function Shortcuts() {
+  return (
+    <Panel title="Shortcuts" description="Your messages and full stats are in Meta Business Suite and TikTok Studio (also as phone apps). One click from here; they open in a new tab." compact>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {SHORTCUTS.map((g) => (
+          <div key={g.group} className="min-w-0">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{g.group}</p>
+            <ul className="space-y-1.5">
+              {g.items.map((s) => (
+                <li key={s.href}>
+                  <a
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex min-w-0 items-center gap-2.5 rounded-xl border border-[var(--border)] px-3 py-2 transition hover:border-[var(--brand)]"
+                  >
+                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)]">
+                      <SocialGlyph id={s.icon} size={13} />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{s.label}</span>
+                      <span className="block truncate text-[11px] text-[var(--fg-muted)]">{s.hint}</span>
+                    </span>
+                    <SiteIcon name="external" size={12} className="shrink-0 text-[var(--fg-muted)]" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </Panel>
+  )
+}
+
+const todayIso = () => new Date().toISOString().slice(0, 10)
+
+/** Update my numbers: followers and posts of each account, for a day (today by default) */
+function NumbersDialog({ open, onClose, last }: { open: boolean; onClose: () => void; last: PlatformStats[] }) {
+  const qc = useQueryClient()
+  const [day, setDay] = useState(todayIso())
+  const [values, setValues] = useState<Record<SocialPlatform, { followers: string; posts: string }>>({
+    facebook: { followers: '', posts: '' },
+    instagram: { followers: '', posts: '' },
+    tiktok: { followers: '', posts: '' },
+  })
+  useEffect(() => {
+    if (open) setDay(todayIso())
+  }, [open])
+  const entries = (['facebook', 'instagram', 'tiktok'] as SocialPlatform[])
+    .filter((p) => values[p].followers.trim() !== '')
+    .map((p) => ({ platform: p, followers: Number(values[p].followers), posts: values[p].posts.trim() === '' ? undefined : Number(values[p].posts) }))
+  const bad = entries.some((e) => !Number.isInteger(e.followers) || e.followers < 0 || (e.posts !== undefined && (!Number.isInteger(e.posts) || e.posts < 0)))
+  const save = useMutation({
+    mutationFn: () => adminApi.social.saveNumbers(day, entries),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-social'] })
+      toast.success('Numbers saved')
+      setValues({ facebook: { followers: '', posts: '' }, instagram: { followers: '', posts: '' }, tiktok: { followers: '', posts: '' } })
+      onClose()
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+  return (
+    <Modal open={open} onClose={onClose} title="Update my numbers">
+      <form
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (entries.length && !bad) save.mutate()
+        }}
+      >
+        <p className="text-xs text-[var(--fg-muted)]">Type what each profile shows today (only the ones you want). Once a week is enough to see your growth.</p>
+        <Input label="Day" type="date" value={day} max={todayIso()} onChange={(e) => setDay(e.target.value)} />
+        {(['facebook', 'instagram', 'tiktok'] as SocialPlatform[]).map((p) => {
+          const prev = last.find((x) => x.platform === p)
+          return (
+            <div key={p} className="grid grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)] items-end gap-2">
+              <span className="mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full text-white" style={{ background: COLOR[p] }}>
+                <SocialGlyph id={p} size={14} />
+              </span>
+              <Input
+                label={`${LABEL[p]} followers`}
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                placeholder={typeof prev?.followers === 'number' ? `last: ${prev.followers}` : 'e.g. 1520'}
+                value={values[p].followers}
+                onChange={(e) => setValues((v) => ({ ...v, [p]: { ...v[p], followers: e.target.value } }))}
+              />
+              <Input
+                label="Posts (optional)"
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                placeholder={typeof prev?.posts === 'number' ? `last: ${prev.posts}` : ''}
+                value={values[p].posts}
+                onChange={(e) => setValues((v) => ({ ...v, [p]: { ...v[p], posts: e.target.value } }))}
+              />
+            </div>
+          )
+        })}
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={save.isPending} disabled={!entries.length || bad}>
+            Save
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+/** The numbers typed so far (to correct a mistake) */
+function TypedHistory({ rows }: { rows: SocialOverview['typed'] }) {
+  const qc = useQueryClient()
+  const remove = useMutation({
+    mutationFn: (r: { platform: string; day: string }) => adminApi.social.deleteNumbers(r.platform, r.day),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-social'] })
+      toast.success('Removed')
+    },
+    onError: (e) => toast.error(getErrorMessage(e)),
+  })
+  if (!rows.length) return null
+  return (
+    <details className="rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-sm">
+      <summary className="cursor-pointer font-semibold">Numbers typed ({rows.length})</summary>
+      <ul className="mt-2 divide-y divide-[var(--border)]">
+        {rows.map((r) => (
+          <li key={`${r.platform}-${r.day}`} className="flex items-center gap-3 py-1.5">
+            <SocialGlyph id={r.platform} size={13} />
+            <span className="w-24 shrink-0 text-xs text-[var(--fg-muted)]">{formatDate(r.day)}</span>
+            <span className="min-w-0 flex-1 text-xs tabular-nums">
+              {compact(r.followers)} followers{typeof r.posts === 'number' ? ` · ${compact(r.posts)} posts` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={() => remove.mutate({ platform: r.platform, day: r.day })}
+              aria-label={`Remove ${LABEL[r.platform]} ${r.day}`}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]"
+            >
+              <SiteIcon name="trash" size={13} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
 /** Admin → Social media: followers, growth, latest posts and Facebook / Instagram messages */
 export function Social() {
   const qc = useQueryClient()
@@ -448,6 +638,7 @@ export function Social() {
   const canConnect = hasPermission(role, 'settings')
   const [tab, setTab] = useState<'posts' | 'messages'>('posts')
   const [confirmOff, setConfirmOff] = useState<'meta' | 'tiktok' | null>(null)
+  const [numbersOpen, setNumbersOpen] = useState(false)
 
   const overview = useQuery({
     queryKey: ['admin-social'],
@@ -494,8 +685,8 @@ export function Social() {
         title="Social media"
         description="Your Facebook, Instagram and TikTok in one place: followers, growth, latest posts and messages."
         actions={
-          <Button variant="outline" onClick={() => overview.refetch()} loading={overview.isFetching && !overview.isLoading}>
-            <SiteIcon name="refresh" size={14} /> Refresh
+          <Button onClick={() => setNumbersOpen(true)}>
+            <SiteIcon name="pencil" size={14} /> Update my numbers
           </Button>
         }
       />
@@ -506,6 +697,8 @@ export function Social() {
         <QueryErrorState onRetry={() => overview.refetch()} />
       ) : (
         <>
+          <Shortcuts />
+
           <div className="grid gap-3 md:grid-cols-3">
             {data.platforms.map((p) => (
               <AccountCard
@@ -517,15 +710,16 @@ export function Social() {
                 connecting={connect.isPending && connect.variables === CONNECT_OF[p.platform]}
                 onConnect={() => connect.mutate(CONNECT_OF[p.platform])}
                 onDisconnect={() => setConfirmOff(CONNECT_OF[p.platform])}
+                profileLink={SOCIAL_LINKS.find((s) => s.id === p.platform)?.href}
               />
             ))}
           </div>
 
-          {anyConnected ? (
-            <Panel title="Followers over time">
-              <GrowthChart growth={data.growth} />
-            </Panel>
-          ) : null}
+          <Panel title="Followers over time">
+            <GrowthChart growth={data.growth} />
+          </Panel>
+
+          <TypedHistory rows={data.typed ?? []} />
 
           {anyConnected ? (
             <section className="space-y-3">
@@ -547,8 +741,18 @@ export function Social() {
             </section>
           ) : null}
 
-          {needSetup && canConnect ? <SetupGuide setup={data.setup} shop={shop} /> : null}
-          {needSetup && !canConnect ? <p className="text-xs text-[var(--fg-muted)]">The owner connects the accounts (Settings permission).</p> : null}
+          {/* Optional, for later: live numbers and the inbox inside the admin (needs a Meta / TikTok developer app) */}
+          {needSetup && canConnect ? (
+            <details className="rounded-2xl border border-dashed border-[var(--border)] p-3">
+              <summary className="cursor-pointer text-sm font-semibold">Connect automatically (advanced, optional)</summary>
+              <p className="mt-1 text-xs text-[var(--fg-muted)]">
+                Not needed: the shortcuts and your numbers work without it. Only if one day you want live numbers and the inbox inside this admin.
+              </p>
+              <div className="mt-3">
+                <SetupGuide setup={data.setup} shop={shop} />
+              </div>
+            </details>
+          ) : null}
         </>
       )}
 
@@ -561,6 +765,7 @@ export function Social() {
         onClose={() => setConfirmOff(null)}
         onConfirm={() => confirmOff && disconnect.mutate(confirmOff)}
       />
+      {data ? <NumbersDialog open={numbersOpen} onClose={() => setNumbersOpen(false)} last={data.platforms} /> : null}
     </div>
   )
 }

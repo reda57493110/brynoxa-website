@@ -26,6 +26,8 @@ export type PlatformStats = {
   reach28?: number
   recent: SocialPost[]
   error?: string
+  /** Not connected: the day of the numbers typed by staff */
+  typedOn?: string
 }
 
 export type SocialOverview = {
@@ -34,8 +36,12 @@ export type SocialOverview = {
     tiktok: { configured: boolean; callbackUrl: string }
   }
   platforms: PlatformStats[]
-  growth: { platform: SocialPlatform; day: string; followers: number }[]
+  growth: SocialSnapshotRow[]
+  /** Numbers typed by staff, newest first */
+  typed: SocialSnapshotRow[]
 }
+
+export type SocialSnapshotRow = { platform: SocialPlatform; day: string; followers: number; posts?: number; manual?: boolean }
 
 export type SocialConversation = {
   id: string

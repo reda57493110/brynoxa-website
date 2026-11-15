@@ -55,6 +55,8 @@ export interface ISocialSnapshot extends Document {
   day: string;
   followers: number;
   posts?: number;
+  /** Typed by staff (Admin → Social media → Update my numbers), not read from the platform */
+  manual?: boolean;
 }
 
 const socialSnapshotSchema = new Schema<ISocialSnapshot>(
@@ -63,6 +65,7 @@ const socialSnapshotSchema = new Schema<ISocialSnapshot>(
     day: { type: String, required: true },
     followers: { type: Number, required: true },
     posts: Number,
+    manual: Boolean,
   },
   { timestamps: true }
 );

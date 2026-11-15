@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { requireAuth, requirePermission } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { socialReplySchema } from '../validators/schemas';
+import { socialNumbersSchema, socialReplySchema } from '../validators/schemas';
 import { asyncHandler } from '../utils/asyncHandler';
 import { sendSuccess } from '../utils/ApiResponse';
 import { param } from '../utils/params';
@@ -69,6 +69,25 @@ router.post(
   validate(socialReplySchema),
   asyncHandler(async (req: AuthRequest, res: Response) => {
     sendSuccess(res, await social.reply(req.body), 'Message sent');
+  })
+);
+
+router.post(
+  '/admin/social/numbers',
+  requireAuth,
+  requirePermission('ads'),
+  validate(socialNumbersSchema),
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    sendSuccess(res, await social.saveNumbers(req.body), 'Numbers saved');
+  })
+);
+router.delete(
+  '/admin/social/numbers/:platform/:day',
+  requireAuth,
+  requirePermission('ads'),
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    await social.deleteNumbers(param(req, 'platform'), param(req, 'day'));
+    sendSuccess(res, null, 'Removed');
   })
 );
 

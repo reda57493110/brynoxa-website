@@ -40,6 +40,7 @@ const RULES: Rule[] = [
   { rx: /^admin\/(inventory|stock)/, action: 'Changed stock', kind: 'inventory' },
   { rx: /^admin\/(customers|wholesale)\/([^/]+)/, action: 'Updated a customer', kind: 'customer' },
   { rx: /^admin\/(customers|wholesale)/, action: 'Updated customers', kind: 'customer' },
+  { rx: /^admin\/social\/numbers/, action: (m: string) => (m === 'DELETE' ? 'Removed social media numbers' : 'Updated social media numbers'), kind: 'marketing' },
   { rx: /^admin\/social\/reply$/, action: 'Replied to a social media message', kind: 'marketing' },
   { rx: /^admin\/social\/[^/]+\/connect$/, action: 'Connected a social media account', kind: 'marketing' },
   { rx: /^admin\/social\/[^/]+$/, methods: ['DELETE'], action: 'Disconnected a social media account', kind: 'marketing' },

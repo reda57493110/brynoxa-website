@@ -158,7 +158,7 @@ test('replies go from the Page, only to a real customer id, as a response', asyn
 test('rights, routes, live site, staff log, admin page', () => {
   const routes = read('backend/src/routes/social.routes.ts');
   assert.equal((routes.match(/requirePermission\('settings'\)/g) || []).length, 2, 'connect / disconnect: owner');
-  assert.equal((routes.match(/requirePermission\('ads'\)/g) || []).length, 4, 'numbers and messages: owner + marketing');
+  assert.equal((routes.match(/requirePermission\('ads'\)/g) || []).length, 6, 'numbers, typed numbers and messages: owner + marketing');
   assert.ok(!/route === 'social'|startsWith\('social/.test(read('api/v1/admin.js')), 'admin routes reach Express');
   // the return from Meta / TikTok goes through the catch-all to Express
   const idx = read('api/index.js');
@@ -173,4 +173,51 @@ test('rights, routes, live site, staff log, admin page', () => {
   assert.ok(f('lib/permissions.ts').includes("'/admin/social': 'ads',"));
   assert.ok(f('app/router.tsx').includes('<Route path="social" element={<S><AdminSocial /></S>} />'));
   assert.ok(read('backend/.env.example').includes('# META_APP_ID='));
+});
+
+test('without connection: numbers typed by staff (one row per platform and day), shown on the cards and the chart', async () => {
+  const social = require(dist('services/social.service.js'));
+  const { SocialAccount, SocialSnapshot } = require(dist('models/SocialAccount.js'));
+  const { socialNumbersSchema } = require(dist('validators/schemas.js'));
+  assert.ok(socialNumbersSchema.safeParse({ day: '2026-11-15', entries: [{ platform: 'instagram', followers: 3870, posts: 64 }] }).success);
+  assert.ok(!socialNumbersSchema.safeParse({ day: '2026-11-15', entries: [{ platform: 'myspace', followers: 1 }] }).success);
+  assert.ok(!socialNumbersSchema.safeParse({ day: '2026-11-15', entries: [{ platform: 'tiktok', followers: -4 }] }).success);
+  assert.ok(!socialNumbersSchema.safeParse({ day: '2026-11-15', entries: [] }).success);
+
+  const orig = { upd: SocialSnapshot.updateOne, find: SocialSnapshot.find, acc: SocialAccount.find, del: SocialSnapshot.deleteOne };
+  const writes = [];
+  SocialSnapshot.updateOne = async (q, u, o) => writes.push({ q, set: u.$set, o });
+  try {
+    await social.saveNumbers({ day: '2026-11-15', entries: [{ platform: 'instagram', followers: 3870, posts: 64 }, { platform: 'tiktok', followers: 950 }] });
+    assert.deepEqual(writes.map((w) => [w.q.platform, w.q.day, w.set.followers, w.set.manual, w.o.upsert]), [
+      ['instagram', '2026-11-15', 3870, true, true],
+      ['tiktok', '2026-11-15', 950, true, true],
+    ]);
+    await assert.rejects(() => social.saveNumbers({ day: '2999-01-01', entries: [{ platform: 'tiktok', followers: 1 }] }), /today or a past day/);
+
+    const day = (n) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+    SocialAccount.find = () => ({ lean: async () => [] });
+    SocialSnapshot.find = () => ({ sort: () => ({ lean: async () => [
+      { platform: 'instagram', day: day(20), followers: 3500, posts: 60, manual: true },
+      { platform: 'instagram', day: day(1), followers: 3870, posts: 64, manual: true },
+    ] }) });
+    const o = await social.overview();
+    const ig = o.platforms.find((p) => p.platform === 'instagram');
+    assert.deepEqual([ig.connected, ig.followers, ig.posts, ig.typedOn], [false, 3870, 64, day(1)]);
+    assert.equal(o.platforms.find((p) => p.platform === 'facebook').followers, undefined, 'nothing typed yet');
+    assert.equal(o.growth.length, 2, 'the chart');
+    assert.equal(o.typed[0].day, day(1), 'newest first');
+
+    let removed;
+    SocialSnapshot.deleteOne = async (q) => (removed = q);
+    await social.deleteNumbers('instagram', day(1));
+    assert.deepEqual(removed, { platform: 'instagram', day: day(1), manual: true }, 'only typed numbers can be removed');
+    await assert.rejects(() => social.deleteNumbers('x', 'y'), /Not found/);
+  } finally {
+    Object.assign(SocialSnapshot, { updateOne: orig.upd, find: orig.find, deleteOne: orig.del });
+    SocialAccount.find = orig.acc;
+  }
+  const page = read('frontend/src/pages/admin/Social.tsx');
+  for (const href of ['https://business.facebook.com/latest/inbox/all', 'https://business.facebook.com/latest/insights', 'https://www.tiktok.com/tiktokstudio/analytics']) assert.ok(page.includes(href), href);
+  assert.ok(page.includes('Connect automatically (advanced, optional)'), 'the developer app is optional now');
 });
