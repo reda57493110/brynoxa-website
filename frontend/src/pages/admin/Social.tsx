@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/adminApi'
@@ -70,6 +70,7 @@ function AccountCard({
   onDisconnect,
   connecting,
   profileLink,
+  onOpen,
 }: {
   p: PlatformStats
   growth: SocialOverview['growth']
@@ -80,10 +81,12 @@ function AccountCard({
   connecting: boolean
   /** The page address from Settings → Contact & business (when not connected) */
   profileLink?: string
+  /** Opens this account's own page */
+  onOpen: () => void
 }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4">
-      <div className="flex items-center gap-3">
+    <div className="flex min-w-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 transition hover:border-[var(--brand)]">
+      <button type="button" onClick={onOpen} className="flex items-center gap-3 text-start" aria-label={`Open ${LABEL[p.platform]}: messages, followers, posts`}>
         <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[var(--border)] bg-[var(--bg-muted)]">
           {p.picture ? <img src={p.picture} alt="" className="h-full w-full object-cover" /> : null}
           <span className="absolute -bottom-0.5 -end-0.5 flex h-5 w-5 items-center justify-center rounded-full text-white" style={{ background: COLOR[p.platform] }}>
@@ -92,9 +95,10 @@ function AccountCard({
         </span>
         <div className="min-w-0">
           <p className="truncate font-semibold">{p.connected ? p.name || LABEL[p.platform] : LABEL[p.platform]}</p>
-          <p className="truncate text-xs text-[var(--fg-muted)]">{p.connected ? (p.username ? `@${p.username}` : 'Connected') : 'Not connected'}</p>
+          <p className="truncate text-xs text-[var(--fg-muted)]">{p.connected ? (p.username ? `@${p.username}` : 'Connected') : (p.typedOn ? 'Your numbers' : 'No numbers yet')}</p>
         </div>
-      </div>
+        <SiteIcon name="chevron-right" size={16} className="ms-auto shrink-0 text-[var(--fg-muted)] rtl:rotate-180" />
+      </button>
 
       {p.connected && !p.error ? (
         <>
@@ -136,6 +140,9 @@ function AccountCard({
       )}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-4">
+        <Button size="sm" onClick={onOpen}>
+          Messages, posts &amp; stats
+        </Button>
         {p.link || profileLink ? (
           <a href={p.link || profileLink} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
             <SiteIcon name="external" size={12} /> Open
@@ -374,82 +381,6 @@ function Inbox({ platforms }: { platforms: PlatformStats[] }) {
   )
 }
 
-function CopyLine({ value }: { value: string }) {
-  return (
-    <span className="flex min-w-0 items-center gap-2">
-      <code className="min-w-0 flex-1 truncate rounded bg-[var(--bg-muted)] px-2 py-1 text-[11px]" title={value}>
-        {value}
-      </code>
-      <button
-        type="button"
-        className="shrink-0 text-xs font-semibold text-[var(--brand-text)] hover:underline"
-        onClick={() => navigator.clipboard.writeText(value).then(() => toast.success('Copied'), () => toast.error('Could not copy'))}
-      >
-        Copy
-      </button>
-    </span>
-  )
-}
-
-/** What the owner does once in Meta / TikTok (their own developer apps) and in Vercel */
-function SetupGuide({ setup, shop }: { setup: SocialOverview['setup']; shop: string }) {
-  return (
-    <Panel title="Setup (once)" description="Facebook, Instagram and TikTok only share your stats with an app you register with them. Free; about 15 minutes for Meta. TikTok reviews its apps (a few days or more).">
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="min-w-0 text-sm">
-          <p className="flex items-center gap-2 font-semibold">
-            <SocialGlyph id="facebook" size={14} /> Facebook + Instagram {setup.meta.configured ? <span className="text-xs text-[var(--success)]">● ready{setup.meta.configId ? '' : ' (no Configuration ID yet)'}</span> : null}
-          </p>
-          <ol className="mt-2 list-decimal space-y-1.5 ps-5 text-xs text-[var(--fg-muted)]">
-            <li>
-              In <b>Meta Business Suite</b> → Settings → Instagram accounts: check your Instagram is connected (a <b>Professional</b> account). If not, connect it there.
-            </li>
-            <li>
-              Go to <b>developers.facebook.com</b> (same Facebook account) → My Apps → Create app → use case <b>Other</b> → type <b>Business</b> → link it to your <b>business portfolio</b> (the one in Business Suite).
-            </li>
-            <li>Add the products <b>Facebook Login for Business</b>, <b>Instagram</b> (API setup with Facebook login) and <b>Messenger</b>.</li>
-            <li>
-              Facebook Login for Business → Settings → Valid OAuth Redirect URIs: <CopyLine value={setup.meta.callbackUrl} />
-            </li>
-            <li>
-              Facebook Login for Business → <b>Configurations</b> → Create: token type <b>User access token</b>, choose these permissions, then copy the <b>Configuration ID</b>:{' '}
-              <span className="mt-1 block break-words font-mono text-[10px]">{setup.meta.scopes.join(', ')}</span>
-            </li>
-            <li>
-              App settings → Basic: App domains <CopyLine value={new URL(shop).hostname} /> and add your Privacy policy address <CopyLine value={`${shop}/privacy`} />
-            </li>
-            <li>Copy the <b>App ID</b> and <b>App secret</b> (App settings → Basic).</li>
-            <li>
-              In Vercel → your project → Settings → Environment Variables, add <code>META_APP_ID</code>, <code>META_APP_SECRET</code> and <code>META_CONFIG_ID</code>, then redeploy. Never paste them anywhere else (not in a chat).
-            </li>
-            <li>Come back here and press <b>Connect</b> on Facebook. While the app stays in “Development” mode it works for you (admin of the app) — that is all this page needs.</li>
-          </ol>
-        </div>
-        <div className="min-w-0 text-sm">
-          <p className="flex items-center gap-2 font-semibold">
-            <SocialGlyph id="tiktok" size={14} /> TikTok {setup.tiktok.configured ? <span className="text-xs text-[var(--success)]">● ready</span> : null}
-          </p>
-          <ol className="mt-2 list-decimal space-y-1.5 ps-5 text-xs text-[var(--fg-muted)]">
-            <li>
-              Go to <b>developers.tiktok.com</b> → Manage apps → Connect an app (Web).
-            </li>
-            <li>
-              Add <b>Login Kit</b> with the Redirect URI: <CopyLine value={setup.tiktok.callbackUrl} />
-            </li>
-            <li>
-              Ask for the scopes <code>user.info.basic</code>, <code>user.info.profile</code>, <code>user.info.stats</code>, <code>video.list</code> (add <b>Display API</b>).
-            </li>
-            <li>Fill in the app details (website, Terms and Privacy pages) and submit it for review.</li>
-            <li>
-              Once approved: copy <b>Client key</b> and <b>Client secret</b> into Vercel as <code>TIKTOK_CLIENT_KEY</code> and <code>TIKTOK_CLIENT_SECRET</code>, then redeploy and press Connect.
-            </li>
-          </ol>
-        </div>
-      </div>
-    </Panel>
-  )
-}
-
 /** Official tools of each platform, where messages and full stats already live */
 const SHORTCUTS: { group: string; items: { label: string; hint: string; href: string; icon: string }[] }[] = [
   {
@@ -630,6 +561,116 @@ function TypedHistory({ rows }: { rows: SocialOverview['typed'] }) {
   )
 }
 
+/** Where each account's messages, posts and stats live (opened in a new tab) */
+const PLACES: Record<SocialPlatform, { label: string; hint: string; href: string; icon: 'chat' | 'package' | 'sliders' | 'users' | 'mail' }[]> = {
+  facebook: [
+    { label: 'Messages', hint: 'Messenger conversations · Business Suite', href: 'https://business.facebook.com/latest/inbox/messenger', icon: 'chat' },
+    { label: 'Comments', hint: 'Comments on your posts · Business Suite', href: 'https://business.facebook.com/latest/inbox/facebook', icon: 'mail' },
+    { label: 'Posts', hint: 'Your published posts and their results', href: 'https://business.facebook.com/latest/posts/published_posts', icon: 'package' },
+    { label: 'Stats & followers', hint: 'Reach, visits, new followers · Insights', href: 'https://business.facebook.com/latest/insights', icon: 'sliders' },
+  ],
+  instagram: [
+    { label: 'Messages', hint: 'Instagram direct messages · Business Suite', href: 'https://business.facebook.com/latest/inbox/instagram_direct', icon: 'chat' },
+    { label: 'Comments', hint: 'Comments on your posts · Business Suite', href: 'https://business.facebook.com/latest/inbox/instagram', icon: 'mail' },
+    { label: 'Posts', hint: 'Your posts, reels and their results', href: 'https://business.facebook.com/latest/posts/published_posts', icon: 'package' },
+    { label: 'Stats & followers', hint: 'Reach, profile visits, followers · Insights', href: 'https://business.facebook.com/latest/insights', icon: 'sliders' },
+  ],
+  tiktok: [
+    { label: 'Messages', hint: 'TikTok messages', href: 'https://www.tiktok.com/messages', icon: 'chat' },
+    { label: 'Videos', hint: 'Your videos and their views · TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/content', icon: 'package' },
+    { label: 'Stats & followers', hint: 'Views, followers, best times · TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/analytics', icon: 'sliders' },
+    { label: 'Upload a video', hint: 'TikTok Studio', href: 'https://www.tiktok.com/tiktokstudio/upload', icon: 'users' },
+  ],
+}
+
+/** One account: its numbers and growth, and one click to its messages, posts and stats */
+function PlatformPage({ p, data, profileLink, onBack, onUpdate }: { p: PlatformStats; data: SocialOverview; profileLink?: string; onBack: () => void; onUpdate: () => void }) {
+  const growth = data.growth.filter((g) => g.platform === p.platform)
+  const typed = (data.typed ?? []).filter((r) => r.platform === p.platform)
+  const link = p.link || profileLink
+  return (
+    <div className="min-w-0 space-y-4">
+      <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm font-medium text-[var(--brand-text)] hover:underline">
+        <SiteIcon name="arrow-left" size={14} className="rtl:rotate-180" /> All accounts
+      </button>
+
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 sm:p-5">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full text-white" style={{ background: COLOR[p.platform] }}>
+          {p.picture ? <img src={p.picture} alt="" className="h-full w-full object-cover" /> : <SocialGlyph id={p.platform} size={24} />}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-xl font-semibold">{p.name || LABEL[p.platform]}</h2>
+          <p className="text-xs text-[var(--fg-muted)]">{p.username ? `@${p.username} · ` : ''}{p.typedOn ? `numbers of ${formatDate(p.typedOn)}` : p.connected ? 'connected' : 'no numbers yet'}</p>
+        </div>
+        <div className="flex gap-6">
+          <div>
+            <p className="font-display text-2xl font-bold tabular-nums">{compact(p.followers)}</p>
+            <p className="text-[11px] text-[var(--fg-muted)]">followers</p>
+            <div className="flex flex-col">
+              <Delta value={change(data.growth, p.platform, p.followers, 7)} label="7 days" />
+              <Delta value={change(data.growth, p.platform, p.followers, 30)} label="30 days" />
+            </div>
+          </div>
+          <div>
+            <p className="font-display text-2xl font-bold tabular-nums">{compact(p.posts)}</p>
+            <p className="text-[11px] text-[var(--fg-muted)]">{p.platform === 'tiktok' ? 'videos' : 'posts'}</p>
+          </div>
+        </div>
+        <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          <Button size="sm" onClick={onUpdate}>
+            <SiteIcon name="pencil" size={13} /> Update numbers
+          </Button>
+          {link ? (
+            <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-xs font-medium hover:border-[var(--brand)]">
+              <SiteIcon name="external" size={12} /> Profile
+            </a>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Connected one day: the real posts and messages here; otherwise one click to them */}
+      {p.connected && !p.error ? (
+        <div className="space-y-4">
+          <Panel title="Latest posts">
+            <Posts platforms={[p]} />
+          </Panel>
+          {p.platform !== 'tiktok' ? (
+            <Panel title="Messages">
+              <Inbox platforms={[p]} />
+            </Panel>
+          ) : null}
+        </div>
+      ) : (
+        <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+          {PLACES[p.platform].map((x) => (
+            <li key={x.label}>
+              <a
+                href={x.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-full min-w-0 flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 transition hover:-translate-y-0.5 hover:border-[var(--brand)]"
+              >
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: COLOR[p.platform] }}>
+                  <SiteIcon name={x.icon} size={18} />
+                </span>
+                <span className="flex items-center gap-1.5 font-semibold">
+                  {x.label} <SiteIcon name="external" size={12} className="text-[var(--fg-muted)]" />
+                </span>
+                <span className="text-xs text-[var(--fg-muted)]">{x.hint}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Panel title={`${LABEL[p.platform]} followers over time`}>
+        <GrowthChart growth={growth} />
+      </Panel>
+      <TypedHistory rows={typed} />
+    </div>
+  )
+}
+
 /** Admin → Social media: followers, growth, latest posts and Facebook / Instagram messages */
 export function Social() {
   const qc = useQueryClient()
@@ -675,8 +716,8 @@ export function Social() {
   })
 
   const data = overview.data
-  const shop = useMemo(() => window.location.origin, [])
-  const needSetup = data && (!data.setup.meta.configured || !data.setup.tiktok.configured)
+  const openPlatform = params.get('platform') as SocialPlatform | null
+  const opened = data?.platforms.find((p) => p.platform === openPlatform)
   const anyConnected = data?.platforms.some((p) => p.connected)
 
   return (
@@ -695,6 +736,14 @@ export function Social() {
         <div className="flex justify-center py-12"><Spinner size="lg" /></div>
       ) : overview.isError || !data ? (
         <QueryErrorState onRetry={() => overview.refetch()} />
+      ) : opened ? (
+        <PlatformPage
+          p={opened}
+          data={data}
+          profileLink={SOCIAL_LINKS.find((s) => s.id === opened.platform)?.href}
+          onBack={() => setParams({})}
+          onUpdate={() => setNumbersOpen(true)}
+        />
       ) : (
         <>
           <Shortcuts />
@@ -711,6 +760,7 @@ export function Social() {
                 onConnect={() => connect.mutate(CONNECT_OF[p.platform])}
                 onDisconnect={() => setConfirmOff(CONNECT_OF[p.platform])}
                 profileLink={SOCIAL_LINKS.find((s) => s.id === p.platform)?.href}
+                onOpen={() => setParams({ platform: p.platform })}
               />
             ))}
           </div>
@@ -741,18 +791,6 @@ export function Social() {
             </section>
           ) : null}
 
-          {/* Optional, for later: live numbers and the inbox inside the admin (needs a Meta / TikTok developer app) */}
-          {needSetup && canConnect ? (
-            <details className="rounded-2xl border border-dashed border-[var(--border)] p-3">
-              <summary className="cursor-pointer text-sm font-semibold">Connect automatically (advanced, optional)</summary>
-              <p className="mt-1 text-xs text-[var(--fg-muted)]">
-                Not needed: the shortcuts and your numbers work without it. Only if one day you want live numbers and the inbox inside this admin.
-              </p>
-              <div className="mt-3">
-                <SetupGuide setup={data.setup} shop={shop} />
-              </div>
-            </details>
-          ) : null}
         </>
       )}
 

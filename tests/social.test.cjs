@@ -219,5 +219,9 @@ test('without connection: numbers typed by staff (one row per platform and day),
   }
   const page = read('frontend/src/pages/admin/Social.tsx');
   for (const href of ['https://business.facebook.com/latest/inbox/all', 'https://business.facebook.com/latest/insights', 'https://www.tiktok.com/tiktokstudio/analytics']) assert.ok(page.includes(href), href);
-  assert.ok(page.includes('Connect automatically (advanced, optional)'), 'the developer app is optional now');
+  assert.ok(!page.includes('Connect automatically') && !page.includes('function SetupGuide'), 'no developer-app guide on the page');
+  // each account opens its own page: numbers, growth, and one click to its messages / posts / stats
+  assert.ok(page.includes("onOpen={() => setParams({ platform: p.platform })}"));
+  for (const href of ['https://business.facebook.com/latest/inbox/messenger', 'https://business.facebook.com/latest/inbox/instagram_direct', 'https://www.tiktok.com/tiktokstudio/content']) assert.ok(page.includes(href), href);
+  assert.ok(page.includes('const growth = data.growth.filter((g) => g.platform === p.platform)'), 'its own chart');
 });
