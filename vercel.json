@@ -100,7 +100,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/((?:(?:fr|ar)/)?(?:shop|category|product|search|cart|checkout|compare|account|contact|services|help|privacy|terms|track-order|order-confirmation|login|register|forgot-password|verify-email|reset-password|admin-print|admin)(?:/.*)?)",
+      "source": "/((?:(?:fr|ar)/)?(?:shop|setups|category|product|search|cart|checkout|compare|account|contact|services|help|privacy|terms|track-order|order-confirmation|login|register|forgot-password|verify-email|reset-password|admin-print|admin)(?:/.*)?)",
       "destination": "/index.html"
     }
   ],
