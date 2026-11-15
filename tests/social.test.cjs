@@ -45,6 +45,14 @@ test('Connect sends the owner to Meta / TikTok with the right permissions and re
   assert.equal(meta.searchParams.get('redirect_uri'), 'https://shop.test/api/v1/social/meta/callback');
   for (const s of ['pages_read_engagement', 'instagram_basic', 'instagram_manage_messages', 'pages_messaging']) assert.ok(meta.searchParams.get('scope').includes(s), s);
   assert.ok(!meta.toString().includes('meta-secret-xyz'), 'never the secret');
+  // Facebook Login for Business: the configuration replaces the list of permissions
+  process.env.META_CONFIG_ID = '987654321012';
+  const biz = new URL(social.connectUrl('meta', OWNER));
+  assert.equal(biz.searchParams.get('config_id'), '987654321012');
+  assert.equal(biz.searchParams.get('scope'), null);
+  process.env.META_CONFIG_ID = 'not-an-id';
+  assert.equal(new URL(social.connectUrl('meta', OWNER)).searchParams.get('config_id'), null, 'a bad value is ignored');
+  delete process.env.META_CONFIG_ID;
   const tt = new URL(social.connectUrl('tiktok', OWNER));
   assert.equal(tt.hostname, 'www.tiktok.com');
   assert.equal(tt.searchParams.get('scope'), 'user.info.basic,user.info.profile,user.info.stats,video.list');

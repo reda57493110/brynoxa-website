@@ -33,6 +33,8 @@ export const META_SCOPES = [
 ];
 export const TIKTOK_SCOPES = ['user.info.basic', 'user.info.profile', 'user.info.stats', 'video.list'];
 
+/** Facebook Login for Business: the configuration listing the permissions (META_CONFIG_ID) */
+const metaConfigId = () => (/^\d{5,30}$/.test(process.env.META_CONFIG_ID?.trim() || '') ? process.env.META_CONFIG_ID!.trim() : undefined);
 const metaConfigured = () => Boolean(process.env.META_APP_ID?.trim() && process.env.META_APP_SECRET?.trim());
 const tiktokConfigured = () => Boolean(process.env.TIKTOK_CLIENT_KEY?.trim() && process.env.TIKTOK_CLIENT_SECRET?.trim());
 
@@ -79,7 +81,8 @@ export function connectUrl(platform: 'meta' | 'tiktok', userId: string) {
       redirect_uri: callbackUrl('meta'),
       state,
       response_type: 'code',
-      scope: META_SCOPES.join(','),
+      // Business apps (Facebook Login for Business) name their permissions in a configuration
+      ...(metaConfigId() ? { config_id: metaConfigId() } : { scope: META_SCOPES.join(',') }),
     })}`;
   }
   if (!tiktokConfigured()) throw new ApiError(400, 'Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET in Vercel first (see the setup guide)');
@@ -434,7 +437,7 @@ export async function overview() {
   );
   return {
     setup: {
-      meta: { configured: metaConfigured(), callbackUrl: callbackUrl('meta'), graphVersion: GRAPH_VERSION },
+      meta: { configured: metaConfigured(), configId: Boolean(metaConfigId()), callbackUrl: callbackUrl('meta'), graphVersion: GRAPH_VERSION, scopes: META_SCOPES },
       tiktok: { configured: tiktokConfigured(), callbackUrl: callbackUrl('tiktok') },
     },
     platforms,

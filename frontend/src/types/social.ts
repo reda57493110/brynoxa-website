@@ -30,7 +30,7 @@ export type PlatformStats = {
 
 export type SocialOverview = {
   setup: {
-    meta: { configured: boolean; callbackUrl: string; graphVersion: string }
+    meta: { configured: boolean; configId: boolean; callbackUrl: string; graphVersion: string; scopes: string[] }
     tiktok: { configured: boolean; callbackUrl: string }
   }
   platforms: PlatformStats[]

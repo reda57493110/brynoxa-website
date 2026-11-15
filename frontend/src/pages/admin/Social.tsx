@@ -388,23 +388,29 @@ function SetupGuide({ setup, shop }: { setup: SocialOverview['setup']; shop: str
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="min-w-0 text-sm">
           <p className="flex items-center gap-2 font-semibold">
-            <SocialGlyph id="facebook" size={14} /> Facebook + Instagram {setup.meta.configured ? <span className="text-xs text-[var(--success)]">● ready</span> : null}
+            <SocialGlyph id="facebook" size={14} /> Facebook + Instagram {setup.meta.configured ? <span className="text-xs text-[var(--success)]">● ready{setup.meta.configId ? '' : ' (no Configuration ID yet)'}</span> : null}
           </p>
           <ol className="mt-2 list-decimal space-y-1.5 ps-5 text-xs text-[var(--fg-muted)]">
-            <li>Instagram: Settings → Account type → switch to a <b>Professional</b> account, and link it to your Facebook Page.</li>
             <li>
-              Go to <b>developers.facebook.com</b> → My Apps → Create app → type <b>Business</b> (use the Facebook account that manages your Page).
+              In <b>Meta Business Suite</b> → Settings → Instagram accounts: check your Instagram is connected (a <b>Professional</b> account). If not, connect it there.
             </li>
-            <li>Add the products <b>Facebook Login for Business</b>, <b>Instagram</b> (API with Facebook login) and <b>Messenger</b>.</li>
             <li>
-              Facebook Login → Settings → Valid OAuth Redirect URIs: <CopyLine value={setup.meta.callbackUrl} />
+              Go to <b>developers.facebook.com</b> (same Facebook account) → My Apps → Create app → use case <b>Other</b> → type <b>Business</b> → link it to your <b>business portfolio</b> (the one in Business Suite).
+            </li>
+            <li>Add the products <b>Facebook Login for Business</b>, <b>Instagram</b> (API setup with Facebook login) and <b>Messenger</b>.</li>
+            <li>
+              Facebook Login for Business → Settings → Valid OAuth Redirect URIs: <CopyLine value={setup.meta.callbackUrl} />
+            </li>
+            <li>
+              Facebook Login for Business → <b>Configurations</b> → Create: token type <b>User access token</b>, choose these permissions, then copy the <b>Configuration ID</b>:{' '}
+              <span className="mt-1 block break-words font-mono text-[10px]">{setup.meta.scopes.join(', ')}</span>
             </li>
             <li>
               App settings → Basic: App domains <CopyLine value={new URL(shop).hostname} /> and add your Privacy policy address <CopyLine value={`${shop}/privacy`} />
             </li>
             <li>Copy the <b>App ID</b> and <b>App secret</b> (App settings → Basic).</li>
             <li>
-              In Vercel → your project → Settings → Environment Variables, add <code>META_APP_ID</code> and <code>META_APP_SECRET</code>, then redeploy.
+              In Vercel → your project → Settings → Environment Variables, add <code>META_APP_ID</code>, <code>META_APP_SECRET</code> and <code>META_CONFIG_ID</code>, then redeploy. Never paste them anywhere else (not in a chat).
             </li>
             <li>Come back here and press <b>Connect</b> on Facebook. While the app stays in “Development” mode it works for you (admin of the app) — that is all this page needs.</li>
           </ol>
