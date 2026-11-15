@@ -9,6 +9,7 @@ import { waNumber } from '@/lib/customerContact'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { Locale } from '@/i18n'
+import { withBrand } from '@/lib/brand'
 
 const LANGS: { id: Locale; label: string }[] = [
   { id: 'fr', label: 'Français' },
@@ -65,7 +66,7 @@ export function PasswordLinkDialog({
   const result = make.data
   const link = result ? linkInLanguage(result.link, lang) : ''
   const first = customer.name.split(/[\s/]+/)[0] || customer.name
-  const message = result ? TEXT[lang](first, link) : ''
+  const message = result ? withBrand(TEXT[lang](first, link)) : ''
   const wa = waNumber(result?.phone || customer.phone)
   const chip = (active: boolean) =>
     cn(

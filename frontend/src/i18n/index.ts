@@ -1,5 +1,6 @@
 import { en, type Messages } from './en'
 import { canonicalCategorySlug } from '../lib/categorySlug'
+import { withBrand } from '../lib/brand'
 
 export type Locale = 'en' | 'fr' | 'ar'
 
@@ -57,7 +58,8 @@ export function translate(
       text = text.replaceAll(`{${name}}`, String(value))
     }
   }
-  return text
+  // Texts are written with the built-in name; the shop may have another (Settings → General)
+  return withBrand(text)
 }
 
 export function getMessages(locale: Locale): Messages {

@@ -10,6 +10,7 @@ import { LEGAL_CONTENT, type LegalPage } from '@/lib/legal'
 import { LegalSectionContent } from '@/components/legal/LegalSectionContent'
 import { CONTACT, LEGAL } from '@/lib/site'
 import { cn } from '@/lib/cn'
+import { withBrand } from '@/lib/brand'
 
 const DATE_LOCALES = { en: 'en-GB', fr: 'fr-MA', ar: 'ar-MA' } as const
 
@@ -63,7 +64,7 @@ export function Legal({ page }: { page: LegalPage }) {
                       href={`#${section.id}`}
                       className="-ms-px block border-s border-transparent ps-3 text-sm text-[var(--fg-muted)] transition hover:border-[var(--brand)] hover:text-[var(--fg)]"
                     >
-                      {section.title}
+                      {withBrand(section.title)}
                     </a>
                   </li>
                 ))}
@@ -80,7 +81,7 @@ export function Legal({ page }: { page: LegalPage }) {
 
           <article className="min-w-0 max-w-3xl">
             <p className="text-[15px] leading-relaxed text-[var(--fg)] sm:text-base sm:leading-7">
-              {doc.intro}
+              {withBrand(doc.intro)}
             </p>
 
             <section
@@ -116,7 +117,7 @@ export function Legal({ page }: { page: LegalPage }) {
                   className="scroll-mt-[calc(var(--nav-height)+1.5rem)]"
                 >
                   <h2 className="font-display text-lg font-semibold tracking-tight text-[var(--fg)] sm:text-xl">
-                    {section.title}
+                    {withBrand(section.title)}
                   </h2>
                   <LegalSectionContent section={section} />
                 </section>

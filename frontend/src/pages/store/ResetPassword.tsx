@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
+import { brandName } from '@/lib/brand'
 
 export function ResetPassword() {
   const t = useT()
-  usePageTitle(`${t('auth.resetPassword')} — Brynoxa`)
+  usePageTitle(`${t('auth.resetPassword')} — ${brandName()}`)
   const navigate = useNavigate()
   const [params] = useSearchParams()
   // The reset key is read once and removed from the address (history, analytics, screenshots).

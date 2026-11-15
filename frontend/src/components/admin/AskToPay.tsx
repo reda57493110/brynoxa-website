@@ -7,6 +7,7 @@ import { dueOnDelivery } from '@/lib/deposit'
 import { cn } from '@/lib/cn'
 import type { Locale } from '@/i18n'
 import type { Order } from '@/types'
+import { withBrand } from '@/lib/brand'
 
 const LANGS: { id: Locale; label: string }[] = [
   { id: 'fr', label: 'Français' },
@@ -81,7 +82,7 @@ export function AskToPay({ order }: { order: Order }) {
         ...(method.fees ? [`⚠ ${method.fees}`] : []),
         '',
         tx.rest(formatCurrency(rest)),
-        tx.thanks,
+        withBrand(tx.thanks),
       ].join('\n')
     )
   }, [method, lang, customer, amount, rest, order.orderNumber])

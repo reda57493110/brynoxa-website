@@ -10,6 +10,8 @@ import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { openConsent } from '@/lib/consent'
+import { brandTagline } from '@/lib/brand'
+import { useLocaleStore } from '@/store/localeStore'
 
 const explore = [
   { to: '/shop', key: 'common.shop' as const },
@@ -38,6 +40,7 @@ function FooterHeading({ children }: { children: string }) {
 
 export function Footer() {
   const t = useT()
+  const locale = useLocaleStore((s) => s.locale)
   const openWhatsAppPicker = useWhatsAppStore((s) => s.open)
 
   return (
@@ -82,7 +85,7 @@ export function Footer() {
             </div>
           </div>
           <p className="mt-2 max-w-sm text-xs leading-snug text-[var(--fg-muted)] sm:mt-3 sm:max-w-xs sm:text-sm sm:leading-relaxed">
-            {t('footer.tagline')}
+            {brandTagline(locale) || t('footer.tagline')}
           </p>
         </div>
 

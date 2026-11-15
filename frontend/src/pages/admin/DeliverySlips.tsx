@@ -11,6 +11,7 @@ import { feesCovered, toCollect } from '@/lib/deposit'
 import { cn } from '@/lib/cn'
 import type { Order } from '@/types'
 import { useSiteContactSync } from '@/hooks/useSiteContactSync'
+import { brandName } from '@/lib/brand'
 
 type Lang = 'fr' | 'ar' | 'en'
 
@@ -104,7 +105,7 @@ function Brand() {
     <div className="flex items-center gap-2">
       <img src="/brand/brynoxa-mark.png" alt="" className="h-8 w-8 rounded-md bg-[#080B0E]" />
       <div className="leading-tight">
-        <p className="text-base font-bold tracking-tight">Brynoxa</p>
+        <p className="text-base font-bold tracking-tight">{brandName()}</p>
         <p className="text-[9px] text-black/60" dir="ltr">
           {CONTACT.phone.value} · {CONTACT.email.value}
         </p>

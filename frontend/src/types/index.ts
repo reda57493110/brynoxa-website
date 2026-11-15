@@ -453,6 +453,8 @@ export interface StoreSettings {
   supportEmail: string
   /** Settings → Contact & business ('' = built-in number / not shown) */
   siteContact?: import('@/lib/siteContact').SiteContact
+  /** Settings → General → Store identity: logo ('' = built-in) and slogan per language ('' = built-in) */
+  branding?: { logo: string; tagline: { en: string; fr: string; ar: string } }
   /** Settings → Tracking codes ('' = not loaded) */
   tracking?: { metaPixelId: string; tiktokPixelId: string; gaMeasurementId: string }
   /** Public settings only: false when the shop cannot send emails (no Resend key) */

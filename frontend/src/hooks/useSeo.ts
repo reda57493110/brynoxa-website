@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { ALL_PATH_LOCALES, currentPathLocale, localizedPath, stripLocale } from '@/lib/localePath'
+import { brandName } from '@/lib/brand'
 
 export type SeoInput = {
   title: string
@@ -97,7 +98,7 @@ export function useSeo({
 
     upsertMeta('name', 'description', description)
     upsertMeta('name', 'robots', robots)
-    upsertMeta('property', 'og:site_name', 'Brynoxa')
+    upsertMeta('property', 'og:site_name', brandName())
     upsertMeta('property', 'og:title', title)
     upsertMeta('property', 'og:description', description)
     upsertMeta('property', 'og:image', imageUrl)

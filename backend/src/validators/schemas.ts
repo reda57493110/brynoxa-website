@@ -7,6 +7,7 @@ import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPas
 import { AD_KINDS, AD_PLATFORMS } from '../utils/adTracking';
 import { siteContactIssue } from '../utils/siteContact';
 import { trackingIssue } from '../utils/tracking';
+import { brandingIssue } from '../utils/branding';
 
 /** Customers; staff accounts are held to 12 in auth.service. */
 const CUSTOMER_PASSWORD_MIN = 6;
@@ -337,6 +338,17 @@ export const settingsSchema = z.object({
     .optional(),
   taxRate: z.number().min(0).max(100).optional(),
   supportEmail: z.string().email().optional(),
+  /** Settings → General → Store identity: logo ('' = built-in) and slogan per language ('' = built-in) */
+  branding: z
+    .object({
+      logo: z.string().max(500).optional(),
+      tagline: z.object({ en: z.string().max(120), fr: z.string().max(120), ar: z.string().max(120) }).partial().optional(),
+    })
+    .superRefine((v, ctx) => {
+      const issue = brandingIssue(v);
+      if (issue) ctx.addIssue({ code: 'custom', message: issue });
+    })
+    .optional(),
   /** Settings → Tracking codes ('' = not loaded) */
   tracking: z
     .object({ metaPixelId: z.string().max(40), tiktokPixelId: z.string().max(40), gaMeasurementId: z.string().max(40) })

@@ -1,3 +1,4 @@
+import { brandName } from './brand'
 /**
  * Google title + description for a product page, in the page language: the model, key specs,
  * the price in Morocco and the shop's promises (what people type: "hp elitebook i7 prix maroc").
@@ -46,9 +47,9 @@ export function productSeoText({
   // Specs the name does not already say, so the title adds information
   const extra = specs.filter((s) => s && !lower.includes(s.toLowerCase())).slice(0, 2)
 
-  let title = `${name}${extra.length ? ' ' + extra.join(' ') : ''} — ${c.price} | Brynoxa`
-  if (title.length > TITLE_MAX) title = `${name} — ${c.price} | Brynoxa`
-  if (title.length > TITLE_MAX) title = `${cut(name, TITLE_MAX - 10)} | Brynoxa`
+  let title = `${name}${extra.length ? ' ' + extra.join(' ') : ''} — ${c.price} | ${brandName()}`
+  if (title.length > TITLE_MAX) title = `${name} — ${c.price} | ${brandName()}`
+  if (title.length > TITLE_MAX) title = `${cut(name, TITLE_MAX - 10)} | ${brandName()}`
 
   const parts = [
     `${name} ${c.at(priceText(price))}.`,

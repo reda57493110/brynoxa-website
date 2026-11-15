@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/format'
 import { dayLabel } from '@/lib/salesBuckets'
 import { cn } from '@/lib/cn'
 import type { ExpenseCategory, ProfitOrderKind, ProfitReport as Report, SalesRange } from '@/types'
+import { brandName } from '@/lib/brand'
 
 const RANGES: { value: SalesRange; label: string }[] = [
   { value: 7, label: '7 days' },
@@ -146,7 +147,7 @@ function ReportBody({ r }: { r: Report }) {
         <div className="flex items-center gap-3">
           <img src="/brand/brynoxa-mark.png" alt="" className="size-10 rounded-lg bg-[#080B0E]" />
           <div>
-            <p className="text-lg leading-tight font-bold">Brynoxa</p>
+            <p className="text-lg leading-tight font-bold">{brandName()}</p>
             <p className="text-[11px] text-slate-500">Profit report</p>
           </div>
         </div>
@@ -353,7 +354,7 @@ export function ProfitReport() {
 
   useEffect(() => {
     const prev = document.title
-    if (r) document.title = `Brynoxa profit report ${r.from} to ${r.to}`
+    if (r) document.title = `${brandName()} profit report ${r.from} to ${r.to}`
     return () => {
       document.title = prev
     }

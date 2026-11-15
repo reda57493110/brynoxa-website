@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { BRAND } from '@/lib/brand'
 
 type BrandLogoProps = {
   to?: string
@@ -13,8 +14,8 @@ type BrandLogoProps = {
   onClick?: () => void
 }
 
-/** Glowing mark from brand pack — matches social profile art. 128 px copy (shown at 32–40 px). */
-const MARK_SRC = '/brand/brynoxa-mark-128.webp'
+/** Name split so its last letter takes the brand colour ("Brynox" + "a") */
+const splitName = (name: string) => [name.slice(0, -1), name.slice(-1)] as const
 
 export function BrandLogo({
   to = '/',
@@ -39,7 +40,7 @@ export function BrandLogo({
         )}
       >
         <img
-          src={MARK_SRC}
+          src={BRAND.logo}
           alt=""
           width={72}
           height={72}
@@ -49,7 +50,8 @@ export function BrandLogo({
       </span>
       {wordmark ? (
         <span className="min-w-0 truncate font-display text-base font-bold tracking-tight sm:text-xl">
-          Brynox<span className="text-[var(--brand)]">a</span>
+          {splitName(BRAND.name)[0]}
+          <span className="text-[var(--brand)]">{splitName(BRAND.name)[1]}</span>
           {suffix ? (
             <span className="ml-1.5 text-xs font-medium tracking-normal text-[var(--fg-muted)]">
               {suffix}
@@ -68,7 +70,7 @@ export function BrandLogo({
 
   if (!to) {
     return (
-      <span className={shared} aria-label="Brynoxa">
+      <span className={shared} aria-label={BRAND.name}>
         {content}
       </span>
     )

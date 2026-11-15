@@ -20,6 +20,7 @@ import { Switch } from '@/components/admin/settings/SettingsUi'
 import { usePush } from '@/hooks/usePush'
 import { formatDateTime } from '@/lib/format'
 import type { PushOverview, PushSendPayload } from '@/types'
+import { withBrand } from '@/lib/brand'
 
 const TITLE_MAX = 80
 const BODY_MAX = 240
@@ -35,7 +36,7 @@ const EMPTY_TRANSLATIONS: Record<Lang, Draft> = {
 const PRODUCT_COPY = {
   main: { title: (name: string) => `New: ${name}`, body: 'Now available at Brynoxa. Tap to see price and details.' },
   fr: { title: (name: string) => `Nouveau : ${name}`, body: 'Disponible maintenant chez Brynoxa. Touchez pour voir le prix et les détails.' },
-  ar: { title: (name: string) => `جديد: ${name}`, body: 'متوفر الآن لدى برينوكسا. اضغط لرؤية السعر والتفاصيل.' },
+  ar: { title: (name: string) => `جديد: ${name}`, body: 'متوفر الآن لدى Brynoxa. اضغط لرؤية السعر والتفاصيل.' },
 }
 
 export function PushNotifications() {
@@ -117,13 +118,13 @@ export function PushNotifications() {
     setUrl(`/product/${product.slug}`)
     setImage(picture.startsWith('https://') ? picture : '')
     if (!title.trim()) setTitle(PRODUCT_COPY.main.title(product.name).slice(0, TITLE_MAX))
-    if (!body.trim()) setBody(PRODUCT_COPY.main.body)
+    if (!body.trim()) setBody(withBrand(PRODUCT_COPY.main.body))
     setTranslations((prev) => {
       const next = { ...prev }
       for (const lang of ['fr', 'ar'] as const) {
         next[lang] = {
           title: prev[lang].title || PRODUCT_COPY[lang].title(product.name).slice(0, TITLE_MAX),
-          body: prev[lang].body || PRODUCT_COPY[lang].body,
+          body: prev[lang].body || withBrand(PRODUCT_COPY[lang].body),
         }
       }
       return next

@@ -1,11 +1,12 @@
 import type { LegalSection } from '@/lib/legal'
 import { CONTACT } from '@/lib/site'
+import { withBrand } from '@/lib/brand'
 
 /** Keeps emails and phone numbers left-to-right inside Arabic sentences. */
 const isolate = (value: string) => `⁦${value}⁩`
 
 const fill = (text: string) =>
-  text
+  withBrand(text)
     .replaceAll('{email}', isolate(CONTACT.email.value))
     .replaceAll('{phone}', isolate(CONTACT.phone.value))
 

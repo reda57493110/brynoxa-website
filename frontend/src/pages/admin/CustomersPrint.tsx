@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/Spinner'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { formatCurrency } from '@/lib/format'
 import type { CustomerListParams } from '@/types'
+import { brandName } from '@/lib/brand'
 
 /** Columns kept on paper (the spreadsheet has them all); widths fit a landscape A4 page. */
 const PRINTED = ['Customer ID', 'Name', 'Phone', 'Email', 'Type', 'Status', 'Registered', 'Orders', 'Amount paid', 'Net sales', 'Last order', 'To collect', 'Gross profit']
@@ -80,7 +81,7 @@ export function CustomersPrint() {
               <img src="/brand/brynoxa-mark.png" alt="" className="size-9 rounded-md bg-[#080B0E]" />
               <div>
                 <h1 className="text-lg font-bold leading-tight text-black">Customers</h1>
-                <p className="text-xs text-black/60">Brynoxa · {new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                <p className="text-xs text-black/60">{brandName()} · {new Date().toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>
               </div>
             </div>
             <div className="text-end text-xs">

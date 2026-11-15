@@ -1,5 +1,8 @@
 import { Resend } from 'resend';
 import { env, isEmailConfigured } from '../config/env';
+import { getSettingsCached } from '../models/Settings';
+import { brandEmail } from '../utils/branding';
+import { siteUrl } from './emailTemplate';
 
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [600, 2000];
@@ -41,6 +44,14 @@ export async function sendEmail(input: {
   if (!isEmailConfigured()) {
     console.warn(`[email] skipped, Resend not configured: "${input.subject}"`);
     return false;
+  }
+
+  // The shop's name and logo from Settings → General (templates are written with the built-in ones)
+  try {
+    const s = await getSettingsCached();
+    input = { ...input, ...brandEmail(input, { storeName: s.storeName, logo: s.branding?.logo }, siteUrl) };
+  } catch {
+    /* settings unreadable: send with the built-in name */
   }
 
   const resend = new Resend(env.RESEND_API_KEY!);

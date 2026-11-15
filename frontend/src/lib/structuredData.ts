@@ -5,6 +5,7 @@
 import { CONTACT } from '@/lib/site'
 import { currentPathLocale, localizedPath } from '@/lib/localePath'
 import type { Brand, Category, Product } from '@/types'
+import { brandName } from '@/lib/brand'
 
 function origin() {
   const fromEnv = import.meta.env.VITE_SITE_URL as string | undefined
@@ -15,7 +16,7 @@ function origin() {
 export const absolute = (pathOrUrl: string) =>
   /^https?:\/\//i.test(pathOrUrl) ? pathOrUrl : `${origin()}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`
 
-const SELLER = () => ({ '@type': 'Organization', '@id': `${origin()}/#organization`, name: 'Brynoxa' })
+const SELLER = () => ({ '@type': 'Organization', '@id': `${origin()}/#organization`, name: brandName() })
 
 /** Home page: who we are, how to reach us, and the shop search (search box in Google). */
 export function organizationData() {
@@ -25,7 +26,7 @@ export function organizationData() {
       {
         '@type': 'OnlineStore',
         '@id': `${origin()}/#organization`,
-        name: 'Brynoxa',
+        name: brandName(),
         url: `${origin()}/`,
         logo: absolute('/brand/icon-192.png'),
         image: absolute('/brand/brynoxa-logo-social.png'),
@@ -47,7 +48,7 @@ export function organizationData() {
         '@type': 'WebSite',
         '@id': `${origin()}/#website`,
         url: `${origin()}/`,
-        name: 'Brynoxa',
+        name: brandName(),
         publisher: { '@id': `${origin()}/#organization` },
         inLanguage: ['en', 'fr', 'ar'],
         potentialAction: {

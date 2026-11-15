@@ -25,6 +25,7 @@ import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { StoreHero, heroInput } from '@/components/layout/StoreHero'
 import { onePerCategory } from '@/lib/heroProduct'
+import { brandName } from '@/lib/brand'
 
 const SHOP_HERO_IMAGE =
   'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
@@ -163,9 +164,9 @@ export function Shop() {
   const allRotation = activeCategory ? undefined : onePerCategory(allPicks.data ?? [], categoryList)
 
   const shopTitle = activeCategoryName
-    ? `${activeCategoryName} — ${t('shop.title')} · Brynoxa`
+    ? `${activeCategoryName} — ${t('shop.title')} · ${brandName()}`
     : filters.q
-      ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · Brynoxa`
+      ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · ${brandName()}`
       : t('meta.shopTitle')
 
   useSeo({

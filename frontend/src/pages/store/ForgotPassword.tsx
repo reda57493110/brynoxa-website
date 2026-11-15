@@ -10,10 +10,11 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
 import { CONTACT } from '@/lib/site'
+import { brandName } from '@/lib/brand'
 
 export function ForgotPassword() {
   const t = useT()
-  usePageTitle(`${t('auth.resetPassword')} — Brynoxa`, { noIndex: true })
+  usePageTitle(`${t('auth.resetPassword')} — ${brandName()}`, { noIndex: true })
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')

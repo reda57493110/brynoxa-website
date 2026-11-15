@@ -9,6 +9,7 @@ import {
   type SiteContact,
   type SocialKey,
 } from './siteContact'
+import { applyBrand, brandFrom, type BrandingSettings } from './brand'
 
 /**
  * The shop's contact details, social pages and legal details. Built-in values below; the owner
@@ -31,7 +32,7 @@ const BUILT_IN = {
 /** Pages shown until Contact & business is saved for the first time (the form starts with them) */
 export const BUILT_IN_SOCIAL = { facebook: BUILT_IN.facebook, instagram: BUILT_IN.instagram }
 
-export type SiteSettingsLike = { siteContact?: Partial<SiteContact> | null; supportEmail?: string | null }
+export type SiteSettingsLike = { siteContact?: Partial<SiteContact> | null; supportEmail?: string | null } & BrandingSettings
 
 type ContactInfo = {
   whatsapp: { label: string; value: string; href: string; number: string }
@@ -74,7 +75,7 @@ export function siteInfoFrom(settings?: SiteSettingsLike | null) {
   const c: SiteContact = everSaved ? saved : { ...saved, ...BUILT_IN_SOCIAL }
   const contact = buildContact(c, String(settings?.supportEmail ?? '').trim())
   const legal: LegalInfo = {
-    businessName: c.businessName || BUILT_IN.businessName,
+    businessName: c.businessName || brandFrom(settings).name || BUILT_IN.businessName,
     /** Registered business address. */
     address: c.address,
     /** Identifiant Commun de l’Entreprise. */
@@ -99,6 +100,7 @@ function cached(): SiteSettingsLike | null {
 }
 
 const first = siteInfoFrom(cached())
+applyBrand(cached())
 export let CONTACT: ContactInfo = first.contact
 /**
  * Business identity shown on the Terms of Sale and Privacy Policy pages.
@@ -112,7 +114,12 @@ let appliedKey = ''
 /** Uses the saved contact details from now on (returns true when something changed). */
 export function applySiteSettings(settings?: SiteSettingsLike | null): boolean {
   if (!settings) return false
-  const picked: SiteSettingsLike = { siteContact: settings.siteContact ?? null, supportEmail: settings.supportEmail ?? '' }
+  const picked: SiteSettingsLike = {
+    siteContact: settings.siteContact ?? null,
+    supportEmail: settings.supportEmail ?? '',
+    storeName: settings.storeName ?? '',
+    branding: settings.branding ?? null,
+  }
   const key = JSON.stringify(picked)
   if (key === appliedKey) return false
   appliedKey = key
@@ -120,6 +127,7 @@ export function applySiteSettings(settings?: SiteSettingsLike | null): boolean {
   CONTACT = next.contact
   LEGAL = next.legal
   SOCIAL_LINKS = next.social
+  applyBrand(picked)
   try {
     localStorage.setItem(CACHE_KEY, key)
   } catch {

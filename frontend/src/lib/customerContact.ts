@@ -1,3 +1,4 @@
+import { brandName } from './brand'
 /** Phone links for staff contacting a customer (Moroccan numbers written any way). */
 
 /** "06 12-34 56 78", "+212 612345678", "00212…" → "212612345678" (WhatsApp format); '' if unusable. */
@@ -19,6 +20,6 @@ export function customerWhatsAppHref(phone: string | null | undefined, name: str
   const n = waNumber(phone)
   if (!n) return ''
   const first = name.split(/[\s/]+/)[0] || ''
-  const text = `Bonjour ${first}, c'est Brynoxa à propos de votre commande ${orderNumber}.`
+  const text = `Bonjour ${first}, c'est ${brandName()} à propos de votre commande ${orderNumber}.`
   return `https://wa.me/${n}?text=${encodeURIComponent(text)}`
 }

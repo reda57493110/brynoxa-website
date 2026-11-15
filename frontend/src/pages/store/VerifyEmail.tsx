@@ -5,10 +5,11 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { useT } from '@/hooks/useT'
+import { brandName } from '@/lib/brand'
 
 export function VerifyEmail() {
   const t = useT()
-  usePageTitle(`${t('auth.verifyEmail')} — Brynoxa`)
+  usePageTitle(`${t('auth.verifyEmail')} — ${brandName()}`)
   const [params] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [error, setError] = useState('')

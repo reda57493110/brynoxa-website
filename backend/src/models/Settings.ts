@@ -5,6 +5,8 @@ import type { SiteContact } from '../utils/siteContact';
 export { sanitizeSiteContact } from '../utils/siteContact';
 import type { TrackingIds } from '../utils/tracking';
 export { sanitizeTracking } from '../utils/tracking';
+import type { Branding } from '../utils/branding';
+export { sanitizeBranding } from '../utils/branding';
 
 export interface IShippingCityRate {
   city: string;
@@ -87,6 +89,8 @@ export const MAX_DEPOSIT_METHODS = 8;
 
 export interface ISettings extends Document {
   storeName: string;
+  /** Settings → General → Store identity: logo and slogan (public) */
+  branding: Branding;
   currency: string;
   shippingFlatRate: number;
   freeShippingMin: number;
@@ -136,6 +140,19 @@ export interface ISettings extends Document {
 const settingsSchema = new Schema<ISettings>(
   {
     storeName: { type: String, default: 'Brynoxa' },
+    branding: {
+      type: new Schema(
+        {
+          logo: { type: String, default: '' },
+          tagline: {
+            type: new Schema({ en: { type: String, default: '' }, fr: { type: String, default: '' }, ar: { type: String, default: '' } }, { _id: false }),
+            default: () => ({}),
+          },
+        },
+        { _id: false }
+      ),
+      default: () => ({}),
+    },
     currency: { type: String, default: 'MAD' },
     shippingFlatRate: { type: Number, default: 0 },
     freeShippingMin: { type: Number, default: 0 },

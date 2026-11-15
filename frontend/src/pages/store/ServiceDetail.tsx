@@ -12,6 +12,7 @@ import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { HelpLink } from '@/components/help/HelpLink'
 import type { HelpGuideId } from '@/lib/help/types'
+import { brandName } from '@/lib/brand'
 
 const pillPrimary =
   'inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]'
@@ -57,7 +58,7 @@ function ServiceDetailContent({ service }: { service: CustomerService }) {
   const others = CUSTOMER_SERVICES.filter((s) => s.id !== service.id)
 
   useSeo({
-    title: `${item.title} — Brynoxa`,
+    title: `${item.title} — ${brandName()}`,
     description: item.summary,
     image: service.photo,
     path: `/services/${service.slug}`,

@@ -9,6 +9,7 @@ import { useCompareStore } from '@/store/compareStore'
 import { toast } from '@/store/toastStore'
 import { cn } from '@/lib/cn'
 import { useT } from '@/hooks/useT'
+import { brandName } from '@/lib/brand'
 
 export function MobileNav({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate()
@@ -47,7 +48,7 @@ export function MobileNav({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   return (
-    <Drawer open={open} onClose={onClose} title="Brynoxa" side="left">
+    <Drawer open={open} onClose={onClose} title={brandName()} side="left">
       <nav className="flex flex-col gap-1" aria-label={t('nav.mobile')}>
         {links.map(({ to, label, icon, end, count }) => (
           <NavLink
