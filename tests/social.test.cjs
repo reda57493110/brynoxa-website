@@ -226,10 +226,8 @@ test('without connection: numbers typed by staff (one row per platform and day),
   assert.ok(page.includes('const growth = data.growth.filter((g) => g.platform === p.platform)'), 'its own chart');
 });
 
-test('Metricool: one click from the Social media page (header button and Stats shortcut)', () => {
+test('followers are typed by hand: no Metricool link', () => {
   const page = read('frontend/src/pages/admin/Social.tsx');
-  assert.ok(page.includes("const METRICOOL_URL = 'https://app.metricool.com/'"));
-  assert.ok(page.includes('href={METRICOOL_URL}'), 'header button');
-  assert.ok(page.includes("href: 'https://app.metricool.com/', icon: 'metricool'"), 'shortcut');
-  assert.ok(page.includes('rel="noopener noreferrer"'));
+  assert.ok(!/metricool/i.test(page));
+  assert.ok(page.includes('Update my numbers'));
 });
