@@ -67,6 +67,10 @@ export function normalizeSocialUrl(key: SocialKey, value: unknown): string {
     const ok = SOCIAL_HOSTS[key].some((h) => host === h || host.endsWith(`.${h}`))
     if (!ok || url.username || url.password) return ''
     url.protocol = 'https:'
+    // Share links carry the app's own tracking (?is_from_webapp=1, ?igsh=…): only keep a Facebook page id
+    const id = url.pathname.endsWith('/profile.php') ? url.searchParams.get('id') : null
+    url.search = id ? `?id=${id}` : ''
+    url.hash = ''
     return url.toString().slice(0, 300)
   } catch {
     return ''

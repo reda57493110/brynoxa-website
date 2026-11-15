@@ -101,3 +101,12 @@ test('admin: Contact & business, Delivery sections; Brands in Catalog; search fi
     assert.ok(back.includes(line) && front.includes(line), line);
   }
 });
+
+test('a page address pasted from the app is cleaned of its tracking', () => {
+  const { normalizeSocialUrl } = require(dist('utils/siteContact.js'));
+  assert.equal(normalizeSocialUrl('tiktok', 'https://www.tiktok.com/@brynoxa?is_from_webapp=1&sender_device=pc'), 'https://www.tiktok.com/@brynoxa');
+  assert.equal(normalizeSocialUrl('instagram', 'https://www.instagram.com/brynoxa1?igsh=MWZ0eHl4#x'), 'https://www.instagram.com/brynoxa1');
+  assert.equal(normalizeSocialUrl('facebook', 'https://www.facebook.com/profile.php?id=61594042771780&mibextid=abc'), 'https://www.facebook.com/profile.php?id=61594042771780', 'a Facebook page id stays');
+  const front = read('frontend/src/lib/siteContact.ts');
+  assert.ok(front.includes("url.search = id ? `?id=${id}` : ''"), 'the shop cleans it the same way');
+});
