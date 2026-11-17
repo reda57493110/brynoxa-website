@@ -333,6 +333,7 @@ export async function createConditionListing(productId: string, condition: 'refu
     sku,
     description: model.description,
     shortDescription: model.shortDescription,
+    translations: model.translations,
     category: model.category,
     brand: model.brand,
     images: model.images,

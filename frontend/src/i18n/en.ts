@@ -789,6 +789,7 @@ export const en = {
     hintQuestion: 'Not sure what to pick?',
     hintLink: 'Choose your setup',
     metaTitle: 'Pick your setup',
+    metaPromise: 'Delivered across Morocco, pay cash at your door, every product under warranty.',
     kicker: 'Pick your setup',
     title: 'What will you use it for?',
     short: 'Pick what it’s for: we show only what fits.',

@@ -180,6 +180,7 @@ export function ProductForm() {
     sku: string
     description: string
     shortDescription: string
+    translations: { fr: { description: string; shortDescription: string }; ar: { description: string; shortDescription: string } }
     category: string
     brand: string
     price: number
@@ -206,6 +207,7 @@ export function ProductForm() {
     sku: '',
     description: '',
     shortDescription: '',
+    translations: { fr: { description: '', shortDescription: '' }, ar: { description: '', shortDescription: '' } },
     category: '',
     brand: '',
     price: 0,
@@ -256,6 +258,10 @@ export function ProductForm() {
         sku: p.sku,
         description: p.description,
         shortDescription: p.shortDescription || '',
+        translations: {
+          fr: { description: p.translations?.fr?.description || '', shortDescription: p.translations?.fr?.shortDescription || '' },
+          ar: { description: p.translations?.ar?.description || '', shortDescription: p.translations?.ar?.shortDescription || '' },
+        },
         category: typeof p.category === 'string' ? p.category : p.category._id,
         brand: brandName,
         price: p.price,
@@ -382,6 +388,8 @@ export function ProductForm() {
         sku: form.sku.trim() || autoSku(form.name),
         description: form.description,
         shortDescription: form.shortDescription || undefined,
+        // Always sent (empty = the main text in that language), so a text can be removed
+        translations: form.translations,
         category: form.category,
         brand: brandId,
         price: Number(form.price),
@@ -1026,6 +1034,48 @@ export function ProductForm() {
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
         </div>
+        {(['fr', 'ar'] as const).map((lang) => {
+          const text = form.translations[lang]
+          const filled = Boolean(text.description.trim() || text.shortDescription.trim())
+          const setText = (patch: Partial<typeof text>) =>
+            setForm((f) => ({ ...f, translations: { ...f.translations, [lang]: { ...f.translations[lang], ...patch } } }))
+          return (
+            <details
+              key={lang}
+              open={filled}
+              className="group sm:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 open:bg-transparent"
+            >
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span>
+                  <span className="block text-sm font-semibold">
+                    {lang === 'fr' ? 'French description (optional)' : 'Arabic description (optional)'}
+                    {filled ? <span className="ms-2 text-xs font-medium text-[var(--brand-text)]">✓ Added</span> : null}
+                  </span>
+                  <span className="block text-xs text-[var(--fg-muted)]">
+                    {lang === 'fr'
+                      ? 'Shown on the French shop (/fr). Empty = the description above is shown.'
+                      : 'Shown on the Arabic shop (/ar). Empty = the description above is shown.'}
+                  </span>
+                </span>
+                <SiteIcon name="chevron-down" size={16} className="shrink-0 text-[var(--fg-muted)] transition group-open:rotate-180" />
+              </summary>
+              <div className="grid gap-4 border-t border-[var(--border)] p-4" dir={lang === 'ar' ? 'rtl' : 'ltr'} lang={lang}>
+                <Textarea
+                  label={lang === 'fr' ? 'Description courte' : 'وصف قصير'}
+                  rows={2}
+                  value={text.shortDescription}
+                  onChange={(e) => setText({ shortDescription: e.target.value })}
+                />
+                <Textarea
+                  label={lang === 'fr' ? 'Description complète' : 'الوصف الكامل'}
+                  rows={5}
+                  value={text.description}
+                  onChange={(e) => setText({ description: e.target.value })}
+                />
+              </div>
+            </details>
+          )
+        })}
         <FormAnchor id="pf-more" />
         <details className="group sm:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-muted)]/30 open:bg-transparent">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">

@@ -7,6 +7,7 @@ import { useSetupLists } from '@/hooks/useSetupLists'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
+import { brandName } from '@/lib/brand'
 import { cn } from '@/lib/cn'
 import { SETUP_ICON, SETUP_IDS, isSetupId, type SetupId, type SetupPiece } from '@/lib/setups'
 
@@ -46,8 +47,9 @@ export function Setups() {
   const groups = current.groups
 
   useSeo({
-    title: `${t(`setups.${active}.name`)} · ${t('setups.metaTitle')}`,
-    description: t(`setups.${active}.intro`),
+    title: `${t(`setups.${active}.name`)} · ${t('setups.metaTitle')} — ${brandName()}`,
+    // Intro + our promises: long enough for Google's snippet
+    description: `${t(`setups.${active}.intro`)} ${t('setups.metaPromise')}`,
     path: kind ? `/setups/${active}` : '/setups',
   })
 

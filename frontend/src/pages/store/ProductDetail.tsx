@@ -25,6 +25,7 @@ import { productSeoText } from '@/lib/productSeo'
 import { keySpecs } from '@/components/home/HomeSpotlight'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { withProductText } from '@/lib/productText'
 import { WhatsAppIcon } from '@/components/contact/BrandIcons'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { HelpLink } from '@/components/help/HelpLink'
@@ -82,9 +83,11 @@ function ProductDetailPage() {
   }, [product.data])
 
   const productImage = product.data ? primaryImage(product.data) : undefined
+  // Descriptions in the page language (French / Arabic typed in admin, else the main text)
+  const texts = product.data ? withProductText(product.data, locale) : undefined
   const productDescription =
-    product.data?.shortDescription ||
-    product.data?.description?.slice(0, 160) ||
+    texts?.shortDescription ||
+    texts?.description?.slice(0, 160) ||
     t('meta.shopDescription')
 
   // Google title / snippet: model + key specs + price in Morocco + our promises (page language)
@@ -93,7 +96,7 @@ function ProductDetailPage() {
         name: product.data.variantLabel ? `${product.data.name} (${product.data.variantLabel})` : product.data.name,
         price: product.data.price,
         specs: keySpecs(product.data, locale, 4).map((s) => s.value),
-        shortDescription: product.data.shortDescription,
+        shortDescription: texts?.shortDescription,
         locale,
       })
     : null
@@ -173,7 +176,7 @@ function ProductDetailPage() {
     )
   }
 
-  const p = product.data
+  const p = withProductText(product.data, locale)
   const category = typeof p.category === 'object' ? (p.category as Category) : null
   const brand = typeof p.brand === 'object' ? (p.brand as Brand) : null
   const categoryName = category

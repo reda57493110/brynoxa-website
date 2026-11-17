@@ -63,6 +63,9 @@ async function searchConditions(q: string) {
         { sku: new RegExp(`^${escapeRegex(word)}`, 'i') },
         { tags: rx },
         { shortDescription: rx },
+        // French / Arabic short texts typed in admin: found from the French / Arabic shop too
+        { 'translations.fr.shortDescription': rx },
+        { 'translations.ar.shortDescription': rx },
         // "i7", "rtx", "ryzen" find products by their processor / graphics card
         { 'specs.cpu': rx },
         { 'specs.gpu': rx },
@@ -549,7 +552,7 @@ export async function listProducts(query: ProductQuery) {
     );
     const pageIds = order.slice(skip, skip + query.limit);
     const docs = await Product.find({ _id: { $in: pageIds } })
-      .select(query.admin ? '' : `-description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
+      .select(query.admin ? '' : `-description -translations.fr.description -translations.ar.description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
       .populate('category', 'name slug isActive specTemplate')
       .populate('brand', 'name slug logo')
       .lean();
@@ -560,7 +563,7 @@ export async function listProducts(query: ProductQuery) {
 
   const listQuery = Product.find(filter)
     // Shop cards use the short description; the long one is loaded by the product page
-    .select(query.admin ? '' : `-description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
+    .select(query.admin ? '' : `-description -translations.fr.description -translations.ar.description ${HIDE_PRIVATE_PRODUCT_FIELDS}`)
     .skip(skip)
     .limit(query.limit)
     .populate('category', 'name slug isActive specTemplate')
@@ -757,6 +760,7 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   const fields = [
     'description',
     'shortDescription',
+    'translations',
     'category',
     'brand',
     'images',

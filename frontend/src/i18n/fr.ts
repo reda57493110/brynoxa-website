@@ -793,6 +793,7 @@ export const fr: Messages = {
     hintQuestion: 'Vous hésitez ?',
     hintLink: 'Choisissez votre setup',
     metaTitle: 'Choisissez votre setup',
+    metaPromise: 'Livré partout au Maroc, paiement à la livraison, chaque produit sous garantie.',
     kicker: 'Choisissez votre setup',
     title: 'Pour quoi allez-vous l’utiliser ?',
     short: 'Choisissez l’usage : on vous montre seulement ce qui convient.',

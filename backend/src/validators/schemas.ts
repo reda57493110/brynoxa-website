@@ -123,11 +123,18 @@ export function forUpdate<T extends z.ZodObject>(schema: T): ReturnType<T['parti
   return z.object(shape) as unknown as ReturnType<T['partial']>;
 }
 
+/** A product's text in one more language (French or Arabic) */
+const productTextSchema = z.object({
+  description: z.string().trim().max(10000).optional(),
+  shortDescription: z.string().trim().max(500).optional(),
+});
+
 export const productSchema = z.object({
   name: z.string().min(2),
   sku: z.string().min(2),
   description: z.string().max(10000).optional().default(''),
   shortDescription: z.string().optional(),
+  translations: z.object({ fr: productTextSchema.optional(), ar: productTextSchema.optional() }).optional(),
   category: z.string().min(1),
   brand: z.string().min(1),
   images: z

@@ -10,6 +10,11 @@ export interface IProductImage {
 
 export type ProductCondition = 'new' | 'refurbished' | 'used';
 
+export interface IProductText {
+  description?: string;
+  shortDescription?: string;
+}
+
 /** Non-sellable unit counts. Sellable units are Product.stock. Changed only through the inventory ledger. */
 export interface IProductInventory {
   reserved: number;
@@ -30,6 +35,8 @@ export interface IProduct extends Document {
   sku: string;
   description: string;
   shortDescription?: string;
+  /** French / Arabic texts typed in admin; empty = the main text is shown in that language too */
+  translations?: { fr?: IProductText; ar?: IProductText };
   category: Types.ObjectId;
   brand: Types.ObjectId;
   images: IProductImage[];
@@ -114,6 +121,10 @@ const productSchema = new Schema<IProduct>(
     sku: { type: String, required: true, unique: true, uppercase: true },
     description: { type: String, default: '' },
     shortDescription: { type: String },
+    translations: {
+      fr: { description: { type: String }, shortDescription: { type: String } },
+      ar: { description: { type: String }, shortDescription: { type: String } },
+    },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
     brand: { type: Schema.Types.ObjectId, ref: 'Brand', required: true },
     images: [imageSchema],

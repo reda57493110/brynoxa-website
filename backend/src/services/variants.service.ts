@@ -126,6 +126,7 @@ export async function createVariant(
     sku,
     description: src.description,
     shortDescription: src.shortDescription,
+    translations: src.translations,
     category: String(src.category),
     brand: String(src.brand),
     images: (base.images ?? []).map(({ url, publicId, alt, isPrimary }) => ({ url, publicId, alt, isPrimary })),

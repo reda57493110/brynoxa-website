@@ -15,6 +15,7 @@ import { cn } from '@/lib/cn'
 import { imageFit, imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { useT } from '@/hooks/useT'
 import { useLocaleStore } from '@/store/localeStore'
+import { withProductText } from '@/lib/productText'
 import { categoryDisplayName } from '@/i18n'
 import { keySpecs } from '@/components/home/HomeSpotlight'
 import { formatCurrency } from '@/lib/format'
@@ -63,7 +64,7 @@ export function ProductCard({
   const category = categoryName(product, locale)
   // Grid cards stay short: brand only; the spotlight card has room for the category too
   const meta = spotlight ? [brand, category].filter(Boolean).join(' · ') : brand || category
-  const blurb = product.shortDescription?.trim()
+  const blurb = withProductText(product, locale).shortDescription?.trim()
   const original = primaryImage(product)
   // Sized for the card: phones get ~320 px, desktop grids ~480 px, the spotlight up to 1600 px
   const imageSrc = sizedImageUrl(original, spotlight ? 1200 : 480)

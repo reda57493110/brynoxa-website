@@ -123,6 +123,11 @@ export interface ProductDeposit {
   value: number
 }
 
+export interface ProductText {
+  description?: string
+  shortDescription?: string
+}
+
 export interface Product {
   _id: string
   name: string
@@ -130,6 +135,8 @@ export interface Product {
   sku: string
   description: string
   shortDescription?: string
+  /** French / Arabic texts; empty = the main text */
+  translations?: { fr?: ProductText; ar?: ProductText }
   category: Category | string
   brand: Brand | string
   images: ProductImage[]
