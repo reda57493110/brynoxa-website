@@ -51,6 +51,16 @@ export function normalizePhone(value: unknown): string {
   return /^[1-9]\d{7,14}$/.test(d) ? d : ''
 }
 
+/**
+ * A phone a customer can order with: a full number. Moroccan numbers are 0 + 9 digits or
+ * +212 + 9 digits; an extra digit (a way around a blocked number) is refused.
+ */
+export function validCustomerPhone(value: unknown): boolean {
+  const n = normalizePhone(value)
+  if (!n) return false
+  return n.startsWith('212') ? n.length === 12 : true
+}
+
 /** "212779318061" → "07 79 31 80 61" (Moroccan numbers the local way), others "+33 …" */
 export function formatPhone(international: string): string {
   const m = /^212(\d{9})$/.exec(international)

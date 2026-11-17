@@ -28,6 +28,8 @@ const LIMITS = {
   contact: { max: 10, windowMs: 60 * 60 * 1000, message: 'Too many messages. Please try again later.' },
   pushSubscribe: { max: 60, windowMs: 60 * 60 * 1000, message: 'Too many requests. Please try again later.' },
   pushClick: { max: 120, windowMs: 15 * 60 * 1000, message: 'Too many requests.' },
+  // Shop search (each one runs several database queries); generous for people typing
+  search: { max: 90, windowMs: 60 * 1000, message: 'Too many searches. Please wait a moment.' },
 };
 
 let indexReady = null;

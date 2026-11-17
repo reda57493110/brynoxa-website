@@ -100,7 +100,12 @@ module.exports = async (req, res) => {
     // POST /wishlist/sync — { productIds: string[] }
     if (route === 'sync' && req.method === 'POST') {
       const body = await readJsonBody(req);
-      const productIds = Array.isArray(body.productIds) ? body.productIds.map(String) : [];
+      const parsed = require('../../backend/dist/validators/schemas').wishlistSyncSchema.safeParse(body);
+      if (!parsed.success) {
+        sendJson(res, 400, { success: false, message: 'Too many products in the wishlist' });
+        return;
+      }
+      const productIds = parsed.data.productIds;
       const wishlist = await wishlistService.syncWishlist(userId, productIds);
       sendJson(res, 200, { success: true, message: 'Wishlist synced', data: wishlist });
       return;

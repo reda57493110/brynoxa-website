@@ -127,7 +127,8 @@ module.exports = async (req, res) => {
           existing.isActive = true;
           await existing.save();
         }
-        sendJson(res, 200, { success: true, message: 'Already subscribed', data: { email } });
+        // Same answer as a new sign-up: nobody can check who is subscribed
+        sendJson(res, 201, { success: true, message: 'Subscribed', data: { email } });
         return;
       }
       await NewsletterSubscriber.create({ email });

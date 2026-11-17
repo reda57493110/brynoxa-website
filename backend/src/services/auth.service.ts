@@ -497,7 +497,8 @@ async function guestByPhone(input: {
   const digits = phoneDigits(input.phone || input.shippingAddress?.phone);
   if (digits.length < 9) throw new ApiError(400, 'Enter a valid phone number');
   const rx = new RegExp(`${digits.split('').join('\\D*')}\\D*$`);
-  let user = await User.findOne({ role: 'customer', isGuest: true, phone: rx }).sort({ createdAt: 1 });
+  // Indexed key first; the pattern only for guests saved before the key existed
+  let user = await User.findOne({ role: 'customer', isGuest: true, $or: [{ phoneKey: digits.slice(-9) }, { phoneKey: null, phone: rx }] }).sort({ createdAt: 1 });
   if (!user) {
     user = await User.create({
       name: input.name,

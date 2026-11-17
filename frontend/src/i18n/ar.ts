@@ -505,6 +505,8 @@ export const ar: Messages = {
     trackOptional: '(اختياري)',
     trackLostNumber: 'أضعت رقم الطلب؟ اتركه فارغاً: نعرض الطلبات المرسلة إلى هذا الهاتف.',
     trackPhoneResults: 'الطلبات المرتبطة بهذا الهاتف',
+    trackItemCount: '{count} منتج',
+    trackDetailsWithNumber: 'لرؤية المنتجات والمجموع، أدخل رقم الطلب مع رقم هاتفك.',
     trackPhonePrivacy: 'لحماية خصوصيتك، لا يظهر الاسم والعنوان وتفاصيل الدفع إلا برقم الطلب الكامل. تحتاجها؟ راسلنا على واتساب.',
     trackWhatsApp: 'سؤال عن هذا الطلب؟ راسلنا على واتساب',
     trackWhatsAppMessage: 'مرحبا Brynoxa، عندي سؤال عن طلبي {number}.',

@@ -168,6 +168,18 @@ export async function assertCouponPerCustomer(couponId: Types.ObjectId, limit: n
   return taken;
 }
 
+/**
+ * A cancelled / deleted order gives its coupon use back — once: the order is marked first in one
+ * atomic step, so two cancellations at the same moment cannot give it back twice.
+ */
+export async function giveCouponBack(order: { _id: unknown; coupon?: { couponId?: unknown; released?: boolean } | null }) {
+  if (!order.coupon?.couponId) return;
+  const marked = await Order.updateOne({ _id: order._id, 'coupon.released': { $ne: true } }, { $set: { 'coupon.released': true } });
+  if (marked.modifiedCount !== 1) return;
+  order.coupon.released = true;
+  await Coupon.updateOne({ _id: order.coupon.couponId, usedCount: { $gt: 0 } }, { $inc: { usedCount: -1 } });
+}
+
 export async function releaseCouponLocks(ids: string[]) {
   if (ids.length) await couponLocks()?.deleteMany({ _id: { $in: ids } });
 }
@@ -587,38 +599,32 @@ export function maskOrderNumber(orderNumber: string) {
   return `${i >= 0 ? orderNumber.slice(0, i + 1) : ''}${'•'.repeat(Math.max(tail.length - 2, 0))}${tail.slice(-2)}`;
 }
 
+/** "0612345678" → "••••678" */
+export const maskTail = (s: string) => (s.length > 4 ? `••••${s.slice(-3)}` : '••••');
+
 /**
  * Track order with the phone only (a guest lost the order number): the last orders delivered to
- * this phone, in a short form. Anyone can type someone's phone, so no name, street address,
- * notes, payment details or full order number — the order number still opens the full view.
+ * this phone, reduced to a masked number, the status, the date and how many items. Anyone can type
+ * someone's phone, so no products, prices, city, name or address (law 09-08) — the full order
+ * number (with the phone) still opens the full view.
  */
 export async function trackOrdersByPhone(phone: string) {
   const digits = normalizePhoneDigits(phone);
   if (digits.length < 8) throw new ApiError(400, 'Enter the phone used for delivery');
   const rx = new RegExp(`${digits.slice(-9).split('').join('\\D*')}\\D*$`);
-  const orders = await Order.find({ 'shippingAddress.phone': rx }).sort({ createdAt: -1 }).limit(10);
+  // Indexed key first; the pattern only for orders saved before the key existed
+  const orders = await Order.find({ $or: [{ phoneKey: phoneKey(phone) }, { phoneKey: null, 'shippingAddress.phone': rx }] })
+    .sort({ createdAt: -1 })
+    .limit(10);
   const mine = orders.filter((o) => phonesMatch(o.shippingAddress?.phone || '', phone));
   if (!mine.length) throw new ApiError(404, 'We could not find an order with this phone');
   return mine.map((order) => {
-    const view = customerOrderView(order) as unknown as {
-      orderNumber: string;
-      orderStatus: string;
-      createdAt: Date;
-      rescheduledFor?: Date;
-      pricing: { total: number };
-      shippingAddress?: { city?: string };
-      items: { name: string; qty: number; price: number; image?: string }[];
-      timeline?: { status: string; at: Date }[];
-    };
     return {
-      orderRef: maskOrderNumber(view.orderNumber),
-      orderStatus: view.orderStatus,
-      createdAt: view.createdAt,
-      rescheduledFor: view.rescheduledFor,
-      total: view.pricing.total,
-      city: view.shippingAddress?.city || '',
-      items: view.items.map((i) => ({ name: i.name, qty: i.qty, price: i.price, image: i.image })),
-      timeline: (view.timeline || []).map((s) => ({ status: s.status, at: s.at })),
+      orderRef: maskOrderNumber(order.orderNumber),
+      orderStatus: order.orderStatus,
+      createdAt: order.createdAt,
+      rescheduledFor: order.rescheduledFor,
+      itemCount: order.items.reduce((a, i) => a + i.qty, 0),
     };
   });
 }
@@ -813,7 +819,12 @@ export async function updateOrderStatus(
 
   if (orderStatus === 'delivered') {
     // Cash is collected once; a withdrawn return request does not collect it again
-    if (!order.deliveredAt) order.deliveredAt = now;
+    if (!order.deliveredAt) {
+      order.deliveredAt = now;
+      // Units that came back before delivery (partly returned parcel) were never paid by the customer
+      const back = order.items.reduce((a, i) => a + i.price * (i.returnedQty || 0), 0);
+      if (back > 0) order.uncollected = roundMoney(Math.min(back, order.pricing.total));
+    }
     if (order.paymentStatus === 'pending' || order.paymentStatus === 'failed') order.paymentStatus = 'paid';
     order.deliveryIssue = undefined;
     order.rescheduledFor = undefined;
@@ -823,11 +834,8 @@ export async function updateOrderStatus(
     order.paymentStatus = 'failed';
   }
 
-  if (orderStatus === 'cancelled' && prev !== 'cancelled' && order.coupon?.couponId) {
-    await Coupon.updateOne(
-      { _id: order.coupon.couponId, usedCount: { $gt: 0 } },
-      { $inc: { usedCount: -1 } }
-    );
+  if (orderStatus === 'cancelled' && prev !== 'cancelled') {
+    await giveCouponBack(order);
   }
 
   if (orderStatus === 'no_answer') {
@@ -943,6 +951,16 @@ export function customerOrderView<T>(order: T): T {
     if (Array.isArray(dep.proofs)) {
       o.deposit = { ...dep, proofs: (dep.proofs as Record<string, unknown>[]).map(({ addedByName: _n, ...p }) => p) };
     }
+  }
+  // Cash withdrawal codes, the sender's phone and the payment reference stay with the shop: the
+  // tracking page opens with the order number + phone (printed on the delivery slip)
+  if (o.deposit && typeof o.deposit === 'object' && (o.deposit as Record<string, unknown>).payment) {
+    const dep = o.deposit as Record<string, unknown>;
+    const pay = { ...(dep.payment as Record<string, unknown>) };
+    if (Array.isArray(pay.codes)) pay.codes = (pay.codes as { label?: string }[]).map((c) => ({ label: c.label, value: '••••' }));
+    if (typeof pay.senderPhone === 'string') pay.senderPhone = maskTail(pay.senderPhone);
+    if (typeof pay.reference === 'string') pay.reference = maskTail(pay.reference);
+    o.deposit = { ...dep, payment: pay };
   }
   if (o.deliveryIssue && typeof o.deliveryIssue === 'object') {
     const { note: _note, ...issue } = o.deliveryIssue as Record<string, unknown>;
@@ -1102,13 +1120,15 @@ export function amountPaidOnOrder(order: {
   deliveredAt?: Date | null;
   pricing: { total: number };
   deposit?: { amount: number; status: string; feeCredit?: number } | null;
+  /** Units returned before delivery: not collected */
+  uncollected?: number | null;
 }) {
   // Delivered: the deposit plus what the courier collected (fees the shop covered are not paid,
   // and never more than what was left after the deposit)
   if (wasDelivered(order)) {
     const deposit = order.deposit && order.deposit.amount > 0 ? order.deposit.amount : 0;
     const fees = Math.min(feeCreditOf(order.deposit), Math.max(0, order.pricing.total - deposit));
-    return roundMoney(order.pricing.total - fees);
+    return roundMoney(Math.max(0, order.pricing.total - fees - (order.uncollected ?? 0)));
   }
   return order.deposit?.status === 'received' ? order.deposit.amount : 0;
 }
@@ -1135,25 +1155,34 @@ export async function recordRefund(
     throw new ApiError(400, `The refund must be between 0 and ${formatDh(refundable)}`);
   }
 
-  order.refunds.push({
+  const refund = {
     amount,
     reason: input.reason.trim(),
     itemsReturned: Boolean(input.itemsReturned),
     ...(input.method ? { method: input.method } : {}),
     at: new Date(),
     by: actorId as never,
-  });
-  // Only money actually given back marks the payment refunded (all of it, on a delivered order)
-  if (wasDelivered(order) && alreadyRefunded + amount >= paid - 0.005) {
-    order.paymentStatus = 'refunded';
-  }
-  order.timeline.push({
+  };
+  const step = {
     status: order.orderStatus,
     note: `Refund of ${formatDh(amount)} recorded${input.itemsReturned ? ' (items returned)' : ''}: ${input.reason.trim()}`,
     at: new Date(),
     by: actorId as never,
-  });
-  await order.save();
+  };
+  const set: Record<string, unknown> = {};
+  // Only money actually given back marks the payment refunded (all of it, on a delivered order)
+  if (wasDelivered(order) && alreadyRefunded + amount >= paid - 0.005) set.paymentStatus = 'refunded';
+  if (order.deliveredAt) set.deliveredAt = order.deliveredAt;
+  // Saved only if no other refund was recorded since it was read: two clicks / two staff members
+  // at the same moment can never refund more than was paid
+  const saved = await Order.findOneAndUpdate(
+    { _id: order._id, refunds: { $size: (order.refunds || []).length } },
+    { $push: { refunds: refund, timeline: step }, ...(Object.keys(set).length ? { $set: set } : {}) },
+    { new: true }
+  );
+  if (!saved) throw new ApiError(409, 'Another refund was just recorded on this order. Reload it and check before refunding again.');
+  order.refunds.push(refund);
+  if (set.paymentStatus) order.paymentStatus = 'refunded';
   invalidateDashboardCache();
 
   try {
@@ -1342,12 +1371,7 @@ export async function deleteOrder(id: string, opts: { isOwner?: boolean } = {}) 
     order.stockReserved = false;
   }
 
-  if (order.coupon?.couponId && order.orderStatus !== 'cancelled') {
-    await Coupon.updateOne(
-      { _id: order.coupon.couponId, usedCount: { $gt: 0 } },
-      { $inc: { usedCount: -1 } }
-    );
-  }
+  if (order.orderStatus !== 'cancelled') await giveCouponBack(order);
 
   await Order.deleteOne({ _id: order._id });
   // Private payment photos of this order go with it

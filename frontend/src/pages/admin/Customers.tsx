@@ -58,6 +58,8 @@ export function Customers() {
   const role = useAuthStore((s) => s.user?.role)
   const canEdit = hasPermission(role, 'customers:write')
   const canSaveSegments = hasPermission(role, 'settings')
+  /** The whole customer list leaves the admin: the owner only (law 09-08) */
+  const canExport = hasPermission(role, 'users:manage')
   const qc = useQueryClient()
   const [params, setParams] = useSearchParams()
   const get = (k: string) => params.get(k) || ''
@@ -260,9 +262,11 @@ export function Customers() {
         title="Customers"
         description="Accounts, spending, profitability and wholesale status."
         actions={
-          <Button variant="outline" size="sm" onClick={exportPdf}>
-            <SiteIcon name="arrow-up" size={14} className="rotate-180" /> Export PDF
-          </Button>
+          canExport ? (
+            <Button variant="outline" size="sm" onClick={exportPdf}>
+              <SiteIcon name="arrow-up" size={14} className="rotate-180" /> Export PDF
+            </Button>
+          ) : undefined
         }
       />
 

@@ -33,6 +33,9 @@ function decodeReceipt(dataUrl: string) {
  * photo. The deposit stays awaiting until staff check it and mark it received. Can be sent again
  * (it replaces the previous report) while the deposit is awaiting.
  */
+/** Receipt photos one customer can send in 24 hours */
+export const MAX_RECEIPTS_PER_DAY = 5;
+
 export async function reportDepositPayment(
   userId: string,
   orderNumber: string,
@@ -83,6 +86,10 @@ export async function reportDepositPayment(
   }
 
   if (receipt) {
+    // Receipts are stored in the database: a few a day per customer, so it cannot be filled up
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recent = await Order.countDocuments({ user: userId, _id: { $ne: order._id }, 'deposit.payment.hasReceipt': true, updatedAt: { $gte: since } });
+    if (recent >= MAX_RECEIPTS_PER_DAY) throw new ApiError(429, 'Too many receipt photos today. Send the transfer code instead, or contact us on WhatsApp.');
     await DepositReceipt.findOneAndUpdate(
       { order: order._id },
       { order: order._id, data: receipt.data, contentType: receipt.contentType, size: receipt.data.length },

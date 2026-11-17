@@ -505,6 +505,8 @@ export const fr: Messages = {
     trackOptional: '(facultatif)',
     trackLostNumber: 'Numéro de commande perdu ? Laissez-le vide : nous affichons les commandes livrées à ce téléphone.',
     trackPhoneResults: 'Commandes pour ce téléphone',
+    trackItemCount: '{count} article(s)',
+    trackDetailsWithNumber: 'Pour voir les produits et le total, saisissez le numéro de commande avec votre téléphone.',
     trackPhonePrivacy: 'Pour protéger votre vie privée, le nom, l’adresse et les détails de paiement ne s’affichent qu’avec le numéro de commande complet. Besoin de ces infos ? Écrivez-nous sur WhatsApp.',
     trackWhatsApp: 'Une question sur cette commande ? Écrivez-nous sur WhatsApp',
     trackWhatsAppMessage: 'Bonjour Brynoxa, j’ai une question sur ma commande {number}.',

@@ -41,6 +41,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setAccessToken: (accessToken) => set({ accessToken }),
   setBootstrapped: (bootstrapped) => set({ bootstrapped }),
   logout: () => {
+    // Staff alerts (new orders, deposits: customer names and totals) must not keep arriving on a
+    // device after sign-out — shared computers, lock screens
+    if (isStaffRole(get().user?.role)) {
+      void import('@/lib/push').then((m) => m.unsubscribeFromPush()).catch(() => undefined)
+    }
     setSessionHint('0')
     set({ user: null, accessToken: null })
   },

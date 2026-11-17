@@ -94,6 +94,8 @@ export interface IUser extends Document {
   mfaRecoveryCodeHashes: string[];
   failedLoginAttempts: number;
   lockedUntil?: Date;
+  /** Last 9 digits of the phone (indexed; guests are found again by it) */
+  phoneKey?: string;
   comparePassword(candidate: string): Promise<boolean>;
   createdAt: Date;
   updatedAt: Date;
@@ -204,9 +206,18 @@ const userSchema = new Schema<IUser>(
     mfaRecoveryCodeHashes: { type: [String], select: false, default: [] },
     failedLoginAttempts: { type: Number, default: 0, select: false },
     lockedUntil: { type: Date, select: false },
+    /** Last 9 digits of the phone (indexed) */
+    phoneKey: { type: String },
   },
   { timestamps: true }
 );
+
+// Guests are found again by their phone through this indexed key (no scan of every account)
+userSchema.pre('validate', function () {
+  const digits = String(this.phone || '').replace(/\D/g, '');
+  this.set('phoneKey', digits.length >= 8 ? digits.slice(-9) : undefined);
+});
+userSchema.index({ phoneKey: 1 });
 
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;

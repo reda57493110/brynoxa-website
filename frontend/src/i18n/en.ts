@@ -503,6 +503,8 @@ export const en = {
     trackOptional: '(optional)',
     trackLostNumber: 'Lost your order number? Leave it empty: we show the orders delivered to this phone.',
     trackPhoneResults: 'Orders for this phone',
+    trackItemCount: '{count} item(s)',
+    trackDetailsWithNumber: 'To see the products and the total, enter the order number with your phone.',
     trackPhonePrivacy: 'To protect your privacy, the name, address and payment details show only with the full order number. Need them? Message us on WhatsApp.',
     trackWhatsApp: 'Question about this order? WhatsApp us',
     trackWhatsAppMessage: 'Hello Brynoxa, I have a question about my order {number}.',

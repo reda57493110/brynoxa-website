@@ -18,7 +18,11 @@ function ensureInitialized(): Promise<void> {
     initPromise = (async () => {
       await connectDB();
       await runBootstrap();
-    })();
+    })().catch((err) => {
+      // A database hiccup at start must not break every request until the server restarts
+      initPromise = null;
+      throw err;
+    });
   }
   return initPromise;
 }

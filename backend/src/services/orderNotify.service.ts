@@ -10,6 +10,7 @@ import {
   type ISettings,
 } from '../models/Settings';
 import { escapeHtml, sendEmail } from './email.service';
+import { orderEmailAllowed } from '../utils/emailBudget';
 import {
   button,
   detailRows,
@@ -251,6 +252,7 @@ export async function sendOrderPlacedCustomerEmail(
   const { deposit } = depositAmounts(order);
   const id = String(order._id);
   if (!customer?.email || !isEmailEnabled(settings, 'orderPlaced')) return false;
+  if (!(await orderEmailAllowed(customer.email))) return false;
 
   const intro = deposit
     ? 'Thank you for your order. We have received it. This order needs a deposit before we confirm it — the details are below. You pay the rest in cash when it arrives.'

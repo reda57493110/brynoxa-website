@@ -342,16 +342,14 @@ export interface OrderPricing {
   total: number
 }
 
-/** Track order with the phone only: a short view (no name, address, payment details) */
+/** Track order with the phone only: masked number, status, date, item count (law 09-08: no
+ * products, prices, city, name or address — the order number opens the full view) */
 export interface PhoneOrderMatch {
   orderRef: string
   orderStatus: OrderStatus
   createdAt: string
   rescheduledFor?: string
-  total: number
-  city: string
-  items: { name: string; qty: number; price: number; image?: string }[]
-  timeline: { status: OrderStatus; at: string }[]
+  itemCount: number
 }
 
 export interface Order {

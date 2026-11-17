@@ -3,6 +3,7 @@ const { connectMongo } = require('../_lib/mongo');
 const { paging } = require('../_lib/paging');
 const { sendJson, sendError, cachePublic, cachePrivate } = require('../_lib/http');
 const { requireStaff } = require('../_lib/auth');
+const { rateLimit } = require('../_lib/rateLimit');
 
 const backendNodeModules = path.join(__dirname, '../../backend/node_modules');
 if (!module.paths.includes(backendNodeModules)) {
@@ -100,6 +101,9 @@ module.exports = async (req, res) => {
       const user = await requireStaff(req, res);
       if (!user) return;
     }
+
+    // Searches are limited per connection (random words always skip the shared cache)
+    if (!isAdmin && String(raw.q || '').trim() && !(await rateLimit(req, res, 'search'))) return;
 
     const result = await catalog.listProducts({
       page,

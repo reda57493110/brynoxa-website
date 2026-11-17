@@ -37,6 +37,7 @@ type LeanOrder = {
   orderStatus: OrderStatus;
   origin?: OrderOrigin;
   deliveredAt?: Date | null;
+  uncollected?: number | null;
   pricing: { total: number; shipping: number; discount: number };
   items: { product: unknown; name: string; price: number; qty: number; unitCost?: number; returnedQty?: number }[];
   refunds?: { amount: number }[];
@@ -66,7 +67,7 @@ export function orderFigures(o: LeanOrder, courier: CourierCosts, unitCosts: Uni
   const depositKept = o.deposit?.status === 'received' ? o.deposit.amount : 0;
   const moneyIn =
     kind === 'sale'
-      ? roundMoney(o.pricing.total - fees)
+      ? roundMoney(Math.max(0, o.pricing.total - fees - (o.uncollected ?? 0)))
       : kind === 'failed' || kind === 'cancelled'
         ? roundMoney(Math.max(0, depositKept - refunded))
         : 0;

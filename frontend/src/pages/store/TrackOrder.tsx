@@ -157,20 +157,14 @@ function PhoneMatches({ matches }: { matches: PhoneOrderMatch[] }) {
             <div className="min-w-0">
               <p className="font-medium tabular-nums" dir="ltr">#{m.orderRef}</p>
               <p className="text-xs text-[var(--fg-muted)]">
-                {t('orders.trackPlaced', { date: formatDate(m.createdAt) })} · {m.city}
+                {t('orders.trackPlaced', { date: formatDate(m.createdAt) })} · {t('orders.trackItemCount', { count: m.itemCount })}
               </p>
             </div>
             <Badge variant={orderStatusVariant(m.orderStatus)}>{t(orderStatusKey(m.orderStatus))}</Badge>
           </header>
           <StatusLine status={m.orderStatus} rescheduledFor={m.rescheduledFor} />
-          <OrderProgress status={m.orderStatus} timeline={m.timeline} notes={false} />
-          <div className="border-t border-[var(--border)] pt-3">
-            <ItemsList items={m.items} />
-            <p className="mt-2 flex justify-between gap-3 text-sm font-semibold">
-              <span>{t('checkout.totalCod')}</span>
-              <span className="tabular-nums">{formatCurrency(m.total)}</span>
-            </p>
-          </div>
+          <OrderProgress status={m.orderStatus} timeline={[]} notes={false} />
+          <p className="border-t border-[var(--border)] pt-3 text-xs text-[var(--fg-muted)]">{t('orders.trackDetailsWithNumber')}</p>
         </article>
       ))}
       <div className="flex flex-col gap-2 rounded-xl bg-[var(--bg-muted)] px-3 py-3 text-xs leading-relaxed text-[var(--fg-muted)]">

@@ -33,6 +33,7 @@ import {
   createStaffUserSchema,
   staffPasswordSchema,
   forUpdate,
+  wishlistSyncSchema,
 } from '../validators/schemas';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
@@ -152,7 +153,7 @@ router.delete('/wishlist/:productId', requireAuth, misc.removeWishlist);
 router.post(
   '/wishlist/sync',
   requireAuth,
-  validate(z.object({ productIds: z.array(z.string()) })),
+  validate(wishlistSyncSchema),
   misc.syncWishlist
 );
 

@@ -3,7 +3,7 @@ import * as catalog from '../controllers/catalog.controller';
 import { validate } from '../middleware/validate';
 import { optionalAuth, requireAuth, requirePermission } from '../middleware/auth';
 import { upload } from '../middleware/upload';
-import { uploadLimiter } from '../middleware/rateLimit';
+import { searchLimiter, uploadLimiter } from '../middleware/rateLimit';
 import {
   categorySchema,
   brandSchema,
@@ -63,7 +63,7 @@ router.delete(
   catalog.deleteBrand
 );
 
-router.get('/products', optionalAuth, catalog.getProducts);
+router.get('/products', optionalAuth, searchLimiter, catalog.getProducts);
 router.get('/products/compare', catalog.compareProducts);
 router.get('/products/:slug', catalog.getProduct);
 router.get('/products/:id/recommendations', catalog.productRecommendations);

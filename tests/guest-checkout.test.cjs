@@ -14,7 +14,9 @@ const { User } = require(dist('models/User'));
 const db = [];
 const match = (u, q) =>
   Object.entries(q).every(([k, v]) => {
+    if (k === '$or') return v.some((sub) => match(u, sub));
     const val = u.get(k);
+    if (v === null) return val === undefined || val === null;
     if (v instanceof RegExp) return v.test(String(val ?? ''));
     return String(val) === String(v);
   });

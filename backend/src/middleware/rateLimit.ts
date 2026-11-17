@@ -25,6 +25,16 @@ export const couponLimiter = rateLimit({
   message: { success: false, message: 'Too many coupon checks, try again later' },
 });
 
+/** Shop search: same as the serverless limit (90 a minute per connection), only when searching */
+export const searchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 90,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => !String(req.query.q || '').trim() || req.query.admin === 'true',
+  message: { success: false, message: 'Too many searches. Please wait a moment.' },
+});
+
 export const uploadLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,

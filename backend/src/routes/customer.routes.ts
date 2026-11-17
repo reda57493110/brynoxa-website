@@ -14,7 +14,8 @@ const router = Router();
 // Admin customer management (literal paths before /:id)
 router.get('/admin/customers', requireAuth, requirePermission('customers:read'), customer.list);
 router.get('/admin/customers/summary', requireAuth, requirePermission('customers:read'), customer.summary);
-router.get('/admin/customers/export', requireAuth, requirePermission('customers:read'), customer.exportCsv);
+// The whole customer list (names, phones, addresses): the owner only (law 09-08: no more than needed)
+router.get('/admin/customers/export', requireAuth, requirePermission('users:manage'), customer.exportCsv);
 router.get('/admin/customers/:id', requireAuth, requirePermission('customers:read'), customer.profile);
 router.patch(
   '/admin/customers/:id',

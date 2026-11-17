@@ -5,7 +5,8 @@ import { MANUAL_ORDER_ORIGINS } from '../utils/orderOrigin';
 import { SPEC_TEMPLATE_IDS } from '../utils/specs';
 import { BLOCKED_PASSWORD_MESSAGE, isBlockedPassword } from '../utils/blockedPasswords';
 import { AD_KINDS, AD_PLATFORMS } from '../utils/adTracking';
-import { siteContactIssue } from '../utils/siteContact';
+import { siteContactIssue, validCustomerPhone } from '../utils/siteContact';
+import { cleanLogo } from '../utils/branding';
 import { trackingIssue } from '../utils/tracking';
 import { brandingIssue } from '../utils/branding';
 
@@ -85,7 +86,7 @@ export const addressSchema = z.object({
   state: z.string().trim().max(80).optional(),
   postalCode: z.string().trim().max(20).optional().default('00000'),
   country: z.string().trim().max(56).optional().default('MA'),
-  phone: z.string().trim().min(5).max(30),
+  phone: z.string().trim().min(5).max(30).refine(validCustomerPhone, 'Enter a full phone number, e.g. 06 12 34 56 78'),
   isDefault: z.boolean().optional(),
 });
 
@@ -101,8 +102,9 @@ export const categorySchema = z.object({
 });
 
 export const brandSchema = z.object({
-  name: z.string().min(2),
-  logo: z.string().optional(),
+  name: z.string().trim().min(2).max(60),
+  /** Uploaded through the admin only ('' = no logo) */
+  logo: z.string().max(500).refine((v) => v === '' || cleanLogo(v) !== '', 'Upload the logo here').optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -502,8 +504,9 @@ export const pushSubscribeSchema = z.object({
   subscription: z.object({
     endpoint: pushEndpointSchema,
     keys: z.object({
-      p256dh: z.string().min(1).max(200),
-      auth: z.string().min(1).max(100),
+      // A browser's real keys: P-256 public key (65 bytes) and 16-byte secret, base64url
+      p256dh: z.string().regex(/^[A-Za-z0-9_-]{86,88}={0,2}$/, 'Invalid push key'),
+      auth: z.string().regex(/^[A-Za-z0-9_-]{21,24}={0,2}$/, 'Invalid push key'),
     }),
   }),
   locale: z.enum(['en', 'fr', 'ar']).optional(),
@@ -871,6 +874,9 @@ export const socialNumbersSchema = z.object({
     .min(1)
     .max(3),
 });
+
+/** Wishlist sync after sign-in: product ids, 100 at most */
+export const wishlistSyncSchema = z.object({ productIds: z.array(z.string().max(40)).max(100) });
 
 /** Admin: block a phone number from ordering on the website */
 export const blockPhoneSchema = z.object({

@@ -1,6 +1,7 @@
 // Track order with the phone only: a guest who lost the order number sees the orders delivered to
-// that phone — in a short form, because anyone can type someone's phone: no name, street address,
-// notes, payment details or full order number (the order number still opens the full view).
+// that phone — masked number, status, date and item count only, because anyone can type someone's
+// phone (law 09-08): no products, prices, city, name, address, notes or payment details. The order
+// number (with the phone) still opens the full view.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -30,9 +31,13 @@ const ahmed = (n, phone, status = 'shipped') =>
     ],
   });
 let stored = [];
+let lastQuery;
 Order.find = (q) => {
-  const rx = q['shippingAddress.phone'];
-  const list = stored.filter((o) => rx.test(o.shippingAddress.phone));
+  lastQuery = q;
+  // indexed key, or the pattern for orders saved before the key existed
+  const [byKey, legacy] = q.$or;
+  const rx = legacy['shippingAddress.phone'];
+  const list = stored.filter((o) => o.phoneKey === byKey.phoneKey || rx.test(o.shippingAddress.phone));
   return { sort: () => ({ limit: async () => list }) };
 };
 
@@ -40,19 +45,18 @@ test('the order number is masked: enough to tell orders apart, not to open them'
   assert.equal(orders.maskOrderNumber('BRX-20261020-K7M2QX'), 'BRX-20261020-••••QX');
 });
 
-test('phone only: the orders delivered to this phone (written any way), short form', async () => {
+test('phone only: the orders delivered to this phone (written any way): number, status, date, item count', async () => {
   stored = [ahmed(1, '06 12 34 56 78'), ahmed(2, '+212612345678', 'delivered'), ahmed(3, '0699999999')];
   const found = await orders.trackOrdersByPhone('0612345678');
   assert.equal(found.length, 2);
   assert.deepEqual(found.map((o) => o.orderStatus), ['shipped', 'delivered']);
   const json = JSON.stringify(found);
-  for (const secret of ['Ahmed', 'Rue Atlas', 'Maarif', 'K7M2Q1', 'Calls after', 'Amana', 'code 1234', 'unitCost', '4000']) {
+  for (const secret of ['Ahmed', 'Rue Atlas', 'Maarif', 'Casablanca', 'K7M2Q1', 'Calls after', 'Amana', 'code 1234', 'unitCost', '4000', '5000', 'HP EliteBook', 'cloudinary']) {
     assert.ok(!json.includes(secret), `must not show: ${secret}`);
   }
-  assert.equal(found[0].city, 'Casablanca');
-  assert.equal(found[0].total, 5000);
-  assert.deepEqual(found[0].items, [{ name: 'HP EliteBook 840', qty: 1, price: 5000, image: 'https://res.cloudinary.com/x/image/upload/hp.jpg' }], 'with the product photo');
-  assert.deepEqual(found[0].timeline.map((s) => s.status), ['pending', 'shipped'], 'internal steps hidden');
+  assert.deepEqual(Object.keys(found[0]).sort(), ['createdAt', 'itemCount', 'orderRef', 'orderStatus', 'rescheduledFor'].sort());
+  assert.equal(found[0].itemCount, 1);
+  assert.equal(lastQuery.$or[0].phoneKey, '612345678', 'found by the indexed phone key');
 });
 
 test('nothing for an unknown or too short phone', async () => {
@@ -82,7 +86,9 @@ test('the page: order number optional, explains the lost-number option and what 
   const short = page.slice(page.indexOf('function PhoneMatches'), page.indexOf('export function TrackOrder'));
   assert.ok(short.length > 200);
   assert.doesNotMatch(short, /fullName|line1|DepositNotice/, 'no name, address or payment details');
-  assert.match(short, /<OrderProgress status=\{m\.orderStatus\} timeline=\{m\.timeline\} notes=\{false\} \/>/, 'no step notes');
+  assert.match(short, /<OrderProgress status=\{m\.orderStatus\} timeline=\{\[\]\} notes=\{false\} \/>/, 'no step history');
+  assert.doesNotMatch(short, /ItemsList|m\.total|m\.city/, 'no products, total or city');
+  assert.match(short, /t\('orders\.trackDetailsWithNumber'\)/);
   // Phone first (required), order number second (optional)
   assert.ok(page.indexOf("label={t('orders.trackPhone')}") < page.indexOf("t('orders.trackOrderNumber')"));
 });
@@ -101,8 +107,8 @@ test('progress: detailed statuses sit on the 4 customer steps', async () => {
   assert.equal(orderStepIndex('returned'), 3);
 });
 
-test('each product shows its photo (full and phone-only views)', () => {
+test('each product shows its photo (full view; the phone-only view shows no products)', () => {
   const page = fs.readFileSync(path.join(ROOT, 'frontend/src/pages/store/TrackOrder.tsx'), 'utf8');
   assert.match(page, /src=\{item\.image \? sizedImageUrl\(item\.image, 160\) : undefined\}/);
-  assert.equal((page.match(/<ItemsList items=/g) || []).length, 2);
+  assert.equal((page.match(/<ItemsList items=/g) || []).length, 1);
 });

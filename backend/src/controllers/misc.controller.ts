@@ -314,7 +314,8 @@ export const subscribeNewsletter = asyncHandler(async (req: Request, res: Respon
       existing.isActive = true;
       await existing.save();
     }
-    sendSuccess(res, { email }, 'Already subscribed');
+    // Same answer as a new sign-up: nobody can check who is subscribed
+    sendSuccess(res, { email }, 'Subscribed', 201);
     return;
   }
   await NewsletterSubscriber.create({ email });

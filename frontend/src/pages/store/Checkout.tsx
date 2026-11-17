@@ -36,6 +36,7 @@ import type { Address, Product } from '@/types'
 import { ConditionBadge } from '@/components/product/ConditionBadge'
 import { isPreOwned } from '@/lib/condition'
 import { HelpLink } from '@/components/help/HelpLink'
+import { validCustomerPhone } from '@/lib/siteContact'
 import { readUtm } from '@/lib/adTracking'
 
 export function Checkout() {
@@ -337,7 +338,7 @@ export function Checkout() {
     setFormError('')
 
     // The phone is how we confirm and deliver: a full Moroccan / international number
-    if (address.phone.replace(/\D/g, '').length < 9) {
+    if (!validCustomerPhone(address.phone)) {
       setFormError(t('checkout.phoneInvalid'))
       return
     }

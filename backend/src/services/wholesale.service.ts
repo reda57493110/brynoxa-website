@@ -13,8 +13,10 @@ import { button, paragraphs, renderEmail, siteUrl, toPlainText } from './emailTe
  */
 export async function getWholesaleTerms(userId?: string | null): Promise<WholesaleTerms | null> {
   if (!userId) return null;
-  const user = await User.findById(userId).select('customerType wholesale isActive role');
+  const user = await User.findById(userId).select('customerType wholesale isActive role isGuest');
   if (!user || user.role !== 'customer' || !user.isActive) return null;
+  // A guest is found by phone or email alone, so anyone typing them would get the discount
+  if (user.isGuest) return null;
   if (user.customerType === 'retail' || user.wholesale?.status !== 'approved' || !user.wholesale.tierId) {
     return null;
   }

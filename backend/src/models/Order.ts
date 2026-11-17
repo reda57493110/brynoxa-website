@@ -156,6 +156,10 @@ export interface IOrder extends Document {
   rescheduledFor?: Date;
   /** First time the order was delivered (cash collected); kept when items come back later. */
   deliveredAt?: Date;
+  /** Units returned before delivery: money the courier never collected */
+  uncollected?: number;
+  /** Last 9 digits of the delivery phone (indexed: tracking by phone) */
+  phoneKey?: string;
   customerNote?: string;
   adminNote?: string;
   stockReserved: boolean;
@@ -306,6 +310,8 @@ const orderSchema = new Schema<IOrder>(
       couponId: { type: Schema.Types.ObjectId, ref: 'Coupon' },
       /** Last 9 digits of the delivery phone (per-customer coupon limits). */
       phoneKey: { type: String },
+      /** The coupon use was given back (order cancelled / deleted) */
+      released: { type: Boolean },
     },
     shippingAddress: {
       label: String,
@@ -348,6 +354,8 @@ const orderSchema = new Schema<IOrder>(
     deliveryAttempts: { type: Number, default: 0 },
     rescheduledFor: { type: Date },
     deliveredAt: { type: Date },
+    uncollected: { type: Number, min: 0 },
+    phoneKey: { type: String },
     customerNote: { type: String },
     adminNote: { type: String },
     stockReserved: { type: Boolean, default: false },
@@ -366,6 +374,13 @@ orderSchema.index({ 'coupon.couponId': 1, 'coupon.phoneKey': 1 }, { sparse: true
 orderSchema.index({ orderStatus: 1, createdAt: -1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ origin: 1, createdAt: -1 });
+orderSchema.index({ phoneKey: 1, createdAt: -1 });
+
+// Tracking by phone uses an indexed key instead of scanning every order
+orderSchema.pre('validate', function () {
+  const digits = String(this.shippingAddress?.phone || '').replace(/\D/g, '');
+  this.phoneKey = digits.length >= 8 ? digits.slice(-9) : undefined;
+});
 orderSchema.index({ 'marketing.campaign': 1, createdAt: -1 }, { sparse: true });
 // Staff activity (Admin → Roles): who made each step / call, and orders they added
 orderSchema.index({ 'timeline.by': 1, 'timeline.at': -1 });
