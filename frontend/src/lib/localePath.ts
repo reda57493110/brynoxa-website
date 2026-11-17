@@ -7,7 +7,6 @@
  */
 export type PathLocale = 'en' | 'fr' | 'ar'
 
-export const PREFIXED_LOCALES = ['fr', 'ar'] as const
 export const ALL_PATH_LOCALES: PathLocale[] = ['en', 'fr', 'ar']
 
 /** "fr" / "ar" when the path starts with that prefix, else null (English). */

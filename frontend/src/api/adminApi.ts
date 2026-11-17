@@ -1,5 +1,5 @@
 import api from './client'
-import type { SocialConversation, SocialMessage, SocialOverview } from '@/types/social'
+import type { SocialOverview } from '@/types/social'
 import type { AdCampaign, AdCampaignDetail, AdCampaignPayload, AdRange, AdsOverview } from '@/types/ads'
 import type {
   AnalyticsReport,
@@ -325,12 +325,6 @@ export const adminApi = {
   /** Admin → Social media (Facebook, Instagram, TikTok) */
   social: {
     overview: () => api.get<ApiResponse<SocialOverview>>('/admin/social'),
-    /** The Meta / TikTok address to send the owner to */
-    connect: (platform: 'meta' | 'tiktok') => api.post<ApiResponse<{ url: string }>>(`/admin/social/${platform}/connect`),
-    disconnect: (platform: 'meta' | 'tiktok') => api.delete<ApiResponse<null>>(`/admin/social/${platform}`),
-    inbox: (platform: 'facebook' | 'instagram') => api.get<ApiResponse<SocialConversation[]>>(`/admin/social/inbox/${platform}`),
-    thread: (id: string) => api.get<ApiResponse<SocialMessage[]>>(`/admin/social/thread/${encodeURIComponent(id)}`),
-    reply: (customerId: string, text: string) => api.post<ApiResponse<{ sent: boolean }>>('/admin/social/reply', { customerId, text }),
     /** Update my numbers: followers (and posts) typed for a day */
     saveNumbers: (day: string, entries: { platform: 'facebook' | 'instagram' | 'tiktok'; followers: number; posts?: number }[]) =>
       api.post<ApiResponse<{ saved: number }>>('/admin/social/numbers', { day, entries }),

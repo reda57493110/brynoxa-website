@@ -521,7 +521,6 @@ export interface DashboardStats {
   lowStock: number
   /** Nothing left to sell. */
   outOfStock: number
-  reviewCount: number
   unreadMessages: number
   recentOrders: Order[]
   ordersByStatus: Record<string, number>

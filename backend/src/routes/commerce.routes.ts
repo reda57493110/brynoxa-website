@@ -185,8 +185,7 @@ router.get(
     'orders:read',
     'inventory:write',
     'messages',
-    'coupons',
-    'reviews'
+    'coupons'
   ),
   misc.dashboard
 );

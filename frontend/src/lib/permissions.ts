@@ -23,7 +23,6 @@ export type Permission =
   | 'customers:write'
   | 'users:manage'
   | 'messages'
-  | 'reviews'
   | 'coupons'
   | 'push'
   /** Ads & social media: campaigns, their spending and results */
@@ -40,7 +39,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[] | ['*']> = {
   orders: ['orders:read', 'orders:write', 'customers:read'],
   catalog: ['products:read', 'products:write', 'products:delete', 'inventory:write'],
   support: ['orders:read', 'orders:write', 'messages', 'customers:read'],
-  marketing: ['coupons', 'reviews', 'push', 'ads'],
+  marketing: ['coupons', 'push', 'ads'],
 }
 
 /** First page each role opens after login. */

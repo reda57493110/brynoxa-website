@@ -76,8 +76,7 @@ export const heroGhostPill =
 export const heroPrimaryPill =
   'inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-4 text-[13px] font-semibold sm:text-sm text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-11 sm:px-6'
 
-export const heroChip =
-  'inline-flex h-6 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-2 text-[10px] font-medium text-[var(--fg-muted)] sm:h-8 sm:px-3 sm:text-xs dark:border-white/15 dark:bg-black/30 dark:text-white dark:backdrop-blur-sm'
+
 
 export const heroInput =
   'h-9 min-w-0 flex-1 rounded-full border border-[var(--border)] bg-[var(--bg-input)] px-3.5 text-[13px] sm:text-sm text-[var(--fg)] outline-none placeholder:text-[var(--fg-muted)] focus:border-[var(--brand)] sm:h-11 dark:border-white/20 dark:bg-white/10 dark:text-white dark:backdrop-blur-sm dark:placeholder:text-white/55'

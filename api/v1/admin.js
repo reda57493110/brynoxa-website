@@ -558,7 +558,6 @@ module.exports = async (req, res) => {
         'inventory:write',
         'messages',
         'coupons',
-        'reviews',
       ]);
       if (!user) return;
       const now = Date.now();

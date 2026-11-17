@@ -65,7 +65,7 @@ test('permission "ads": owner and Marketing; mirrored in the admin; logged in st
   assert.ok(hasPermission('marketing', 'ads'));
   for (const r of ['orders', 'catalog', 'support']) assert.ok(!hasPermission(r, 'ads'), r);
   const front = read('frontend/src/lib/permissions.ts');
-  assert.ok(front.includes("marketing: ['coupons', 'reviews', 'push', 'ads'],") && front.includes("'/admin/ads': 'ads',"));
+  assert.ok(front.includes("marketing: ['coupons', 'push', 'ads'],") && front.includes("'/admin/ads': 'ads',"));
 
   const { describeStaffAction } = require(dist('utils/staffActions.js'));
   const id = 'b'.repeat(24);

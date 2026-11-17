@@ -9,7 +9,6 @@ const KEY = 'brx-consent'
 /** Raised when the policy changes in a way that needs asking again */
 const VERSION = 1
 const OPEN_EVENT = 'brx-consent-open'
-const CHANGE_EVENT = 'brx-consent-change'
 
 export function readConsent(): ConsentChoice | null {
   try {
@@ -47,18 +46,11 @@ export function saveConsent(choice: ConsentChoice, now = Date.now()) {
     /* private mode: asked again next visit; nothing loads meanwhile unless accepted */
   }
   if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: choice }))
   // Scripts already running cannot be unloaded: refusing after accepting reloads the page clean
   if (choice === 'denied' && before === 'granted') {
     clearTrackingCookies()
     window.location.reload()
   }
-}
-
-export function onConsentChange(cb: (choice: ConsentChoice) => void) {
-  const fn = (e: Event) => cb((e as CustomEvent<ConsentChoice>).detail)
-  window.addEventListener(CHANGE_EVENT, fn)
-  return () => window.removeEventListener(CHANGE_EVENT, fn)
 }
 
 /** Footer "Cookie settings": shows the banner again */

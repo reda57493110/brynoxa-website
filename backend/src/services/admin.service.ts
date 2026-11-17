@@ -54,7 +54,7 @@ async function buildDashboardStats() {
   const lowExpr = { $lte: ['$stock', { $ifNull: ['$lowStockThreshold', 5] }] };
 
   // Separate small queries, each served by an index (a $facet reads every order in full)
-  const [byStatus, attention, todayStats, customerCount, productStats, reviewCount, unreadMessages, recentOrders] =
+  const [byStatus, attention, todayStats, customerCount, productStats, unreadMessages, recentOrders] =
     await Promise.all([
       // Counts per status from the { orderStatus, createdAt } index alone
       Order.aggregate<{ _id: string; count: number }>([
@@ -87,7 +87,6 @@ async function buildDashboardStats() {
           },
         },
       ]),
-      Review.countDocuments(),
       ContactMessage.countDocuments({ status: 'new' }),
       Order.find()
         .sort({ createdAt: -1 })
@@ -116,7 +115,6 @@ async function buildDashboardStats() {
     activeProducts: n(productsFacet.activeProducts),
     lowStock: n(productsFacet.lowStock),
     outOfStock: n(productsFacet.outOfStock),
-    reviewCount,
     unreadMessages,
     recentOrders: recentOrders || [],
     ordersByStatus: statusMap,
@@ -150,8 +148,6 @@ export function dashboardStatsFor(stats: DashboardStats, role: string | undefine
     outOfStock: products ? stats.outOfStock : 0,
     lowStockProducts: products ? stats.lowStockProducts : [],
     unreadMessages: can('messages') ? stats.unreadMessages : 0,
-    // Reviews were removed from the shop
-    reviewCount: 0,
   };
 }
 

@@ -872,12 +872,6 @@ export const socialNumbersSchema = z.object({
     .max(3),
 });
 
-/** Admin → Social media: a reply to a Facebook / Instagram message */
-export const socialReplySchema = z.object({
-  customerId: z.string().regex(/^\d{5,30}$/),
-  text: z.string().trim().min(1).max(1000),
-});
-
 /** Admin: block a phone number from ordering on the website */
 export const blockPhoneSchema = z.object({
   phone: z.string().trim().min(6).max(40),

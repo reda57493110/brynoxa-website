@@ -13,8 +13,7 @@ export function useAdminStats() {
       hasPermission(role, 'orders:read') ||
       hasPermission(role, 'inventory:write') ||
       hasPermission(role, 'messages') ||
-      hasPermission(role, 'coupons') ||
-      hasPermission(role, 'reviews'))
+      hasPermission(role, 'coupons'))
 
   const query = useQuery({
     queryKey: ['admin-dashboard'],

@@ -41,7 +41,7 @@ test('nothing loads before the visitor accepts; Accept starts what the shop conf
   consent.saveConsent('granted');
   a.applyConsent();
   assert.equal(added.length, 2, 'accepted: Meta and TikTok load');
-  assert.ok(events.includes('brx-consent-change'));
+  assert.equal(consent.readConsent(), 'granted');
 });
 
 
