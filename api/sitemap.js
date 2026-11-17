@@ -104,7 +104,11 @@ module.exports = async (req, res) => {
       .select('slug updatedAt')
       .lean();
 
-    categoryUrls = categories.map((c) =>
+    // Empty categories (nothing to buy in them or their sub-categories) are not offered to Google
+    const all = await Category.find({}).select('_id parent').lean();
+    const { categoriesWithProducts } = require('../backend/dist/services/catalog.service');
+    const withProducts = await categoriesWithProducts(all);
+    categoryUrls = categories.filter((c) => withProducts.has(String(c._id))).map((c) =>
       urlEntry(origin, `/category/${c.slug}`, {
         lastmod: toDate(c.updatedAt),
         changefreq: 'weekly',

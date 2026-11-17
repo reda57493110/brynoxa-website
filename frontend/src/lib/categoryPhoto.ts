@@ -3,7 +3,9 @@ import { canonicalCategorySlug } from './categorySlug'
 
 /** Built-in photos for the store's main categories (by address), used until the owner sets one. */
 export const BUILT_IN_CATEGORY_PHOTOS: Record<string, string> = {
-  laptops: '/categories/laptops.webp',
+  // Photo by Dell on Unsplash (Unsplash License: free to use, no credit needed), no logo in view;
+  // replaced a photo showing other brands' logos. New name = phones fetch the new photo at once
+  laptops: '/categories/laptops-v2.webp',
   'gaming-pcs': '/categories/gaming-pcs.webp',
   monitors: '/categories/monitors.jpg',
   keyboards: '/categories/keyboards.jpg',
@@ -79,6 +81,7 @@ export function categoryPhotoCredit(c: { slug: string; image?: string }) {
 /** Built-in originals sharp enough for phone screens (3× pixels): offered as the largest size. */
 const BUILT_IN_ORIGINAL_WIDTH: Record<string, number> = {
   'desktop-pcs': 2128,
+  laptops: 1600,
   ...Object.fromEntries(SUB_CATEGORY_PHOTOS.map((s) => [s, 1200])),
 }
 

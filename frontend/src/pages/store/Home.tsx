@@ -92,9 +92,11 @@ export function Home() {
     (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
   )
   // The home page shows four of them, in this order; "See more categories" opens the shop for the rest
-  const homeCategories = HOME_CATEGORIES.map((slug) => categoryList.find((c) => canonicalCategorySlug(c.slug) === slug)).filter(
+  // (the shop only lists categories that have products; an empty one is replaced by another)
+  const chosen = HOME_CATEGORIES.map((slug) => categoryList.find((c) => canonicalCategorySlug(c.slug) === slug)).filter(
     (c): c is (typeof categoryList)[number] => Boolean(c)
   )
+  const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORIES.length)
 
   return (
     <>

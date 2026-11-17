@@ -64,7 +64,8 @@ test('the built-in Unsplash photos need no credit line; a photo set in admin nee
 test('the Desktop PCs photo is sharp on phones: a 1600 px copy is offered', async () => {
   const photos = await load('lib/categoryPhoto.ts');
   assert.ok(photos.categoryPhotoSrcSet({ slug: 'desktop-pc' }).endsWith('/categories/desktop-pcs-v10.webp 2128w'));
-  assert.ok(!photos.categoryPhotoSrcSet({ slug: 'laptops' }).includes('1600w'), 'others unchanged');
+  assert.ok(photos.categoryPhotoSrcSet({ slug: 'laptops' }).endsWith('/categories/laptops-v2.webp 1600w'), 'the new Laptops photo too');
+  assert.ok(!photos.categoryPhotoSrcSet({ slug: 'monitors' }).includes('1600w'), 'others unchanged');
 });
 
 test('Desktop PCs image: wide enough for the wide tile, so no special framing is needed', async () => {
@@ -78,9 +79,9 @@ test('Desktop PCs image: wide enough for the wide tile, so no special framing is
 test('a sub-category without its own photo shows its main category photo', async () => {
   const photos = await load('lib/categoryPhoto.ts');
   const list = [{ _id: 'l', slug: 'laptops' }, { _id: 'd', slug: 'desktop-pc', image: 'https://x/own-desktop.jpg' }];
-  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: 'l' }, list), '/categories/laptops.webp');
+  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: 'l' }, list), '/categories/laptops-v2.webp');
   assert.equal(photos.categoryPhoto({ slug: 'my-other-sub', parent: 'd' }, list), 'https://x/own-desktop.jpg');
-  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: { slug: 'laptops' } }), '/categories/laptops.webp', 'populated parent');
+  assert.equal(photos.categoryPhoto({ slug: 'my-own-sub', parent: { slug: 'laptops' } }), '/categories/laptops-v2.webp', 'populated parent');
   assert.equal(photos.categoryPhoto({ slug: 'business-laptops', parent: 'l', image: 'https://x/mine.jpg' }, list), 'https://x/mine.jpg', 'its own photo wins');
   assert.equal(photos.categoryPhoto({ slug: 'mice' }), '/categories/mice.jpg', 'built-in photo of its own');
 });

@@ -203,6 +203,25 @@ function categoryIsActive(category: unknown): boolean {
   return doc.isActive !== false;
 }
 
+/** Categories holding at least one product on sale, directly or through a sub-category */
+export async function categoriesWithProducts(all: { _id: unknown; parent?: unknown }[]) {
+  const counts = await Product.aggregate<{ _id: unknown }>([
+    { $match: { isActive: true, category: { $ne: null } } },
+    { $group: { _id: '$category' } },
+  ]);
+  const parentOf = new Map(all.map((c) => [String(c._id), c.parent ? String(c.parent) : '']));
+  const out = new Set<string>();
+  for (const c of counts) {
+    // The category and the ones it sits in (two levels; a few steps at most)
+    let id = String(c._id);
+    for (let step = 0; id && step < 5 && !out.has(id); step++) {
+      out.add(id);
+      id = parentOf.get(id) || '';
+    }
+  }
+  return out;
+}
+
 export async function listCategories(activeOnly = true) {
   const filter: Record<string, unknown> = {
     slug: { $nin: ['office', 'networking'] },
@@ -213,8 +232,10 @@ export async function listCategories(activeOnly = true) {
     // A sub-category of a hidden category is hidden too
     const all = await Category.find({}).select('_id isActive slug parent').lean();
     const visible = visibleCategoryIds(all);
-    // Sub-categories show even while empty: clicking a category always shows what is inside it
-    return items.filter((c) => visible.has(String(c._id)));
+    // Only categories with something to buy, in them or in their sub-categories: a customer never
+    // lands on an empty page from the menu, the home page or the shop (the page itself still opens)
+    const withProducts = await categoriesWithProducts(all);
+    return items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id)));
   }
   // Staff list: how many products each one holds (shown in Settings, needed before a delete)
   const counts = await Product.aggregate<{ _id: unknown; n: number }>([{ $group: { _id: '$category', n: { $sum: 1 } } }]);

@@ -156,7 +156,7 @@ test('Laptops: "Student / small budget" instead of 2-in-1, named in French and A
   assert.ok(fr.includes("'student-laptops': { name: 'Étudiants / petit budget'"));
 });
 
-test('shop: sub-categories show even while empty (clicking a category shows what is inside)', async () => {
+test('shop: only categories with products are listed (a main category shows when one of its sub-categories has some)', async () => {
   const cats = [
     { _id: id(1), slug: 'components', isActive: true, parent: null },
     { _id: id(2), slug: 'ram', isActive: true, parent: id(1) },
@@ -171,5 +171,5 @@ test('shop: sub-categories show even while empty (clicking a category shows what
   const { Product } = require(dist('models/Product.js'));
   Product.aggregate = async () => [{ _id: id(2), n: 3 }];
   const shown = (await catalog.listCategories(true)).map((c) => c.slug);
-  assert.deepEqual(shown, ['components', 'ram', 'storage', 'cameras'], 'Storage has no product yet: still shown');
+  assert.deepEqual(shown, ['components', 'ram'], 'empty Storage and Cameras are not listed; Components shows through RAM');
 });
