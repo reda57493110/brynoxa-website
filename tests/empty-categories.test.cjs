@@ -34,7 +34,7 @@ test('a category counts when it or one of its sub-categories has a product on sa
 
 test('the shop list, the sitemap and the home tiles use it', () => {
   const svc = read('backend/src/services/catalog.service.ts');
-  assert.ok(svc.includes('const shown = new Set(items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id))).map((c) => String(c._id)));'));
+  assert.ok(svc.includes('const shown = new Set(items.filter((c) => visible.has(String(c._id)) && (withProducts.has(String(c._id)) || core(c))).map((c) => String(c._id)));'));
   assert.ok(svc.includes('if (!opts.emptySubs) return items.filter((c) => shown.has(String(c._id)));'), 'the normal list: only categories with products');
   assert.ok(read('api/sitemap.js').includes('categories.filter((c) => withProducts.has(String(c._id)))'));
   const home = read('frontend/src/pages/store/Home.tsx');
@@ -48,4 +48,15 @@ test('the Laptops photo: a new file (phones fetch it at once), a real WebP in 3 
     assert.equal(b.toString('ascii', 8, 12), 'WEBP', f);
   }
   for (const old of ['laptops.webp', 'laptops-960.webp', 'laptops-480.webp']) assert.ok(!fs.existsSync(path.join(ROOT, 'frontend/public/categories', old)), old);
+});
+
+test('the main categories (Laptops, Desktop PCs, Gaming PCs) are always listed, even while empty; their page says so', () => {
+  const svc = read('backend/src/services/catalog.service.ts');
+  assert.ok(svc.includes("export const ALWAYS_SHOWN_CATEGORIES = ['laptops', 'desktop-pcs', 'gaming-pcs'];"));
+  assert.ok(svc.includes('!c.parent && ALWAYS_SHOWN_CATEGORIES.includes(canonicalCategorySlug(c.slug))'), '"desktop-pc" counts as desktop-pcs; main categories only');
+  assert.ok(svc.includes('(withProducts.has(String(c._id)) || core(c))'));
+  const { canonicalCategorySlug } = require(dist('utils/categorySuggestions.js'));
+  assert.equal(canonicalCategorySlug('desktop-pc'), 'desktop-pcs');
+  const shop = read('frontend/src/pages/store/Shop.tsx');
+  assert.ok(shop.includes("title={t('shop.categoryEmpty')} description={t('shop.categoryEmptyBody')} actionLabel={t('shop.backToShop')}"));
 });

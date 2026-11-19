@@ -420,12 +420,14 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
                     <span className="sr-only">{t('ui.loadingProducts')}</span>
                   </ul>
                 ) : !products.data?.items.length ? (
-                  <EmptyState
-                    title={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
-                    description={hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')}
-                    actionLabel={hasNarrowing ? t('shop.clearFilters') : undefined}
-                    onAction={hasNarrowing ? clearFilters : undefined}
-                  />
+                  hasNarrowing ? (
+                    <EmptyState title={t('shop.noMatch')} description={t('shop.noMatchBody')} actionLabel={t('shop.clearFilters')} onAction={clearFilters} />
+                  ) : activeCategory ? (
+                    // A main category shown before it has products (Desktop PCs…): say so, offer the shop
+                    <EmptyState title={t('shop.categoryEmpty')} description={t('shop.categoryEmptyBody')} actionLabel={t('shop.backToShop')} onAction={() => navigate('/shop')} />
+                  ) : (
+                    <EmptyState title={t('shop.empty')} description={t('shop.emptyBody')} />
+                  )
                 ) : view === 'grid' ? (
                   <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
                     {products.data.items.map((p, i) => (

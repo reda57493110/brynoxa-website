@@ -225,6 +225,9 @@ export async function categoriesWithProducts(all: { _id: unknown; parent?: unkno
   return out;
 }
 
+/** The shop's main categories: always listed, even before they have products (by address) */
+export const ALWAYS_SHOWN_CATEGORIES = ['laptops', 'desktop-pcs', 'gaming-pcs'];
+
 /**
  * Shop categories. Public: only those with something to buy (a customer never lands on an empty
  * page). `emptySubs`: also the empty sub-categories of the categories shown, marked `empty: true`
@@ -243,7 +246,9 @@ export async function listCategories(activeOnly = true, opts: { emptySubs?: bool
     // Only categories with something to buy, in them or in their sub-categories: a customer never
     // lands on an empty page from the menu, the home page or the shop (the page itself still opens)
     const withProducts = await categoriesWithProducts(all);
-    const shown = new Set(items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id))).map((c) => String(c._id)));
+    // ...except the main ones (Laptops, Desktop PCs, Gaming PCs): always there, even while empty
+    const core = (c: { slug: string; parent?: unknown }) => !c.parent && ALWAYS_SHOWN_CATEGORIES.includes(canonicalCategorySlug(c.slug));
+    const shown = new Set(items.filter((c) => visible.has(String(c._id)) && (withProducts.has(String(c._id)) || core(c))).map((c) => String(c._id)));
     if (!opts.emptySubs) return items.filter((c) => shown.has(String(c._id)));
     const parentId = (c: { parent?: unknown }) => {
       const p = c.parent as { _id?: unknown } | null | undefined;
