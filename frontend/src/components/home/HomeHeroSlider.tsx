@@ -59,7 +59,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       className={cn(
         'grid h-full items-center gap-4 p-3.5 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
         'transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)]',
-        active ? 'z-[1] opacity-100 delay-150 duration-500' : 'pointer-events-none opacity-0 duration-200'
+        active ? 'z-[1] opacity-100 duration-500' : 'pointer-events-none opacity-0 duration-300'
       )}
     >
       {/* Photo */}

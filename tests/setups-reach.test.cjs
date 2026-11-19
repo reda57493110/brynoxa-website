@@ -13,11 +13,11 @@ test('menus and footer link to /setups', () => {
   assert.ok(src('components/layout/Footer.tsx').includes("{ to: '/setups', key: 'common.setups' as const },"));
 });
 
-test('home: the four setups, each opening its own page, right after the categories', () => {
-  const strip = src('components/home/HomeSetups.tsx');
+test('home: the four setups, each opening its own page (the setups band, after the budgets)', () => {
+  const strip = src('components/home/HomeBlocks.tsx');
   assert.ok(strip.includes('to={`/setups/${id}`}') && strip.includes('SETUP_IDS.map'));
   const home = src('pages/store/Home.tsx');
-  const pos = ['{/* Categories:', '<HomeSetups />', '{/* Featured */}'].map((m) => home.indexOf(m));
+  const pos = ['{/* Categories:', '{/* Featured */}', '<HomeSetupsBand />'].map((m) => home.indexOf(m));
   assert.ok(pos.every((p, i) => p > 0 && (i === 0 || p > pos[i - 1])), pos.join(','));
 });
 

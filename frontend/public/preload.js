@@ -1,6 +1,6 @@
 // Runs before the app scripts, so the page a shopper lands on starts loading at once instead of
 // one step after another (on a phone over 4G each step is a round trip):
-// 1. home: the Brynoxa card photo (same address as HERO_PHOTO in src/pages/store/Home.tsx);
+// 1. (home: no photo to start early; its banner shows the deals, found in step 3);
 // 2. shop / category / product: that page's code (file names written by the build into
 //    #route-chunks, see vite.config.ts);
 // 3. the shop data the page asks for first. src/api/client.ts uses these answers instead of
@@ -18,16 +18,6 @@
     if (as) l.as = as
     head.appendChild(l)
     return l
-  }
-
-  // 1. Home: the Brynoxa card's photo (HERO_PHOTO in src/pages/store/Home.tsx, same address)
-  if (path === '/') {
-    var hero = link(
-      'preload',
-      'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1200&h=676&fit=crop',
-      'image'
-    )
-    hero.setAttribute('fetchpriority', 'high')
   }
 
   var match = path.match(/^\/(category|product)\/([^/]+)$/)

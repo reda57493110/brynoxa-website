@@ -56,9 +56,9 @@ test('product form: only known setups are saved; none = by its category', () => 
 
 test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks and texts', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
-  const home = src('pages/store/Home.tsx');
-  const i = home.indexOf("{t('home.heroCtaShop')}");
-  assert.ok(home.slice(Math.max(0, i - 600), i).includes('to="/setups"'), 'hero button goes to /setups');
+  const hero = src('components/home/HomeHero.tsx');
+  const i = hero.indexOf("cta={t('home.heroCtaShop')}");
+  assert.ok(i > 0 && hero.slice(Math.max(0, i - 300), i).includes('to="/setups"'), 'the setups tile goes to /setups');
   const router = src('app/router.tsx');
   assert.ok(router.includes('<Route path="setups" element={<S><Setups /></S>} />'));
   assert.ok(router.includes('<Route path="setups/:kind" element={<S><Setups /></S>} />'));

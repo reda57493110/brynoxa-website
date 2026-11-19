@@ -12,8 +12,7 @@ import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
 import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT, useStorefrontPlacements } from '@/hooks/useStorefrontPlacements'
 import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
-import { HOME_ROW_MIN } from '@/components/home/HomeProductRow'
-import { SIGNATURE_MIN } from '@/components/home/HomeSignature'
+import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'
 import { ShopHeaderBoard } from '@/components/admin/ShopHeaderBoard'
 
 /** The "Complete your setup" editor (its own code, loaded when its tab is opened) */

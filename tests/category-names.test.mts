@@ -58,7 +58,7 @@ test('the built-in Unsplash photos need no credit line; a photo set in admin nee
   const photos = await load('lib/categoryPhoto.ts');
   assert.equal(photos.categoryPhotoCredit({ slug: 'desktop-pc' }), undefined);
   assert.equal(photos.categoryPhotoCredit({ slug: 'cameras' }), undefined);
-  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8').includes('categoryPhotoCredit(c)'), 'credits still shown when a future photo needs one');
+  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBlocks.tsx'), 'utf8').includes('categoryPhotoCredit(c)'), 'credits still shown when a future photo needs one');
 });
 
 test('the Desktop PCs photo is sharp on phones: a 1600 px copy is offered', async () => {
@@ -73,7 +73,7 @@ test('Desktop PCs image: wide enough for the wide tile, so no special framing is
   assert.equal(photos.categoryPhotoPosition({ slug: 'desktop-pc' }), undefined);
   assert.equal(photos.categoryPhotoPosition({ slug: 'desktop-pc', image: 'https://x/own.jpg' }), undefined, 'own photo: centred');
   assert.equal(photos.categoryPhotoPosition({ slug: 'laptops' }), undefined);
-  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8').includes('objectPosition: categoryPhotoPosition(c)'));
+  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBlocks.tsx'), 'utf8').includes('objectPosition: categoryPhotoPosition(category)'));
 });
 
 test('a sub-category without its own photo shows its main category photo', async () => {

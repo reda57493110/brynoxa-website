@@ -19,13 +19,13 @@ test('server: the Signature choice is saved like the other home sections (12 at 
 
 test('shop: own section, after the top picks and before the budgets; Brynoxa products by default', () => {
   const home = src('pages/store/Home.tsx');
-  const pos = ['{/* Featured */}', '<HomeSignature products={rows.signature} />', '<HomeBudget budgets'].map((m) => home.indexOf(m));
+  const pos = ['{/* Featured */}', '<HomeSignatureBanner products={rows.signature} />', '<HomeBudgetCards budgets'].map((m) => home.indexOf(m));
   assert.ok(pos.every((p, i) => p > 0 && (i === 0 || p > pos[i - 1])), pos.join(','));
   const hook = src('hooks/useHomeRows.ts');
   assert.ok(hook.includes("productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: 12 })"));
   assert.ok(hook.includes("export const SIGNATURE_BRAND = 'brynoxa'"));
-  const section = src('components/home/HomeSignature.tsx');
-  assert.ok(section.includes('if (products.length < SIGNATURE_MIN) return null'));
+  const section = src('components/home/HomeBlocks.tsx');
+  assert.ok(section.includes('{products.length >= SIGNATURE_MIN ? ('), 'the products under the banner need 2');
   assert.ok(section.includes('to={`/shop?brand=${SIGNATURE_BRAND}`}'), 'see all opens the Brynoxa products in the shop');
   for (const l of ['en', 'fr', 'ar']) {
     const t = src(`i18n/${l}.ts`);

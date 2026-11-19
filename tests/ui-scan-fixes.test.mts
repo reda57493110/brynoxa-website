@@ -79,7 +79,7 @@ test('home banner: while the deals load, a loading copy of the banner (spinner, 
   const skeleton = slider.slice(slider.indexOf('export function HomeHeroSliderSkeleton'), slider.indexOf('export function HomeHeroSlider('));
   assert.match(skeleton, /<Frame>/, 'the same dark frame as the banner');
   assert.match(skeleton, /<ImageSpinner size="lg" tone="dark" \/>/, 'the loading spinner the other products use');
-  assert.equal((src('pages/store/Home.tsx').match(/<HomeHeroSliderSkeleton \/>/g) || []).length, 1, 'one banner for phones and computers');
+  assert.equal((src('components/home/HomeHero.tsx').match(/<HomeHeroSliderSkeleton \/>/g) || []).length, 1, 'one banner for phones and computers');
 });
 
 test('delivery slip: fits a phone screen, prints unchanged on A5, French plural and date', () => {

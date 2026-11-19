@@ -64,10 +64,7 @@ test('home, category and product pages (also in French / Arabic) ask for what th
     '/api/v1/products?carousel=true&limit=12',
     '/api/v1/categories',
   ]);
-  const heroLinks = (await run('/')).links.filter((l) => l.as === 'image');
-  assert.equal(heroLinks.length, 1, 'home: the Brynoxa card photo');
-  const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
-  assert.ok(home.includes(`'${heroLinks[0].href}'`), 'the same address the page shows');
+  assert.equal((await run('/')).links.filter((l) => l.as === 'image').length, 0, 'home: no big photo to start early (the banner shows the deals)');
   assert.deepEqual((await run('/fr/category/laptops')).fetched, ['/api/v1/categories/laptops', '/api/v1/products?category=laptops&limit=24&sort=newest', '/api/v1/categories']);
   assert.deepEqual((await run('/ar/product/hp-840')).fetched, ['/api/v1/products/hp-840']);
   for (const other of ['/cart', '/checkout', '/account/orders', '/admin', '/help', '/product/a/b']) {
@@ -130,8 +127,8 @@ test('product cards and home category tiles show at once (CSS rise, not the late
   assert.match(grid, /data-rise="card"/);
   assert.match(grid, /<ProductCard product=\{p\} eager=\{i < 4\} \/>/, 'first row photos download at once');
   assert.match(src('components/product/ProductCard.tsx'), /loading=\{spotlight \|\| eager \? 'eager' : 'lazy'\}/);
-  const home = src('pages/store/Home.tsx');
-  const tiles = home.slice(home.indexOf('homeCategories.map('), home.indexOf('Closing CTA'));
+  const blocks = src('components/home/HomeBlocks.tsx');
+  const tiles = blocks.slice(blocks.indexOf('export function HomeIntro'), blocks.indexOf('export function HomeDealsBlock'));
   assert.doesNotMatch(tiles, /<m\.div|initial=/);
   assert.match(tiles, /data-rise="card"/);
   assert.match(src('index.css'), /\[data-rise\] \{\s+animation: hero-rise/);
