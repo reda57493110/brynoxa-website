@@ -24,8 +24,8 @@ import type { Brand, Category, Product } from '@/types'
 import { HomeGrid, HomeSectionHead, HomeShelf } from './HomeShelf'
 import type { CardBadge } from './HomeShopCard'
 
-/** Fewer than this and the Deals block stays hidden (no half-empty row) */
-export const HOME_ROW_MIN = 4
+/** Fewer than this and the Deals block stays hidden (the deals card fills the row, so 2 look full) */
+export const HOME_ROW_MIN = 2
 /** Fewer than this and the Signature products under the banner stay hidden */
 export const SIGNATURE_MIN = 2
 

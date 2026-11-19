@@ -33,7 +33,7 @@ test('live site: the products function passes onSale on', async () => {
   void fakeModule; void callHandler;
 });
 
-test('home: two rows, deduplicated, hidden under 4 products; shop understands ?onSale=true', () => {
+test('home: two rows, deduplicated, Deals hidden under 2 products; shop understands ?onSale=true', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   const home = src('pages/store/Home.tsx');
   const hook = src('hooks/useHomeRows.ts');
@@ -48,7 +48,7 @@ test('home: two rows, deduplicated, hidden under 4 products; shop understands ?o
   assert.ok(board.includes("useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])"), "useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])");
   for (const t of ['title="Deals"', 'title="New arrivals"', 'Budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
   const row = src('components/home/HomeBlocks.tsx');
-  assert.match(row, /export const HOME_ROW_MIN = 4/);
+  assert.match(row, /export const HOME_ROW_MIN = 2/, 'Deals of the moment shows from 2 products (the deals card fills the row)');
   assert.match(row, /if \(products\.length < HOME_ROW_MIN\) return null/);
   assert.match(src('pages/store/Shop.tsx'), /onSale: params\.get\('onSale'\) === 'true' \? true : undefined/);
   for (const l of ['en', 'fr', 'ar']) {
