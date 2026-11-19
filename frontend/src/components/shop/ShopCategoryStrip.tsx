@@ -58,10 +58,17 @@ export function ShopCategoryStrip({
         </li>
         {items.map((c) => {
           const on = activeSlug === c.slug
-          const thumb = categoryThumb(c, all)
+          const thumb = categoryThumb(c, [...all, ...items])
           return (
             <li key={c._id} className="w-[11rem] shrink-0 snap-start sm:w-[14rem]">
-              <button type="button" onClick={() => onPick(c.slug)} aria-pressed={on} className={card(on)}>
+              <button
+                type="button"
+                // Nothing to buy yet: shown, but not a page to open
+                disabled={c.empty}
+                onClick={() => onPick(c.slug)}
+                aria-pressed={on}
+                className={cn(card(on), c.empty && 'cursor-default opacity-55 hover:border-[var(--border)]')}
+              >
                 <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[var(--bg-muted)] text-[var(--brand-text)] sm:size-14">
                   {/* The icon shows until the photo arrives (and stays if there is none) */}
                   <SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />
@@ -80,6 +87,7 @@ export function ShopCategoryStrip({
                 </span>
                 <span className="min-w-0 text-[12.5px] font-extrabold uppercase leading-tight sm:text-sm">
                   <span className="line-clamp-2">{categoryDisplayName(locale, c.slug, c.name)}</span>
+                  {c.empty ? <span className="mt-0.5 block text-[10px] font-bold normal-case tracking-wide text-[var(--brand-text)]">{t('shop.comingSoon')}</span> : null}
                 </span>
               </button>
             </li>

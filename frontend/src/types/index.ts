@@ -94,6 +94,8 @@ export interface Category {
   specTemplate?: string
   /** Staff list only: products in this category. */
   productCount?: number
+  /** Shop list with ?emptySubs: a sub-category with nothing to buy yet ("Coming soon") */
+  empty?: boolean
   createdAt?: string
   updatedAt?: string
 }

@@ -15,7 +15,7 @@ import { ApiError } from '../utils/ApiError';
 
 export const getCategories = asyncHandler(async (req: Request, res: Response) => {
   const admin = isStaffRole(req.user?.role) && req.query.all === 'true';
-  const items = await catalog.listCategories(!admin);
+  const items = await catalog.listCategories(!admin, { emptySubs: req.query.emptySubs === 'true' });
   sendSuccess(res, items);
 });
 

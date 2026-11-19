@@ -80,7 +80,7 @@ module.exports = async (req, res) => {
       const { isStaffRole } = require('../../backend/dist/permissions');
       if (user && isStaffRole(user.role)) activeOnly = false;
     }
-    const items = await catalog.listCategories(activeOnly);
+    const items = await catalog.listCategories(activeOnly, { emptySubs: query.emptySubs === 'true' });
     if (query.all === 'true') cachePrivate(res);
     else cachePublic(res);
     sendJson(res, 200, {

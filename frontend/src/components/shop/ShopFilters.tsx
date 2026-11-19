@@ -87,6 +87,7 @@ function Choice({ on, label, onClick, round = false, icon }: { on: boolean; labe
  */
 export function ShopFilters({
   categories,
+  soon = [],
   brands,
   values,
   onChange,
@@ -94,6 +95,8 @@ export function ShopFilters({
   activeCount,
 }: {
   categories: Category[]
+  /** Empty sub-categories: listed greyed with "Coming soon" */
+  soon?: Category[]
   brands: Brand[]
   values: ShopFilterValues
   onChange: (next: ShopFilterValues) => void
@@ -140,6 +143,7 @@ export function ShopFilters({
           <Choice round on={!values.category} label={t('shop.allCategories')} onClick={() => onChange({ ...values, category: undefined })} />
           {mainCategories(categories).map((c) => {
             const subs = childrenOf(categories, c._id)
+            const later = childrenOf(soon, c._id)
             return (
               <div key={c._id}>
                 <Choice
@@ -149,10 +153,16 @@ export function ShopFilters({
                   label={categoryDisplayName(locale, c.slug, c.name)}
                   onClick={() => onChange({ ...values, category: c.slug })}
                 />
-                {subs.length ? (
+                {subs.length || later.length ? (
                   <div className="ms-3 border-s-2 border-[rgb(0_194_255/0.3)] ps-2">
                     {subs.map((s) => (
                       <Choice key={s._id} round on={values.category === s.slug} label={categoryDisplayName(locale, s.slug, s.name)} onClick={() => onChange({ ...values, category: s.slug })} />
+                    ))}
+                    {later.map((s) => (
+                      <p key={s._id} className="flex items-center justify-between gap-2 px-1.5 py-1 text-[12px] text-[var(--fg-muted)] opacity-70">
+                        <span className="truncate">{categoryDisplayName(locale, s.slug, s.name)}</span>
+                        <span className="shrink-0 text-[10px] font-bold text-[var(--brand-text)]">{t('shop.comingSoon')}</span>
+                      </p>
                     ))}
                   </div>
                 ) : null}

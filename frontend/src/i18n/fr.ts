@@ -336,6 +336,7 @@ export const fr: Messages = {
     seeDetails: 'Voir tous les détails',
     perPage: 'Afficher',
     quickFilters: 'Choix rapides',
+    comingSoon: 'Bientôt',
   },
   auth: {
     resetByWhatsApp: 'La réinitialisation par email n’est pas disponible pour le moment. Écrivez-nous sur WhatsApp avec l’email de votre compte et nous vous aiderons à retrouver l’accès.',

@@ -334,6 +334,7 @@ export const en = {
     seeDetails: 'See all details',
     perPage: 'Show',
     quickFilters: 'Quick choices',
+    comingSoon: 'Coming soon',
   },
   auth: {
     resetByWhatsApp: 'Password reset by email isn’t available right now. Message us on WhatsApp with the email of your account and we’ll help you get back in.',

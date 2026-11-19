@@ -36,7 +36,7 @@ test('sub-categories in French and Arabic', () => {
 test('pages: home shows main categories; shop, filters and category page show the sub-categories', () => {
   const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
   assert.match(src('pages/store/Home.tsx'), /const categoryList = mainCategories\(/);
-  assert.match(src('pages/store/Shop.tsx'), /const stripItems = stripInside \? subList : withSubCategories\(mainList, categoryList\)/, 'the cards under the banner: sub-categories inside a category, all of them on "All"');
+  assert.match(src('pages/store/Shop.tsx'), /const stripItems = stripInside \? \[\.\.\.subList, \.\.\.soonOf\(activeMain!\._id\)\] : withSubCategories\(mainList, categoryList\)/, 'the cards under the banner: sub-categories inside a category, all of them on "All"');
   assert.match(src('components/shop/ShopFilters.tsx'), /subs\.map\(/, 'the filters list the sub-categories of the chosen one');
   assert.match(src('pages/store/CategoryPage.tsx'), /return <Shop categorySlug=\{slug\} \/>/, 'a category page is the shop with that category (same cards and filters)');
   assert.match(src('components/layout/SearchBox.tsx'), / › /);

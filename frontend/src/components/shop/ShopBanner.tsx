@@ -100,6 +100,7 @@ export function ShopBanner({
   description,
   count,
   photo,
+  photoPosition,
   category,
   rotate,
   search,
@@ -110,6 +111,8 @@ export function ShopBanner({
   description: string
   count: string
   photo: string
+  /** Where to centre the photo (some category photos need it) */
+  photoPosition?: string
   category?: HeroCategory
   rotate?: Product[]
   search: string
@@ -148,8 +151,20 @@ export function ShopBanner({
       </nav>
 
       <section aria-labelledby="shop-heading" className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#05080b] text-white sm:rounded-[2rem]">
-        <img src={photo} alt="" width={1600} height={600} fetchPriority="high" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[60%_45%]" />
-        <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.82)_38%,rgb(5_8_11/0.25)_75%,rgb(5_8_11/0.1)_100%)] rtl:bg-[linear-gradient(270deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.82)_38%,rgb(5_8_11/0.25)_75%,rgb(5_8_11/0.1)_100%)]" aria-hidden="true" />
+        {/* The photo fills the right side and fades into the dark text side (the whole banner on
+            phones, darker), softened so every category photo sits well on the dark page */}
+        <img
+          src={photo}
+          alt=""
+          width={1600}
+          height={600}
+          fetchPriority="high"
+          decoding="async"
+          style={{ objectPosition: photoPosition ?? '60% 45%' }}
+          className="absolute inset-y-0 end-0 -z-20 h-full w-full object-cover opacity-45 brightness-90 saturate-[0.8] sm:w-[68%] sm:opacity-100 sm:[mask-image:linear-gradient(to_left,black_45%,transparent)] rtl:sm:[mask-image:linear-gradient(to_right,black_45%,transparent)]"
+        />
+        {/* A touch of the brand cyan over the photo, and a dark veil under the text */}
+        <span className="absolute inset-0 -z-10 bg-[radial-gradient(55%_90%_at_85%_50%,rgb(0_194_255/0.16),transparent_70%),linear-gradient(90deg,rgb(5_8_11/0.92)_0%,rgb(5_8_11/0.75)_35%,rgb(5_8_11/0.2)_70%,rgb(5_8_11/0.35)_100%)] rtl:bg-[radial-gradient(55%_90%_at_15%_50%,rgb(0_194_255/0.16),transparent_70%),linear-gradient(270deg,rgb(5_8_11/0.92)_0%,rgb(5_8_11/0.75)_35%,rgb(5_8_11/0.2)_70%,rgb(5_8_11/0.35)_100%)]" aria-hidden="true" />
         <span className="absolute inset-x-0 bottom-0 -z-10 h-1 bg-[linear-gradient(90deg,var(--brand),transparent)]" aria-hidden="true" />
         <div className="grid gap-5 p-4 sm:p-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-10 lg:p-10">
           <div className="min-w-0">

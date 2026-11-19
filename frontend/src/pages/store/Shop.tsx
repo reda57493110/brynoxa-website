@@ -19,7 +19,7 @@ import { ShopFilters, type ShopFilterValues } from '@/components/shop/ShopFilter
 import { ShopListCard } from '@/components/shop/ShopListCard'
 import { cn } from '@/lib/cn'
 import { childrenOf, mainCategories, mainOf, withSubCategories } from '@/lib/categoryTree'
-import { categoryPhoto } from '@/lib/categoryPhoto'
+import { categoryPhoto, categoryPhotoPosition } from '@/lib/categoryPhoto'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
@@ -30,7 +30,8 @@ import { brandName } from '@/lib/brand'
 import { BUDGETS } from '@/lib/homeRows'
 import { SIGNATURE_BRAND } from '@/hooks/useHomeRows'
 
-const SHOP_HERO_IMAGE = 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=1600&q=75'
+/** "All": the Brynoxa desk lit in teal (free Pexels photo, also used on the home page) */
+const SHOP_HERO_IMAGE = 'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop'
 
 type View = 'grid' | 'list'
 const VIEW_KEY = 'brynoxa-shop-view'
@@ -97,6 +98,12 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
     queryKey: ['categories'],
     queryFn: async () => (await categoriesApi.list()).data.data,
   })
+  // The same list plus the empty sub-categories ("Coming soon" cards); the shop works without it
+  const withSoon = useQuery({
+    queryKey: ['categories', 'with-empty-subs'],
+    queryFn: async () => (await categoriesApi.listWithEmptySubs()).data.data,
+    staleTime: 5 * 60_000,
+  })
   const brands = useQuery({
     queryKey: ['brands'],
     queryFn: async () => (await brandsApi.list()).data.data,
@@ -156,6 +163,9 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   const mainList = mainCategories(categoryList)
   const activeMain = mainOf(categoryList, activeCategory)
   const subList = activeMain ? childrenOf(categoryList, activeMain._id) : []
+  // Sub-categories still empty: shown as "Coming soon" (not clickable) after the real ones
+  const soonList = (withSoon.data ?? []).filter((c) => c.empty)
+  const soonOf = (mainId: string) => childrenOf([...categoryList, ...soonList], mainId).filter((c) => c.empty)
   const activeCategoryName = activeCategory ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name) : undefined
   const activeCategoryDescription = activeCategory ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description) : undefined
 
@@ -223,9 +233,9 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   const bannerCount = productsLoading ? t('ui.loadingProducts') : total === 1 ? t('shop.productCountOne', { count: total }) : t('shop.productCount', { count: total })
 
   // Cards under the banner: sub-categories inside a category that has some, else the main ones
-  const stripInside = Boolean(activeMain && subList.length)
+  const stripInside = Boolean(activeMain && (subList.length || soonOf(activeMain._id).length))
   // "All": every main category followed by its sub-categories (Accessories, Mice, Headphones…)
-  const stripItems = stripInside ? subList : withSubCategories(mainList, categoryList)
+  const stripItems = stripInside ? [...subList, ...soonOf(activeMain!._id)] : withSubCategories(mainList, categoryList)
   const stripActive = stripInside ? (filters.category === activeMain!.slug ? undefined : filters.category) : filters.category
 
   // Quick choices above the products (each a toggle): deals, in stock, the budget bands, Brynoxa
@@ -247,7 +257,7 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   ]
 
   const filtersPanel = (
-    <ShopFilters categories={categoryList} brands={brandList} values={filterValues} onChange={onFilterChange} onClear={clearFilters} activeCount={sidebarFilterCount} />
+    <ShopFilters categories={categoryList} soon={soonList} brands={brandList} values={filterValues} onChange={onFilterChange} onClear={clearFilters} activeCount={sidebarFilterCount} />
   )
 
   return (
@@ -259,6 +269,7 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
           description={bannerText}
           count={bannerCount}
           photo={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
+          photoPosition={activeCategory ? categoryPhotoPosition(activeCategory) : undefined}
           category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
           rotate={allRotation}
           search={filters.q ?? ''}

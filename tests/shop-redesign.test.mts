@@ -85,7 +85,7 @@ test('category photos show at once; sub-categories are visible on the shop, in i
   assert.ok(strip.includes('loading="eager"'), 'the cards are at the top: their photos load at once');
   assert.ok(strip.indexOf('<SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />') < strip.indexOf('src={thumb}'), 'the icon shows under the photo while it loads');
   assert.ok(src('pages/store/Shop.tsx').includes('withSubCategories(mainList, categoryList)'), '"All": main categories and their sub-categories');
-  assert.ok(src('components/shop/ShopFilters.tsx').includes('{subs.length ? ('), 'filters: sub-categories always listed');
+  assert.ok(src('components/shop/ShopFilters.tsx').includes('{subs.length || later.length ? ('), 'filters: sub-categories always listed');
   const home = src('pages/store/Home.tsx');
   assert.ok(home.includes('const homeWithSubs = withSubCategories(homeCategories, shownCategories)'));
   assert.ok(home.includes('categories={homeWithSubs}') && home.includes('<HomeIntro categories={homeWithSubs}'));
@@ -96,4 +96,57 @@ test('category photos show at once; sub-categories are visible on the shop, in i
   assert.deepEqual(tree.withSubCategories(tree.mainCategories(cats), cats).map((c: { slug: string }) => c.slug), ['accessories', 'mice', 'headphones', 'laptops']);
   assert.equal(tree.isSubCategory(cats[2], cats), true);
   assert.equal(tree.isSubCategory(cats[0], cats), false);
+});
+
+test('empty sub-categories: listed as "Coming soon" on the shop (not clickable); the normal list still hides them', async () => {
+  const { createRequire } = await import('node:module');
+  const require = createRequire(import.meta.url);
+  require('./_helpers.cjs').setTestEnv();
+  const dist = (p: string) => path.join(root, 'backend/dist', p);
+  const { Category } = require(dist('models/Category.js'));
+  const { Product } = require(dist('models/Product.js'));
+  const catalog = require(dist('services/catalog.service.js'));
+  const doc = (o: Record<string, unknown>) => ({ ...o, toObject: () => ({ ...o }) });
+  const cats = [
+    { _id: 'm1', slug: 'components', isActive: true, parent: null },
+    { _id: 's1', slug: 'ram', isActive: true, parent: 'm1' },
+    { _id: 'm2', slug: 'accessories', isActive: true, parent: null },
+    { _id: 's2', slug: 'mice', isActive: true, parent: 'm2' },
+    { _id: 'm3', slug: 'cameras', isActive: true, parent: null },
+    { _id: 's3', slug: 'webcams', isActive: true, parent: 'm3' },
+  ];
+  const orig = { find: Category.find, agg: Product.aggregate };
+  Category.find = (q: Record<string, unknown>) => {
+    const chain = { sort: () => chain, populate: async () => cats.map((c) => doc({ ...c, parent: c.parent ? { _id: c.parent } : null })), select: () => ({ lean: async () => cats }) };
+    void q;
+    return chain;
+  };
+  // Products in Components (the main one) and in Mice; nothing in Cameras / Webcams / RAM
+  Product.aggregate = async () => [{ _id: 'm1' }, { _id: 's2' }];
+  try {
+    const plain = (await catalog.listCategories(true)).map((c: { slug: string }) => c.slug);
+    assert.deepEqual(plain.sort(), ['accessories', 'components', 'mice']);
+    const soon = await catalog.listCategories(true, { emptySubs: true });
+    const bySlug = Object.fromEntries(soon.map((c: { slug: string; empty?: boolean }) => [c.slug, Boolean(c.empty)]));
+    assert.equal(bySlug.ram, true, 'RAM: empty sub-category of a shown category → "Coming soon"');
+    assert.equal(bySlug.components, false);
+    assert.equal(bySlug.mice, false);
+    assert.ok(!('webcams' in bySlug) && !('cameras' in bySlug), 'nothing under a category that is not shown');
+  } finally {
+    Category.find = orig.find;
+    Product.aggregate = orig.agg;
+  }
+  assert.ok(fs.readFileSync(path.join(root, 'api/v1/categories.js'), 'utf8').includes("catalog.listCategories(activeOnly, { emptySubs: query.emptySubs === 'true' })"), 'the live site too');
+  const strip = src('components/shop/ShopCategoryStrip.tsx');
+  assert.ok(strip.includes('disabled={c.empty}') && strip.includes("t('shop.comingSoon')"));
+  for (const l of ['en', 'fr', 'ar']) assert.ok(src(`i18n/${l}.ts`).includes("    comingSoon: '"), l);
+});
+
+test('photos sit well on the dark page: shop banner photo on the right, softened; category card photo not squeezed', () => {
+  const banner = src('components/shop/ShopBanner.tsx');
+  assert.ok(banner.includes('sm:[mask-image:linear-gradient(to_left,black_45%,transparent)]'), 'fades into the text side');
+  assert.ok(banner.includes("style={{ objectPosition: photoPosition ?? '60% 45%' }}"));
+  assert.ok(src('pages/store/Shop.tsx').includes('pexels-photo-6942359'), '"All": the Brynoxa teal desk, not the purple laptop');
+  const blocks = src('components/home/HomeBlocks.tsx');
+  assert.ok(blocks.includes('<span className="relative block aspect-[4/3] overflow-hidden">'), 'the category photo in its own landscape frame, the text under it');
 });

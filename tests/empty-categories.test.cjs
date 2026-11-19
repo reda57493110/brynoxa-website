@@ -34,7 +34,8 @@ test('a category counts when it or one of its sub-categories has a product on sa
 
 test('the shop list, the sitemap and the home tiles use it', () => {
   const svc = read('backend/src/services/catalog.service.ts');
-  assert.ok(svc.includes('return items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id)));'));
+  assert.ok(svc.includes('const shown = new Set(items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id))).map((c) => String(c._id)));'));
+  assert.ok(svc.includes('if (!opts.emptySubs) return items.filter((c) => shown.has(String(c._id)));'), 'the normal list: only categories with products');
   assert.ok(read('api/sitemap.js').includes('categories.filter((c) => withProducts.has(String(c._id)))'));
   const home = read('frontend/src/pages/store/Home.tsx');
   assert.ok(home.includes('const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORY_MAX)'), 'an empty home category is replaced by another one');

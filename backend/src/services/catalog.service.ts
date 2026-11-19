@@ -225,7 +225,12 @@ export async function categoriesWithProducts(all: { _id: unknown; parent?: unkno
   return out;
 }
 
-export async function listCategories(activeOnly = true) {
+/**
+ * Shop categories. Public: only those with something to buy (a customer never lands on an empty
+ * page). `emptySubs`: also the empty sub-categories of the categories shown, marked `empty: true`
+ * — the shop shows them as "Coming soon" (not clickable) so customers see what is planned.
+ */
+export async function listCategories(activeOnly = true, opts: { emptySubs?: boolean } = {}) {
   const filter: Record<string, unknown> = {
     slug: { $nin: ['office', 'networking'] },
   };
@@ -238,7 +243,20 @@ export async function listCategories(activeOnly = true) {
     // Only categories with something to buy, in them or in their sub-categories: a customer never
     // lands on an empty page from the menu, the home page or the shop (the page itself still opens)
     const withProducts = await categoriesWithProducts(all);
-    return items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id)));
+    const shown = new Set(items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id))).map((c) => String(c._id)));
+    if (!opts.emptySubs) return items.filter((c) => shown.has(String(c._id)));
+    const parentId = (c: { parent?: unknown }) => {
+      const p = c.parent as { _id?: unknown } | null | undefined;
+      return p ? String(p._id ?? p) : '';
+    };
+    const empty = new Set(
+      items
+        .filter((c) => visible.has(String(c._id)) && !shown.has(String(c._id)) && shown.has(parentId(c)))
+        .map((c) => String(c._id))
+    );
+    return items
+      .filter((c) => shown.has(String(c._id)) || empty.has(String(c._id)))
+      .map((c) => (empty.has(String(c._id)) ? { ...c.toObject(), empty: true } : c));
   }
   // Staff list: how many products each one holds (shown in Settings, needed before a delete)
   const counts = await Product.aggregate<{ _id: unknown; n: number }>([{ $group: { _id: '$category', n: { $sum: 1 } } }]);

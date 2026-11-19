@@ -32,7 +32,7 @@ export const SIGNATURE_MIN = 2
 const panel = 'rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-[2rem] sm:p-6 lg:p-7'
 
 /** A category photo (built-in or uploaded), sized for the place */
-function CategoryPhoto({ category, sizes, className }: { category: Category; sizes: string; className?: string }) {
+function CategoryPhoto({ category, sizes, className, frameClassName = 'absolute inset-0' }: { category: Category; sizes: string; className?: string; frameClassName?: string }) {
   const photo = categoryPhoto(category)
   if (!photo) return null
   return (
@@ -43,7 +43,7 @@ function CategoryPhoto({ category, sizes, className }: { category: Category; siz
       width={480}
       height={480}
       sizes={sizes}
-      frameClassName="absolute inset-0"
+      frameClassName={frameClassName}
       style={{ objectPosition: categoryPhotoPosition(category) }}
       className={cn('h-full w-full object-cover transition duration-500 group-hover:scale-[1.08]', className)}
       loading="lazy"
@@ -351,15 +351,20 @@ export function HomeCategoryTabs({ categories }: { categories: Category[] }) {
   const lead = (
     <Link
       to={`/category/${active.slug}`}
-      className="group relative isolate flex h-full min-h-[16rem] flex-col justify-end overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-4 text-white sm:p-5"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.3)] bg-[#05080b] text-white transition hover:border-[var(--brand)]"
     >
-      <CategoryPhoto category={active} sizes="(min-width: 1024px) 18rem, 46vw" className="-z-20" />
-      <span className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.1),rgb(5_8_11/0.92)_75%)]" aria-hidden="true" />
+      {/* The photo in its own landscape frame (a wide photo is never squeezed into a tall card) */}
+      <span className="relative block aspect-[4/3] overflow-hidden">
+        <CategoryPhoto category={active} sizes="(min-width: 1024px) 18rem, 46vw" className="brightness-[0.85] saturate-[0.9]" />
+        <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#05080b)]" aria-hidden="true" />
+      </span>
+      <span className="flex flex-1 flex-col justify-end p-4 pt-1 sm:p-5 sm:pt-1">
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{t('home.categoriesKicker')}</span>
       <span className="mt-1 font-display text-lg font-black uppercase leading-tight sm:text-2xl">{name}</span>
       <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#05080b] transition group-hover:bg-[var(--brand)] sm:text-sm">
         {t('home.catSeeAll')}
         <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
+      </span>
       </span>
     </Link>
   )
