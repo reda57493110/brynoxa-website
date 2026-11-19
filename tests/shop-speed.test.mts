@@ -82,8 +82,7 @@ test('shop ("All"): the product picked for All and its photo follow the settings
   });
   assert.ok(r.fetched.includes(`/api/v1/products/compare?ids=${id}`));
   const p = r.links.find((l) => l.as === 'image')!;
-  assert.equal(p.href, image.sizedImageUrl(cloud, 1280));
-  assert.equal(p.attrs.imagesrcset, image.imageSrcSet(cloud, [640, 960, 1280, 1600]));
+  assert.equal(p.href, image.sizedImageUrl(cloud, 320), 'the small photo the banner shows');
   assert.equal(p.referrerPolicy, 'no-referrer');
   const sold = await run('/shop', {
     '/api/v1/settings': { data: { categoryHeroes: { all: id } } },

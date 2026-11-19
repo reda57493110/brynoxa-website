@@ -41,12 +41,11 @@ test('said once: no small labels repeating the page title; no repeats on product
 });
 
 
-test('shop filters: only Brand and Price (the 4 buttons); plain headings', () => {
-  const f = src('components/product/FilterSidebar.tsx');
-  assert.ok(!f.includes("t('shop.inStockOnly')"), 'no In stock only switch');
-  assert.ok(!f.includes("t('shop.customRange')"), 'no custom range box');
-  assert.ok(f.includes("<h3 className={cn('font-semibold text-[var(--fg)]', compact ? 'text-[13px]' : 'text-sm')}>{title}</h3>"));
-  assert.ok(f.includes('PRICE_PRESETS.map') && f.includes("t('shop.brand')"));
+test('shop filters (like the big shops): Category, Price (4 ranges or own min / max), Availability, Brand; one Reset', () => {
+  const f = src('components/shop/ShopFilters.tsx');
+  for (const k of ["t('shop.category')", "t('shop.priceDh')", "t('shop.availability')", "t('shop.brand')", "t('shop.resetFilters')", 'PRICE_PRESETS.map', "t('shop.inStockOnly')", "t('shop.onSaleOnly')"]) assert.ok(f.includes(k), k);
+  assert.ok(f.includes('if (lo && hi && Number(lo) > Number(hi)) [lo, hi] = [hi, lo]'), 'a min above the max is swapped');
+  assert.ok(f.includes("role={round ? 'radio' : 'checkbox'}") && f.includes('aria-checked={on}'), 'screen readers hear the choices');
 });
 
 test('Shop by budget: one card per price range and one to type a budget, four in a row on computers', () => {

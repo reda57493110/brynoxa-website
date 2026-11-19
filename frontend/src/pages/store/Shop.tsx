@@ -1,61 +1,64 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
-import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
+import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
 import { brandsApi } from '@/api/brandsApi'
 import { Container } from '@/components/ui/Container'
-import { ProductGrid } from '@/components/product/ProductGrid'
-import { FilterSidebar, type FilterValues } from '@/components/product/FilterSidebar'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { SortSelect } from '@/components/product/SortSelect'
 import { Pagination } from '@/components/ui/Pagination'
 import { Drawer } from '@/components/ui/Drawer'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { HomeShopCard } from '@/components/home/HomeShopCard'
+import { ShopBanner } from '@/components/shop/ShopBanner'
+import { ShopCategoryStrip } from '@/components/shop/ShopCategoryStrip'
+import { ShopFilters, type ShopFilterValues } from '@/components/shop/ShopFilters'
+import { ShopListCard } from '@/components/shop/ShopListCard'
 import { cn } from '@/lib/cn'
-import { categoryIcon } from '@/lib/categoryIcon'
 import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
-import { categoryThumb, categoryPhoto } from '@/lib/categoryPhoto'
-import { SubThumb } from '@/components/product/SubThumb'
+import { categoryPhoto } from '@/lib/categoryPhoto'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { StoreHero, heroInput } from '@/components/layout/StoreHero'
 import { onePerCategory } from '@/lib/heroProduct'
 import { brandName } from '@/lib/brand'
 
-const SHOP_HERO_IMAGE =
-  'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=2560&q=80'
+const SHOP_HERO_IMAGE = 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=1600&q=75'
 
+type View = 'grid' | 'list'
+const VIEW_KEY = 'brynoxa-shop-view'
+
+/**
+ * The shop, in the style of the big Moroccan PC shops (Brynoxa colours): path, dark banner (title,
+ * description, search, the header product), category cards, then the filters on the left and the
+ * products on the right — as a grid of cards or as long rows with the specs (remembered on this
+ * device). Every choice lives in the address (?category=…&brand=…&minPrice=…&sort=…).
+ */
 export function Shop() {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
-  // Phones: one or two products per row (remembered on this device; one by default)
-  const [phoneCols, setPhoneCols] = useState<1 | 2>(() => {
+  const [view, setView] = useState<View>(() => {
     try {
-      return localStorage.getItem('brynoxa-shop-cols') === '2' ? 2 : 1
+      return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'grid'
     } catch {
-      return 1
+      return 'grid'
     }
   })
-  const choosePhoneCols = (cols: 1 | 2) => {
-    setPhoneCols(cols)
+  const chooseView = (v: View) => {
+    setView(v)
     try {
-      localStorage.setItem('brynoxa-shop-cols', String(cols))
+      localStorage.setItem(VIEW_KEY, v)
     } catch {
-      /* private mode: keep it for this visit only */
+      /* private mode: this visit only */
     }
   }
-  const [searchDraft, setSearchDraft] = useState(params.get('q') || '')
-
-  useEffect(() => {
-    setSearchDraft(params.get('q') || '')
-  }, [params])
 
   const filters = useMemo(
     () => ({
@@ -104,23 +107,23 @@ export function Shop() {
     setParams(next, 'page' in patch ? undefined : { state: { keepScroll: true } })
   }
 
-  const filterValues: FilterValues = {
+  const filterValues: ShopFilterValues = {
     category: filters.category,
     brand: filters.brand,
     minPrice: params.get('minPrice') || undefined,
     maxPrice: params.get('maxPrice') || undefined,
     inStock: filters.inStock,
+    onSale: filters.onSale,
   }
-
-  const onFilterChange = (next: FilterValues) => {
+  const onFilterChange = (next: ShopFilterValues) =>
     update({
       category: next.category,
       brand: next.brand,
       minPrice: next.minPrice,
       maxPrice: next.maxPrice,
       inStock: next.inStock ? 'true' : undefined,
+      onSale: next.onSale ? 'true' : undefined,
     })
-  }
 
   const clearFilters = () => {
     const next = new URLSearchParams()
@@ -128,33 +131,19 @@ export function Shop() {
     setParams(next)
   }
 
-  const hasNarrowing = Boolean(
-    filters.category ||
-      filters.brand ||
-      filters.minPrice ||
-      filters.maxPrice ||
-      filters.q ||
-      filters.inStock ||
-      filters.onSale
-  )
+  const hasNarrowing = Boolean(filters.category || filters.brand || filters.minPrice || filters.maxPrice || filters.q || filters.inStock || filters.onSale)
 
-  const categoryList = (categories.data ?? []).filter(
-    (c) => c.slug !== 'office' && c.slug !== 'networking'
-  )
+  const categoryList = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
   const brandList = brands.data ?? []
   const activeCategory = categoryList.find((c) => c.slug === filters.category)
-  // Two levels: main chips, then the sub-categories of the chosen main category
+  // Two levels: the main categories, then the sub-categories of the chosen one
   const mainList = mainCategories(categoryList)
   const activeMain = mainOf(categoryList, activeCategory)
   const subList = activeMain ? childrenOf(categoryList, activeMain._id) : []
-  const activeCategoryName = activeCategory
-    ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name)
-    : undefined
-  const activeCategoryDescription = activeCategory
-    ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description)
-    : undefined
+  const activeCategoryName = activeCategory ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name) : undefined
+  const activeCategoryDescription = activeCategory ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description) : undefined
 
-  // The "All" header: one product per main category in turn (computers first), from the best sellers
+  // The "All" banner: one product per main category in turn (computers first), from the best sellers
   const allPicks = useQuery({
     queryKey: ['products', 'shop-all-hero'],
     queryFn: async () => (await productsApi.list({ inStock: true, sort: 'popular', limit: 60 })).data.data,
@@ -171,11 +160,7 @@ export function Shop() {
 
   useSeo({
     title: shopTitle,
-    description:
-      activeCategoryDescription ||
-      (filters.q
-        ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}`
-        : t('meta.shopDescription')),
+    description: activeCategoryDescription || (filters.q ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}` : t('meta.shopDescription')),
     // /shop?category=x is the same list as /category/x: tell Google which address to keep
     path: filters.category ? `/category/${filters.category}` : '/shop',
     // Search result pages are endless and thin: kept out of Google
@@ -191,314 +176,181 @@ export function Shop() {
   const pages = products.data?.meta?.pages || 1
   const from = total === 0 ? 0 : (filters.page - 1) * filters.limit + 1
   const to = Math.min(filters.page * filters.limit, total)
-  const sidebarFilterCount = [
-    filters.category,
-    filters.brand,
-    filters.minPrice,
-    filters.maxPrice,
-    filters.inStock,
-  ].filter(Boolean).length
+  const sidebarFilterCount = [filters.category, filters.brand, filters.minPrice || filters.maxPrice, filters.inStock, filters.onSale].filter(Boolean).length
 
-  const sidebar = (plain: boolean) => (
-    <FilterSidebar
-      categories={categoryList}
-      brands={brandList}
-      values={filterValues}
-      onChange={onFilterChange}
-      onClear={clearFilters}
-      plain={plain}
-      hideCategories
-    />
-  )
+  // Path: Home › Shop › Components › RAM (or › Search "…")
+  const crumbs: { label: string; to?: string }[] = [{ label: t('common.home'), to: '/' }]
+  if (activeCategory || filters.q) crumbs.push({ label: t('shop.title'), to: '/shop' })
+  else crumbs.push({ label: t('shop.title') })
+  if (activeMain && activeCategory && activeMain._id !== activeCategory._id) {
+    crumbs.push({ label: categoryDisplayName(locale, activeMain.slug, activeMain.name), to: `/shop?category=${activeMain.slug}` })
+  }
+  if (activeCategoryName) crumbs.push({ label: activeCategoryName })
+  if (filters.q) crumbs.push({ label: `“${filters.q}”` })
 
-  const chip = (active: boolean) =>
-    cn(
-      'inline-flex h-8 shrink-0 items-center gap-1 rounded-full border ps-1 pe-3 text-xs font-medium transition active:scale-[0.97] sm:h-10 sm:gap-2 sm:ps-1.5 sm:pe-4 sm:text-sm',
-      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-      active
-        ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
-        : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
-    )
+  const bannerTitle = filters.q ? `${t('shop.searchTitle')} “${filters.q}”` : (activeCategoryName ?? `${t('shop.heroTitleLead')} ${t('shop.heroTitleAccent')}`)
+  const bannerText = filters.q
+    ? `${t('shop.resultsFor', { q: filters.q })}${activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : ''}`
+    : activeCategoryDescription || t('shop.body')
+  const bannerCount = productsLoading ? t('ui.loadingProducts') : total === 1 ? t('shop.productCountOne', { count: total }) : t('shop.productCount', { count: total })
 
-  // Sub-categories (RAM, Storage…): smaller chips under the main ones
-  const subChip = (active: boolean) =>
-    cn(
-      'inline-flex h-7 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:h-8',
-      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-      active
-        ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
-    )
+  // Cards under the banner: sub-categories inside a category that has some, else the main ones
+  const stripInside = Boolean(activeMain && subList.length)
+  const stripItems = stripInside ? subList : mainList
+  const stripActive = stripInside ? (filters.category === activeMain!.slug ? undefined : filters.category) : filters.category
 
-  const chipIcon = (active: boolean, name: SiteIconName) => (
-    <span
-      className={cn(
-        'grid size-6 shrink-0 place-items-center rounded-full sm:size-7',
-        active ? 'bg-white/25 text-[var(--brand-fg)]' : 'bg-[color-mix(in_srgb,var(--brand)_12%,transparent)] text-[var(--brand-text)]'
-      )}
-    >
-      <SiteIcon name={name} size={13} />
-    </span>
+  const filtersPanel = (
+    <ShopFilters categories={categoryList} brands={brandList} values={filterValues} onChange={onFilterChange} onClear={clearFilters} activeCount={sidebarFilterCount} />
   )
 
   return (
     <>
-      <StoreHero
-        page="shop"
-        category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
-        titleId="shop-heading"
-        // A category shows its own photo when it has no product to show (never a laptop on Cameras)
-        image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
-        photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}
-        // "All": one product per category in turn (not always the same laptop)
-        rotate={allRotation}
-        rotatePending={!activeCategory && allPicks.isPending}
-        imagePosition="object-[50%_40%]"
-        maxWidthClassName="max-w-[96rem]"
-        kicker={t('shop.kicker')}
-        titleLead={
-          filters.q
-            ? t('shop.searchTitle')
-            : activeCategoryName
-              ? t('shop.title')
-              : t('shop.heroTitleLead')
-        }
-        titleAccent={
-          filters.q ? `“${filters.q}”` : activeCategoryName ?? t('shop.heroTitleAccent')
-        }
-        description={
-          filters.q ? (
-            <>
-              {t('shop.resultsFor', { q: filters.q })}
-              {activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : null}
-            </>
-          ) : (
-            activeCategoryDescription || t('shop.body')
-          )
-        }
-      >
-        <form
-          className="flex max-w-xl gap-2"
-          onSubmit={(e) => {
-            e.preventDefault()
-            update({ q: searchDraft.trim() || undefined })
-          }}
-        >
-          <label className="sr-only" htmlFor="shop-search">
-            {t('shop.searchShop')}
-          </label>
-          <input
-            id="shop-search"
-            value={searchDraft}
-            onChange={(e) => setSearchDraft(e.target.value)}
-            placeholder={t('shop.searchShopPlaceholder')}
-            className={heroInput}
-          />
-          <button
-            type="submit"
-            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 text-[13px] font-semibold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-11 sm:gap-2 sm:px-5 sm:text-sm"
-          >
-            <SiteIcon name="search" size={15} />
-            {t('shop.searchAction')}
-          </button>
-        </form>
-      </StoreHero>
+      <Container className="max-w-[96rem]">
+        <ShopBanner
+          crumbs={crumbs}
+          title={bannerTitle}
+          description={bannerText}
+          count={bannerCount}
+          photo={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
+          category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
+          rotate={allRotation}
+          search={filters.q ?? ''}
+          onSearch={(q) => update({ q: q || undefined })}
+        />
 
-      <Container className="max-w-[96rem] pb-8 pt-4 sm:pb-10 sm:pt-6">
-        <div className="mb-4 flex flex-col gap-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 shadow-soft sm:mb-5 sm:gap-3 sm:p-3.5 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
-          <div
-            className="-mx-3 flex min-w-0 gap-1.5 overflow-x-auto px-3 [scrollbar-width:none] sm:-mx-4 sm:gap-2 sm:px-4 lg:mx-0 lg:flex-1 lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
-            aria-label={t('shop.shopByCategory')}
-          >
-            <button
-              type="button"
-              className={chip(!filters.category)}
-              onClick={() => update({ category: undefined })}
-            >
-              {chipIcon(!filters.category, 'layers')}
-              {t('shop.all')}
-            </button>
-            {mainList.map((c) => (
-              <button
-                key={c._id}
-                type="button"
-                className={chip(activeMain?._id === c._id)}
-                onClick={() =>
-                  update({ category: filters.category === c.slug ? undefined : c.slug })
-                }
-              >
-                {chipIcon(activeMain?._id === c._id, categoryIcon(c.slug, c.name))}
-                {categoryDisplayName(locale, c.slug, c.name)}
-              </button>
-            ))}
-          </div>
-          {activeMain && subList.length ? (
-            <div
-              className="-mx-3 flex min-w-0 basis-full gap-1.5 overflow-x-auto px-3 lg:order-last [scrollbar-width:none] sm:-mx-4 sm:px-4 lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden"
-              aria-label={categoryDisplayName(locale, activeMain.slug, activeMain.name)}
-            >
-              <button type="button" className={subChip(filters.category === activeMain.slug)} onClick={() => update({ category: activeMain.slug })}>
-                {t('shop.all')}
-              </button>
-              {subList.map((c) => (
-                <button key={c._id} type="button" className={subChip(filters.category === c.slug)} onClick={() => update({ category: c.slug })}>
-                  <SubThumb src={categoryThumb(c, categoryList)} />
-                  {categoryDisplayName(locale, c.slug, c.name)}
-                </button>
-              ))}
+        <ShopCategoryStrip
+          items={stripItems}
+          all={categoryList}
+          activeSlug={stripActive}
+          label={stripInside ? categoryDisplayName(locale, activeMain!.slug, activeMain!.name) : t('shop.shopByCategory')}
+          onPick={(slug) => update({ category: slug ?? (stripInside ? activeMain!.slug : undefined) })}
+        />
+      </Container>
+
+      <Container className="max-w-[96rem] pb-8 pt-4 sm:pb-12 sm:pt-6">
+        <div className="grid gap-5 lg:grid-cols-[16.5rem_minmax(0,1fr)] xl:gap-6">
+          {/* Computers: the filters, always in view */}
+          <aside aria-label={t('shop.filters')} className="hidden lg:block">
+            <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 [scrollbar-width:thin]">
+              {filtersPanel}
             </div>
-          ) : null}
+          </aside>
 
-          {/* Phones: count on its own line, Filters + Sort as two equal buttons under it (fits any text size) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border)] pt-2.5 sm:flex-nowrap sm:gap-3 lg:shrink-0 lg:border-0 lg:pt-0">
-          <p className="min-w-0 text-xs text-[var(--fg-muted)] sm:truncate sm:text-sm">
-            {productsLoading ? (
-              t('ui.loadingProducts')
-            ) : (
-              <>
-                {total === 0 ? (
-                  <span className="font-medium text-[var(--fg)]">{t('shop.zeroProducts')}</span>
+          <div className="min-w-0">
+            {/* Toolbar: how many, Filters (phones), sort, grid / list */}
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2 sm:mb-4 sm:gap-3 sm:p-2.5">
+              <p className="min-w-0 flex-1 basis-full px-1 text-xs text-[var(--fg-muted)] sm:basis-auto sm:text-sm">
+                {productsLoading ? (
+                  t('ui.loadingProducts')
+                ) : total === 0 ? (
+                  <span className="font-semibold text-[var(--fg)]">{t('shop.zeroProducts')}</span>
                 ) : (
                   <>
-                    <span className="font-display text-base font-bold text-[var(--fg)] sm:text-lg">{total}</span>{' '}
-                    <span className="font-medium text-[var(--fg)]">{t('shop.productsWord')}</span>
-                    {total > to - from + 1 ? (
-                      <span className="hidden text-[var(--fg-muted)] sm:inline"> · {t('shop.productsCount', { from, to, total })}</span>
-                    ) : null}
+                    <span className="font-display text-base font-extrabold text-[var(--fg)]">{total}</span> <span className="font-semibold text-[var(--fg)]">{t('shop.productsWord')}</span>
+                    {total > to - from + 1 ? <span> · {t('shop.productsCount', { from, to, total })}</span> : null}
                   </>
                 )}
-                {sidebarFilterCount > 0 ? (
-                  <span className="ms-1 text-[11px] text-[var(--brand-text)] sm:ms-2 sm:text-xs">
-                    · {t('shop.refined', { count: sidebarFilterCount })}
-                  </span>
-                ) : null}
-              </>
-            )}
-          </p>
-          <div className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg)] p-0.5 sm:hidden" role="group" aria-label={t('shop.viewLabel')}>
-            {([1, 2] as const).map((cols) => (
+              </p>
               <button
-                key={cols}
                 type="button"
-                onClick={() => choosePhoneCols(cols)}
-                aria-pressed={phoneCols === cols}
-                aria-label={cols === 1 ? t('shop.viewOne') : t('shop.viewTwo')}
-                title={cols === 1 ? t('shop.viewOne') : t('shop.viewTwo')}
-                className={cn(
-                  'grid size-8 place-items-center rounded-full transition',
-                  phoneCols === cols ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]'
-                )}
+                onClick={() => setFiltersOpen(true)}
+                className="relative inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-bold uppercase transition hover:border-[var(--brand)] sm:flex-none sm:text-sm lg:hidden"
               >
-                <SiteIcon name={cols === 1 ? 'view-one' : 'view-two'} size={15} />
+                <SiteIcon name="sliders" size={16} />
+                {t('shop.filters')}
+                {sidebarFilterCount ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand)] px-1 text-[11px] text-[var(--brand-fg)]">{sidebarFilterCount}</span> : null}
               </button>
-            ))}
-          </div>
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center lg:block">
-            <button
-              type="button"
-              className="relative inline-flex h-10 min-w-0 items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg)] px-3 text-xs font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:h-10 sm:gap-2 sm:px-4 sm:text-sm lg:hidden"
-              onClick={() => setFiltersOpen(true)}
-            >
-              <SiteIcon name="sliders" size={16} />
-              {t('shop.filters')}
-              {sidebarFilterCount > 0 ? (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[11px] font-bold text-[var(--brand-fg)]">
-                  {sidebarFilterCount}
-                </span>
-              ) : null}
-            </button>
-            <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} className="max-sm:h-10 max-sm:w-full" />
-          </div>
-          </div>
-        </div>
-
-        {hasNarrowing ? (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            {filters.q ? (
-              <ActiveChip label={`“${filters.q}”`} onRemove={() => update({ q: undefined })} />
-            ) : null}
-            {activeCategory ? (
-              <ActiveChip
-                label={activeCategoryName!}
-                onRemove={() => update({ category: undefined })}
-              />
-            ) : null}
-            {activeBrand ? (
-              <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} />
-            ) : null}
-            {filters.onSale ? (
-              <ActiveChip label={t('shop.onSaleOnly')} onRemove={() => update({ onSale: undefined })} />
-            ) : null}
-            {filters.inStock ? (
-              <ActiveChip
-                label={t('shop.inStockOnly')}
-                onRemove={() => update({ inStock: undefined })}
-              />
-            ) : null}
-            {filters.minPrice || filters.maxPrice ? (
-              <ActiveChip
-                label={`${filters.minPrice ?? 0}–${filters.maxPrice ?? '∞'} DH`}
-                onRemove={() => update({ minPrice: undefined, maxPrice: undefined })}
-              />
-            ) : null}
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="text-xs font-medium text-[var(--brand-text)] hover:underline"
-            >
-              {t('ui.clearAll')}
-            </button>
-          </div>
-        ) : null}
-
-        <div className="grid gap-5 lg:grid-cols-[16.5rem_minmax(0,1fr)] xl:gap-6">
-          <div className="hidden lg:block">
-            <div className="sticky top-[calc(var(--nav-height)+0.75rem)] max-h-[calc(100svh-var(--nav-height)-1.5rem)] overflow-y-auto">
-              {sidebar(false)}
+              <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} className="h-10 flex-1 rounded-xl sm:flex-none" />
+              <div role="group" aria-label={t('shop.viewLabel')} className="flex h-10 items-center gap-0.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-0.5">
+                {(['grid', 'list'] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => chooseView(v)}
+                    aria-pressed={view === v}
+                    aria-label={v === 'grid' ? t('shop.viewGrid') : t('shop.viewList')}
+                    title={v === 'grid' ? t('shop.viewGrid') : t('shop.viewList')}
+                    className={cn('grid size-8 place-items-center rounded-lg transition', view === v ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]')}
+                  >
+                    <SiteIcon name={v === 'grid' ? 'view-two' : 'view-one'} size={15} />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-          <div>
+
+            {/* What is chosen, each removable */}
+            {hasNarrowing ? (
+              <div className="mb-3 flex flex-wrap items-center gap-2 sm:mb-4">
+                {filters.q ? <ActiveChip label={`“${filters.q}”`} onRemove={() => update({ q: undefined })} /> : null}
+                {activeCategory ? <ActiveChip label={activeCategoryName!} onRemove={() => update({ category: undefined })} /> : null}
+                {activeBrand ? <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} /> : null}
+                {filters.onSale ? <ActiveChip label={t('shop.onSaleOnly')} onRemove={() => update({ onSale: undefined })} /> : null}
+                {filters.inStock ? <ActiveChip label={t('shop.inStockOnly')} onRemove={() => update({ inStock: undefined })} /> : null}
+                {filters.minPrice || filters.maxPrice ? (
+                  <ActiveChip label={`${filters.minPrice ?? 0}–${filters.maxPrice ?? '∞'} DH`} onRemove={() => update({ minPrice: undefined, maxPrice: undefined })} />
+                ) : null}
+                <button type="button" onClick={clearFilters} className="text-xs font-bold text-[var(--brand-text)] hover:underline">
+                  {t('ui.clearAll')}
+                </button>
+              </div>
+            ) : null}
+
             {products.isError ? (
-              <EmptyState
-                title={t('shop.loadError')}
-                description={t('shop.loadErrorBody')}
-                actionLabel={t('common.retry')}
-                onAction={() => products.refetch()}
-              />
+              <EmptyState title={t('shop.loadError')} description={t('shop.loadErrorBody')} actionLabel={t('common.retry')} onAction={() => products.refetch()} />
             ) : (
               <>
                 {/* Not sure what to pick? Setups show what goes together (gaming, study, work…) */}
                 {!filters.q && filters.page === 1 ? (
                   <Link
                     to="/setups"
-                    className="group mb-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[color-mix(in_srgb,var(--brand)_45%,var(--border))] bg-[color-mix(in_srgb,var(--brand)_6%,var(--bg-elevated))] px-3 py-2.5 text-[13px] transition hover:border-[var(--brand)] sm:mb-4 sm:px-4 sm:text-sm"
+                    className="group mb-3 flex items-center justify-between gap-3 rounded-xl border border-dashed border-[rgb(0_194_255/0.45)] bg-[rgb(0_194_255/0.06)] px-3 py-2.5 text-[13px] transition hover:border-[var(--brand)] sm:mb-4 sm:px-4 sm:text-sm"
                   >
                     <span className="inline-flex min-w-0 items-center gap-2">
                       <SiteIcon name="monitor" size={16} className="shrink-0 text-[var(--brand-text)]" />
                       <span className="truncate text-[var(--fg-muted)]">{t('setups.hintQuestion')}</span>
                     </span>
-                    <span className="inline-flex shrink-0 items-center gap-1 font-semibold text-[var(--brand-text)]">
+                    <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--brand-text)]">
                       {t('setups.hintLink')}
                       <SiteIcon name="arrow-right" size={14} className="transition group-hover:translate-x-0.5 rtl:rotate-180" />
                     </span>
                   </Link>
                 ) : null}
-                <ProductGrid
-                  products={products.data?.items}
-                  loading={productsLoading}
-                  className={cn(phoneCols === 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2', 'md:grid-cols-3 xl:grid-cols-3')}
-                  emptyTitle={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
-                  emptyDescription={
-                    hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')
-                  }
-                  emptyActionLabel={hasNarrowing ? t('shop.clearFilters') : undefined}
-                  onEmptyAction={hasNarrowing ? clearFilters : undefined}
-                />
-                <Pagination
-                  page={filters.page}
-                  pages={pages}
-                  onChange={(page) => update({ page: String(page) })}
-                />
+
+                {productsLoading ? (
+                  <ul className={view === 'grid' ? 'grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4' : 'space-y-3'} role="status" aria-busy="true">
+                    {Array.from({ length: view === 'grid' ? 8 : 4 }).map((_, i) => (
+                      <li key={i}>
+                        <Skeleton spinner className={view === 'grid' ? 'aspect-[3/4.4] rounded-2xl' : 'h-56 rounded-2xl'} />
+                      </li>
+                    ))}
+                    <span className="sr-only">{t('ui.loadingProducts')}</span>
+                  </ul>
+                ) : !products.data?.items.length ? (
+                  <EmptyState
+                    title={hasNarrowing ? t('shop.noMatch') : t('shop.empty')}
+                    description={hasNarrowing ? t('shop.noMatchBody') : t('shop.emptyBody')}
+                    actionLabel={hasNarrowing ? t('shop.clearFilters') : undefined}
+                    onAction={hasNarrowing ? clearFilters : undefined}
+                  />
+                ) : view === 'grid' ? (
+                  <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">
+                    {products.data.items.map((p, i) => (
+                      // Rise in with CSS: visible at once, never waiting for the animation code
+                      <li key={p._id} data-rise="card" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
+                        <HomeShopCard product={p} eager={i < 4} />
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="space-y-3">
+                    {products.data.items.map((p, i) => (
+                      <li key={p._id} data-rise="card" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
+                        <ShopListCard product={p} eager={i < 2} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Pagination page={filters.page} pages={pages} onChange={(page) => update({ page: String(page) })} />
               </>
             )}
           </div>
@@ -511,17 +363,12 @@ export function Shop() {
         title={t('shop.filters')}
         side="left"
         footer={
-          <div className="flex gap-2">
-            <Button variant="outline" className="h-12 shrink-0 rounded-full px-5" onClick={clearFilters} disabled={!sidebarFilterCount}>
-              {t('ui.clear')}
-            </Button>
-            <Button className="h-12 flex-1 rounded-full text-base" onClick={() => setFiltersOpen(false)}>
-              {productsLoading ? t('ui.loadingProducts') : t('shop.showResults', { count: total })}
-            </Button>
-          </div>
+          <Button className="h-12 w-full rounded-full text-base" onClick={() => setFiltersOpen(false)}>
+            {productsLoading ? t('ui.loadingProducts') : t('shop.showResults', { count: total })}
+          </Button>
         }
       >
-        {sidebar(true)}
+        {filtersPanel}
       </Drawer>
     </>
   )
@@ -530,12 +377,12 @@ export function Shop() {
 function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   const t = useT()
   return (
-    <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] pl-3 pr-1 text-xs font-medium text-[var(--fg)]">
+    <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[rgb(0_194_255/0.4)] bg-[rgb(0_194_255/0.08)] ps-3 pe-1 text-xs font-semibold text-[var(--fg)]">
       {label}
       <button
         type="button"
         onClick={onRemove}
-        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
+        className="inline-flex size-6 items-center justify-center rounded-full text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
         aria-label={t('ui.removeNamed', { label })}
       >
         <SiteIcon name="close" size={12} />

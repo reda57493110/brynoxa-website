@@ -36,8 +36,8 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   assert.ok(hook.includes("const needAuto = Boolean(page) && page !== 'shop' && !cat && settings.isSuccess"), 'a category never borrows the shop product (no laptop on Cameras)');
   assert.ok(hook.includes("? 'empty-category'"), 'nothing in stock: the category photo');
   const shop = src('pages/store/Shop.tsx');
-  assert.ok(shop.includes('image={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}'), 'the category photo in the header');
-  assert.ok(shop.includes('photoCard={Boolean(activeCategory && categoryPhoto(activeCategory, categoryList))}'));
+  assert.ok(shop.includes('photo={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}'), 'the category photo in the banner');
+  assert.ok(src('components/shop/ShopBanner.tsx').includes("const hero = useHeroProduct('shop', category)"), 'the product chosen for the shop / category in the banner');
   assert.ok(src('components/layout/StoreHero.tsx').includes("!photoCard && 'md:dark:hidden!'"), 'framed in dark mode too');
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("{ id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' }"));

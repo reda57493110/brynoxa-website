@@ -36,8 +36,8 @@ test('sub-categories in French and Arabic', () => {
 test('pages: home shows main categories; shop, filters and category page show the sub-categories', () => {
   const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
   assert.match(src('pages/store/Home.tsx'), /const categoryList = mainCategories\(/);
-  assert.match(src('pages/store/Shop.tsx'), /subList\.map\(/);
-  assert.match(src('components/product/FilterSidebar.tsx'), /childrenOf\(categories, activeMain\._id\)\.map\(/);
+  assert.match(src('pages/store/Shop.tsx'), /const stripItems = stripInside \? subList : mainList/, 'the cards under the banner: sub-categories inside a category');
+  assert.match(src('components/shop/ShopFilters.tsx'), /subs\.map\(/, 'the filters list the sub-categories of the chosen one');
   assert.match(src('pages/store/CategoryPage.tsx'), /subs\.map\(/);
   assert.match(src('components/layout/SearchBox.tsx'), / › /);
   const admin = src('components/admin/settings/CategoriesSettings.tsx');
@@ -61,8 +61,9 @@ test('category and filter clicks keep the scroll position; changing page still g
   assert.equal((src('pages/store/CategoryPage.tsx').match(/state=\{\{ keepScroll: true \}\}/g) || []).length, 4);
 });
 
-test('shop: 3 products per row on tablets and computers (phones keep the 1 / 2 choice)', () => {
+test('shop: a grid (2 / 3 / 4 a row) or long rows with the specs, remembered on this device', () => {
   const shop = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Shop.tsx'), 'utf8');
-  assert.ok(shop.includes("'md:grid-cols-3 xl:grid-cols-3'"));
-  assert.ok(!shop.includes('xl:grid-cols-4'));
+  assert.ok(shop.includes('<ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 xl:grid-cols-4">'));
+  assert.ok(shop.includes('<ShopListCard product={p} eager={i < 2} />'));
+  assert.ok(shop.includes("const VIEW_KEY = 'brynoxa-shop-view'"));
 });
