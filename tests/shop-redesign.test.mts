@@ -150,3 +150,20 @@ test('photos sit well on the dark page: shop banner photo on the right, softened
   const blocks = src('components/home/HomeBlocks.tsx');
   assert.ok(blocks.includes('<span className="relative block aspect-[4/3] overflow-hidden">'), 'the category photo in its own landscape frame, the text under it');
 });
+
+test('phones: compact banner, cards and texts (computers keep their sizes)', () => {
+  const slider = src('components/home/HomeHeroSlider.tsx');
+  assert.ok(slider.includes("'grid h-full grid-cols-[38%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"), 'deals banner: photo beside the text on phones');
+  assert.ok(slider.includes('text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl'), 'banner title: small on phones, as before on computers');
+  const card = src('components/home/HomeShopCard.tsx');
+  assert.ok(card.includes("'relative aspect-[5/4] overflow-hidden sm:aspect-square'"), 'card photo: shorter on phones');
+  assert.ok(card.includes('text-[11px] font-bold uppercase leading-[1.25] tracking-tight text-[var(--fg)] sm:text-sm'));
+  assert.ok(src('components/home/HomeTrustBar.tsx').includes('hidden text-[11px] leading-snug text-[var(--fg-muted)] sm:block'), 'promises: titles only on phones');
+  assert.ok(src('components/home/HomeShelf.tsx').includes("className={i >= 4 ? 'max-sm:hidden' : undefined}"), 'Our selection: 2 rows on phones');
+  const banner = src('components/shop/ShopBanner.tsx');
+  assert.ok(banner.includes('<div className="max-sm:hidden">\n              <BannerProduct') || banner.includes('<div className="max-sm:hidden">\r\n              <BannerProduct'), 'shop: no product card in the banner on phones');
+  assert.ok(banner.includes('<div className="mt-2 max-w-2xl max-sm:hidden sm:mt-3">'), 'shop: no long sentence on phones');
+  const list = src('components/shop/ShopListCard.tsx');
+  assert.ok(list.includes('grid-cols-[6.5rem_minmax(0,1fr)]'), 'list view: photo beside the text on phones');
+  assert.ok(list.includes('col-start-2 row-span-2 row-start-1'), 'list view: Add to cart beside the price on phones');
+});

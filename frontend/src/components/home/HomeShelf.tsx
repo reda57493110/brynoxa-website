@@ -26,8 +26,8 @@ export function HomeSectionHead({
   return (
     <div className={cn('mb-3 flex items-end justify-between gap-3 sm:mb-5', className)}>
       <div className="min-w-0">
-        <h2 id={id} className="flex items-center gap-2.5 font-display text-lg font-extrabold uppercase tracking-tight sm:text-[1.75rem]">
-          <span className="h-5 w-1.5 shrink-0 -skew-x-12 rounded-sm bg-[var(--brand)] shadow-[0_0_12px_rgb(0_194_255/0.7)] sm:h-7 sm:w-2" aria-hidden="true" />
+        <h2 id={id} className="flex items-center gap-2 font-display text-[15px] font-extrabold uppercase tracking-tight sm:gap-2.5 sm:text-[1.75rem]">
+          <span className="h-4 w-1 shrink-0 -skew-x-12 rounded-sm bg-[var(--brand)] shadow-[0_0_12px_rgb(0_194_255/0.7)] sm:h-7 sm:w-2" aria-hidden="true" />
           {title}
         </h2>
         {body ? <p className="mt-1 hidden text-sm text-[var(--fg-muted)] sm:block">{body}</p> : null}
@@ -101,8 +101,8 @@ export function HomeGrid({ products, badge }: { products: Product[]; badge?: (p:
   return (
     <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
       {products.map((p, i) => (
-        // Phones: three rows of two
-        <li key={p._id} className={i >= 6 ? 'max-sm:hidden' : undefined}>
+        // Phones: two rows of two
+        <li key={p._id} className={i >= 4 ? 'max-sm:hidden' : undefined}>
           <HomeShopCard product={p} badge={badge ? badge(p) : null} />
         </li>
       ))}

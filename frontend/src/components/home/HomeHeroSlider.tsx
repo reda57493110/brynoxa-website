@@ -57,7 +57,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'grid h-full items-center gap-4 p-3.5 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
+        'grid h-full grid-cols-[38%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
         'transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)]',
         active ? 'z-[1] opacity-100 duration-500' : 'pointer-events-none opacity-0 duration-300'
       )}
@@ -69,7 +69,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         aria-hidden="true"
         ref={photo.ref}
         className={cn(
-          'group relative block aspect-[16/10] overflow-hidden rounded-[1.1rem] sm:order-2 sm:aspect-[5/4] sm:rounded-[1.4rem]',
+          'group relative block aspect-square overflow-hidden rounded-xl sm:order-2 sm:aspect-[5/4] sm:rounded-[1.4rem]',
           contain ? 'photo-stage' : 'bg-[#0b1116]'
         )}
       >
@@ -89,27 +89,27 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           onError={photo.onError}
           className={cn(
             'absolute inset-0 h-full w-full transition duration-[900ms] ease-out group-hover:scale-[1.04]',
-            contain ? 'object-contain p-5 mix-blend-multiply sm:p-8' : 'object-cover',
+            contain ? 'object-contain p-2 mix-blend-multiply sm:p-8' : 'object-cover',
             active ? 'scale-100' : 'scale-[1.05]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
         />
         {d ? (
-          <DealSticker percent={d.percent} className="absolute end-3 top-3 z-10 h-11 w-11 -rotate-6 text-[13px] sm:end-4 sm:top-4 sm:h-14 sm:w-14 sm:text-base" />
+          <DealSticker percent={d.percent} className="absolute end-1.5 top-1.5 z-10 h-8 w-8 -rotate-6 text-[10px] sm:end-4 sm:top-4 sm:h-14 sm:w-14 sm:text-base" />
         ) : null}
       </Link>
 
       {/* Text */}
       <div className="min-w-0 sm:order-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-[rgb(0_194_255/0.14)] px-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--brand)] ring-1 ring-[rgb(0_194_255/0.35)] sm:h-8 sm:px-3 sm:text-xs">
+          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-[rgb(0_194_255/0.14)] px-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--brand)] ring-1 ring-[rgb(0_194_255/0.35)] sm:h-8 sm:px-3 sm:text-xs">
             <SiteIcon name={d ? 'tag' : 'star'} size={13} solid={!d} />
             {d ? t('home.spotlightDeal') : t('product.featuredPick')}
           </span>
-          {brand ? <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55 sm:text-xs">{brand}</span> : null}
+          {brand ? <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55 max-sm:hidden sm:text-xs">{brand}</span> : null}
         </div>
 
-        <h2 className="mt-2.5 line-clamp-2 font-display text-xl font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl lg:text-[2.5rem] lg:leading-[1.1]">
+        <h2 className="mt-1.5 line-clamp-2 font-display text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl lg:text-[2.2rem] lg:leading-[1.1]">
           <Link to={href} className="hover:text-[#9be8ff] focus-visible:outline-none focus-visible:underline">
             {product.name}
           </Link>
@@ -117,7 +117,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         </h2>
 
         {specs.length ? (
-          <ul className="mt-3 flex flex-wrap gap-1.5 sm:mt-4 sm:gap-2">
+          <ul className="mt-3 hidden flex-wrap gap-1.5 sm:mt-4 sm:flex sm:gap-2">
             {specs.map((s) => (
               <li
                 key={s.key}
@@ -130,15 +130,15 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           </ul>
         ) : null}
 
-        <div className="mt-3.5 flex flex-wrap items-end gap-x-3 gap-y-1 sm:mt-6">
-          <span className="whitespace-nowrap font-display text-[1.75rem] font-extrabold leading-none tracking-tight text-[var(--brand)] sm:text-[2.6rem] lg:text-5xl">
+        <div className="mt-1.5 flex flex-wrap items-end gap-x-2 gap-y-0.5 sm:mt-6 sm:gap-x-3">
+          <span className="whitespace-nowrap font-display text-xl font-extrabold leading-none tracking-tight text-[var(--brand)] sm:text-[2.6rem] lg:text-5xl">
             {formatCurrency(product.price)}
           </span>
           {d ? (
-            <span className="whitespace-nowrap pb-0.5 text-sm text-white/45 line-through sm:text-lg">{formatCurrency(product.compareAtPrice!)}</span>
+            <span className="whitespace-nowrap text-[11px] text-white/45 line-through sm:pb-0.5 sm:text-lg">{formatCurrency(product.compareAtPrice!)}</span>
           ) : null}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] sm:text-xs">
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] sm:mt-2 sm:gap-x-3 sm:text-xs">
           {d ? (
             <span className="inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 font-semibold text-[#9be8ff]">
               {t('home.spotlightSave', { amount: formatCurrency(d.saved) })}
@@ -147,18 +147,18 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           <StockLine product={product} />
         </div>
 
-        <div className="mt-4 flex gap-2 sm:mt-7 sm:gap-3">
+        <div className="mt-2.5 flex gap-2 sm:mt-7 sm:gap-3">
           <button
             type="button"
             onClick={add}
-            className="btn-shine inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-12 sm:flex-none sm:px-7 sm:text-base"
+            className="btn-shine inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--brand)] px-3 text-xs font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-12 sm:flex-none sm:gap-2 sm:px-7 sm:text-base"
           >
             <SiteIcon name="cart" size={17} />
             {t('common.addToCart')}
           </button>
           <Link
             to={href}
-            className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/20 bg-white/[0.04] px-4 text-sm font-semibold text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:h-12 sm:px-6 sm:text-base"
+            className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/20 bg-white/[0.04] px-4 text-sm font-semibold text-white max-sm:hidden transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:h-12 sm:px-6 sm:text-base"
           >
             <span className="max-sm:sr-only">{t('product.viewProduct')}</span>
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
@@ -272,7 +272,7 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
         </div>
 
         {many ? (
-          <div className="relative z-10 flex items-center gap-3 px-3.5 pb-3.5 sm:px-8 sm:pb-6 lg:px-10">
+          <div className="relative z-10 flex items-center gap-3 px-3 pb-3 sm:px-8 sm:pb-6 lg:px-10">
             <div role="tablist" aria-label={t('home.dealsLabel')} className="flex flex-1 gap-1.5 sm:gap-2">
               {products.map((p, i) => {
                 const on = i === active
@@ -334,7 +334,7 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
                 type="button"
                 onClick={() => go(-1)}
                 aria-label={t('home.prevDeal')}
-                className="grid size-9 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:size-10"
+                className="grid size-8 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:size-10"
               >
                 <SiteIcon name="chevron-left" size={16} className="rtl:rotate-180" />
               </button>
@@ -342,7 +342,7 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
                 type="button"
                 onClick={() => go(1)}
                 aria-label={t('home.nextDeal')}
-                className="grid size-9 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:size-10"
+                className="grid size-8 place-items-center rounded-full border border-white/15 bg-white/[0.05] text-white transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:size-10"
               >
                 <SiteIcon name="chevron-right" size={16} className="rtl:rotate-180" />
               </button>

@@ -76,7 +76,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition duration-300 hover:-translate-y-0.5 hover:border-[rgb(0_194_255/0.6)] hover:shadow-[0_18px_40px_-24px_rgb(0_194_255/0.7)]">
-      <div ref={photo.ref} className={cn('relative aspect-square overflow-hidden', contain ? 'photo-stage' : 'bg-[#0b1116]')}>
+      <div ref={photo.ref} className={cn('relative aspect-[5/4] overflow-hidden sm:aspect-square', contain ? 'photo-stage' : 'bg-[#0b1116]')}>
         {photo.loaded ? null : <ImageSpinner size="sm" tone={contain ? 'auto' : 'dark'} />}
         <SafeImage
           src={src}
@@ -92,7 +92,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
           onError={photo.onError}
           className={cn(
             'absolute inset-0 h-full w-full transition duration-500 group-hover:scale-[1.05]',
-            contain ? 'object-contain p-3 mix-blend-multiply sm:p-4' : 'object-cover',
+            contain ? 'object-contain p-2 mix-blend-multiply sm:p-4' : 'object-cover',
             photo.loaded ? 'opacity-100' : 'opacity-0',
             hover && 'sm:group-hover:opacity-0'
           )}
@@ -120,7 +120,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
           aria-label={compared ? t('compare.remove') : t('compare.add')}
           title={compared ? t('compare.remove') : t('compare.add')}
           className={cn(
-            'absolute end-2 top-2 z-10 grid size-8 place-items-center rounded-full border shadow-sm transition sm:end-2.5 sm:top-2.5',
+            'absolute end-1.5 top-1.5 z-10 grid size-7 place-items-center rounded-full border shadow-sm transition sm:end-2.5 sm:top-2.5 sm:size-8',
             compared
               ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
               : 'border-black/10 bg-white/90 text-[#05080b] hover:bg-[var(--brand)] hover:text-[var(--brand-fg)] sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100'
@@ -131,7 +131,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
         {sticker ? (
           <span
             className={cn(
-              'absolute start-2 top-2 z-10 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide shadow sm:start-2.5 sm:top-2.5 sm:px-2 sm:text-[11px]',
+              'absolute start-1.5 top-1.5 z-10 rounded-md px-1.5 py-0.5 text-[9.5px] font-extrabold uppercase tracking-wide shadow sm:start-2.5 sm:top-2.5 sm:px-2 sm:text-[11px]',
               badge === 'new' ? 'bg-white text-[#05080b]' : 'bg-[var(--brand)] text-[var(--brand-fg)]'
             )}
           >
@@ -140,9 +140,9 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3.5">
-        {brand ? <p className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:text-[11px]">{brand}</p> : null}
-        <h3 className="mt-0.5 line-clamp-2 min-h-[2.5em] text-[12.5px] font-bold uppercase leading-[1.25] tracking-tight text-[var(--fg)] sm:text-sm">
+      <div className="flex flex-1 flex-col p-2 sm:p-3.5">
+        {brand ? <p className="truncate text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:text-[11px]">{brand}</p> : null}
+        <h3 className="mt-0.5 line-clamp-2 min-h-[2.5em] text-[11px] font-bold uppercase leading-[1.25] tracking-tight text-[var(--fg)] sm:text-sm">
           <Link to={href} className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none">
             {product.name}
             {product.variantLabel ? <span className="font-medium normal-case text-[var(--fg-muted)]"> · {product.variantLabel}</span> : null}
@@ -158,26 +158,26 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
             ))}
           </ul>
         ) : null}
-        <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-          <StockLine product={product} className="text-[11px]" />
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 sm:mt-2">
+          <StockLine product={product} className="text-[10px] sm:text-[11px]" />
           {freeDelivery ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--brand-text)]">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--brand-text)] max-sm:hidden">
               <SiteIcon name="truck" size={12} />
               {t('home.freeDelivery')}
             </span>
           ) : null}
         </div>
-        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
+        <div className="mt-auto flex items-end justify-between gap-1.5 pt-1.5 sm:gap-2 sm:pt-2">
           <div className="min-w-0 leading-tight">
-            {d ? <p className="truncate text-[11px] text-[var(--fg-muted)] line-through sm:text-xs">{formatCurrency(product.compareAtPrice!)}</p> : null}
-            <p className="truncate font-display text-base font-extrabold tracking-tight text-[var(--brand)] sm:text-lg">{formatCurrency(product.price)}</p>
+            {d ? <p className="truncate text-[10px] text-[var(--fg-muted)] line-through sm:text-xs">{formatCurrency(product.compareAtPrice!)}</p> : null}
+            <p className="truncate font-display text-[14px] font-extrabold tracking-tight text-[var(--brand)] sm:text-lg">{formatCurrency(product.price)}</p>
           </div>
           <button
             type="button"
             onClick={add}
             aria-label={`${t('common.addToCart')}: ${product.name}`}
             title={t('common.addToCart')}
-            className="relative z-10 grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:size-10"
+            className="relative z-10 grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--brand)] sm:rounded-xl text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] sm:size-10"
           >
             <SiteIcon name="cart" size={17} />
           </button>

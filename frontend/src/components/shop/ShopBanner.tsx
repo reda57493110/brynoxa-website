@@ -166,14 +166,14 @@ export function ShopBanner({
         {/* A touch of the brand cyan over the photo, and a dark veil under the text */}
         <span className="absolute inset-0 -z-10 bg-[radial-gradient(55%_90%_at_85%_50%,rgb(0_194_255/0.16),transparent_70%),linear-gradient(90deg,rgb(5_8_11/0.92)_0%,rgb(5_8_11/0.75)_35%,rgb(5_8_11/0.2)_70%,rgb(5_8_11/0.35)_100%)] rtl:bg-[radial-gradient(55%_90%_at_15%_50%,rgb(0_194_255/0.16),transparent_70%),linear-gradient(270deg,rgb(5_8_11/0.92)_0%,rgb(5_8_11/0.75)_35%,rgb(5_8_11/0.2)_70%,rgb(5_8_11/0.35)_100%)]" aria-hidden="true" />
         <span className="absolute inset-x-0 bottom-0 -z-10 h-1 bg-[linear-gradient(90deg,var(--brand),transparent)]" aria-hidden="true" />
-        <div className="grid gap-5 p-4 sm:p-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-10 lg:p-10">
+        <div className="grid gap-5 p-3.5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-10 lg:p-10">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{count}</p>
-            <h1 id="shop-heading" className="mt-1.5 font-display text-2xl font-black uppercase leading-[1.05] tracking-tight sm:text-4xl lg:text-5xl">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{count}</p>
+            <h1 id="shop-heading" className="mt-1 font-display text-lg font-black uppercase leading-[1.05] tracking-tight sm:mt-1.5 sm:text-4xl lg:text-5xl">
               {title}
             </h1>
             {description ? (
-              <div className="mt-2 max-w-2xl sm:mt-3">
+              <div className="mt-2 max-w-2xl max-sm:hidden sm:mt-3">
                 <p className={cn('text-[13px] leading-relaxed text-white/75 sm:text-[15px]', !open && 'line-clamp-2')}>{description}</p>
                 {description.length > 120 ? (
                   <button type="button" onClick={() => setOpen((o) => !o)} className="mt-1 text-xs font-bold uppercase tracking-wide text-[var(--brand)] hover:underline">
@@ -182,7 +182,7 @@ export function ShopBanner({
                 ) : null}
               </div>
             ) : null}
-            <form onSubmit={submit} className="mt-4 flex max-w-xl overflow-hidden rounded-xl border border-white/15 bg-white/[0.07] backdrop-blur focus-within:border-[var(--brand)] sm:mt-6">
+            <form onSubmit={submit} className="mt-3 flex max-w-xl overflow-hidden rounded-xl border border-white/15 bg-white/[0.07] backdrop-blur focus-within:border-[var(--brand)] sm:mt-6">
               <label htmlFor="shop-search" className="sr-only">
                 {t('shop.searchShop')}
               </label>
@@ -191,14 +191,19 @@ export function ShopBanner({
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder={t('shop.searchShopPlaceholder')}
-                className="h-11 min-w-0 flex-1 bg-transparent px-3.5 text-sm text-white outline-none placeholder:text-white/50 sm:h-12"
+                className="h-10 min-w-0 flex-1 bg-transparent px-3 text-[13px] text-white outline-none placeholder:text-white/50 sm:h-12 sm:px-3.5 sm:text-sm"
               />
               <button type="submit" aria-label={t('shop.searchAction')} className="grid w-12 shrink-0 place-items-center bg-[var(--brand)] text-[var(--brand-fg)] transition hover:brightness-110 sm:w-14">
                 <SiteIcon name="search" size={18} />
               </button>
             </form>
           </div>
-          {products.length ? <BannerProduct products={products} /> : null}
+          {/* Phones: no product card here (the products are just below) */}
+          {products.length ? (
+            <div className="max-sm:hidden">
+              <BannerProduct products={products} />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

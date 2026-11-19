@@ -19,7 +19,7 @@ export function HomeTrustBar() {
     { icon: 'refresh', title: t('home.trustReturnsTitle'), body: t('home.trustReturnsBody'), to: '/services/returns' },
     { icon: 'chat', title: t('home.trustHelpTitle'), body: t('home.trustHelpBody'), href: whatsappHref() },
   ]
-  const tile = 'group flex h-full items-center gap-2.5 px-2.5 py-3 transition hover:bg-[rgb(0_194_255/0.06)] sm:gap-3.5 sm:px-5 sm:py-4 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]'
+  const tile = 'group flex h-full items-center gap-2 px-2.5 py-2 transition hover:bg-[rgb(0_194_255/0.06)] sm:gap-3.5 sm:px-5 sm:py-4 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--brand)]'
 
   return (
     <section aria-label={t('home.trustLabel')} className="pt-2.5 sm:pt-4">
@@ -28,10 +28,10 @@ export function HomeTrustBar() {
           {items.map((it) => {
             const inner = (
               <>
-                <SiteIcon name={it.icon} size={26} className="shrink-0 text-[var(--brand)] transition group-hover:scale-110" />
+                <SiteIcon name={it.icon} size={20} className="shrink-0 text-[var(--brand)] transition group-hover:scale-110 sm:size-[26px]" />
                 <span className="min-w-0">
-                  <span className="block text-[12px] font-extrabold uppercase leading-tight tracking-tight text-[var(--fg)] sm:text-sm">{it.title}</span>
-                  <span className="mt-0.5 block text-[11px] leading-snug text-[var(--fg-muted)] sm:text-[13px]">{it.body}</span>
+                  <span className="block text-[10.5px] font-extrabold uppercase leading-tight tracking-tight text-[var(--fg)] sm:text-sm">{it.title}</span>
+                  <span className="mt-0.5 hidden text-[11px] leading-snug text-[var(--fg-muted)] sm:block sm:text-[13px]">{it.body}</span>
                 </span>
               </>
             )

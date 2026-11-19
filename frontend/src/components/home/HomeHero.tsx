@@ -17,13 +17,13 @@ function PromoTile({ to, photo, kicker, title, cta }: { to: string; photo: strin
   return (
     <Link
       to={to}
-      className="group relative isolate flex min-h-[8.5rem] flex-col justify-end overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.2)] bg-[#05080b] p-3 text-white sm:min-h-[11rem] sm:p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+      className="group relative isolate flex min-h-[6.5rem] flex-col justify-end overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.2)] bg-[#05080b] p-2.5 text-white sm:min-h-[11rem] sm:p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
     >
       <img src={photo} alt="" width={480} height={300} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
       <span className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.05)_0%,rgb(5_8_11/0.6)_55%,rgb(5_8_11/0.95)_100%)]" aria-hidden="true" />
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{kicker}</span>
-      <span className="mt-0.5 font-display text-[15px] font-extrabold uppercase leading-tight sm:text-xl">{title}</span>
-      <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-white/80 transition group-hover:text-[var(--brand)] sm:text-sm">
+      <span className="mt-0.5 font-display text-[13px] font-extrabold uppercase leading-tight sm:text-xl">{title}</span>
+      <span className="mt-1 inline-flex items-center gap-1 text-[10.5px] font-semibold text-white/80 transition group-hover:text-[var(--brand)] sm:text-sm">
         {cta}
         <SiteIcon name="chevron-right" size={14} className="rtl:rotate-180" />
       </span>
@@ -62,7 +62,7 @@ export function HomeHero({
         <li key={c._id} className="shrink-0">
           <Link
             to={`/category/${c.slug}`}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-3 text-[12.5px] font-semibold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 text-[12px] font-semibold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
           >
             <SiteIcon name={categoryIcon(c.slug, c.name)} size={15} className="text-[var(--brand-text)]" />
             {categoryDisplayName(locale, c.slug, c.name)}

@@ -29,7 +29,7 @@ export const HOME_ROW_MIN = 2
 /** Fewer than this and the Signature products under the banner stay hidden */
 export const SIGNATURE_MIN = 2
 
-const panel = 'rounded-[1.5rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-[2rem] sm:p-6 lg:p-7'
+const panel = 'rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-2.5 sm:rounded-[2rem] sm:p-6 lg:p-7'
 
 /** A category photo (built-in or uploaded), sized for the place */
 function CategoryPhoto({ category, sizes, className, frameClassName = 'absolute inset-0' }: { category: Category; sizes: string; className?: string; frameClassName?: string }) {
@@ -61,14 +61,14 @@ export function HomeIntro({ categories, loading, error, onRetry }: { categories:
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   return (
-    <section id="categories" aria-labelledby="home-hero-heading" className="scroll-mt-24 pb-2 pt-6 text-center sm:pb-4 sm:pt-10">
+    <section id="categories" aria-labelledby="home-hero-heading" className="scroll-mt-24 pb-1 pt-4 text-center sm:pb-4 sm:pt-10">
       <Container>
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.kicker')}</p>
-        <h1 id="home-hero-heading" className="mx-auto mt-2 max-w-3xl font-display text-[1.45rem] font-extrabold uppercase leading-[1.1] tracking-tight text-balance sm:text-4xl lg:text-[2.6rem]">
+        <h1 id="home-hero-heading" className="mx-auto mt-1.5 max-w-3xl font-display text-[1.15rem] font-extrabold uppercase leading-[1.1] tracking-tight text-balance sm:text-4xl lg:text-[2.6rem]">
           {t('home.heroTitleLead')}{' '}
           <span className="bg-gradient-to-r from-[#00c2ff] via-[#38d2ff] to-[#9be8ff] bg-clip-text text-transparent">{t('home.heroTitleAccent')}</span>
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-[13px] text-[var(--fg-muted)] sm:mt-3 sm:text-base">{t('home.heroBody')}</p>
+        <p className="mx-auto mt-1.5 max-w-xl text-[12px] text-[var(--fg-muted)] sm:mt-3 sm:text-base">{t('home.heroBody')}</p>
 
         {error ? (
           <div className="mt-6">
@@ -77,24 +77,24 @@ export function HomeIntro({ categories, loading, error, onRetry }: { categories:
         ) : (
           <ul
             aria-label={t('home.categoriesTitle')}
-            className="-mx-4 mt-5 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-8 sm:flex-wrap sm:justify-center sm:gap-6 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+            className="-mx-4 mt-3.5 flex snap-x gap-2.5 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:mt-8 sm:flex-wrap sm:justify-center sm:gap-6 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
           >
             {loading
               ? Array.from({ length: 6 }).map((_, i) => (
                   <li key={i} className="shrink-0">
-                    <Skeleton className="size-20 rounded-full sm:size-28" />
+                    <Skeleton className="size-16 rounded-full sm:size-28" />
                   </li>
                 ))
               : categories.map((c, i) => (
-                  <li key={c._id} className="w-20 shrink-0 snap-start sm:w-28" data-rise="card" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
+                  <li key={c._id} className="w-16 shrink-0 snap-start sm:w-28" data-rise="card" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                     <Link to={`/category/${c.slug}`} className="group flex flex-col items-center gap-2 focus-visible:outline-none">
-                      <span className="relative block size-20 overflow-hidden rounded-full border-2 border-[var(--border)] bg-[var(--bg-muted)] shadow-soft transition duration-300 group-hover:border-[var(--brand)] group-hover:shadow-[0_0_0_4px_rgb(0_194_255/0.18)] group-focus-visible:border-[var(--brand)] sm:size-28">
+                      <span className="relative block size-16 overflow-hidden rounded-full border-2 border-[var(--border)] bg-[var(--bg-muted)] shadow-soft transition duration-300 group-hover:border-[var(--brand)] group-hover:shadow-[0_0_0_4px_rgb(0_194_255/0.18)] group-focus-visible:border-[var(--brand)] sm:size-28">
                         <CategoryPhoto category={c} sizes="(min-width: 640px) 7rem, 5rem" />
-                        <span className="absolute bottom-1 end-1 grid size-6 place-items-center rounded-full bg-[rgb(5_8_11/0.75)] text-[var(--brand)] sm:size-7">
+                        <span className="absolute bottom-0.5 end-0.5 grid size-5 place-items-center rounded-full bg-[rgb(5_8_11/0.75)] text-[var(--brand)] sm:bottom-1 sm:end-1 sm:size-7">
                           <SiteIcon name={categoryIcon(c.slug, c.name)} size={13} />
                         </span>
                       </span>
-                      <span className="line-clamp-2 text-[11.5px] font-bold leading-tight text-[var(--fg)] group-hover:text-[var(--brand-text)] sm:text-sm">
+                      <span className="line-clamp-2 text-[10.5px] font-bold leading-tight text-[var(--fg)] group-hover:text-[var(--brand-text)] sm:text-sm">
                         {categoryDisplayName(locale, c.slug, c.name)}
                       </span>
                     </Link>
@@ -145,7 +145,7 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
   const lead = (
     <Link
       to="/shop?onSale=true"
-      className="group relative isolate flex h-full min-h-[16rem] flex-col justify-between overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-4 text-white sm:p-5"
+      className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
     >
       <span className="absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
       <SiteIcon name="tag" size={130} className="absolute -bottom-6 -end-6 -z-10 rotate-[-14deg] text-[rgb(0_194_255/0.12)]" />
@@ -155,9 +155,9 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
       </span>
       <span>
         {off > 0 ? (
-          <span className="block font-display text-3xl font-black leading-none tracking-tight text-[var(--brand)] sm:text-5xl">{t('home.upTo', { percent: off })}</span>
+          <span className="block font-display text-2xl font-black leading-none tracking-tight text-[var(--brand)] sm:text-5xl">{t('home.upTo', { percent: off })}</span>
         ) : null}
-        <span className="mt-2 block font-display text-base font-extrabold uppercase leading-tight sm:text-xl">{t('home.dealsTitle')}</span>
+        <span className="mt-1.5 block font-display text-[13px] font-extrabold uppercase leading-tight sm:mt-2 sm:text-xl">{t('home.dealsTitle')}</span>
         <span className="mt-1 block text-[11.5px] text-white/65 sm:text-[13px]">{t('home.dealsCount', { count: products.length })}</span>
         {saved > 0 ? (
           <span className="mt-2 inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 text-[11px] font-bold text-[#9be8ff] sm:text-xs">{t('home.dealsSaveUpTo', { amount: formatCurrency(saved) })}</span>
@@ -234,7 +234,7 @@ export function HomeSelection({
                   aria-selected={x.id === active.id}
                   onClick={() => setTab(x.id)}
                   className={cn(
-                    'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3 text-[12.5px] font-bold uppercase tracking-wide transition sm:h-11 sm:px-4 sm:text-sm',
+                    'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-bold uppercase tracking-wide transition sm:h-11 sm:rounded-xl sm:px-4 sm:text-sm',
                     x.id === active.id
                       ? 'bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
                       : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
@@ -299,20 +299,20 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
         <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
           <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_50%] opacity-80" />
           <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
-          <div className="flex min-h-[14rem] flex-col justify-center p-5 sm:min-h-[19rem] sm:p-10 lg:p-12">
+          <div className="flex min-h-[11rem] flex-col justify-center p-4 sm:min-h-[19rem] sm:p-10 lg:p-12">
             <div className="flex items-center gap-3">
-              <span className="inline-flex size-11 overflow-hidden rounded-xl ring-1 ring-[rgb(0_194_255/0.5)] shadow-[0_0_24px_-4px_rgb(0_194_255/0.8)] sm:size-14 sm:rounded-2xl">
+              <span className="inline-flex size-9 overflow-hidden rounded-xl ring-1 ring-[rgb(0_194_255/0.5)] shadow-[0_0_24px_-4px_rgb(0_194_255/0.8)] sm:size-14 sm:rounded-2xl">
                 <img src="/brand/brynoxa-mark-128.webp" alt="" width={56} height={56} className="h-full w-full scale-[1.08] object-cover" decoding="async" />
               </span>
               <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.signatureBadge')}</span>
             </div>
-            <h2 id="home-signature-heading" className="mt-4 max-w-xl font-display text-2xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl">
+            <h2 id="home-signature-heading" className="mt-2.5 max-w-xl font-display text-lg font-black uppercase leading-[1.05] tracking-tight sm:mt-4 sm:text-5xl">
               {t('home.signatureTitle')}
             </h2>
-            <p className="mt-2 max-w-md text-[13px] text-white/75 sm:mt-3 sm:text-base">{t('home.signatureBody')}</p>
+            <p className="mt-1.5 line-clamp-2 max-w-md text-[12px] text-white/75 sm:mt-3 sm:line-clamp-none sm:text-base">{t('home.signatureBody')}</p>
             <Link
               to={`/shop?brand=${SIGNATURE_BRAND}`}
-              className="btn-shine mt-5 inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-7 sm:text-base"
+              className="btn-shine mt-3 inline-flex h-9 w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-4 text-xs font-bold sm:mt-5 sm:h-11 sm:px-5 sm:text-sm text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-7 sm:text-base"
             >
               {t('home.signatureViewAll')}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
@@ -384,7 +384,7 @@ export function HomeCategoryTabs({ categories }: { categories: Category[] }) {
                   aria-selected={on}
                   onClick={() => setChosen(c._id)}
                   className={cn(
-                    'inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border px-3 text-[12.5px] font-bold transition sm:h-12 sm:px-4 sm:text-sm',
+                    'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-[11.5px] font-bold transition sm:h-12 sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm',
                     on
                       ? 'border-[var(--brand)] bg-[rgb(0_194_255/0.12)] text-[var(--brand-text)] shadow-[inset_0_-3px_0_var(--brand)]'
                       : 'border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)]'
@@ -449,20 +449,20 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
               <li key={b.id}>
                 <Link
                   to={link(b.min, b.max)}
-                  className="group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3.5 transition hover:-translate-y-0.5 hover:border-[var(--brand)] sm:p-5"
+                  className="group relative isolate flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 transition hover:-translate-y-0.5 hover:border-[var(--brand)] sm:p-5"
                 >
                   <SiteIcon name={BAND_ICON[b.id] ?? 'banknote'} size={90} className="absolute -bottom-4 -end-4 -z-10 text-[rgb(0_194_255/0.07)]" />
-                  <span className="grid size-10 place-items-center rounded-xl bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12">
+                  <span className="grid size-8 place-items-center rounded-lg bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12 sm:rounded-xl">
                     <SiteIcon name={BAND_ICON[b.id] ?? 'banknote'} size={20} />
                   </span>
-                  <span className="mt-3 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:text-xs">{t(BAND_NAME[b.id])}</span>
-                  <span className="mt-0.5 font-display text-[15px] font-extrabold leading-tight text-[var(--fg)] sm:text-2xl">
+                  <span className="mt-2 text-[9.5px] font-bold uppercase tracking-[0.14em] text-[var(--fg-muted)] sm:mt-3 sm:text-xs">{t(BAND_NAME[b.id])}</span>
+                  <span className="mt-0.5 font-display text-[13px] font-extrabold leading-tight text-[var(--fg)] sm:text-2xl">
                     {t(b.label, { min: amount(b.min ?? 0), max: amount(b.max ?? 0) })}
                   </span>
-                  <span className="mt-1 text-[11px] text-[var(--fg-muted)] sm:text-sm">
+                  <span className="mt-1 text-[10px] text-[var(--fg-muted)] sm:text-sm">
                     {t('home.budgetCount', { count: b.items.length })} · {t('home.budgetFrom', { price: amount(from) })}
                   </span>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[var(--brand-text)] sm:text-sm">
+                  <span className="mt-3 hidden items-center gap-1 text-xs font-bold text-[var(--brand-text)] sm:inline-flex sm:text-sm">
                     {t('home.budgetSeeAll')}
                     <SiteIcon name="chevron-right" size={14} className="transition group-hover:translate-x-0.5 rtl:rotate-180" />
                   </span>
@@ -471,11 +471,11 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
             )
           })}
           <li className={cn(bands.length % 2 === 0 && 'col-span-2 lg:col-span-1')}>
-            <form onSubmit={submit} className="flex h-full flex-col rounded-2xl border border-dashed border-[rgb(0_194_255/0.4)] bg-[rgb(0_194_255/0.05)] p-3.5 sm:p-5">
-              <span className="grid size-10 place-items-center rounded-xl bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] sm:size-12">
+            <form onSubmit={submit} className="flex h-full flex-col rounded-2xl border border-dashed border-[rgb(0_194_255/0.4)] bg-[rgb(0_194_255/0.05)] p-3 sm:p-5">
+              <span className="hidden size-10 place-items-center rounded-xl sm:grid bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] sm:size-12">
                 <SiteIcon name="sliders" size={20} />
               </span>
-              <label htmlFor="home-own-budget" className="mt-3 font-display text-[15px] font-extrabold leading-tight sm:text-xl">
+              <label htmlFor="home-own-budget" className="font-display text-[13px] font-extrabold leading-tight sm:mt-3 sm:text-xl">
                 {t('home.budgetOwnTitle')}
               </label>
               <div className="mt-auto flex gap-2 pt-3">
@@ -512,29 +512,29 @@ export function HomeSetupsBand() {
   return (
     <section id="setups" data-reveal="" aria-labelledby="home-setups-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
-        <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-4 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
+        <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
           <span className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
           <span
             className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:40px_40px]"
             aria-hidden="true"
           />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">Brynoxa · {t('common.setups')}</p>
-          <h2 id="home-setups-heading" className="mt-1.5 font-display text-xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
+          <h2 id="home-setups-heading" className="mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('home.setupsBandTitle')}
           </h2>
-          <p className="mt-1.5 max-w-xl text-[13px] text-white/70 sm:text-base">{t('home.setupsBandBody')}</p>
-          <ul className="mt-4 grid grid-cols-2 gap-2 sm:mt-7 sm:gap-3 lg:grid-cols-4">
+          <p className="mt-1 max-w-xl text-[12px] text-white/70 max-sm:line-clamp-2 sm:mt-1.5 sm:text-base">{t('home.setupsBandBody')}</p>
+          <ul className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-7 sm:gap-3 lg:grid-cols-4">
             {SETUP_IDS.map((id) => (
               <li key={id}>
                 <Link
                   to={`/setups/${id}`}
                   className="group flex h-full items-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.04] p-2.5 transition hover:border-[var(--brand)] hover:bg-[rgb(0_194_255/0.12)] sm:gap-3.5 sm:rounded-2xl sm:p-4"
                 >
-                  <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[rgb(0_194_255/0.16)] text-[var(--brand)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12 sm:rounded-xl">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[rgb(0_194_255/0.16)] text-[var(--brand)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12 sm:rounded-xl">
                     <SiteIcon name={SETUP_ICON[id]} size={20} />
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-extrabold uppercase sm:text-base">{t(`setups.${id}.name`)}</span>
+                    <span className="block truncate text-[11.5px] font-extrabold uppercase sm:text-base">{t(`setups.${id}.name`)}</span>
                     <span className="hidden truncate text-xs text-white/60 sm:block">{t(`setups.${id}.tagline`)}</span>
                   </span>
                   <SiteIcon name="chevron-right" size={16} className="ms-auto hidden text-white/50 group-hover:text-[var(--brand)] sm:block rtl:rotate-180" />
@@ -600,17 +600,17 @@ export function HomeHelpBand() {
   return (
     <section data-reveal="" aria-labelledby="home-help-heading" className="py-3 sm:py-5">
       <Container>
-        <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.3)] bg-[linear-gradient(110deg,rgb(0_194_255/0.16),rgb(0_194_255/0.04)_55%,transparent)] p-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[2rem] sm:p-8">
+        <div className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[linear-gradient(110deg,rgb(0_194_255/0.16),rgb(0_194_255/0.04)_55%,transparent)] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[2rem] sm:p-8">
           <SiteIcon name="chat" size={160} className="absolute -bottom-10 end-24 -z-10 hidden rotate-[-10deg] text-[rgb(0_194_255/0.07)] lg:block" />
           <div className="flex items-start gap-3 sm:gap-4">
-            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow sm:size-14">
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow sm:size-14 sm:rounded-2xl">
               <SiteIcon name="headphones" size={22} />
             </span>
             <div className="min-w-0">
-              <h2 id="home-help-heading" className="font-display text-lg font-extrabold uppercase leading-tight tracking-tight sm:text-2xl">
+              <h2 id="home-help-heading" className="font-display text-[15px] font-extrabold uppercase leading-tight tracking-tight sm:text-2xl">
                 {t('home.helpBandTitle')}
               </h2>
-              <p className="mt-1 max-w-lg text-[13px] text-[var(--fg-muted)] sm:text-[15px]">{t('home.helpBandBody')}</p>
+              <p className="mt-1 max-w-lg text-[12px] text-[var(--fg-muted)] sm:text-[15px]">{t('home.helpBandBody')}</p>
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
@@ -618,14 +618,14 @@ export function HomeHelpBand() {
               href={whatsappHref(t('home.helpBandMessage'))}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-shine inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:flex-none sm:h-12 sm:px-6"
+              className="btn-shine inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-4 text-[13px] font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:flex-none sm:h-12 sm:px-6 sm:text-sm"
             >
               <SiteIcon name="chat" size={17} />
               {t('home.helpBandWhatsapp')}
             </a>
             <a
               href={CONTACT.phone.href}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-bold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:flex-none sm:h-12"
+              className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-4 text-[13px] font-bold text-[var(--fg)] sm:text-sm transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:flex-none sm:h-12"
             >
               <SiteIcon name="phone" size={16} />
               <span dir="ltr">{CONTACT.phone.value}</span>

@@ -39,28 +39,28 @@ export function ShopCategoryStrip({
   }
   const card = (on: boolean) =>
     cn(
-      'group flex h-full w-full items-center gap-2.5 rounded-2xl border p-2 text-start transition sm:gap-3 sm:p-2.5',
+      'group flex h-full w-full items-center gap-2 rounded-xl border p-1.5 text-start transition sm:gap-3 sm:rounded-2xl sm:p-2.5',
       'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
       on
         ? 'border-[var(--brand)] bg-[rgb(0_194_255/0.1)] shadow-[inset_0_-3px_0_var(--brand)]'
         : 'border-[var(--border)] bg-[var(--bg-elevated)] hover:border-[rgb(0_194_255/0.6)]'
     )
   return (
-    <div className="relative mt-3 sm:mt-4">
+    <div className="relative mt-2.5 sm:mt-4">
       <ul ref={track} aria-label={label} className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:gap-3 sm:px-0 [&::-webkit-scrollbar]:hidden">
-        <li className="w-[9.5rem] shrink-0 snap-start sm:w-[12rem]">
+        <li className="w-[6.5rem] shrink-0 snap-start sm:w-[12rem]">
           <button type="button" onClick={() => onPick(undefined)} aria-pressed={!activeSlug} className={card(!activeSlug)}>
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] sm:size-14">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] sm:size-14 sm:rounded-xl">
               <SiteIcon name="layers" size={20} />
             </span>
-            <span className="text-[12.5px] font-extrabold uppercase leading-tight sm:text-sm">{t('shop.all')}</span>
+            <span className="text-[11px] font-extrabold uppercase leading-tight sm:text-sm">{t('shop.all')}</span>
           </button>
         </li>
         {items.map((c) => {
           const on = activeSlug === c.slug
           const thumb = categoryThumb(c, [...all, ...items])
           return (
-            <li key={c._id} className="w-[11rem] shrink-0 snap-start sm:w-[14rem]">
+            <li key={c._id} className="w-[8.5rem] shrink-0 snap-start sm:w-[14rem]">
               <button
                 type="button"
                 // Nothing to buy yet: shown, but not a page to open
@@ -69,7 +69,7 @@ export function ShopCategoryStrip({
                 aria-pressed={on}
                 className={cn(card(on), c.empty && 'cursor-default opacity-55 hover:border-[var(--border)]')}
               >
-                <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[var(--bg-muted)] text-[var(--brand-text)] sm:size-14">
+                <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)] sm:size-14 sm:rounded-xl">
                   {/* The icon shows until the photo arrives (and stays if there is none) */}
                   <SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />
                   {thumb ? (
@@ -85,7 +85,7 @@ export function ShopCategoryStrip({
                     />
                   ) : null}
                 </span>
-                <span className="min-w-0 text-[12.5px] font-extrabold uppercase leading-tight sm:text-sm">
+                <span className="min-w-0 text-[10.5px] font-extrabold uppercase leading-tight sm:text-sm">
                   <span className="line-clamp-2">{categoryDisplayName(locale, c.slug, c.name)}</span>
                   {c.empty ? <span className="mt-0.5 block text-[10px] font-bold normal-case tracking-wide text-[var(--brand-text)]">{t('shop.comingSoon')}</span> : null}
                 </span>
