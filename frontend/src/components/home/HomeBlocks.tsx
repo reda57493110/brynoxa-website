@@ -519,7 +519,7 @@ export function HomeSetupsBand() {
             className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:40px_40px]"
             aria-hidden="true"
           />
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">Brynoxa · {t('common.setups')}</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.setupsBandKicker')}</p>
           <h2 id="home-setups-heading" className="text-white mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('home.setupsBandTitle')}
           </h2>

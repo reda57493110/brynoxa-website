@@ -482,7 +482,8 @@ export function ProductForm() {
             : 'Product created',
         'success'
       )
-      navigate('/admin/products')
+      // A new product: the list opens its placement window (where it shows on the site, and why not)
+      navigate('/admin/products', isEdit || !savedId ? undefined : { state: { placeNew: savedId } })
     },
     onError: (e) => toast(getErrorMessage(e), 'error'),
   })

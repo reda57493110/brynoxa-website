@@ -200,3 +200,23 @@ test('Admin board shows every home section with products, also the automatic one
   assert.ok(b.includes("queryKey: ['products', 'home-best']") && b.includes("queryKey: ['products', 'home-category', active?.slug]"), 'the same requests as the home page');
   assert.ok(b.includes('readOnly'), 'automatic sections: products can be opened, not moved or removed');
 });
+
+test('new product: the list opens its placement window, which says where it shows by itself and why not (with the fix)', () => {
+  const form = src('pages/admin/ProductForm.tsx');
+  assert.ok(form.includes("navigate('/admin/products', isEdit || !savedId ? undefined : { state: { placeNew: savedId } })"));
+  const list = src('pages/admin/Products.tsx');
+  assert.ok(list.includes('const placeNew = (location.state as { placeNew?: string } | null)?.placeNew'));
+  assert.ok(list.includes("navigateTo(location.pathname + location.search, { replace: true, state: null })"), 'only once (not again on reload)');
+  const auto = src('components/admin/ProductAutoPlaces.tsx');
+  for (const k of ["title: 'Stock 0'", "'No · needs an old price above the price'", "'No · this list was chosen by hand'", "fix: { label: 'Add stock', to: `/admin/inventory/products/${p._id}` }", 'setupsFor(p as never)', 'BUDGETS.find((b) => inBudget(p.price, b))']) assert.ok(auto.includes(k), k);
+  assert.ok(src('components/admin/ProductPlacementDialog.tsx').includes('<ProductAutoPlaces product={p} />'));
+});
+
+test('the setups band has Brynoxa\'s own words (not a competitor\'s "Find your next setup")', () => {
+  for (const l of ['en', 'fr', 'ar']) {
+    const t = src(`i18n/${l}.ts`);
+    assert.doesNotMatch(t, /Find your next setup|Trouvez votre prochain setup/);
+    assert.ok(t.includes("    setupsBandKicker: '"), l);
+  }
+  assert.ok(src('components/home/HomeBlocks.tsx').includes("{t('home.setupsBandKicker')}") && src('pages/store/Setups.tsx').includes("{t('home.setupsBandKicker')}"));
+});

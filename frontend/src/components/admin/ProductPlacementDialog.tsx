@@ -6,6 +6,7 @@ import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { ActiveToggle } from '@/components/admin/ActiveToggle'
+import { ProductAutoPlaces } from '@/components/admin/ProductAutoPlaces'
 import { MAX_HOME_DEALS } from '@/hooks/useHomeDeals'
 import { HOME_ROW_LIMIT, useStorefrontPlacements } from '@/hooks/useStorefrontPlacements'
 import { cn } from '@/lib/cn'
@@ -222,6 +223,9 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
           </Row>
 
         </ul>
+
+        {/* The sections that fill themselves: where it shows, and why not (with the fix) */}
+        <ProductAutoPlaces product={p} />
 
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <a href={`/product/${p.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[var(--brand-text)] hover:underline">

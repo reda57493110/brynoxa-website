@@ -1,5 +1,5 @@
-import { Fragment, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { adminApi } from '@/api/adminApi'
@@ -106,6 +106,21 @@ export function Products() {
   const [sort, setSort] = useState<'placement' | 'newest' | 'name' | 'price_asc' | 'price_desc'>('placement')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [placing, setPlacing] = useState<Product | null>(null)
+  // Just created (Add product → Save): open its placement window once
+  const location = useLocation()
+  const navigateTo = useNavigate()
+  const placeNew = (location.state as { placeNew?: string } | null)?.placeNew
+  useEffect(() => {
+    if (!placeNew) return
+    adminApi.products
+      .get(placeNew)
+      .then((r) => {
+        if (r.data.data) setPlacing(r.data.data)
+      })
+      .catch(() => undefined)
+    // Not again on reload / back
+    navigateTo(location.pathname + location.search, { replace: true, state: null })
+  }, [placeNew]) // eslint-disable-line react-hooks/exhaustive-deps
   const [managing, setManaging] = useState<ManagedSection | null>(null)
   const place = useStorefrontPlacements()
 
