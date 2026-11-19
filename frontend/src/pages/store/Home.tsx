@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -10,6 +11,7 @@ import {
   HomeBudgetCards,
   HomeCategoryTabs,
   HomeDealsBlock,
+  HomeHelpBand,
   HomeIntro,
   HomeSelection,
   HomeSetupsBand,
@@ -85,6 +87,37 @@ export function Home() {
   )
   const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORY_MAX)
 
+  // Sections further down rise in as they scroll into view (not on screens that ask for less
+  // motion). Only those below the screen at the start wait; nothing above ever hides.
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          ;(e.target as HTMLElement).dataset.reveal = 'in'
+          io.unobserve(e.target)
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px' }
+    )
+    const watch = () => {
+      // New sections, and any still waiting (also after a restart of this effect)
+      document.querySelectorAll<HTMLElement>('[data-reveal=""], [data-reveal="wait"]').forEach((el) => {
+        if (el.dataset.reveal === '') el.dataset.reveal = el.getBoundingClientRect().top > window.innerHeight ? 'wait' : 'in'
+        if (el.dataset.reveal === 'wait') io.observe(el)
+      })
+    }
+    watch()
+    // Sections that appear once their products arrive
+    const mo = new MutationObserver(watch)
+    mo.observe(document.getElementById('main-content') ?? document.body, { childList: true, subtree: true })
+    return () => {
+      io.disconnect()
+      mo.disconnect()
+    }
+  }, [])
+
   return (
     <>
       <HomeHero
@@ -121,6 +154,8 @@ export function Home() {
       <HomeBudgetCards budgets={rows.budgets} />
 
       <HomeSetupsBand />
+
+      <HomeHelpBand />
 
       <HomeBrands products={unique([...deals.products, ...topPicks, ...rows.deals, ...rows.newArrivals, ...rows.budgets.flatMap((b) => b.items)])} />
     </>

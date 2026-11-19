@@ -151,7 +151,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           <button
             type="button"
             onClick={add}
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-12 sm:flex-none sm:px-7 sm:text-base"
+            className="btn-shine inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:h-12 sm:flex-none sm:px-7 sm:text-base"
           >
             <SiteIcon name="cart" size={17} />
             {t('common.addToCart')}
@@ -288,9 +288,32 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
                       setIndex(i)
                       setPicked(true)
                     }}
-                    className="group/bar relative h-6 flex-1 sm:max-w-24"
+                    className={cn(
+                      'group/bar relative h-6 flex-1 sm:flex sm:h-auto sm:max-w-[10rem] sm:items-center sm:gap-2 sm:overflow-hidden sm:rounded-xl sm:border sm:p-1.5 sm:pe-2.5 sm:text-start sm:transition',
+                      on ? 'sm:border-[rgb(0_194_255/0.6)] sm:bg-[rgb(0_194_255/0.1)]' : 'sm:border-white/10 sm:bg-white/[0.03] sm:hover:border-white/30'
+                    )}
                   >
-                    <span className={cn('absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full transition', on ? 'bg-white/20' : 'bg-white/15 group-hover/bar:bg-white/35')}>
+                    {/* Computers / tablets: a small photo and the price */}
+                    <span className={cn('relative hidden size-9 shrink-0 overflow-hidden rounded-lg sm:block', imageFit(primaryImage(p)) === 'contain' ? 'photo-stage' : 'bg-white/10')}>
+                      {primaryImage(p) ? (
+                        <SafeImage
+                          src={sizedImageUrl(primaryImage(p), 120)}
+                          alt=""
+                          width={36}
+                          height={36}
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className={cn('h-full w-full', imageFit(primaryImage(p)) === 'contain' ? 'object-contain p-0.5 mix-blend-multiply' : 'object-cover')}
+                        />
+                      ) : null}
+                    </span>
+                    <span className={cn('hidden min-w-0 truncate text-xs font-bold sm:block', on ? 'text-white' : 'text-white/65')}>{formatCurrency(p.price)}</span>
+                    <span
+                      className={cn(
+                        'absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 overflow-hidden rounded-full transition sm:inset-x-1.5 sm:bottom-1 sm:top-auto sm:h-0.5 sm:translate-y-0',
+                        on ? 'bg-white/20' : 'bg-white/15 group-hover/bar:bg-white/35 sm:bg-transparent'
+                      )}
+                    >
                       {on ? (
                         <span
                           key={`${p._id}-${index}-${picked}`}

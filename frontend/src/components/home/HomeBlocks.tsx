@@ -14,6 +14,9 @@ import { categoryPhoto, categoryPhotoCredit, categoryPhotoPosition, categoryPhot
 import { imageSrcSet, sizedImageUrl } from '@/lib/image'
 import { bestDiscount, ownBudgetAmount, type Budget } from '@/lib/homeRows'
 import { SETUP_ICON, SETUP_IDS } from '@/lib/setups'
+import { CONTACT } from '@/lib/site'
+import { whatsappHref } from '@/lib/whatsapp'
+import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { categoryDisplayName, type MessageKey } from '@/i18n'
 import { useLocaleStore } from '@/store/localeStore'
@@ -137,6 +140,8 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
   const t = useT()
   if (products.length < HOME_ROW_MIN) return null
   const off = bestDiscount(products)
+  // The biggest real saving in DH (old price − price)
+  const saved = Math.max(0, ...products.map((p) => (p.compareAtPrice && p.compareAtPrice > p.price ? p.compareAtPrice - p.price : 0)))
   const lead = (
     <Link
       to="/shop?onSale=true"
@@ -154,6 +159,9 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
         ) : null}
         <span className="mt-2 block font-display text-base font-extrabold uppercase leading-tight sm:text-xl">{t('home.dealsTitle')}</span>
         <span className="mt-1 block text-[11.5px] text-white/65 sm:text-[13px]">{t('home.dealsCount', { count: products.length })}</span>
+        {saved > 0 ? (
+          <span className="mt-2 inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 text-[11px] font-bold text-[#9be8ff] sm:text-xs">{t('home.dealsSaveUpTo', { amount: formatCurrency(saved) })}</span>
+        ) : null}
       </span>
       <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#05080b] transition group-hover:bg-[var(--brand)] sm:text-sm">
         {t('home.seeAllDeals')}
@@ -162,7 +170,7 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
     </Link>
   )
   return (
-    <section id="deals" aria-labelledby="home-deals-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="deals" data-reveal="" aria-labelledby="home-deals-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className={cn(panel, 'border-[rgb(0_194_255/0.3)]')}>
           <HomeSectionHead id="home-deals-heading" title={t('home.dealsMomentTitle')} body={t('home.dealsBody')} viewAll={{ to: '/shop?onSale=true', label: t('home.seeAllDeals') }} />
@@ -212,7 +220,7 @@ export function HomeSelection({
   const loading = active.id === 'best' ? best.isPending : pending
 
   return (
-    <section id="featured" aria-labelledby="home-featured-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="featured" data-reveal="" aria-labelledby="home-featured-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className={panel}>
           <div className="mb-3 flex flex-col gap-3 sm:mb-5 lg:flex-row lg:items-center lg:justify-between">
@@ -234,6 +242,9 @@ export function HomeSelection({
                 >
                   <SiteIcon name={x.icon} size={15} />
                   {x.label}
+                  {x.id !== 'best' && x.items.length ? (
+                    <span className={cn('rounded-full px-1.5 text-[10px] leading-4', x.id === active.id ? 'bg-black/20' : 'bg-[var(--bg-muted)] text-[var(--fg-muted)]')}>{x.items.length}</span>
+                  ) : null}
                 </button>
               ))}
             </div>
@@ -283,7 +294,7 @@ export const SIGNATURE_PHOTO =
 export function HomeSignatureBanner({ products }: { products: Product[] }) {
   const t = useT()
   return (
-    <section id="signature" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="signature" data-reveal="" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
           <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_50%] opacity-80" />
@@ -301,7 +312,7 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
             <p className="mt-2 max-w-md text-[13px] text-white/75 sm:mt-3 sm:text-base">{t('home.signatureBody')}</p>
             <Link
               to={`/shop?brand=${SIGNATURE_BRAND}`}
-              className="mt-5 inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-7 sm:text-base"
+              className="btn-shine mt-5 inline-flex h-11 w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-12 sm:px-7 sm:text-base"
             >
               {t('home.signatureViewAll')}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
@@ -353,7 +364,7 @@ export function HomeCategoryTabs({ categories }: { categories: Category[] }) {
     </Link>
   )
   return (
-    <section id="by-category" aria-labelledby="home-bycat-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="by-category" data-reveal="" aria-labelledby="home-bycat-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className={panel}>
           <HomeSectionHead id="home-bycat-heading" title={t('home.catProductsTitle')} viewAll={{ to: '/shop', label: t('home.seeMoreCategories') }} />
@@ -423,7 +434,7 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
   }
 
   return (
-    <section id="budget" aria-labelledby="home-budget-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="budget" data-reveal="" aria-labelledby="home-budget-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <HomeSectionHead id="home-budget-heading" title={t('home.budgetTitle')} body={t('home.budgetBody')} />
         <ul className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
@@ -494,7 +505,7 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
 export function HomeSetupsBand() {
   const t = useT()
   return (
-    <section id="setups" aria-labelledby="home-setups-heading" className="scroll-mt-24 py-3 sm:py-5">
+    <section id="setups" data-reveal="" aria-labelledby="home-setups-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-4 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
           <span className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
@@ -548,7 +559,7 @@ export function HomeBrands({ products }: { products: Product[] }) {
   const brands = [...seen.values()].slice(0, 12)
   if (brands.length < 3) return null
   return (
-    <section aria-labelledby="home-brands-heading" className="py-4 sm:py-8">
+    <section data-reveal="" aria-labelledby="home-brands-heading" className="py-4 sm:py-8">
       <Container>
         <HomeSectionHead id="home-brands-heading" title={t('home.brandsTitle')} viewAll={{ to: '/shop', label: t('common.viewAll') }} />
         <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
@@ -568,6 +579,54 @@ export function HomeBrands({ products }: { products: Product[] }) {
             </li>
           ))}
         </ul>
+      </Container>
+    </section>
+  )
+}
+
+/* ------------------------------------------------------------------------------------------ */
+
+/**
+ * "Not sure what to choose?": a band with WhatsApp (the question already written) and a call
+ * button, like the shops' "Besoin d'aide ?". Numbers from Settings → Contact (read when shown).
+ */
+export function HomeHelpBand() {
+  const t = useT()
+  return (
+    <section data-reveal="" aria-labelledby="home-help-heading" className="py-3 sm:py-5">
+      <Container>
+        <div className="relative isolate flex flex-col gap-4 overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.3)] bg-[linear-gradient(110deg,rgb(0_194_255/0.16),rgb(0_194_255/0.04)_55%,transparent)] p-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-[2rem] sm:p-8">
+          <SiteIcon name="chat" size={160} className="absolute -bottom-10 end-24 -z-10 hidden rotate-[-10deg] text-[rgb(0_194_255/0.07)] lg:block" />
+          <div className="flex items-start gap-3 sm:gap-4">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow sm:size-14">
+              <SiteIcon name="headphones" size={22} />
+            </span>
+            <div className="min-w-0">
+              <h2 id="home-help-heading" className="font-display text-lg font-extrabold uppercase leading-tight tracking-tight sm:text-2xl">
+                {t('home.helpBandTitle')}
+              </h2>
+              <p className="mt-1 max-w-lg text-[13px] text-[var(--fg-muted)] sm:text-[15px]">{t('home.helpBandBody')}</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <a
+              href={whatsappHref(t('home.helpBandMessage'))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-shine inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:flex-none sm:h-12 sm:px-6"
+            >
+              <SiteIcon name="chat" size={17} />
+              {t('home.helpBandWhatsapp')}
+            </a>
+            <a
+              href={CONTACT.phone.href}
+              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border)] bg-[var(--bg-elevated)] px-5 text-sm font-bold text-[var(--fg)] transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:flex-none sm:h-12"
+            >
+              <SiteIcon name="phone" size={16} />
+              <span dir="ltr">{CONTACT.phone.value}</span>
+            </a>
+          </div>
+        </div>
       </Container>
     </section>
   )

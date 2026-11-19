@@ -98,3 +98,38 @@ test('the old home pieces are gone', () => {
   assert.doesNotMatch(src('index.css'), /hero-showroom|hero-band/);
   assert.doesNotMatch(src('components/home/HomeSpotlight.tsx'), /HomeSpotlightCard|HomeSpotlightSkeleton/);
 });
+
+test('cards: another photo on hover, compare button, "Free delivery" by the same rule as the cart', () => {
+  const card = src('components/home/HomeShopCard.tsx');
+  assert.ok(card.includes("hover && 'sm:group-hover:opacity-0'"), 'second photo only on computers');
+  assert.ok(card.includes('aria-pressed={compared}'));
+  assert.ok(card.includes('deliveryAlwaysIncluded(s) || (s.freeShippingMin > 0 && price >= s.freeShippingMin)'));
+  for (const l of ['en', 'fr', 'ar']) assert.ok(src(`i18n/${l}.ts`).includes('    freeDelivery: \''), l);
+});
+
+test('sections rise in on scroll, never hidden without the observer, for people who ask for less motion, or in print', () => {
+  const home = src('pages/store/Home.tsx');
+  assert.ok(home.includes("if (typeof IntersectionObserver === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return"));
+  assert.ok(home.includes(`'[data-reveal=""], [data-reveal="wait"]'`), 'still-waiting sections are watched again (React restarts the effect in development)');
+  assert.ok(home.includes("el.getBoundingClientRect().top > window.innerHeight ? 'wait' : 'in'"), 'only sections below the screen wait');
+  const css = src('index.css');
+  assert.match(css, /\[data-reveal='wait'\] \{\s+opacity: 0;/);
+  assert.match(css, /@media print \{\s+\[data-reveal='wait'\]/);
+});
+
+test('help band: WhatsApp with the question written in, and the shop phone from Settings', () => {
+  const b = src('components/home/HomeBlocks.tsx');
+  assert.ok(b.includes("href={whatsappHref(t('home.helpBandMessage'))}"));
+  assert.ok(b.includes('href={CONTACT.phone.href}'));
+  assert.ok(src('pages/store/Home.tsx').includes('<HomeHelpBand />'));
+  for (const l of ['en', 'fr', 'ar']) {
+    const t = src(`i18n/${l}.ts`);
+    for (const k of ['helpBandTitle', 'helpBandBody', 'helpBandWhatsapp', 'helpBandMessage', 'dealsSaveUpTo']) assert.ok(t.includes(`    ${k}: '`), `${l}: ${k}`);
+  }
+});
+
+test('banner: a small photo and the price of each deal under it (computers)', () => {
+  const s = src('components/home/HomeHeroSlider.tsx');
+  assert.ok(s.includes("sizedImageUrl(primaryImage(p), 120)"));
+  assert.ok(s.includes('{formatCurrency(p.price)}</span>'));
+});

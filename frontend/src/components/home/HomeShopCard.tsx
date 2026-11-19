@@ -1,4 +1,10 @@
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { settingsApi } from '@/api/settingsApi'
+import { deliveryAlwaysIncluded, type ShippingSettingsLike } from '@/lib/shipping'
+import { useCompareStore } from '@/store/compareStore'
+import { toast } from '@/store/toastStore'
+import { COMPARE_MAX } from '@/lib/constants'
 import { ImageSpinner } from '@/components/ui/ImageLoader'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
@@ -18,6 +24,25 @@ function primaryImage(p: Product) {
   return p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url || undefined
 }
 
+/** Another photo of the product, shown when the pointer is on the card (computers) */
+function secondImage(p: Product, first?: string) {
+  return p.images?.find((i) => i.url && i.url !== first)?.url
+}
+
+/**
+ * True when this price is delivered free: delivery is included everywhere (Settings → Delivery),
+ * or the price alone reaches the free-delivery amount. Same rule as the cart (lib/shipping.ts).
+ */
+export function useFreeDelivery() {
+  const settings = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => (await settingsApi.get()).data.data,
+    staleTime: 60_000,
+  })
+  const s = settings.data as ShippingSettingsLike | undefined
+  return (price: number) => Boolean(s && (deliveryAlwaysIncluded(s) || (s.freeShippingMin > 0 && price >= s.freeShippingMin)))
+}
+
 /**
  * Home product card, in the style of the big Moroccan PC shops: sticker, photo on a light stage,
  * brand, name, three key specs, stock, old price and price, and a square cart button.
@@ -35,6 +60,18 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
   const brand = typeof product.brand === 'object' ? product.brand?.name : undefined
   const specs = keySpecs(product, locale, 3)
   const href = `/product/${product.slug}`
+  const hover = secondImage(product, image)
+  const freeDelivery = useFreeDelivery()(product.price)
+  const compared = useCompareStore((s) => s.has(product._id))
+  const addCompare = useCompareStore((s) => s.add)
+  const removeCompare = useCompareStore((s) => s.remove)
+  const onCompare = () => {
+    if (compared) {
+      removeCompare(product._id)
+      toast.info(t('compare.removed'))
+    } else if (addCompare(product)) toast.success(t('compare.added'))
+    else toast.info(t('compare.full', { max: COMPARE_MAX }))
+  }
   const sticker = badge === 'deal' || (badge === null && d) ? (d ? `-${d.percent}%` : null) : badge === 'new' ? t('home.badgeNew') : badge === 'top' ? t('home.badgeTop') : null
 
   return (
@@ -56,9 +93,41 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
           className={cn(
             'absolute inset-0 h-full w-full transition duration-500 group-hover:scale-[1.05]',
             contain ? 'object-contain p-3 mix-blend-multiply sm:p-4' : 'object-cover',
-            photo.loaded ? 'opacity-100' : 'opacity-0'
+            photo.loaded ? 'opacity-100' : 'opacity-0',
+            hover && 'sm:group-hover:opacity-0'
           )}
         />
+        {/* Computers: another photo of the product when the pointer is on the card */}
+        {hover ? (
+          <SafeImage
+            src={sizedImageUrl(hover, 480)}
+            alt=""
+            width={480}
+            height={480}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            className={cn(
+              'absolute inset-0 hidden h-full w-full opacity-0 transition duration-500 group-hover:scale-[1.05] group-hover:opacity-100 sm:block',
+              imageFit(hover) === 'contain' ? 'object-contain p-4 mix-blend-multiply' : 'object-cover'
+            )}
+          />
+        ) : null}
+        <button
+          type="button"
+          onClick={onCompare}
+          aria-pressed={compared}
+          aria-label={compared ? t('compare.remove') : t('compare.add')}
+          title={compared ? t('compare.remove') : t('compare.add')}
+          className={cn(
+            'absolute end-2 top-2 z-10 grid size-8 place-items-center rounded-full border shadow-sm transition sm:end-2.5 sm:top-2.5',
+            compared
+              ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]'
+              : 'border-black/10 bg-white/90 text-[#05080b] hover:bg-[var(--brand)] hover:text-[var(--brand-fg)] sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100'
+          )}
+        >
+          <SiteIcon name="layers" size={14} />
+        </button>
         {sticker ? (
           <span
             className={cn(
@@ -89,7 +158,15 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
             ))}
           </ul>
         ) : null}
-        <StockLine product={product} className="mt-2 text-[11px]" />
+        <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <StockLine product={product} className="text-[11px]" />
+          {freeDelivery ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--brand-text)]">
+              <SiteIcon name="truck" size={12} />
+              {t('home.freeDelivery')}
+            </span>
+          ) : null}
+        </div>
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div className="min-w-0 leading-tight">
             {d ? <p className="truncate text-[11px] text-[var(--fg-muted)] line-through sm:text-xs">{formatCurrency(product.compareAtPrice!)}</p> : null}
