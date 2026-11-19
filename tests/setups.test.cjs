@@ -68,14 +68,15 @@ test('shop: "Grab your setup" opens /setups; page, routes, sitemap, admin ticks 
   assert.ok(hook.includes('productsApi.list({ setup: id, inStock: true'), 'in stock only');
   assert.ok(hook.includes('.filter((p) => setupsFor(p).includes(id))'), 'the product words decide inside shared categories');
   assert.ok(page.includes('t(`setups.groups.${active}.${g.piece}`)'), 'group names per setup (Gaming mice, Laptops for learning)');
-  assert.ok(page.includes('<ProductCarousel products={g.items} />'), 'phones: moving rows, the same size as every carousel');
-  assert.ok(page.includes('mt-5 grid grid-cols-4 gap-1.5'), 'the 4 setups in one row of small cards');
-  assert.ok(page.includes('font-display text-2xl font-semibold tracking-tight sm:text-4xl'), 'smaller title');
+  // Same look as the home page and the shop (Nov 2026): dark band with the 4 setups, a panel per group
+  assert.ok(page.includes('<HomeShelf products={g.items} label={name} />'), 'groups: the shop cards in a row you swipe');
+  assert.ok(page.includes('mt-3 grid grid-cols-2 gap-1.5 sm:mt-7 sm:gap-3 lg:grid-cols-4'), 'the 4 setups: 2 a row on phones, 4 on computers');
+  assert.ok(page.includes('<HomeSectionHead id={'), 'group titles like the home sections');
+  assert.ok(page.includes('<HomeHelpBand />'), 'the WhatsApp help band');
   // Simple page: no repeated setup box, no chips, no box around groups, no long texts
   for (const gone of ['.intro`)}</p>', "t('setups.inside')", "t('setups.from'", "t('setups.moreBody')", "t('setups.helpBody')", '.tagline`)']) assert.ok(!page.includes(gone), gone);
   assert.ok(!page.includes('heroPerk'), 'no repeated promises under the title');
-  assert.ok(page.includes('max-sm:mx-auto max-sm:w-[min(14rem,62vw)]'), 'phones: a single product in the middle, carousel size');
-  assert.ok(page.includes("SPAN_LG[Math.min(n, 4)]") && page.includes('[grid-auto-flow:row_dense]'), 'small groups sit side by side, no empty half rows');
+  assert.ok(page.includes('const small = g.items.length <= 2') && page.includes("!small && 'lg:col-span-2'"), 'small groups (1 or 2 products) sit side by side on computers');
   assert.ok(page.includes("t(n === 1 ? 'setups.countOne' : 'setups.count'"), '1 product, not 1 products');
   assert.ok(fs.readFileSync(api('sitemap.js'), 'utf8').includes("{ path: '/setups', changefreq: 'weekly', priority: '0.8' }"));
   const form = src('pages/admin/ProductForm.tsx');
