@@ -15,32 +15,35 @@ import {
 } from '@/lib/permissions'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import { useAuthStore } from '@/store/authStore'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 
 const items: {
   to: string
-  label: string
+  /** Admin text key (i18n/admin.ts) */
+  label: AdminKey
   icon: SiteIconName
   end?: boolean
   badge?: 'pending' | 'stock' | 'inbox'
-  group: string
+  group: AdminKey
 }[] = [
   // Ordered by importance for running the shop day to day
-  { to: '/admin', label: 'Dashboard', icon: 'dashboard', end: true, group: 'Daily work' },
-  { to: '/admin/orders', label: 'Orders', icon: 'cart', badge: 'pending', group: 'Daily work' },
-  { to: '/admin/messages', label: 'Inbox', icon: 'inbox', badge: 'inbox', group: 'Daily work' },
-  { to: '/admin/customers', label: 'Customers', icon: 'users', group: 'Daily work' },
-  { to: '/admin/products', label: 'Products', icon: 'package', group: 'Catalog' },
-  { to: '/admin/inventory', label: 'Inventory', icon: 'warehouse', badge: 'stock', group: 'Catalog' },
-  { to: '/admin/profit', label: 'Profit', icon: 'banknote', group: 'Money' },
-  { to: '/admin/analytics', label: 'Analytics', icon: 'sliders', group: 'Money' },
-  { to: '/admin/social', label: 'Social media', icon: 'chat', group: 'Marketing' },
-  { to: '/admin/ads', label: 'Ads & campaigns', icon: 'megaphone', group: 'Marketing' },
-  { to: '/admin/coupons', label: 'Coupons', icon: 'ticket', group: 'Marketing' },
-  { to: '/admin/notifications', label: 'Notifications', icon: 'bell', group: 'Marketing' },
-  { to: '/admin/emails', label: 'Emails', icon: 'mail', group: 'Marketing' },
-  { to: '/admin/settings', label: 'Settings', icon: 'settings', group: 'Store' },
-  { to: '/admin/roles', label: 'Roles', icon: 'shield', group: 'Store' },
-  { to: '/admin/security', label: 'Security', icon: 'shield', group: 'Store' },
+  { to: '/admin', label: 'nav.dashboard', icon: 'dashboard', end: true, group: 'group.daily' },
+  { to: '/admin/orders', label: 'nav.orders', icon: 'cart', badge: 'pending', group: 'group.daily' },
+  { to: '/admin/messages', label: 'nav.inbox', icon: 'inbox', badge: 'inbox', group: 'group.daily' },
+  { to: '/admin/customers', label: 'nav.customers', icon: 'users', group: 'group.daily' },
+  { to: '/admin/products', label: 'nav.products', icon: 'package', group: 'group.catalog' },
+  { to: '/admin/inventory', label: 'nav.inventory', icon: 'warehouse', badge: 'stock', group: 'group.catalog' },
+  { to: '/admin/profit', label: 'nav.profit', icon: 'banknote', group: 'group.money' },
+  { to: '/admin/analytics', label: 'nav.analytics', icon: 'sliders', group: 'group.money' },
+  { to: '/admin/social', label: 'nav.social', icon: 'chat', group: 'group.marketing' },
+  { to: '/admin/ads', label: 'nav.ads', icon: 'megaphone', group: 'group.marketing' },
+  { to: '/admin/coupons', label: 'nav.coupons', icon: 'ticket', group: 'group.marketing' },
+  { to: '/admin/notifications', label: 'nav.notifications', icon: 'bell', group: 'group.marketing' },
+  { to: '/admin/emails', label: 'nav.emails', icon: 'mail', group: 'group.marketing' },
+  { to: '/admin/settings', label: 'nav.settings', icon: 'settings', group: 'group.store' },
+  { to: '/admin/roles', label: 'nav.roles', icon: 'shield', group: 'group.store' },
+  { to: '/admin/security', label: 'nav.security', icon: 'shield', group: 'group.store' },
 ]
 
 export function AdminSidebar({
@@ -51,11 +54,13 @@ export function AdminSidebar({
   /** Drawer mode: full-height panel with close affordance via parent */
   embedded?: boolean
 }) {
+  const a = useAdminT()
   const stats = useAdminStats()
   const s = stats.data
   const role = useAuthStore((st) => st.user?.role)
   const home = staffHomePath(role)
-  const roleLabel = isStaffRole(role) ? STAFF_ROLE_LABELS[role as StaffRole] : 'Staff'
+  const roleLabel = isStaffRole(role) ? a(`role.${role as StaffRole}` as AdminKey) : a('role.staff')
+  void STAFF_ROLE_LABELS
 
   const badgeValue = (key?: (typeof items)[number]['badge']) => {
     if (!s || !key) return 0
@@ -72,9 +77,9 @@ export function AdminSidebar({
   return (
     <aside
       className={cn(
-        'flex flex-col border-r border-[var(--border)] bg-[var(--bg-elevated)]',
+        'flex flex-col border-e border-[var(--border)] bg-[var(--bg-elevated)]',
         // Desktop: stays in view while the page scrolls
-        embedded ? 'h-full w-full border-r-0' : 'h-dvh w-64 overflow-y-auto'
+        embedded ? 'h-full w-full border-e-0' : 'h-dvh w-64 overflow-y-auto'
       )}
     >
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-[var(--border)] px-4 sm:h-16 sm:px-5">
@@ -86,7 +91,7 @@ export function AdminSidebar({
           markClassName="h-8 w-8"
         />
         {embedded && onNavigate ? (
-          <Button variant="ghost" size="sm" onClick={onNavigate} aria-label="Close menu">
+          <Button variant="ghost" size="sm" onClick={onNavigate} aria-label={a('nav.closeMenu')}>
             <SiteIcon name="close" size={16} />
           </Button>
         ) : null}
@@ -98,7 +103,7 @@ export function AdminSidebar({
           return (
             <Fragment key={to}>
             {heading ? (
-              <p className={cn('px-3 pb-1 text-[10px] font-semibold tracking-wide text-[var(--fg-muted)] uppercase opacity-80', i > 0 && 'pt-3')}>{group}</p>
+              <p className={cn('px-3 pb-1 text-[10px] font-semibold tracking-wide text-[var(--fg-muted)] uppercase opacity-80', i > 0 && 'pt-3')}>{a(group)}</p>
             ) : null}
             <NavLink
               key={to}
@@ -115,7 +120,7 @@ export function AdminSidebar({
               }
             >
               <SiteIcon name={icon} size={16} className="shrink-0" />
-              <span className="flex-1">{label}</span>
+              <span className="flex-1">{a(label)}</span>
               {count > 0 ? (
                 <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--brand)] px-1 text-[10px] font-bold text-[var(--brand-fg)]">
                   {count > 99 ? '99+' : count}
@@ -128,7 +133,7 @@ export function AdminSidebar({
       </nav>
       <div className="border-t border-[var(--border)] p-3">
         <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-          Your role
+          {a('nav.yourRole')}
         </p>
         <Badge variant="brand" className="mt-1.5">
           {roleLabel}

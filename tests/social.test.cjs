@@ -60,7 +60,7 @@ test('rights: owner and Marketing ("ads"); staff log; menu, address and search',
   assert.equal(describeStaffAction('POST', 'admin/social/numbers').action, 'Updated social media numbers');
   assert.equal(describeStaffAction('DELETE', 'admin/social/numbers/instagram/2026-11-15').action, 'Removed social media numbers');
   const f = (p) => read(path.join('frontend/src', p));
-  assert.ok(f('components/layout/AdminSidebar.tsx').includes("{ to: '/admin/social', label: 'Social media', icon: 'chat', group: 'Marketing' },"));
+  assert.ok(f('components/layout/AdminSidebar.tsx').includes("{ to: '/admin/social', label: 'nav.social', icon: 'chat', group: 'group.marketing' },"));
   assert.ok(f('lib/permissions.ts').includes("'/admin/social': 'ads',"));
   assert.ok(f('app/router.tsx').includes('<Route path="social" element={<S><AdminSocial /></S>} />'));
 });

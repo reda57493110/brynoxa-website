@@ -220,3 +220,19 @@ test('the setups band has Brynoxa\'s own words (not a competitor\'s "Find your n
   }
   assert.ok(src('components/home/HomeBlocks.tsx').includes("{t('home.setupsBandKicker')}") && src('pages/store/Setups.tsx').includes("{t('home.setupsBandKicker')}"));
 });
+
+test('Admin languages (step 1): EN / FR / AR switch in the top bar; menu and top bar translated; Arabic right to left', async () => {
+  const { pathToFileURL } = await import('node:url');
+  const i18n = await import(pathToFileURL(path.join(root, 'frontend/src/i18n/admin.ts')).href);
+  assert.equal(i18n.adminText('fr', 'nav.orders'), 'Commandes');
+  assert.equal(i18n.adminText('ar', 'nav.products'), 'المنتجات');
+  assert.equal(i18n.adminText('fr', 'top.pending', { count: 4 }), '4 en attente');
+  const keys = Object.keys(i18n.ADMIN_TEXT.en);
+  for (const l of ['fr', 'ar']) for (const k of keys) assert.ok(i18n.ADMIN_TEXT[l][k], `${l}: ${k}`);
+  const top = src('components/layout/AdminTopbar.tsx');
+  assert.ok(top.includes('onChange={(e) => setLang(e.target.value as AdminLang)}'));
+  const layout = src('app/layouts/AdminLayout.tsx');
+  assert.ok(layout.includes("dir={ADMIN_LANGS.find((l) => l.id === adminLang)?.dir ?? 'ltr'}"), 'Arabic: right to left');
+  assert.ok(src('components/layout/AdminSidebar.tsx').includes('{a(label)}'));
+  assert.ok(src('store/adminLangStore.ts').includes("{ name: 'brynoxa-admin-lang' }"), 'kept on this device, separate from the shop language');
+});

@@ -1,4 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useAdminLangStore } from '@/store/adminLangStore'
+import { ADMIN_LANGS } from '@/i18n/admin'
 import { Link, Navigate, Outlet, useLocation, useNavigationType } from 'react-router-dom'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { AdminSidebar } from '@/components/layout/AdminSidebar'
@@ -25,6 +27,19 @@ export function AdminLayout() {
   const onSecurity = location.pathname.startsWith('/admin/security')
   const home = staffHomePath(role)
   const required = requiredPermissionForPath(location.pathname)
+
+  // Admin language: the whole page (also windows opened above it) reads right to left in Arabic
+  const adminLang = useAdminLangStore((s) => s.lang)
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    const before = { dir: root.dir, lang: root.lang }
+    root.dir = ADMIN_LANGS.find((l) => l.id === adminLang)?.dir ?? 'ltr'
+    root.lang = adminLang
+    return () => {
+      root.dir = before.dir
+      root.lang = before.lang
+    }
+  }, [adminLang])
 
   // Denser admin on phones: a smaller root size scales every rem-based size (see index.css)
   useLayoutEffect(() => {
@@ -60,17 +75,17 @@ export function AdminLayout() {
   }
 
   return (
-    // Admin UI is English — keep LTR even when the storefront language is Arabic
+    // The admin language chosen in the top bar (Arabic: right to left)
     <div
       // overflow-x-clip (not hidden): hides sideways overflow without making a scroll container,
       // so sticky elements (top bar, form bars) stick to the screen
       className="flex min-h-dvh w-full max-w-[100vw] overflow-x-clip bg-[var(--bg)] text-[var(--fg)]"
-      dir="ltr"
-      lang="en"
+      dir={ADMIN_LANGS.find((l) => l.id === adminLang)?.dir ?? 'ltr'}
+      lang={adminLang}
     >
       <a
         href="#admin-main-content"
-        className="fixed left-3 top-3 z-[110] -translate-y-20 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-[var(--brand-fg)] transition focus:translate-y-0"
+        className="fixed start-3 top-3 z-[110] -translate-y-20 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-[var(--brand-fg)] transition focus:translate-y-0"
       >
         Skip to content
       </a>
@@ -83,7 +98,7 @@ export function AdminLayout() {
         side="left"
         className="max-w-[17.5rem]"
       >
-        <div className="-m-4 h-full" dir="ltr" lang="en">
+        <div className="-m-4 h-full">
           <AdminSidebar embedded onNavigate={() => setMenuOpen(false)} />
         </div>
       </Drawer>

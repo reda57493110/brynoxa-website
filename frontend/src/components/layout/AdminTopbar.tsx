@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/Badge'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useAuthStore } from '@/store/authStore'
 import { useThemeStore } from '@/store/themeStore'
+import { useAdminLangStore, useAdminT } from '@/store/adminLangStore'
+import { ADMIN_LANGS, type AdminKey, type AdminLang } from '@/i18n/admin'
 import { authApi } from '@/api/authApi'
 import { useAdminStats } from '@/hooks/useAdminStats'
 import {
@@ -15,6 +17,9 @@ import {
 } from '@/lib/permissions'
 
 export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
+  const a = useAdminT()
+  const lang = useAdminLangStore((s) => s.lang)
+  const setLang = useAdminLangStore((s) => s.setLang)
   const theme = useThemeStore((s) => s.theme)
   const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const user = useAuthStore((s) => s.user)
@@ -22,7 +27,8 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate()
   const stats = useAdminStats()
   const role = user?.role
-  const roleLabel = isStaffRole(role) ? STAFF_ROLE_LABELS[role as StaffRole] : 'Staff'
+  const roleLabel = isStaffRole(role) ? a(`role.${role as StaffRole}` as AdminKey) : a('role.staff')
+  void STAFF_ROLE_LABELS
   const canOrders = hasPermission(role, 'orders:read')
 
   const signOut = async () => {
@@ -42,7 +48,7 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
         size="sm"
         className="shrink-0 lg:hidden"
         onClick={onMenu}
-        aria-label="Open menu"
+        aria-label={a('nav.openMenu')}
       >
         <SiteIcon name="menu" size={18} />
       </Button>
@@ -58,9 +64,9 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
         <p className="hidden shrink-0 text-sm text-[var(--fg-muted)] xl:block">
           {canOrders
             ? stats.data
-              ? `Live · ${stats.data.todayOrders} order${stats.data.todayOrders === 1 ? '' : 's'} today`
-              : 'Live'
-            : `${roleLabel} workspace`}
+              ? `${a('top.live')} · ${stats.data.todayOrders === 1 ? a('top.orderToday') : a('top.ordersToday', { count: stats.data.todayOrders })}`
+              : a('top.live')
+            : a('top.workspace', { role: roleLabel })}
         </p>
       </div>
 
@@ -74,25 +80,41 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
             className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_16%,transparent)] px-2.5 py-1.5 text-xs font-semibold text-[var(--warning)]"
           >
             <span className="sm:hidden">{stats.data.pendingOrders}</span>
-            <span className="hidden sm:inline">{stats.data.pendingOrders} pending</span>
+            <span className="hidden sm:inline">{a('top.pending', { count: stats.data.pendingOrders })}</span>
           </Link>
         ) : null}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleTheme}
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          aria-label={theme === 'dark' ? a('top.lightMode') : a('top.darkMode')}
+          title={theme === 'dark' ? a('top.lightMode') : a('top.darkMode')}
         >
           <SiteIcon name={theme === 'dark' ? 'sun' : 'moon'} size={16} />
         </Button>
+        {/* Admin language (each staff member chooses; kept on this device) */}
+        <label className="inline-flex h-9 items-center rounded-xl border border-[var(--border)] bg-[var(--bg)] px-1">
+          <span className="sr-only">{a('top.language')}</span>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value as AdminLang)}
+            aria-label={a('top.language')}
+            className="h-8 bg-transparent px-1 text-xs font-bold text-[var(--fg)] outline-none"
+          >
+            {ADMIN_LANGS.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <Link
           to="/"
           className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)] sm:w-auto sm:gap-1.5 sm:px-3 sm:py-2 sm:text-sm"
-          aria-label="View store"
-          title="View store"
+          aria-label={a('top.viewStore')}
+          title={a('top.viewStore')}
         >
-          <span className="hidden sm:inline">Store</span>
+          <span className="hidden sm:inline">{a('top.store')}</span>
           <SiteIcon name="external" size={14} />
         </Link>
         <span className="hidden max-w-[9rem] truncate text-sm text-[var(--fg-muted)] md:inline">
@@ -102,10 +124,10 @@ export function AdminTopbar({ onMenu }: { onMenu: () => void }) {
           variant="ghost"
           size="sm"
           onClick={signOut}
-          aria-label="Sign out"
+          aria-label={a('top.signOut')}
           className="px-2 sm:px-3"
         >
-          <span className="hidden sm:inline">Sign out</span>
+          <span className="hidden sm:inline">{a('top.signOut')}</span>
           <SiteIcon name="logout" size={16} className="sm:hidden" />
         </Button>
       </div>

@@ -69,7 +69,7 @@ test('D: no reviews leftovers; plain wording; labels instead of raw codes', () =
   assert.doesNotMatch(src('components/admin/OrderReturnPanel.tsx'), /The server won't accept/);
   assert.match(src('pages/admin/Dashboard.tsx'), /\{PAYMENT_LABEL\[o\.paymentStatus\] \?\? o\.paymentStatus\}/);
   assert.match(src('components/admin/inventory/ReceiveProductPicker.tsx'), /CONDITION_LABEL\[p\.condition\]/);
-  assert.match(src('components/layout/AdminTopbar.tsx'), /order\$\{stats\.data\.todayOrders === 1 \? '' : 's'\} today/);
+  assert.ok(src('components/layout/AdminTopbar.tsx').includes("stats.data.todayOrders === 1 ? a('top.orderToday') : a('top.ordersToday', { count: stats.data.todayOrders })"), '1 order / N orders, in the admin language');
   assert.match(src('app/layouts/AdminLayout.tsx'), /required for the owner account/);
   assert.doesNotMatch(src('pages/admin/Settings.tsx'), /and sessions/);
 });
