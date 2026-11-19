@@ -2,9 +2,8 @@ import { localeFromPath, localizedPath } from './lib/localePath'
 
 try {
   const storedTheme = localStorage.getItem('brynoxa-theme')
-  // The site is dark only (a light theme saved before is ignored)
-  void storedTheme
-  const theme = 'dark'
+  // The visitor's choice from the switch (dark by default), applied before the page draws
+  const theme = storedTheme && JSON.parse(storedTheme)?.state?.theme === 'light' ? 'light' : 'dark'
   const storedLocale = localStorage.getItem('brynoxa-locale')
   const saved = storedLocale ? JSON.parse(storedLocale)?.state?.locale : 'en'
   const { pathname, search, hash } = window.location

@@ -57,7 +57,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'grid h-full grid-cols-[38%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
+        'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
         'transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)]',
         active ? 'z-[1] opacity-100 duration-500' : 'pointer-events-none opacity-0 duration-300'
       )}
@@ -109,7 +109,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           {brand ? <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/55 max-sm:hidden sm:text-xs">{brand}</span> : null}
         </div>
 
-        <h2 className="mt-1.5 line-clamp-2 font-display text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl lg:text-[2.2rem] lg:leading-[1.1]">
+        <h2 className="text-white mt-1.5 line-clamp-2 font-display text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl lg:text-[2.2rem] lg:leading-[1.1]">
           <Link to={href} className="hover:text-[#9be8ff] focus-visible:outline-none focus-visible:underline">
             {product.name}
           </Link>

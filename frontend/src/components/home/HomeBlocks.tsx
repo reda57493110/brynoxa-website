@@ -306,7 +306,7 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
               </span>
               <span className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.signatureBadge')}</span>
             </div>
-            <h2 id="home-signature-heading" className="mt-2.5 max-w-xl font-display text-lg font-black uppercase leading-[1.05] tracking-tight sm:mt-4 sm:text-5xl">
+            <h2 id="home-signature-heading" className="text-white mt-2.5 max-w-xl font-display text-lg font-black uppercase leading-[1.05] tracking-tight sm:mt-4 sm:text-5xl">
               {t('home.signatureTitle')}
             </h2>
             <p className="mt-1.5 line-clamp-2 max-w-md text-[12px] text-white/75 sm:mt-3 sm:line-clamp-none sm:text-base">{t('home.signatureBody')}</p>
@@ -470,7 +470,8 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
               </li>
             )
           })}
-          <li className={cn(bands.length % 2 === 0 && 'col-span-2 lg:col-span-1')}>
+          {/* Phones: the whole width, so the typed amount is readable */}
+          <li className="col-span-2 lg:col-span-1">
             <form onSubmit={submit} className="flex h-full flex-col rounded-2xl border border-dashed border-[rgb(0_194_255/0.4)] bg-[rgb(0_194_255/0.05)] p-3 sm:p-5">
               <span className="hidden size-10 place-items-center rounded-xl sm:grid bg-[rgb(0_194_255/0.14)] text-[var(--brand-text)] sm:size-12">
                 <SiteIcon name="sliders" size={20} />
@@ -486,7 +487,7 @@ export function HomeBudgetCards({ budgets }: { budgets: (Budget & { items: Produ
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={t('home.budgetOwnPlaceholder')}
-                    className="h-10 w-full rounded-full border border-[var(--border)] bg-[var(--bg)] pe-10 ps-3.5 text-sm outline-none focus:border-[var(--brand)]"
+                    className="h-11 w-full rounded-full border border-[var(--border)] bg-[var(--bg)] pe-10 ps-4 text-base text-[var(--fg)] outline-none focus:border-[var(--brand)] sm:h-10 sm:text-sm"
                   />
                   <span className="pointer-events-none absolute end-3 top-1/2 -translate-y-1/2 text-xs text-[var(--fg-muted)]">DH</span>
                 </div>
@@ -519,7 +520,7 @@ export function HomeSetupsBand() {
             aria-hidden="true"
           />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">Brynoxa · {t('common.setups')}</p>
-          <h2 id="home-setups-heading" className="mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
+          <h2 id="home-setups-heading" className="text-white mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('home.setupsBandTitle')}
           </h2>
           <p className="mt-1 max-w-xl text-[12px] text-white/70 max-sm:line-clamp-2 sm:mt-1.5 sm:text-base">{t('home.setupsBandBody')}</p>

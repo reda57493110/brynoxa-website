@@ -7,11 +7,15 @@ const path = require('path');
 const { ROOT } = require('./_helpers.cjs');
 const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
 
-test('dark only: no theme switch, and a saved light theme is ignored', () => {
-  for (const f of ['components/layout/AdminTopbar.tsx', 'components/layout/MobileNav.tsx']) assert.ok(!src(f).includes('toggleTheme'), f);
-  assert.ok(src('themeInit.ts').includes("const theme = 'dark'"));
+test('dark / light switch (back on request, Nov 2026): shop menu, phone menu, admin top bar; dark by default, the choice is kept', () => {
+  for (const f of ['components/layout/Navbar.tsx', 'components/layout/AdminTopbar.tsx', 'components/layout/MobileNav.tsx']) assert.ok(src(f).includes('onClick={toggleTheme}'), f);
+  assert.ok(src('themeInit.ts').includes("JSON.parse(storedTheme)?.state?.theme === 'light' ? 'light' : 'dark'"), 'applied before the page draws (no flash)');
   const store = src('store/themeStore.ts');
-  assert.ok(store.includes("state.theme = 'dark'") && store.includes("applyTheme('dark')"));
+  assert.ok(store.includes("theme: 'dark',") && store.includes("applyTheme(state.theme === 'light' ? 'light' : 'dark')"));
+  // Headings inside the dark Brynoxa panels stay white in light mode (headings take the page colour)
+  assert.ok(src('components/home/HomeBlocks.tsx').includes('<h2 id="home-setups-heading" className="text-white'));
+  assert.ok(src('components/home/HomeBlocks.tsx').includes('<h2 id="home-signature-heading" className="text-white'));
+  assert.ok(src('pages/store/Setups.tsx').includes('<h1 id="setups-heading" className="text-white'));
 });
 
 test('dashboard: a period with nothing (all refunded) is a plain note, not a red drop', () => {

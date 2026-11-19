@@ -76,7 +76,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
 
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] transition duration-300 hover:-translate-y-0.5 hover:border-[rgb(0_194_255/0.6)] hover:shadow-[0_18px_40px_-24px_rgb(0_194_255/0.7)]">
-      <div ref={photo.ref} className={cn('relative aspect-[5/4] overflow-hidden sm:aspect-square', contain ? 'photo-stage' : 'bg-[#0b1116]')}>
+      <div ref={photo.ref} className={cn('relative aspect-[6/5] overflow-hidden sm:aspect-square', contain ? 'photo-stage' : 'bg-[#0b1116]')}>
         {photo.loaded ? null : <ImageSpinner size="sm" tone={contain ? 'auto' : 'dark'} />}
         <SafeImage
           src={src}
@@ -92,7 +92,7 @@ export function HomeShopCard({ product, badge = null, eager = false }: { product
           onError={photo.onError}
           className={cn(
             'absolute inset-0 h-full w-full transition duration-500 group-hover:scale-[1.05]',
-            contain ? 'object-contain p-2 mix-blend-multiply sm:p-4' : 'object-cover',
+            contain ? 'object-contain p-1 mix-blend-multiply sm:p-4' : 'object-cover',
             photo.loaded ? 'opacity-100' : 'opacity-0',
             hover && 'sm:group-hover:opacity-0'
           )}

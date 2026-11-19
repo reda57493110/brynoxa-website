@@ -4,6 +4,7 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useCartStore } from '@/store/cartStore'
 import { useCompareStore } from '@/store/compareStore'
 import { useAuthStore } from '@/store/authStore'
+import { useThemeStore } from '@/store/themeStore'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { MobileNav } from './MobileNav'
 import { SearchBox } from './SearchBox'
@@ -26,6 +27,8 @@ export function Navbar() {
 
   const cartCount = useCartStore((s) => s.itemCount())
   const compareCount = useCompareStore((s) => s.items.length)
+  const theme = useThemeStore((s) => s.theme)
+  const toggleTheme = useThemeStore((s) => s.toggleTheme)
   const user = useAuthStore((s) => s.user)
   const t = useT()
   const links = [
@@ -128,6 +131,17 @@ export function Navbar() {
               </button>
 
               <LanguageSwitcher className="hidden sm:inline-flex" />
+
+              {/* Dark / light (phones: in the menu) */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className={cn(iconBtn, 'hidden sm:inline-flex')}
+                aria-label={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+                title={theme === 'dark' ? t('nav.lightMode') : t('nav.darkMode')}
+              >
+                <SiteIcon name={theme === 'dark' ? 'sun' : 'moon'} size={17} />
+              </button>
 
               <Link
                 to="/compare"

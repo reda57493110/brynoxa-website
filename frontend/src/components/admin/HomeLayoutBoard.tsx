@@ -1,6 +1,10 @@
 import { lazy, Suspense, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { productsApi } from '@/api/productsApi'
+import { categoriesApi } from '@/api/categoriesApi'
+import { mainCategories } from '@/lib/categoryTree'
+import { canonicalCategorySlug } from '@/lib/categorySlug'
 import { adminApi } from '@/api/adminApi'
 import { getErrorMessage } from '@/api/client'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -45,6 +49,7 @@ function Tile({
   onOpen,
   onMove,
   onRemove,
+  readOnly = false,
 }: {
   product: Product
   index: number
@@ -53,6 +58,8 @@ function Tile({
   onOpen: (p: Product) => void
   onMove: (from: number, to: number) => void
   onRemove: (id: string) => void
+  /** A section that fills itself: only "edit the product" */
+  readOnly?: boolean
 }) {
   const navigate = useNavigate()
   const image = product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
@@ -79,6 +86,13 @@ function Tile({
         </span>
       </button>
       {/* Rank, edit, remove from this section */}
+      {readOnly ? (
+        <span className="mt-1 flex items-center justify-end border-t border-[var(--border)] px-0.5 py-0.5">
+          <button type="button" className={iconBtn} title="Edit the product" aria-label="Edit the product" onClick={() => navigate(`/admin/products/${product._id}/edit`)}>
+            <SiteIcon name="pencil" size={13} />
+          </button>
+        </span>
+      ) : (
       <span className="mt-1 flex items-center justify-between border-t border-[var(--border)] px-0.5 py-0.5">
         <button type="button" className={iconBtn} title="Move left" aria-label="Move left" disabled={busy || index === 0} onClick={() => onMove(index, index - 1)}>
           <SiteIcon name="chevron-left" size={14} />
@@ -100,7 +114,91 @@ function Tile({
           <SiteIcon name="close" size={14} />
         </button>
       </span>
+      )}
     </div>
+  )
+}
+
+/**
+ * A home section that fills itself (no choice to make here): the products customers see in it
+ * now, and how it chooses them. Each product can still be opened / edited.
+ */
+function AutoSection({
+  step,
+  icon,
+  title,
+  how,
+  products,
+  onOpen,
+  empty,
+  children,
+}: {
+  step: number
+  icon: SiteIconName
+  title: string
+  /** How it fills itself, in a few words */
+  how: string
+  products: Product[]
+  onOpen: (p: Product) => void
+  empty: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="min-w-0 max-w-full rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-muted)]/15 p-2.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title="Place on the page">
+          {step}
+        </span>
+        <SiteIcon name={icon} size={14} className="shrink-0 text-[var(--brand-text)]" />
+        <p className="truncate text-[13px] font-semibold">{title}</p>
+        <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{products.length}</span>
+        <StatusPill note={how} />
+      </div>
+      {children}
+      <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+        {products.map((p, i) => (
+          <Tile key={p._id} product={p} index={i} count={products.length} busy={false} onOpen={onOpen} onMove={() => undefined} onRemove={() => undefined} readOnly />
+        ))}
+      </div>
+      {!products.length ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">{empty}</p> : null}
+    </div>
+  )
+}
+
+/** Home categories, in the home page order (Home.tsx: HOME_CATEGORIES first, 6 tabs) */
+const HOME_TAB_CATEGORIES = ['desktop-pcs', 'laptops', 'gaming-pcs', 'monitors']
+
+/** "Browse by category": one tab per category, its products in stock (automatic) */
+function CategoryTabsSection({ step, onOpen }: { step: number; onOpen: (p: Product) => void }) {
+  const cats = useQuery({ queryKey: ['categories'], queryFn: async () => (await categoriesApi.list()).data.data })
+  const list = mainCategories((cats.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking'))
+  const chosen = HOME_TAB_CATEGORIES.map((slug) => list.find((c) => canonicalCategorySlug(c.slug) === slug)).filter((c): c is (typeof list)[number] => Boolean(c))
+  const tabs = [...chosen, ...list.filter((c) => !chosen.includes(c))].slice(0, 6)
+  const [pick, setPick] = useState<string | null>(null)
+  const active = tabs.find((c) => c._id === pick) ?? tabs[0]
+  const products = useQuery({
+    queryKey: ['products', 'home-category', active?.slug],
+    queryFn: async () => (await productsApi.list({ category: active!.slug, inStock: true, limit: 12 })).data.data,
+    enabled: Boolean(active),
+  })
+  return (
+    <AutoSection step={step} icon="layers" title="Browse by category" how="auto: in stock, by category" products={products.data ?? []} onOpen={onOpen} empty="Nothing in stock in this category.">
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {tabs.map((c) => (
+          <button
+            key={c._id}
+            type="button"
+            onClick={() => setPick(c._id)}
+            className={cn(
+              'rounded-full border px-2.5 py-1 text-[11px] font-semibold transition',
+              c._id === active?._id ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)]' : 'border-[var(--border)] hover:border-[var(--brand)]'
+            )}
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
+    </AutoSection>
   )
 }
 
@@ -256,6 +354,15 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   const place = useStorefrontPlacements()
   const rows = useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])
 
+  // Our selection → Best sellers (same request as the home page)
+  const best = useQuery({
+    queryKey: ['products', 'home-best'],
+    queryFn: async () => (await productsApi.list({ sort: 'popular', inStock: true, limit: 10 })).data.data,
+  })
+  // Our brands: the brands of the products on the home page (3 at least)
+  const pageProducts = [...place.deals.products, ...place.featuredList, ...place.row, ...rows.deals, ...rows.newArrivals, ...rows.budgets.flatMap((b) => b.items)]
+  const brandNames = [...new Set(pageProducts.map((p) => (typeof p.brand === 'object' && p.brand ? p.brand.name : '')).filter(Boolean))].slice(0, 12)
+
   if (!place.ready || !rows.ready) {
     return (
       <div className="flex justify-center py-6">
@@ -335,6 +442,15 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           onOpen={onOpen}
           empty="Nothing new yet."
         />
+        <AutoSection
+          step={3}
+          icon="package-check"
+          title="Our selection · Best sellers"
+          how="auto: most sold, in stock"
+          products={best.data ?? []}
+          onOpen={onOpen}
+          empty="Nothing sold yet."
+        />
         <Section
           step={4}
           icon="star"
@@ -348,10 +464,11 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           onOpen={onOpen}
           empty="No Brynoxa product in stock."
         />
+        <CategoryTabsSection step={5} onOpen={onOpen} />
         {rows.budgets.map((b) => (
           <Section
             key={b.id}
-            step={5}
+            step={6}
             icon="banknote"
             title={`Shop by budget · ${bandTitle(b)}`}
             note={b.items.length ? 'auto' : 'card hidden (empty)'}
@@ -364,6 +481,23 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             empty="No product at this price."
           />
         ))}
+        <div className="min-w-0 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-muted)]/15 p-2.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title="Place on the page">
+              9
+            </span>
+            <SiteIcon name="tag" size={14} className="shrink-0 text-[var(--brand-text)]" />
+            <p className="truncate text-[13px] font-semibold">Our brands</p>
+            <StatusPill note={brandNames.length < 3 ? 'hidden (needs 3)' : 'auto: brands of the products above'} />
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {brandNames.map((n) => (
+              <span key={n} className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[11px] font-semibold uppercase">
+                {n}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </>
   )

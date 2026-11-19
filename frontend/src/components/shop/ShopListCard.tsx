@@ -33,7 +33,7 @@ export function ShopListCard({ product, eager = false }: { product: Product; eag
   const href = `/product/${product.slug}`
 
   return (
-    <article className="group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2.5 transition hover:border-[rgb(0_194_255/0.6)] sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-5 sm:p-4 lg:grid-cols-[12rem_minmax(0,1fr)_15rem]">
+    <article className="group grid grid-cols-[8.5rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2.5 transition hover:border-[rgb(0_194_255/0.6)] sm:grid-cols-[11rem_minmax(0,1fr)] sm:gap-5 sm:p-4 lg:grid-cols-[12rem_minmax(0,1fr)_15rem]">
       <Link to={href} tabIndex={-1} aria-hidden="true" className={cn('relative block aspect-square self-start overflow-hidden rounded-xl', contain ? 'photo-stage' : 'bg-[#0b1116]')}>
         {image ? (
           <SafeImage

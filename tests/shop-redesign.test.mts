@@ -158,17 +158,17 @@ test('photos sit well on the dark page: shop banner photo on the right, softened
 
 test('phones: compact banner, cards and texts (computers keep their sizes)', () => {
   const slider = src('components/home/HomeHeroSlider.tsx');
-  assert.ok(slider.includes("'grid h-full grid-cols-[38%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"), 'deals banner: photo beside the text on phones');
+  assert.ok(slider.includes("'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"), 'deals banner: photo beside the text on phones');
   assert.ok(slider.includes('text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl'), 'banner title: small on phones, as before on computers');
   const card = src('components/home/HomeShopCard.tsx');
-  assert.ok(card.includes("'relative aspect-[5/4] overflow-hidden sm:aspect-square'"), 'card photo: shorter on phones');
+  assert.ok(card.includes("'relative aspect-[6/5] overflow-hidden sm:aspect-square'"), 'card photo: shorter on phones');
   assert.ok(card.includes('text-[11px] font-bold uppercase leading-[1.25] tracking-tight text-[var(--fg)] sm:text-sm'));
   assert.ok(src('components/home/HomeTrustBar.tsx').includes('hidden text-[11px] leading-snug text-[var(--fg-muted)] sm:block'), 'promises: titles only on phones');
   const grid = src('components/home/HomeShelf.tsx');
   assert.ok(grid.includes('-mx-2.5 flex snap-x snap-mandatory') && grid.includes('sm:grid sm:grid-cols-3'), 'Our selection: a row you swipe on phones, a grid from tablets up');
   assert.ok(grid.includes('w-[44%] shrink-0 snap-start sm:w-auto'), 'a bit of the third card shows, so the row clearly moves');
   const list = src('components/shop/ShopListCard.tsx');
-  assert.ok(list.includes('grid-cols-[6.5rem_minmax(0,1fr)]'), 'list view: photo beside the text on phones');
+  assert.ok(list.includes('grid-cols-[8.5rem_minmax(0,1fr)]'), 'list view: photo beside the text on phones');
   assert.ok(list.includes('col-start-2 row-span-2 row-start-1'), 'list view: Add to cart beside the price on phones');
 });
 
@@ -184,4 +184,19 @@ test('Admin → Products follows the new site: names and order of the home page,
   assert.ok(form.includes('Home · Top picks (first)') && form.includes('Home · Top picks (then)'));
   const dialog = src('components/admin/ProductPlacementDialog.tsx');
   assert.ok(dialog.includes('<Row title="Deals banner"') && dialog.includes('<Row title="Top picks (first)"'));
+});
+
+test('phones: bigger photos in the deals banner and the list view; your own budget the whole width (readable); a short footer', () => {
+  assert.ok(src('components/home/HomeBlocks.tsx').includes('<li className="col-span-2 lg:col-span-1">'), 'own budget: whole width on phones');
+  assert.ok(src('components/home/HomeBlocks.tsx').includes('pe-10 ps-4 text-base text-[var(--fg)]'), '16 px text in the budget field');
+  const footer = src('components/layout/Footer.tsx');
+  assert.ok(footer.includes('flex flex-wrap gap-x-3 gap-y-1 sm:mt-3 sm:flex-col'), 'footer links side by side on phones');
+  assert.ok(footer.includes('grid gap-3.5 py-4 sm:grid-cols-2'));
+});
+
+test('Admin board shows every home section with products, also the automatic ones', () => {
+  const b = src('components/admin/HomeLayoutBoard.tsx');
+  for (const k of ['title="Our selection · Best sellers"', 'title="Browse by category"', 'Our brands</p>']) assert.ok(b.includes(k), k);
+  assert.ok(b.includes("queryKey: ['products', 'home-best']") && b.includes("queryKey: ['products', 'home-category', active?.slug]"), 'the same requests as the home page');
+  assert.ok(b.includes('readOnly'), 'automatic sections: products can be opened, not moved or removed');
 });

@@ -84,7 +84,7 @@ export function Setups() {
             aria-hidden="true"
           />
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">Brynoxa · {t('common.setups')}</p>
-          <h1 id="setups-heading" className="mt-1 font-display text-lg font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
+          <h1 id="setups-heading" className="text-white mt-1 font-display text-lg font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('setups.title')}
           </h1>
           <p className="mt-1 max-w-xl text-[12px] text-white/70 sm:mt-1.5 sm:text-base">{t('setups.short')}</p>
