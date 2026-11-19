@@ -290,7 +290,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
         <Section
           step={2}
           icon="star"
-          title="Featured (#1 = big card)"
+          title="Featured (first in Top picks)"
           note="your choice"
           products={place.featuredList}
           store={{ kind: 'flag', flag: 'isFeatured' }}
@@ -489,7 +489,7 @@ const TAB_KEY = 'brynoxa-admin-board-tab'
 
 /**
  * The shop pages exactly as customers see them, one tab per page: the Home page (Hero, Featured
- * (#1 is the big card), Carousel, Deals, New arrivals, Shop by budget, plus the Shop page header)
+ * (first in Top picks), Carousel, Deals, New arrivals, Shop by budget, plus the Shop page header)
  * and "Pick your setup" (the home "Grab your setup" button: one card per setup, one row per
  * group). Each product shows its rank and can be moved, edited or removed; "+ Add" adds one.
  * Automatic sections become "your choice" once changed.

@@ -72,8 +72,8 @@ test('phones: New arrivals and Shop by budget use small titles and normal-size c
   const fs = await import('node:fs');
   const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
   const row = src('components/home/HomeProductRow.tsx');
-  assert.ok(row.includes('font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl'), 'row title: small on phones');
-  assert.ok(row.includes("'inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[10.5px]"), 'small fact chips');
+  assert.ok(row.includes('font-display text-lg font-extrabold uppercase leading-[1.05] tracking-tight sm:text-3xl lg:mt-5 lg:text-[2rem]'), 'row title: small on phones');
+  assert.ok(row.includes("'inline-flex h-6 items-center gap-1 rounded-full px-2 text-[10.5px]"), 'small fact chips');
   const carousel = src('components/product/ProductCarousel.tsx');
   assert.ok(carousel.includes("export const CAROUSEL_CARD = 'relative w-[min(14rem,62vw)] shrink-0 sm:w-[17.5rem]'"), 'one card size for every carousel (Shop by budget)');
   const budget = src('components/home/HomeBudget.tsx');
@@ -103,13 +103,13 @@ test('phones: Shop by budget without its long sentence, small price ranges; a sh
   assert.ok(footer.includes("{ to: '/help', key: 'help.kicker' as const }"), 'Help stays (warranty and returns are there)');
 });
 
-test('phones: home categories are a compact 2×2 (small photo, name only); admin board follows the page order', async () => {
+test('home categories: square photo tiles, a row you swipe on phones; admin board follows the page order', async () => {
   const fs = await import('node:fs');
   const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
-  assert.ok(home.includes('<div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">'));
-  assert.ok(home.includes("featuredTile ? 'h-24 sm:h-auto sm:min-h-[10.5rem] sm:flex-1' : 'h-24 sm:h-48'"));
-  assert.ok(home.includes('mt-1.5 line-clamp-2 hidden max-w-sm'), 'descriptions from tablets up');
+  assert.ok(home.includes('-mx-4 flex snap-x snap-mandatory gap-2.5 overflow-x-auto'), 'phones: one row to swipe');
+  assert.ok(home.includes('lg:grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]'), 'computers: one row, no empty gap');
+  assert.ok(home.includes('const HOME_CATEGORY_MAX = 6'));
   const board = fs.readFileSync(path.join(root, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
-  const order = ['title="Hero"', 'title="Featured (#1 = big card)"', 'title="Carousel"', 'title={`Budget · ', 'title="Deals"', 'title="New arrivals"'].map((m) => board.indexOf(m));
+  const order = ['title="Hero"', 'title="Featured (first in Top picks)"', 'title="Carousel"', 'title={`Budget · ', 'title="Deals"', 'title="New arrivals"'].map((m) => board.indexOf(m));
   assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), 'board order: ' + order.join(','));
 });

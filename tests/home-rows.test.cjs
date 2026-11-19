@@ -48,7 +48,8 @@ test('home: two rows, deduplicated, hidden under 4 products; shop understands ?o
   for (const t of ['title="Deals"', 'title="New arrivals"', 'Budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
   const row = src('components/home/HomeProductRow.tsx');
   assert.match(row, /export const HOME_ROW_MIN = 4/);
-  assert.match(row, /if \(products\.length < HOME_ROW_MIN\) return null/);
+  assert.match(row, /min = HOME_ROW_MIN,/);
+  assert.match(row, /if \(products\.length < min\) return null/);
   assert.match(src('pages/store/Shop.tsx'), /onSale: params\.get\('onSale'\) === 'true' \? true : undefined/);
   for (const l of ['en', 'fr', 'ar']) {
     const t = src(`i18n/${l}.ts`);

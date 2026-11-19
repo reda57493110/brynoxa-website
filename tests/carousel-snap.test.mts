@@ -55,7 +55,7 @@ test('every carousel has the same card size (the one of Shop by budget)', () => 
   const carousel = src('components/product/ProductCarousel.tsx');
   assert.ok(carousel.includes('className={CAROUSEL_CARD}'));
   assert.ok(!/size === '(lg|sm)'/.test(carousel), 'no other sizes');
-  for (const p of ['pages/store/Home.tsx', 'components/home/HomeProductRow.tsx', 'components/home/HomeBudget.tsx', 'pages/store/Setups.tsx']) {
+  for (const p of ['components/home/HomeProductRow.tsx', 'components/home/HomeBudget.tsx', 'pages/store/Setups.tsx']) {
     const uses = src(p).match(/<ProductCarousel[^>]*>/g) || [];
     assert.ok(uses.length, p);
     for (const u of uses) assert.ok(!/ size=/.test(u), `${p}: ${u}`);

@@ -18,22 +18,21 @@ function Stat({ icon, children, strong }: { icon: SiteIconName; children: ReactN
   return (
     <span
       className={cn(
-        'inline-flex h-6 items-center gap-1 rounded-full border px-2 text-[10.5px] font-semibold sm:h-8 sm:gap-1.5 sm:px-3 sm:text-[13px]',
-        strong
-          ? 'border-transparent bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
-          : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)]'
+        'inline-flex h-6 items-center gap-1 rounded-full px-2 text-[10.5px] font-semibold sm:h-7 sm:gap-1.5 sm:px-2.5 sm:text-xs',
+        strong ? 'bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow' : 'bg-white/[0.08] text-white/85 ring-1 ring-white/12'
       )}
     >
-      <SiteIcon name={icon} size={13} />
+      <SiteIcon name={icon} size={12} />
       {children}
     </span>
   )
 }
 
 /**
- * A home page product row (Deals, New arrivals) in its own panel: the Featured heading (kicker,
- * title, text, view-all button), facts worked out from the real products (best discount, how
- * many, latest date) and a product carousel. Hidden while it has fewer than 4 products.
+ * A home "shelf" (Top picks, Deals, New arrivals): a dark Brynoxa panel with the title, a few facts
+ * worked out from the real products (best discount, how many, latest date) and the "see all"
+ * button, beside a product carousel. On phones the panel is a short header above the carousel.
+ * Hidden while it has fewer than `min` products (4 by default).
  */
 export function HomeProductRow({
   id,
@@ -44,74 +43,101 @@ export function HomeProductRow({
   body,
   viewAll,
   products,
+  min = HOME_ROW_MIN,
 }: {
   id: string
-  tone: 'deals' | 'new'
+  tone: 'deals' | 'new' | 'featured'
   icon: SiteIconName
   kicker: string
   title: string
   body: string
   viewAll: { to: string; label: string }
   products: Product[]
+  min?: number
 }) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
-  if (products.length < HOME_ROW_MIN) return null
+  if (products.length < min) return null
   const headingId = `home-${id}-heading`
   const discount = tone === 'deals' ? bestDiscount(products) : 0
   const latest = tone === 'new' ? latestAdded(products) : null
 
   return (
-    <section id={id} aria-labelledby={headingId} className="py-4 sm:py-8">
+    <section id={id} aria-labelledby={headingId} className="scroll-mt-24 py-3 sm:py-6">
       <Container>
-        <div
-          className={cn(
-            'relative overflow-hidden rounded-[1.25rem] border p-3 shadow-soft sm:rounded-[2rem] sm:p-7',
-            tone === 'deals'
-              ? 'border-[color-mix(in_srgb,var(--brand)_35%,var(--border))] bg-[radial-gradient(80%_120%_at_0%_0%,color-mix(in_srgb,var(--brand)_16%,transparent),transparent_60%),radial-gradient(60%_90%_at_100%_100%,color-mix(in_srgb,var(--brand)_8%,transparent),transparent_60%)] bg-[var(--bg-elevated)]'
-              : 'border-[var(--border)] bg-[var(--bg-elevated)]'
-          )}
-        >
-          <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5 sm:mb-6 sm:gap-4">
-            <div className="max-w-xl">
-              {void kicker}
-              {void icon}
-              <h2 id={headingId} className="font-display text-lg font-semibold leading-tight tracking-tight sm:mt-2 sm:text-4xl">
-                {title}
-              </h2>
-              <p className="mt-1 text-[12.5px] leading-snug text-[var(--fg-muted)] sm:mt-2 sm:text-base sm:leading-relaxed">{body}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
-                {discount > 0 ? (
-                  <Stat icon="tag" strong>
-                    {t('home.upTo', { percent: discount })}
-                  </Stat>
-                ) : null}
-                <Stat icon={tone === 'deals' ? 'ticket' : 'package'}>
-                  {t(tone === 'deals' ? 'home.dealsCount' : 'home.newCount', { count: products.length })}
-                </Stat>
-                {latest ? (
-                  <Stat icon="clock">
-                    {t('home.latestAdded', {
-                      date: new Intl.DateTimeFormat(LOCALE_TAG[locale], { day: 'numeric', month: 'short' }).format(latest),
-                    })}
-                  </Stat>
-                ) : null}
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-5">
+          {/* The panel: always dark, the Brynoxa glow; a big faint icon in the corner */}
+          <div
+            className={cn(
+              'relative isolate flex flex-col overflow-hidden rounded-[1.25rem] border p-4 text-white sm:rounded-[1.75rem] sm:p-6 lg:p-7',
+              tone === 'deals'
+                ? 'border-[rgb(0_194_255/0.45)] bg-[#060a0d] shadow-[0_24px_60px_-30px_rgb(0_194_255/0.6)]'
+                : 'border-[rgb(0_194_255/0.22)] bg-[#0a0f14]'
+            )}
+          >
+            <div
+              className={cn(
+                'pointer-events-none absolute inset-0 -z-10',
+                tone === 'deals'
+                  ? 'bg-[radial-gradient(90%_70%_at_0%_0%,rgb(0_194_255/0.32),transparent_60%),radial-gradient(70%_60%_at_100%_100%,rgb(0_194_255/0.16),transparent_60%)]'
+                  : 'bg-[radial-gradient(90%_70%_at_0%_0%,rgb(0_194_255/0.18),transparent_60%)]'
+              )}
+              aria-hidden="true"
+            />
+            <SiteIcon
+              name={icon}
+              size={150}
+              className="pointer-events-none absolute -bottom-8 -end-8 -z-10 hidden rotate-[-12deg] text-[rgb(0_194_255/0.09)] lg:block"
+            />
+            {void kicker}
+            <div className="flex items-start justify-between gap-3 lg:block">
+              <div className="min-w-0">
+                <span className="hidden size-11 place-items-center rounded-2xl bg-[rgb(0_194_255/0.16)] text-[var(--brand)] ring-1 ring-[rgb(0_194_255/0.35)] lg:grid">
+                  <SiteIcon name={icon} size={20} />
+                </span>
+                <h2 id={headingId} className="font-display text-lg font-extrabold uppercase leading-[1.05] tracking-tight sm:text-3xl lg:mt-5 lg:text-[2rem]">
+                  {title}
+                </h2>
+                <p className="mt-1 text-[12px] leading-snug text-white/65 sm:mt-2 sm:text-sm sm:leading-relaxed">{body}</p>
               </div>
+              {/* Phones / tablets: the button sits beside the title */}
+              <Link
+                to={viewAll.to}
+                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3 text-xs font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 sm:h-10 sm:px-4 sm:text-sm lg:hidden"
+              >
+                {viewAll.label}
+                <SiteIcon name="arrow-right" size={15} className="rtl:rotate-180" />
+              </Link>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-4">
+              {discount > 0 ? (
+                <Stat icon="tag" strong>
+                  {t('home.upTo', { percent: discount })}
+                </Stat>
+              ) : null}
+              <Stat icon={tone === 'deals' ? 'ticket' : tone === 'new' ? 'package' : 'star'}>
+                {t(tone === 'deals' ? 'home.dealsCount' : tone === 'new' ? 'home.newCount' : 'home.picksCount', { count: products.length })}
+              </Stat>
+              {latest ? (
+                <Stat icon="clock">
+                  {t('home.latestAdded', {
+                    date: new Intl.DateTimeFormat(LOCALE_TAG[locale], { day: 'numeric', month: 'short' }).format(latest),
+                  })}
+                </Stat>
+              ) : null}
             </div>
             <Link
               to={viewAll.to}
-              className={cn(
-                'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition sm:h-10 sm:gap-2 sm:px-4 sm:text-sm',
-                tone === 'deals'
-                  ? 'bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow hover:brightness-110'
-                  : 'border border-[var(--border)] bg-[var(--bg)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
-              )}
+              className="mt-auto hidden h-11 w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-5 text-sm font-bold text-[var(--brand-fg)] shadow-glow transition hover:brightness-110 lg:mt-8 lg:inline-flex"
             >
               {viewAll.label}
               <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
             </Link>
           </div>
-          <ProductCarousel products={products} />
+
+          <div className="min-w-0 self-center">
+            <ProductCarousel products={products} />
+          </div>
         </div>
       </Container>
     </section>

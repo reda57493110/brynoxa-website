@@ -64,7 +64,10 @@ test('home, category and product pages (also in French / Arabic) ask for what th
     '/api/v1/products?carousel=true&limit=12',
     '/api/v1/categories',
   ]);
-  assert.equal((await run('/')).links.filter((l) => l.as === 'image').length, 2, 'home header photo (phone + computer)');
+  const heroLinks = (await run('/')).links.filter((l) => l.as === 'image');
+  assert.equal(heroLinks.length, 1, 'home: the Brynoxa card photo');
+  const home = fs.readFileSync(path.join(root, 'frontend/src/pages/store/Home.tsx'), 'utf8');
+  assert.ok(home.includes(`'${heroLinks[0].href}'`), 'the same address the page shows');
   assert.deepEqual((await run('/fr/category/laptops')).fetched, ['/api/v1/categories/laptops', '/api/v1/products?category=laptops&limit=24&sort=newest', '/api/v1/categories']);
   assert.deepEqual((await run('/ar/product/hp-840')).fetched, ['/api/v1/products/hp-840']);
   for (const other of ['/cart', '/checkout', '/account/orders', '/admin', '/help', '/product/a/b']) {

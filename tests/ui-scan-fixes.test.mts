@@ -74,14 +74,12 @@ test('D: no reviews leftovers; plain wording; labels instead of raw codes', () =
   assert.doesNotMatch(src('pages/admin/Settings.tsx'), /and sessions/);
 });
 
-test('home top product: while it loads, a loading copy of the card (spinner, lines, deal row) instead of an empty space', () => {
-  const card = src('components/home/HomeSpotlight.tsx');
-  const skeleton = card.slice(card.indexOf('export function HomeSpotlightSkeleton'));
-  assert.match(skeleton, /bg-\[#0b1116\]/, 'the same dark card in light and dark mode');
+test('home banner: while the deals load, a loading copy of the banner (spinner, lines) instead of an empty space', () => {
+  const slider = src('components/home/HomeHeroSlider.tsx');
+  const skeleton = slider.slice(slider.indexOf('export function HomeHeroSliderSkeleton'), slider.indexOf('export function HomeHeroSlider('));
+  assert.match(skeleton, /<Frame>/, 'the same dark frame as the banner');
   assert.match(skeleton, /<ImageSpinner size="lg" tone="dark" \/>/, 'the loading spinner the other products use');
-  assert.match(skeleton, /Array\.from\(\{ length: 4 \}/, 'the row of deals underneath');
-  assert.doesNotMatch(skeleton.slice(skeleton.indexOf('return (')), /border-white\/10 bg-white\/10 \[@media/, 'not the see-through box any more');
-  assert.equal((src('pages/store/Home.tsx').match(/<HomeSpotlightSkeleton \/>/g) || []).length, 2, 'phones and desktop');
+  assert.equal((src('pages/store/Home.tsx').match(/<HomeHeroSliderSkeleton \/>/g) || []).length, 1, 'one banner for phones and computers');
 });
 
 test('delivery slip: fits a phone screen, prints unchanged on A5, French plural and date', () => {

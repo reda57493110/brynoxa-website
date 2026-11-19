@@ -37,7 +37,7 @@ test('the shop list, the sitemap and the home tiles use it', () => {
   assert.ok(svc.includes('return items.filter((c) => visible.has(String(c._id)) && withProducts.has(String(c._id)));'));
   assert.ok(read('api/sitemap.js').includes('categories.filter((c) => withProducts.has(String(c._id)))'));
   const home = read('frontend/src/pages/store/Home.tsx');
-  assert.ok(home.includes('const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORIES.length)'), 'an empty home category is replaced by another one');
+  assert.ok(home.includes('const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORY_MAX)'), 'an empty home category is replaced by another one');
 });
 
 test('the Laptops photo: a new file (phones fetch it at once), a real WebP in 3 sizes', () => {
