@@ -26,7 +26,7 @@ function Frame({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative isolate flex h-full flex-col ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#070a0d] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.55)] sm:rounded-[2rem]">
       <div
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_85%_40%,rgb(0_194_255/0.22),transparent_65%),radial-gradient(50%_70%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]"
+        className="ink-glow pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_85%_40%,rgb(0_194_255/0.22),transparent_65%),radial-gradient(50%_70%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]"
         aria-hidden="true"
       />
       {children}
@@ -53,7 +53,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:gap-8 lg:p-10',
+        'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:items-stretch lg:gap-6 lg:p-8',
         'transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)]',
         active ? 'z-[1] opacity-100 duration-500' : 'pointer-events-none opacity-0 duration-300'
       )}
@@ -65,7 +65,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         aria-hidden="true"
         ref={photo.ref}
         className={cn(
-          'group relative block aspect-square overflow-hidden rounded-xl sm:order-2 sm:aspect-[5/4] sm:rounded-[1.4rem]',
+          'group relative block aspect-square overflow-hidden rounded-xl sm:order-2 sm:aspect-[5/4] sm:rounded-[1.4rem] lg:aspect-auto lg:h-full lg:min-h-[20rem]',
           contain ? 'photo-stage' : 'bg-[#0b1116]'
         )}
       >
@@ -85,7 +85,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           onError={photo.onError}
           className={cn(
             'absolute inset-0 h-full w-full transition duration-[900ms] ease-out group-hover:scale-[1.04]',
-            contain ? 'object-contain p-2 mix-blend-multiply sm:p-8' : 'object-cover',
+            contain ? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-cover',
             active ? 'scale-100' : 'scale-[1.05]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
@@ -96,7 +96,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       </Link>
 
       {/* Text */}
-      <div className="min-w-0 sm:order-1">
+      <div className="@container min-w-0 sm:order-1 lg:self-center">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex h-5 items-center gap-1 rounded-full bg-[rgb(0_194_255/0.14)] px-2 text-[9px] font-bold uppercase tracking-[0.12em] text-[var(--brand)] ring-1 ring-[rgb(0_194_255/0.35)] sm:h-8 sm:px-3 sm:text-xs">
             <SiteIcon name={d ? 'tag' : 'star'} size={13} solid={!d} />
@@ -156,7 +156,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
             to={href}
             className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/20 bg-white/[0.04] px-4 text-sm font-semibold text-white max-sm:hidden transition hover:border-[var(--brand)] hover:text-[var(--brand)] sm:h-12 sm:px-6 sm:text-base"
           >
-            <span className="max-sm:sr-only">{t('product.viewProduct')}</span>
+            <span className="max-sm:sr-only @max-[24rem]:sr-only">{t('product.viewProduct')}</span>
             <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
           </Link>
         </div>

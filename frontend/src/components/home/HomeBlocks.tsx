@@ -147,7 +147,7 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
       to="/shop?onSale=true"
       className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
     >
-      <span className="absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
+      <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
       <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-fg)] sm:text-[11px]">
         <SiteIcon name="tag" size={12} />
         {t('home.dealsKicker')}
@@ -285,6 +285,9 @@ export function HomeSelection({
 /** The teal desk photo of the Signature banner (free Pexels photo) */
 export const SIGNATURE_PHOTO =
   'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1200&h=676&fit=crop'
+/** In light mode: a bright white desk with a white PC (free Pexels photo) */
+export const SIGNATURE_PHOTO_LIGHT =
+  'https://images.pexels.com/photos/28228017/pexels-photo-28228017.jpeg?auto=compress&cs=tinysrgb&w=1200&h=676&fit=crop'
 
 /**
  * Brynoxa Signature: a wide cinematic banner (the teal desk photo, the B mark, the line and the
@@ -296,7 +299,8 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
     <section id="signature" data-reveal="" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className="relative isolate ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
-          <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_50%] opacity-80" />
+          <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 hidden h-full w-full object-cover object-[70%_50%] opacity-80 dark:block" />
+          <img src={SIGNATURE_PHOTO_LIGHT} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[75%_50%] dark:hidden" />
           <span className="ink-shade-x absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
           <div className="flex min-h-[11rem] flex-col justify-center p-4 sm:min-h-[19rem] sm:p-10 lg:p-12">
             <div className="flex items-center gap-3">
@@ -513,7 +517,7 @@ export function HomeSetupsBand() {
     <section id="setups" data-reveal="" aria-labelledby="home-setups-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className="relative isolate ink overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
-          <span className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
+          <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.setupsBandKicker')}</p>
           <h2 id="home-setups-heading" className="text-white mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('home.setupsBandTitle')}
