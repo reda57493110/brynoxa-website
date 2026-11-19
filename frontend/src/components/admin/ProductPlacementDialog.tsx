@@ -131,9 +131,6 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
       ? `#${rowIndex + 1}`
       : `Not shown (over ${HOME_ROW_LIMIT})`
 
-  // Shop header
-  const isShopHeader = place.shopHero.product?._id === p._id
-  const shopPinned = place.shopHeroSetting === p._id
 
   return (
     <Modal open={Boolean(product)} onClose={onClose} title="Placement" size="md">
@@ -174,7 +171,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </select>
           </Row>
 
-          <Row title="Hero" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
+          <Row title="Deals banner" status={dealsStatus} tone={dealIndex >= 0 ? 'on' : inDeals ? 'warn' : 'muted'}>
             {inDeals ? (
               <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ homeDeals: pinned.filter((x) => x !== p._id) })}>
                 Remove
@@ -192,7 +189,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             )}
           </Row>
 
-          <Row title="Featured" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
+          <Row title="Top picks (first)" status={featuredStatus} tone={has('spotlight') || (has('row') && !place.rowFromCarousel) ? 'on' : p.isFeatured ? 'warn' : 'muted'}>
             {p.isFeatured && !isSpotlight ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isFeatured: true })}>
                 Make Featured
@@ -208,7 +205,7 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </Button>
           </Row>
 
-          <Row title="Carousel" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
+          <Row title="Top picks (then)" status={carouselStatus} tone={place.rowFromCarousel && rowIndex >= 0 ? 'on' : p.isCarousel ? 'warn' : 'muted'}>
             {p.isCarousel && rowIndex !== 0 ? (
               <Button size="sm" variant="outline" disabled={busy} onClick={() => updateProduct.mutate({ isCarousel: true })}>
                 Show first
@@ -224,21 +221,6 @@ export function ProductPlacementDialog({ product, onClose }: { product: Product 
             </Button>
           </Row>
 
-          <Row
-            title="Shop header"
-            status={isShopHeader ? (shopPinned ? 'Shown' : 'Shown · auto') : 'Off'}
-            tone={isShopHeader ? 'on' : 'muted'}
-          >
-            {shopPinned ? (
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => updateSettings.mutate({ categoryHeroes: { all: '' } })}>
-                Use one per category
-              </Button>
-            ) : (
-              <Button size="sm" variant="outline" disabled={busy || !p.isActive} onClick={() => updateSettings.mutate({ categoryHeroes: { all: p._id } })}>
-                Use as header
-              </Button>
-            )}
-          </Row>
         </ul>
 
         <div className="flex flex-wrap items-center gap-2 text-xs">

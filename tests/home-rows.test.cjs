@@ -46,7 +46,7 @@ test('home: two rows, deduplicated, Deals hidden under 2 products; shop understa
   // Admin → Products shows the same rows (same hook), with "hidden" when under 4
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])"), "useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])");
-  for (const t of ['title="Deals"', 'title="New arrivals"', 'Budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
+  for (const t of ['title="Deals of the moment"', 'title="Our selection · New arrivals"', 'Shop by budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
   const row = src('components/home/HomeBlocks.tsx');
   assert.match(row, /export const HOME_ROW_MIN = 2/, 'Deals of the moment shows from 2 products (the deals card fills the row)');
   assert.match(row, /if \(products\.length < HOME_ROW_MIN\) return null/);

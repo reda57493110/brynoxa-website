@@ -13,7 +13,6 @@ import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT, useStorefrontPlacements } from '@/
 import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
 import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'
-import { ShopHeaderBoard } from '@/components/admin/ShopHeaderBoard'
 
 /** The "Complete your setup" editor (its own code, loaded when its tab is opened) */
 const CompleteSetupAdmin = lazy(() => import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin })))
@@ -265,8 +264,9 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
     )
   }
 
-  // The home page hides a row with fewer than 4 products: say so here
+  // Deals of the moment hides with fewer than HOME_ROW_MIN products; the selection tabs show from 1
   const rowNote = (n: number) => (n < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : 'auto')
+  const tabNote = (n: number) => (n ? 'auto' : 'tab hidden (empty)')
   const amount = (n: number) => new Intl.NumberFormat('en-US').format(n)
   const bandTitle = (b: { min?: number; max?: number }) =>
     b.min === undefined ? `Under ${amount(b.max!)} DH` : b.max === undefined ? `Over ${amount(b.min)} DH` : `${amount(b.min)} – ${amount(b.max)} DH`
@@ -274,10 +274,11 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   return (
     <>
       <div className="flex flex-col gap-2.5">
+        {/* In the order of the home page, top to bottom (Home.tsx) */}
         <Section
           step={1}
           icon="tag"
-          title="Hero"
+          title="Deals banner (top of the page)"
           pinned={place.pinnedDeals.length > 0}
           canReset
           products={place.deals.products}
@@ -288,8 +289,21 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
         />
         <Section
           step={2}
+          icon="tag"
+          title="Deals of the moment"
+          note={rowNote(rows.deals.length)}
+          pinned={rows.dealsPinned}
+          canReset
+          products={rows.deals}
+          store={{ kind: 'homeRows', key: 'deals' }}
+          max={12}
+          onOpen={onOpen}
+          empty="No deals yet."
+        />
+        <Section
+          step={3}
           icon="star"
-          title="Featured (first in Top picks)"
+          title="Our selection · Top picks (first)"
           note="your choice"
           products={place.featuredList}
           store={{ kind: 'flag', flag: 'isFeatured' }}
@@ -300,13 +314,26 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
         <Section
           step={3}
           icon="layers"
-          title="Carousel"
+          title="Our selection · Top picks (then)"
           note={place.rowFromCarousel ? 'your choice' : 'auto'}
           products={place.rowFromCarousel ? place.row : []}
           store={{ kind: 'flag', flag: 'isCarousel' }}
           max={HOME_ROW_LIMIT}
           onOpen={onOpen}
           empty="Empty: shows the next featured products."
+        />
+        <Section
+          step={3}
+          icon="clock"
+          title="Our selection · New arrivals"
+          note={tabNote(rows.newArrivals.length)}
+          pinned={rows.newPinned}
+          canReset
+          products={rows.newArrivals}
+          store={{ kind: 'homeRows', key: 'new' }}
+          max={12}
+          onOpen={onOpen}
+          empty="Nothing new yet."
         />
         <Section
           step={4}
@@ -326,8 +353,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             key={b.id}
             step={5}
             icon="banknote"
-            title={`Budget · ${bandTitle(b)}`}
-            note={rows.budgetTotal < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : b.items.length ? 'auto' : 'hidden'}
+            title={`Shop by budget · ${bandTitle(b)}`}
+            note={b.items.length ? 'auto' : 'card hidden (empty)'}
             pinned={b.pinned}
             canReset
             products={b.items.slice(0, b.pinned ? 12 : 6)}
@@ -337,32 +364,6 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             empty="No product at this price."
           />
         ))}
-        <Section
-          step={6}
-          icon="tag"
-          title="Deals"
-          note={rowNote(rows.deals.length)}
-          pinned={rows.dealsPinned}
-          canReset
-          products={rows.deals}
-          store={{ kind: 'homeRows', key: 'deals' }}
-          max={12}
-          onOpen={onOpen}
-          empty="No deals yet."
-        />
-        <Section
-          step={7}
-          icon="clock"
-          title="New arrivals"
-          note={rowNote(rows.newArrivals.length)}
-          pinned={rows.newPinned}
-          canReset
-          products={rows.newArrivals}
-          store={{ kind: 'homeRows', key: 'new' }}
-          max={12}
-          onOpen={onOpen}
-          empty="Nothing new yet."
-        />
       </div>
     </>
   )
@@ -482,8 +483,8 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   )
 }
 
-type BoardTab = 'home' | 'setups' | 'shop' | 'setup'
-const BOARD_TABS: BoardTab[] = ['home', 'setups', 'shop', 'setup']
+type BoardTab = 'home' | 'setups' | 'setup'
+const BOARD_TABS: BoardTab[] = ['home', 'setups', 'setup']
 const TAB_KEY = 'brynoxa-admin-board-tab'
 
 /**
@@ -517,7 +518,6 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
   const tabs: { id: BoardTab; label: string; icon: SiteIconName; href: string }[] = [
     { id: 'home', label: 'Home page', icon: 'home', href: '/' },
     { id: 'setups', label: 'Setups page', icon: 'layers', href: '/setups' },
-    { id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' },
     { id: 'setup', label: 'Complete your setup', icon: 'plus', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
@@ -557,8 +557,6 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
         <HomeBoard onOpen={onOpen} />
       ) : tab === 'setups' ? (
         <SetupsBoard onOpen={onOpen} />
-      ) : tab === 'shop' ? (
-        <ShopHeaderBoard />
       ) : (
         <Suspense fallback={<div className="flex justify-center py-6"><Spinner /></div>}>
           <CompleteSetupAdmin embedded />

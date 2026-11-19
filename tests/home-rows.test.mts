@@ -68,9 +68,9 @@ test('a short footer (warranty and returns are in Help)', () => {
   assert.ok(footer.includes("{ to: '/help', key: 'help.kicker' as const }"), 'Help stays (warranty and returns are there)');
 });
 
-test('admin board lists the home lists in order', () => {
+test('admin board lists the home lists in the order and with the names of the home page', () => {
   const board = src('components/admin/HomeLayoutBoard.tsx');
-  const order = ['title="Hero"', 'title="Featured (first in Top picks)"', 'title="Carousel"', 'title={`Budget · ', 'title="Deals"', 'title="New arrivals"'].map((m) => board.indexOf(m));
+  const order = ['title="Deals banner (top of the page)"', 'title="Deals of the moment"', 'title="Our selection · Top picks (first)"', 'title="Our selection · Top picks (then)"', 'title="Our selection · New arrivals"', 'title="Brynoxa Signature"', 'title={`Shop by budget · '].map((m) => board.indexOf(m));
   assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), 'board order: ' + order.join(','));
   assert.ok(board.includes("import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'"));
 });

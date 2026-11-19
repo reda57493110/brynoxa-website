@@ -26,16 +26,16 @@ import { toast } from '@/store/toastStore'
 import { useAuthStore } from '@/store/authStore'
 import { hasPermission } from '@/lib/permissions'
 import type { Category, Product, ProductCondition } from '@/types'
+import { mainCategories, withSubCategories } from '@/lib/categoryTree'
 
 type PlacementFilter = '' | 'home' | 'deals' | 'featured' | 'carousel' | 'none'
 
 const control = 'h-9 min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
 
 const SHORT: Record<string, string> = {
-  deals: 'Hero',
-  spotlight: 'Featured',
-  row: 'Carousel',
-  shopHeader: 'Shop header',
+  deals: 'Deals banner',
+  spotlight: 'Top picks',
+  row: 'Top picks',
   featuredWaiting: 'Featured flag · not shown',
   carouselWaiting: 'Carousel · not shown',
 }
@@ -77,11 +77,10 @@ function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placemen
 }
 
 /** Table groups, in storefront order (the board above shows each home section in full). */
-type Group = 'home' | 'shopHeader' | 'shop' | 'hidden'
+type Group = 'home' | 'shop' | 'hidden'
 
 const GROUP_LABEL: Record<Group, string> = {
   home: 'Home page',
-  shopHeader: 'Shop header',
   shop: 'Shop',
   hidden: 'Hidden',
 }
@@ -90,7 +89,6 @@ function groupOf(placements: Placement[]): Group {
   const shown = (key: string) => placements.some((p) => p.key === key && !p.waiting)
   if (placements.some((p) => p.key === 'hidden')) return 'hidden'
   if (shown('deals') || shown('spotlight') || shown('row')) return 'home'
-  if (shown('shopHeader')) return 'shopHeader'
   return 'shop'
 }
 
@@ -104,7 +102,7 @@ export function Products() {
   const [active, setActive] = useState<'all' | 'true' | 'false'>('all')
   const [condition, setCondition] = useState<ProductCondition | ''>('')
   const [placement, setPlacement] = useState<PlacementFilter>('')
-  // Default: the storefront's own order (home page top to bottom, shop header, the rest)
+  // Default: the storefront's own order (home page top to bottom, then the rest of the shop)
   const [sort, setSort] = useState<'placement' | 'newest' | 'name' | 'price_asc' | 'price_desc'>('placement')
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [placing, setPlacing] = useState<Product | null>(null)
@@ -215,9 +213,10 @@ export function Products() {
         </div>
         <select aria-label="Category" value={category} onChange={(e) => setFilter(() => setCategory(e.target.value))} className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}>
           <option value="">All categories</option>
-          {(cats.data as Category[] | undefined)?.map((c) => (
+          {/* Each main category, then its sub-categories (indented) */}
+          {withSubCategories(mainCategories((cats.data as Category[] | undefined) ?? []), (cats.data as Category[] | undefined) ?? []).map((c) => (
             <option key={c._id} value={c._id}>
-              {c.name}
+              {c.parent ? `  ↳ ${c.name}` : c.name}
             </option>
           ))}
         </select>

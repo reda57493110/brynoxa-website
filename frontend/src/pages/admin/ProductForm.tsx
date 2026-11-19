@@ -18,7 +18,7 @@ import { QueryErrorState } from '@/components/ui/QueryErrorState'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useToastStore } from '@/store/toastStore'
-import { useHeroProduct } from '@/hooks/useHeroProduct'
+import { childrenOf, mainCategories, withSubCategories } from '@/lib/categoryTree'
 import { cn } from '@/lib/cn'
 import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupsFor } from '@/lib/setups'
 import type { Brand, Category, Product, ProductCondition } from '@/types'
@@ -162,14 +162,6 @@ export function ProductForm() {
     queryFn: async () => (await adminApi.products.get(id!)).data.data,
     enabled: isEdit,
   })
-  const shopHeroShown = useHeroProduct('shop')
-  const isShownInShopHero = isEdit && shopHeroShown.product?._id === id
-  const isAutoShopHero = isShownInShopHero && !shopHeroShown.pinned
-  const [shopHero, setShopHero] = useState(false)
-
-  useEffect(() => {
-    if (isEdit && !shopHeroShown.pending) setShopHero(isShownInShopHero)
-  }, [isEdit, shopHeroShown.pending, isShownInShopHero])
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [imageSource, setImageSource] = useState<ImageSource>('gallery')
@@ -438,11 +430,6 @@ export function ProductForm() {
         ? await adminApi.products.update(id!, payload)
         : await adminApi.products.create(payload)
       const savedId = res.data.data?._id || id
-      if (savedId && shopHero && !isShownInShopHero) {
-        await adminApi.settings.update({ categoryHeroes: { all: savedId } })
-      } else if (savedId && !shopHero && isShownInShopHero) {
-        await adminApi.settings.update({ categoryHeroes: { all: '' } })
-      }
 
       // Versions: create the new ones, or save changed options for an existing group
       let versionError: string | null = null
@@ -692,12 +679,32 @@ export function ProductForm() {
           onChange={(e) => setForm({ ...form, category: e.target.value })}
           required
           placeholder="Choose a category"
-          options={categoryList.map((c) => {
+          // Each main category followed by its sub-categories, so "Laptops › Gaming laptops" is easy to find
+          options={withSubCategories(mainCategories(categoryList), categoryList).map((c) => {
             const parentId = typeof c.parent === 'string' ? c.parent : c.parent?._id
             const parent = parentId ? categoryList.find((x) => x._id === parentId) : null
             return { value: c._id, label: parent ? `${parent.name} › ${c.name}` : c.name }
           })}
         />
+        {/* A main category that has sub-categories: suggest the right one (the shop shows sub-categories with products) */}
+        {(() => {
+          const chosen = categoryList.find((c) => c._id === form.category)
+          const subs = chosen && !chosen.parent ? childrenOf(categoryList, chosen._id) : []
+          return subs.length ? (
+            <p className="-mt-2 text-xs text-[var(--fg-muted)] sm:col-span-2">
+              Tip: put it in a sub-category so customers find it there too:{' '}
+              {subs.map((s, i) => (
+                <span key={s._id}>
+                  {i ? ', ' : ''}
+                  <button type="button" onClick={() => setForm((f) => ({ ...f, category: s._id }))} className="font-semibold text-[var(--brand-text)] hover:underline">
+                    {s.name}
+                  </button>
+                </span>
+              ))}
+              .
+            </p>
+          ) : null
+        })()}
         <Input
           label="Brand"
           value={form.brand}
@@ -1283,9 +1290,9 @@ export function ProductForm() {
               onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
             />
             <span>
-              <span className="block text-sm font-medium">Featured (spotlight)</span>
+              <span className="block text-sm font-medium">Home · Top picks (first)</span>
               <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                Big featured pick on the homepage — the main product customers see first.
+                First in “Our selection → Top picks” on the home page (4 at most). Also used for the deals banner when you have not chosen its deals.
               </span>
             </span>
           </label>
@@ -1297,56 +1304,10 @@ export function ProductForm() {
               onChange={(e) => setForm({ ...form, isCarousel: e.target.checked })}
             />
             <span>
-              <span className="block text-sm font-medium">Homepage carousel</span>
+              <span className="block text-sm font-medium">Home · Top picks (then)</span>
               <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                Appears in the sliding product carousel under Featured. Separate from the spotlight.
+                Shown in “Our selection → Top picks” after the first ones.
               </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={shopHero}
-              onChange={(e) => setShopHero(e.target.checked)}
-            />
-            <span>
-              <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                Show in Shop page header
-                {isShownInShopHero ? (
-                  <span className="rounded-full bg-[color-mix(in_srgb,var(--success)_14%,transparent)] px-2 py-0.5 text-[11px] font-semibold text-[var(--success)]">
-                    Showing now{isAutoShopHero ? ' · automatic' : ''}
-                  </span>
-                ) : null}
-              </span>
-              <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">
-                {isAutoShopHero
-                  ? 'It appears there automatically because it is your first featured product.'
-                  : isShownInShopHero
-                    ? 'This product is the big picture at the top of the Shop page (“All”).'
-                    : shopHeroShown.product
-                      ? `The big picture at the top of the Shop page. Checking this replaces “${shopHeroShown.product.name}”.`
-                      : 'The big picture at the top of the Shop page when “All” is chosen (instead of one product per category in turn). Only one product can be there.'}
-                {canOpenSettings ? (
-                  <>
-                    {' '}You can also change it in{' '}
-                    <Link to="/admin/products?board=shop" className="text-[var(--brand-text)] hover:underline">
-                      Products → Shop header
-                    </Link>
-                    .
-                  </>
-                ) : null}
-              </span>
-              {isShownInShopHero && !shopHero ? (
-                <span className="mt-1 block text-xs text-[var(--fg-muted)]">
-                  After you save, it will be removed and the Shop header will show its normal photo.
-                </span>
-              ) : null}
-              {shopHero && !form.isActive ? (
-                <span className="mt-1 block text-xs text-[var(--danger)]">
-                  Set the status to Active at the top, otherwise customers won’t see it.
-                </span>
-              ) : null}
             </span>
           </label>
         </div>

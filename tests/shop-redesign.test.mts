@@ -171,3 +171,17 @@ test('phones: compact banner, cards and texts (computers keep their sizes)', () 
   assert.ok(list.includes('grid-cols-[6.5rem_minmax(0,1fr)]'), 'list view: photo beside the text on phones');
   assert.ok(list.includes('col-start-2 row-span-2 row-start-1'), 'list view: Add to cart beside the price on phones');
 });
+
+test('Admin → Products follows the new site: names and order of the home page, Top picks wording, categories with their sub-categories', () => {
+  const placements = src('hooks/useStorefrontPlacements.ts');
+  for (const k of ["'Home · Deals banner'", "'Home · Top picks (first)'", "'Home · Top picks (then)'"]) assert.ok(placements.includes(k), k);
+  const list = src('pages/admin/Products.tsx');
+  assert.ok(list.includes("deals: 'Deals banner'") && !list.includes("shopHeader: 'Shop header'"));
+  assert.ok(list.includes('withSubCategories(mainCategories('), 'category filter: main categories then their sub-categories');
+  const form = src('pages/admin/ProductForm.tsx');
+  assert.ok(form.includes('options={withSubCategories(mainCategories(categoryList), categoryList).map('));
+  assert.ok(form.includes('Tip: put it in a sub-category so customers find it there too'), 'one click to move a product into a sub-category');
+  assert.ok(form.includes('Home · Top picks (first)') && form.includes('Home · Top picks (then)'));
+  const dialog = src('components/admin/ProductPlacementDialog.tsx');
+  assert.ok(dialog.includes('<Row title="Deals banner"') && dialog.includes('<Row title="Top picks (first)"'));
+});

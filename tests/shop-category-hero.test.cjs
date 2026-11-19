@@ -35,13 +35,11 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
   assert.ok(hook.includes("const needAuto = Boolean(page) && page !== 'shop' && !cat && settings.isSuccess"), 'a category never borrows the shop product (no laptop on Cameras)');
   assert.ok(hook.includes("? 'empty-category'"), 'nothing in stock: the category photo');
   assert.ok(src('components/layout/StoreHero.tsx').includes("!photoCard && 'md:dark:hidden!'"), 'framed in dark mode too');
+  // The shop has no header product any more (search bar only): its Admin tab, form box and
+  // placement row are gone too (Nov 2026)
   const board = src('components/admin/HomeLayoutBoard.tsx');
-  assert.ok(board.includes("{ id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' }"));
-  assert.ok(board.includes('<ShopHeaderBoard />'));
-  const shopBoard = src('components/admin/ShopHeaderBoard.tsx');
-  for (const t of ['title="All products"', '/> Photo', '/> Auto', "{yours && setting !== HERO_NONE ? 'Change' : 'Choose'}", 'save.mutateAsync({ categoryHeroes: { [slug]: value } })', 'sub-categories']) {
-    assert.ok(shopBoard.includes(t), t);
-  }
+  assert.ok(!board.includes("label: 'Shop header'") && !board.includes('ShopHeaderBoard'));
+  assert.ok(!fs.existsSync(path.join(ROOT, 'frontend/src/components/admin/ShopHeaderBoard.tsx')));
 });
 
 test('shop "All": one product per category in turn, not always the same laptop; one product only if chosen for All', () => {
@@ -53,19 +51,11 @@ test('shop "All": one product per category in turn, not always the same laptop; 
   assert.ok(hero.includes("prefers-reduced-motion: reduce") && hero.includes('onMouseEnter={() => setPaused(true)}'), 'stops for less motion and on hover');
   assert.ok(!hero.includes('HeroMosaic'), 'no category photo collage');
   assert.ok(src('hooks/useHeroProduct.ts').includes("page !== 'shop' && !cat"), 'no automatic product on the shop');
-  // Every place that chose the old Shop header product now saves the choice for All
-  assert.ok(src('pages/admin/ProductForm.tsx').includes('adminApi.settings.update({ categoryHeroes: { all: savedId } })'));
-  assert.ok(src('components/admin/ProductPlacementDialog.tsx').includes('updateSettings.mutate({ categoryHeroes: { all: p._id } })'));
-  assert.ok(src('components/admin/ShopHeaderBoard.tsx').includes('save={saveFor(SHOP_ALL)}'));
+  // Nothing in Admin offers the Shop header product any more
+  assert.ok(!src('pages/admin/ProductForm.tsx').includes('categoryHeroes'));
+  assert.ok(!src('components/admin/ProductPlacementDialog.tsx').includes('title="Shop header"'));
+  assert.ok(!src('hooks/useStorefrontPlacements.ts').includes("key: 'shopHeader'"));
   assert.ok(!src('pages/admin/Settings.tsx').includes('<PageHeaderProducts'), 'Settings points to Products → Shop page header');
   assert.ok(!fs.readFileSync(path.join(ROOT, 'frontend/public/preload.js'), 'utf8').includes('s.data.categoryHeroes && s.data.categoryHeroes.all'), 'nothing to start early for it');
 });
 
-test('admin Shop page header: reads the shop settings (not the owner-only copy); All shows its products in turn', () => {
-  const b = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/ShopHeaderBoard.tsx'), 'utf8');
-  assert.ok(b.includes("queryKey: ['settings'], queryFn: async () => (await settingsApi.get()).data.data"), 'same data under the same name as the shop');
-  assert.ok(!b.includes('adminApi.settings.get()'));
-  assert.ok(b.includes('allView rotation={onePerCategory(allPicks.data ?? [], list)}'));
-  assert.ok(b.includes("shown.product ? 'Your choice' : 'Rotates'"), 'short status');
-  assert.ok(!b.includes('The product at the top of the Shop page changes'), 'no long explanation');
-});
