@@ -159,7 +159,9 @@ test('phones: compact banner, cards and texts (computers keep their sizes)', () 
   assert.ok(card.includes("'relative aspect-[5/4] overflow-hidden sm:aspect-square'"), 'card photo: shorter on phones');
   assert.ok(card.includes('text-[11px] font-bold uppercase leading-[1.25] tracking-tight text-[var(--fg)] sm:text-sm'));
   assert.ok(src('components/home/HomeTrustBar.tsx').includes('hidden text-[11px] leading-snug text-[var(--fg-muted)] sm:block'), 'promises: titles only on phones');
-  assert.ok(src('components/home/HomeShelf.tsx').includes("className={i >= 4 ? 'max-sm:hidden' : undefined}"), 'Our selection: 2 rows on phones');
+  const grid = src('components/home/HomeShelf.tsx');
+  assert.ok(grid.includes('-mx-2.5 flex snap-x snap-mandatory') && grid.includes('sm:grid sm:grid-cols-3'), 'Our selection: a row you swipe on phones, a grid from tablets up');
+  assert.ok(grid.includes('w-[44%] shrink-0 snap-start sm:w-auto'), 'a bit of the third card shows, so the row clearly moves');
   const banner = src('components/shop/ShopBanner.tsx');
   assert.ok(banner.includes('<div className="max-sm:hidden">\n              <BannerProduct') || banner.includes('<div className="max-sm:hidden">\r\n              <BannerProduct'), 'shop: no product card in the banner on phones');
   assert.ok(banner.includes('<div className="mt-2 max-w-2xl max-sm:hidden sm:mt-3">'), 'shop: no long sentence on phones');

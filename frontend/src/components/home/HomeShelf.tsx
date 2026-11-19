@@ -96,14 +96,17 @@ export function HomeShelf({ products, badge, lead, label }: { products: Product[
   )
 }
 
-/** Same grid of cards, no scrolling: 2 / 3 / 4 / 5 a row */
+/**
+ * Our selection: on phones a row you swipe (two cards in view, all the products); from tablets up a
+ * grid, 3 / 4 / 5 a row. One list, so each photo loads once.
+ */
 export function HomeGrid({ products, badge }: { products: Product[]; badge?: (p: Product) => CardBadge }) {
   return (
-    <ul className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+    <ul className="-mx-2.5 flex snap-x snap-mandatory scroll-px-2.5 gap-2.5 overflow-x-auto px-2.5 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4 xl:grid-cols-5 [&::-webkit-scrollbar]:hidden">
       {products.map((p, i) => (
-        // Phones: two rows of two
-        <li key={p._id} className={i >= 4 ? 'max-sm:hidden' : undefined}>
-          <HomeShopCard product={p} badge={badge ? badge(p) : null} />
+        // Phones: a bit of the third card shows, so it is clear the row moves
+        <li key={p._id} className="w-[44%] shrink-0 snap-start sm:w-auto">
+          <HomeShopCard product={p} badge={badge ? badge(p) : null} eager={i < 2} />
         </li>
       ))}
     </ul>
