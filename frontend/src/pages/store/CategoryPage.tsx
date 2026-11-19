@@ -1,222 +1,40 @@
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { categoriesApi } from '@/api/categoriesApi'
-import { productsApi } from '@/api/productsApi'
 import { Container } from '@/components/ui/Container'
-import { ProductGrid } from '@/components/product/ProductGrid'
-import { SortSelect } from '@/components/product/SortSelect'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PageHero } from '@/components/layout/PageHero'
-import { Skeleton } from '@/components/ui/Skeleton'
 import { QueryErrorState } from '@/components/ui/QueryErrorState'
-import { useSeo } from '@/hooks/useSeo'
 import { useT } from '@/hooks/useT'
-import { useLocaleStore } from '@/store/localeStore'
-import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
-import { SubThumb } from '@/components/product/SubThumb'
-import { categoryPhoto, categoryThumb } from '@/lib/categoryPhoto'
-import { cn } from '@/lib/cn'
+import { Shop } from './Shop'
 
+/**
+ * A category page (/category/laptops): the shop with that category chosen — same banner, cards,
+ * filters and grid / list — under the category's own address (the one Google keeps). A category
+ * that does not exist shows "Category not found".
+ */
 export function CategoryPage() {
   const t = useT()
-  const locale = useLocaleStore((s) => s.locale)
   const { slug = '' } = useParams()
   const navigate = useNavigate()
-  const [params, setParams] = useSearchParams()
-  const sort = params.get('sort') || 'newest'
-
   const category = useQuery({
     queryKey: ['category', slug],
     queryFn: async () => (await categoriesApi.getBySlug(slug)).data.data,
     enabled: Boolean(slug),
   })
-  const products = useQuery({
-    queryKey: ['products', 'category', slug, sort],
-    queryFn: async () =>
-      (await productsApi.list({ category: slug, limit: 24, sort })).data.data,
-    enabled: Boolean(slug),
-    placeholderData: keepPreviousData,
-  })
-  const categories = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => (await categoriesApi.list()).data.data,
-  })
-
-  const displayName = category.data
-    ? categoryDisplayName(locale, category.data.slug, category.data.name)
-    : ''
-  const displayDescription = category.data
-    ? categoryDisplayDescription(
-        locale,
-        category.data.slug,
-        category.data.description
-      ) || t('shop.categoryFallback')
-    : ''
-
-  // Google: "{category} in Morocco — best prices in DH"; the admin's own description first when there is one
-  const ownDescription = category.data
-    ? categoryDisplayDescription(locale, category.data.slug, category.data.description)
-    : ''
-  useSeo({
-    title: category.data ? t('meta.categoryTitle', { name: displayName }) : t('meta.shopTitle'),
-    description: category.data
-      ? ownDescription
-        ? `${ownDescription.trim().replace(/\.?$/, '.')} ${t('meta.categoryDescription', { name: displayName })}`.slice(0, 300)
-        : t('meta.categoryDescription', { name: displayName })
-      : t('meta.shopDescription'),
-    path: slug ? `/category/${slug}` : '/shop',
-    noIndex: !category.data,
-    // Share preview shows the category photo instead of the logo
-    image: category.data ? categoryPhoto(category.data, categories.data ?? []) : undefined,
-  })
 
   if (category.isError) {
     return (
       <Container className="py-8 sm:py-10">
-        <QueryErrorState
-          title={t('shop.loadError')}
-          description={t('shop.loadErrorBody')}
-          onRetry={() => category.refetch()}
-        />
+        <QueryErrorState title={t('shop.loadError')} description={t('shop.loadErrorBody')} onRetry={() => category.refetch()} />
       </Container>
     )
   }
-
   if (!category.isPending && !category.data) {
     return (
       <Container className="py-8 sm:py-10">
-        <EmptyState
-          title={t('shop.categoryMissing')}
-          description={t('shop.categoryMissingBody')}
-          actionLabel={t('shop.backToShop')}
-          onAction={() => navigate('/shop')}
-        />
+        <EmptyState title={t('shop.categoryMissing')} description={t('shop.categoryMissingBody')} actionLabel={t('shop.backToShop')} onAction={() => navigate('/shop')} />
       </Container>
     )
   }
-
-  const chip = (active: boolean) =>
-    cn(
-      'inline-flex h-9 shrink-0 items-center rounded-full border px-3.5 text-sm font-medium transition',
-      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-      active
-        ? 'border-transparent bg-[color-mix(in_srgb,var(--brand)_16%,transparent)] text-[var(--brand-text)]'
-        : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
-    )
-
-  // Two levels: the main categories, then the sub-categories of this one (or of its main one)
-  const allCategories = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
-  const current = allCategories.find((c) => c.slug === slug)
-  const main = mainOf(allCategories, current)
-  const subs = main ? childrenOf(allCategories, main._id) : []
-  const parentOfThis = main && current && main._id !== current._id ? main : null
-
-  const subChip = (active: boolean) =>
-    cn(
-      'inline-flex h-8 shrink-0 items-center rounded-full border px-3 text-xs font-medium transition sm:text-[13px]',
-      'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
-      active
-        ? 'border-[var(--brand)] text-[var(--brand-text)]'
-        : 'border-[var(--border)] text-[var(--fg-muted)] hover:border-[var(--brand)] hover:text-[var(--fg)]'
-    )
-
-  const productCount = products.data?.length ?? 0
-  // Skeleton on first load or a filter change — not on silent background refetches
-  const productsLoading = category.isPending || products.isPending || products.isPlaceholderData
-
-  return (
-    <>
-      <PageHero
-        kicker={
-          parentOfThis ? (
-            <Link to={`/category/${parentOfThis.slug}`} className="hover:underline">
-              {categoryDisplayName(locale, parentOfThis.slug, parentOfThis.name)} ›
-            </Link>
-          ) : (
-            t('shop.categoryKicker')
-          )
-        }
-        title={
-          category.data ? (
-            displayName
-          ) : (
-            <Skeleton className="inline-block h-9 w-48 align-middle sm:h-11 sm:w-64" />
-          )
-        }
-        description={
-          category.data ? (
-            displayDescription
-          ) : (
-            <Skeleton className="mt-1 h-4 w-72 max-w-full" />
-          )
-        }
-      />
-      <Container className="py-8 sm:py-10">
-        <div
-          className="-mx-4 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-          aria-label={t('shop.shopByCategory')}
-        >
-          <Link to="/shop" state={{ keepScroll: true }} className={chip(false)}>
-            {t('shop.all')}
-          </Link>
-          {mainCategories(allCategories).map((c) => (
-            <Link key={c._id} to={`/category/${c.slug}`} state={{ keepScroll: true }} className={chip(c._id === main?._id)}>
-              {categoryDisplayName(locale, c.slug, c.name)}
-            </Link>
-          ))}
-        </div>
-        {main && subs.length ? (
-          <div
-            className="-mx-4 -mt-5 mb-8 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
-            aria-label={categoryDisplayName(locale, main.slug, main.name)}
-          >
-            <Link to={`/category/${main.slug}`} state={{ keepScroll: true }} className={subChip(main.slug === slug)}>
-              {t('shop.all')}
-            </Link>
-            {subs.map((c) => (
-              <Link key={c._id} to={`/category/${c.slug}`} state={{ keepScroll: true }} className={subChip(c.slug === slug)}>
-                <SubThumb src={categoryThumb(c, allCategories)} />
-                {categoryDisplayName(locale, c.slug, c.name)}
-              </Link>
-            ))}
-          </div>
-        ) : null}
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[var(--fg-muted)]">
-            {productsLoading
-              ? t('ui.loadingProducts')
-              : productCount === 1
-                ? t('shop.productCountOne', { count: productCount })
-                : t('shop.productCount', { count: productCount })}
-          </p>
-          <SortSelect
-            value={sort}
-            onChange={(next) => {
-              const updated = new URLSearchParams(params)
-              if (!next || next === 'newest') updated.delete('sort')
-              else updated.set('sort', next)
-              setParams(updated)
-            }}
-          />
-        </div>
-        {products.isError && !productsLoading ? (
-          <QueryErrorState
-            title={t('shop.loadError')}
-            description={t('shop.loadErrorBody')}
-            onRetry={() => products.refetch()}
-          />
-        ) : (
-          <ProductGrid
-            products={products.data}
-            loading={productsLoading}
-            emptyTitle={t('shop.categoryEmpty')}
-            emptyDescription={t('shop.categoryEmptyBody')}
-            emptyActionLabel={t('common.allProducts')}
-            emptyActionTo="/shop"
-          />
-        )}
-      </Container>
-    </>
-  )
+  return <Shop categorySlug={slug} />
 }

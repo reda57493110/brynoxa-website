@@ -65,7 +65,7 @@ test('home, category and product pages (also in French / Arabic) ask for what th
     '/api/v1/categories',
   ]);
   assert.equal((await run('/')).links.filter((l) => l.as === 'image').length, 0, 'home: no big photo to start early (the banner shows the deals)');
-  assert.deepEqual((await run('/fr/category/laptops')).fetched, ['/api/v1/categories/laptops', '/api/v1/products?category=laptops&limit=24&sort=newest', '/api/v1/categories']);
+  assert.deepEqual((await run('/fr/category/laptops')).fetched, ['/api/v1/categories/laptops', '/api/v1/settings', '/api/v1/products?page=1&limit=12&sort=mixed&category=laptops', '/api/v1/categories', '/api/v1/brands'], 'a category page is the shop with that category: same first requests');
   assert.deepEqual((await run('/ar/product/hp-840')).fetched, ['/api/v1/products/hp-840']);
   for (const other of ['/cart', '/checkout', '/account/orders', '/admin', '/help', '/product/a/b']) {
     assert.deepEqual((await run(other)).fetched, [], other);
@@ -121,10 +121,11 @@ test('Cloudinary photos are never enlarged past the original (smaller downloads 
 // (initial opacity 0) stays invisible until that download ends — product cards waited ~2 s on phones.
 test('product cards and home category tiles show at once (CSS rise, not the late animation code)', () => {
   const src = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8');
-  const grid = src('components/product/ProductGrid.tsx');
+  const grid = src('pages/store/Shop.tsx');
   assert.doesNotMatch(grid, /framer-motion|<m\.|initial=/);
   assert.match(grid, /data-rise="card"/);
-  assert.match(grid, /<ProductCard product=\{p\} eager=\{i < 4\} \/>/, 'first row photos download at once');
+  assert.match(grid, /<HomeShopCard product=\{p\} eager=\{i < 4\} \/>/, 'first row photos download at once');
+  assert.match(src('components/home/HomeShopCard.tsx'), /loading=\{eager \? 'eager' : 'lazy'\}/);
   assert.match(src('components/product/ProductCard.tsx'), /loading=\{spotlight \|\| eager \? 'eager' : 'lazy'\}/);
   const blocks = src('components/home/HomeBlocks.tsx');
   const tiles = blocks.slice(blocks.indexOf('export function HomeIntro'), blocks.indexOf('export function HomeDealsBlock'));

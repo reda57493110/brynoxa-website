@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { productsApi } from '@/api/productsApi'
@@ -27,11 +27,15 @@ import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
 import { onePerCategory } from '@/lib/heroProduct'
 import { brandName } from '@/lib/brand'
+import { BUDGETS } from '@/lib/homeRows'
+import { SIGNATURE_BRAND } from '@/hooks/useHomeRows'
 
 const SHOP_HERO_IMAGE = 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=1600&q=75'
 
 type View = 'grid' | 'list'
 const VIEW_KEY = 'brynoxa-shop-view'
+/** Products per page the visitor can choose (12 by default, as preload.js asks) */
+export const PAGE_SIZES = [12, 24, 48] as const
 
 /**
  * The shop, in the style of the big Moroccan PC shops (Brynoxa colours): path, dark banner (title,
@@ -39,9 +43,10 @@ const VIEW_KEY = 'brynoxa-shop-view'
  * products on the right — as a grid of cards or as long rows with the specs (remembered on this
  * device). Every choice lives in the address (?category=…&brand=…&minPrice=…&sort=…).
  */
-export function Shop() {
+export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [view, setView] = useState<View>(() => {
@@ -63,18 +68,19 @@ export function Shop() {
   const filters = useMemo(
     () => ({
       page: Number(params.get('page') || 1),
-      limit: 12,
+      limit: PAGE_SIZES.find((n) => String(n) === params.get('limit')) ?? 12,
       // Default: one product of each kind in turn, so the first rows show the whole shop
       sort: params.get('sort') || 'mixed',
       q: params.get('q') || undefined,
-      category: params.get('category') || undefined,
+      // A category page (/category/x) keeps its category; the shop reads ?category=
+      category: categorySlug || params.get('category') || undefined,
       brand: params.get('brand') || undefined,
       minPrice: params.get('minPrice') ? Number(params.get('minPrice')) : undefined,
       maxPrice: params.get('maxPrice') ? Number(params.get('maxPrice')) : undefined,
       inStock: params.get('inStock') === 'true' ? true : undefined,
       onSale: params.get('onSale') === 'true' ? true : undefined,
     }),
-    [params]
+    [params, categorySlug]
   )
 
   const products = useQuery({
@@ -103,6 +109,15 @@ export function Shop() {
       else next.set(k, v)
     })
     if (!('page' in patch)) next.set('page', '1')
+    // On a category page, another category opens its own page (or the shop for "All")
+    if (categorySlug && 'category' in patch && patch.category !== categorySlug) {
+      next.delete('category')
+      next.delete('page')
+      const query = next.toString()
+      navigate(`${patch.category ? `/category/${patch.category}` : '/shop'}${query ? `?${query}` : ''}`, { state: { keepScroll: true } })
+      return
+    }
+    if (categorySlug) next.delete('category')
     // Category / filter changes keep the page where it is; changing page goes back up
     setParams(next, 'page' in patch ? undefined : { state: { keepScroll: true } })
   }
@@ -125,13 +140,14 @@ export function Shop() {
       onSale: next.onSale ? 'true' : undefined,
     })
 
+  // Reset: everything but the order (and, on a category page, the category itself)
   const clearFilters = () => {
     const next = new URLSearchParams()
     if (filters.sort && filters.sort !== 'mixed') next.set('sort', filters.sort)
     setParams(next)
   }
 
-  const hasNarrowing = Boolean(filters.category || filters.brand || filters.minPrice || filters.maxPrice || filters.q || filters.inStock || filters.onSale)
+  const hasNarrowing = Boolean((filters.category && !categorySlug) || filters.brand || filters.minPrice || filters.maxPrice || filters.q || filters.inStock || filters.onSale)
 
   const categoryList = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
   const brandList = brands.data ?? []
@@ -158,9 +174,21 @@ export function Shop() {
       ? `${t('shop.searchTitle')} “${filters.q}” — ${t('shop.title')} · ${brandName()}`
       : t('meta.shopTitle')
 
+  // Category page: "{category} in Morocco — best prices in DH"; the admin's own description first
+  const categoryMeta = categorySlug && activeCategoryName
+    ? {
+        title: t('meta.categoryTitle', { name: activeCategoryName }),
+        description: activeCategoryDescription
+          ? `${activeCategoryDescription.trim().replace(/\.?$/, '.')} ${t('meta.categoryDescription', { name: activeCategoryName })}`.slice(0, 300)
+          : t('meta.categoryDescription', { name: activeCategoryName }),
+        image: activeCategory ? categoryPhoto(activeCategory, categoryList) : undefined,
+      }
+    : null
+
   useSeo({
-    title: shopTitle,
-    description: activeCategoryDescription || (filters.q ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}` : t('meta.shopDescription')),
+    title: categoryMeta?.title ?? shopTitle,
+    description: categoryMeta?.description ?? (activeCategoryDescription || (filters.q ? `${t('shop.searchTitle')} “${filters.q}” — ${t('meta.shopDescription')}` : t('meta.shopDescription'))),
+    image: categoryMeta?.image,
     // /shop?category=x is the same list as /category/x: tell Google which address to keep
     path: filters.category ? `/category/${filters.category}` : '/shop',
     // Search result pages are endless and thin: kept out of Google
@@ -176,14 +204,14 @@ export function Shop() {
   const pages = products.data?.meta?.pages || 1
   const from = total === 0 ? 0 : (filters.page - 1) * filters.limit + 1
   const to = Math.min(filters.page * filters.limit, total)
-  const sidebarFilterCount = [filters.category, filters.brand, filters.minPrice || filters.maxPrice, filters.inStock, filters.onSale].filter(Boolean).length
+  const sidebarFilterCount = [categorySlug ? undefined : filters.category, filters.brand, filters.minPrice || filters.maxPrice, filters.inStock, filters.onSale].filter(Boolean).length
 
   // Path: Home › Shop › Components › RAM (or › Search "…")
   const crumbs: { label: string; to?: string }[] = [{ label: t('common.home'), to: '/' }]
   if (activeCategory || filters.q) crumbs.push({ label: t('shop.title'), to: '/shop' })
   else crumbs.push({ label: t('shop.title') })
   if (activeMain && activeCategory && activeMain._id !== activeCategory._id) {
-    crumbs.push({ label: categoryDisplayName(locale, activeMain.slug, activeMain.name), to: `/shop?category=${activeMain.slug}` })
+    crumbs.push({ label: categoryDisplayName(locale, activeMain.slug, activeMain.name), to: `/category/${activeMain.slug}` })
   }
   if (activeCategoryName) crumbs.push({ label: activeCategoryName })
   if (filters.q) crumbs.push({ label: `“${filters.q}”` })
@@ -198,6 +226,24 @@ export function Shop() {
   const stripInside = Boolean(activeMain && subList.length)
   const stripItems = stripInside ? subList : mainList
   const stripActive = stripInside ? (filters.category === activeMain!.slug ? undefined : filters.category) : filters.category
+
+  // Quick choices above the products (each a toggle): deals, in stock, the budget bands, Brynoxa
+  const quick: { id: string; label: string; on: boolean; toggle: () => void }[] = [
+    { id: 'sale', label: t('shop.onSaleOnly'), on: Boolean(filters.onSale), toggle: () => update({ onSale: filters.onSale ? undefined : 'true' }) },
+    { id: 'stock', label: t('shop.inStockOnly'), on: Boolean(filters.inStock), toggle: () => update({ inStock: filters.inStock ? undefined : 'true' }) },
+    ...BUDGETS.map((b) => {
+      const on = String(filters.minPrice ?? '') === String(b.min ?? '') && String(filters.maxPrice ?? '') === String(b.max ?? '')
+      return {
+        id: b.id,
+        label: t(b.label, { min: (b.min ?? 0).toLocaleString('fr-MA'), max: (b.max ?? 0).toLocaleString('fr-MA') }),
+        on,
+        toggle: () => update({ minPrice: on || !b.min ? undefined : String(b.min), maxPrice: on || !b.max ? undefined : String(b.max) }),
+      }
+    }),
+    ...(brandList.some((b) => b.slug === SIGNATURE_BRAND)
+      ? [{ id: 'brynoxa', label: brandName(), on: filters.brand === SIGNATURE_BRAND, toggle: () => update({ brand: filters.brand === SIGNATURE_BRAND ? undefined : SIGNATURE_BRAND }) }]
+      : []),
+  ]
 
   const filtersPanel = (
     <ShopFilters categories={categoryList} brands={brandList} values={filterValues} onChange={onFilterChange} onClear={clearFilters} activeCount={sidebarFilterCount} />
@@ -238,7 +284,8 @@ export function Shop() {
 
           <div className="min-w-0">
             {/* Toolbar: how many, Filters (phones), sort, grid / list */}
-            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2 sm:mb-4 sm:gap-3 sm:p-2.5">
+            {/* Phones / tablets: stays under the menu bar while scrolling (Filters and Sort at hand) */}
+            <div className="sticky top-[calc(var(--nav-height)+0.25rem)] z-20 mb-3 flex flex-wrap items-center gap-2 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]/95 p-2 shadow-soft backdrop-blur sm:mb-4 sm:gap-3 sm:p-2.5 lg:static lg:bg-[var(--bg-elevated)] lg:shadow-none lg:backdrop-blur-none">
               <p className="min-w-0 flex-1 basis-full px-1 text-xs text-[var(--fg-muted)] sm:basis-auto sm:text-sm">
                 {productsLoading ? (
                   t('ui.loadingProducts')
@@ -261,6 +308,20 @@ export function Shop() {
                 {sidebarFilterCount ? <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[var(--brand)] px-1 text-[11px] text-[var(--brand-fg)]">{sidebarFilterCount}</span> : null}
               </button>
               <SortSelect value={filters.sort} onChange={(sort) => update({ sort })} className="h-10 flex-1 rounded-xl sm:flex-none" />
+              <label className="hidden h-10 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] ps-3 pe-1 text-sm sm:inline-flex">
+                <span className="text-[var(--fg-muted)]">{t('shop.perPage')}</span>
+                <select
+                  value={filters.limit}
+                  onChange={(e) => update({ limit: e.target.value === '12' ? undefined : e.target.value })}
+                  className="h-8 rounded-lg bg-transparent px-1 font-semibold text-[var(--fg)] outline-none"
+                >
+                  {PAGE_SIZES.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div role="group" aria-label={t('shop.viewLabel')} className="flex h-10 items-center gap-0.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-0.5">
                 {(['grid', 'list'] as const).map((v) => (
                   <button
@@ -278,11 +339,32 @@ export function Shop() {
               </div>
             </div>
 
+            {/* Quick choices */}
+            <div role="group" aria-label={t('shop.quickFilters')} className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
+              {quick.map((q) => (
+                <button
+                  key={q.id}
+                  type="button"
+                  aria-pressed={q.on}
+                  onClick={q.toggle}
+                  className={cn(
+                    'inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-xs font-bold transition',
+                    q.on
+                      ? 'border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow'
+                      : 'border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]'
+                  )}
+                >
+                  {q.on ? <SiteIcon name="check" size={12} /> : null}
+                  {q.label}
+                </button>
+              ))}
+            </div>
+
             {/* What is chosen, each removable */}
             {hasNarrowing ? (
               <div className="mb-3 flex flex-wrap items-center gap-2 sm:mb-4">
                 {filters.q ? <ActiveChip label={`“${filters.q}”`} onRemove={() => update({ q: undefined })} /> : null}
-                {activeCategory ? <ActiveChip label={activeCategoryName!} onRemove={() => update({ category: undefined })} /> : null}
+                {activeCategory && !categorySlug ? <ActiveChip label={activeCategoryName!} onRemove={() => update({ category: undefined })} /> : null}
                 {activeBrand ? <ActiveChip label={activeBrand.name} onRemove={() => update({ brand: undefined })} /> : null}
                 {filters.onSale ? <ActiveChip label={t('shop.onSaleOnly')} onRemove={() => update({ onSale: undefined })} /> : null}
                 {filters.inStock ? <ActiveChip label={t('shop.inStockOnly')} onRemove={() => update({ inStock: undefined })} /> : null}

@@ -334,6 +334,8 @@ export const ar: Messages = {
     viewGrid: 'شبكة',
     viewList: 'لائحة',
     seeDetails: 'شوف كل التفاصيل',
+    perPage: 'عرض',
+    quickFilters: 'اختيارات سريعة',
   },
   auth: {
     resetByWhatsApp: 'استرجاع كلمة المرور عبر البريد غير متاح حالياً. راسلنا على واتساب مع بريد حسابك وسنساعدك على الدخول من جديد.',

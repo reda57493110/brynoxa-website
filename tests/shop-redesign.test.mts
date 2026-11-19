@@ -28,7 +28,7 @@ test('everything stays in the address; filter clicks keep the scroll; deals and 
 test('path: Home › Shop › main category › sub-category', () => {
   const shop = src('pages/store/Shop.tsx');
   assert.ok(shop.includes("const crumbs: { label: string; to?: string }[] = [{ label: t('common.home'), to: '/' }]"));
-  assert.ok(shop.includes('to: `/shop?category=${activeMain.slug}`'));
+  assert.ok(shop.includes('to: `/category/${activeMain.slug}`'));
   const banner = src('components/shop/ShopBanner.tsx');
   assert.ok(banner.includes('aria-current="page"'));
 });
@@ -53,4 +53,29 @@ test('texts in the three languages', () => {
 
 test('the old filter panel is gone', () => {
   assert.ok(!fs.existsSync(path.join(root, 'frontend/src/components/product/FilterSidebar.tsx')));
+});
+
+test('category pages use the shop: their own address and Google title, another category opens its page, Reset keeps the category', () => {
+  const shop = src('pages/store/Shop.tsx');
+  assert.ok(shop.includes('export function Shop({ categorySlug }: { categorySlug?: string } = {})'));
+  assert.ok(shop.includes('category: categorySlug || params.get(\'category\') || undefined,'));
+  assert.ok(shop.includes("navigate(`${patch.category ? `/category/${patch.category}` : '/shop'}"));
+  assert.ok(shop.includes("title: t('meta.categoryTitle', { name: activeCategoryName }),"));
+  assert.ok(shop.includes('to: `/category/${activeMain.slug}`'), 'the path links the main category page');
+  const page = src('pages/store/CategoryPage.tsx');
+  assert.ok(page.includes("t('shop.categoryMissing')"), 'a wrong address still says "Category not found"');
+});
+
+test('products per page: 12 (default, as preload asks), 24 or 48; quick choices; sticky toolbar on phones; brand logos', () => {
+  const shop = src('pages/store/Shop.tsx');
+  assert.ok(shop.includes('export const PAGE_SIZES = [12, 24, 48] as const'));
+  assert.ok(shop.includes("limit: PAGE_SIZES.find((n) => String(n) === params.get('limit')) ?? 12,"), 'any other value falls back to 12');
+  assert.ok(shop.includes("update({ limit: e.target.value === '12' ? undefined : e.target.value })"));
+  assert.ok(shop.includes('...BUDGETS.map((b) => {'), 'the home budget bands as quick choices');
+  assert.ok(shop.includes('sticky top-[calc(var(--nav-height)+0.25rem)] z-20') && shop.includes('lg:static'));
+  assert.ok(src('components/shop/ShopFilters.tsx').includes('sizedImageUrl(b.logo, 80)'));
+  for (const l of ['en', 'fr', 'ar']) {
+    const t = src(`i18n/${l}.ts`);
+    for (const k of ['perPage', 'quickFilters']) assert.ok(t.includes(`    ${k}: '`), `${l}: ${k}`);
+  }
 });

@@ -38,7 +38,7 @@ test('pages: home shows main categories; shop, filters and category page show th
   assert.match(src('pages/store/Home.tsx'), /const categoryList = mainCategories\(/);
   assert.match(src('pages/store/Shop.tsx'), /const stripItems = stripInside \? subList : mainList/, 'the cards under the banner: sub-categories inside a category');
   assert.match(src('components/shop/ShopFilters.tsx'), /subs\.map\(/, 'the filters list the sub-categories of the chosen one');
-  assert.match(src('pages/store/CategoryPage.tsx'), /subs\.map\(/);
+  assert.match(src('pages/store/CategoryPage.tsx'), /return <Shop categorySlug=\{slug\} \/>/, 'a category page is the shop with that category (same cards and filters)');
   assert.match(src('components/layout/SearchBox.tsx'), / › /);
   const admin = src('components/admin/settings/CategoriesSettings.tsx');
   assert.match(admin, /parent: parent \|\| null/);
@@ -58,7 +58,7 @@ test('category and filter clicks keep the scroll position; changing page still g
   assert.match(layout, /const keepScroll = navigationType !== 'POP' && Boolean\(/);
   assert.match(layout, /if \(location\.hash \|\| keepScroll\) return/);
   assert.match(src('pages/store/Shop.tsx'), /setParams\(next, 'page' in patch \? undefined : \{ state: \{ keepScroll: true \} \}\)/);
-  assert.equal((src('pages/store/CategoryPage.tsx').match(/state=\{\{ keepScroll: true \}\}/g) || []).length, 4);
+  assert.ok(src('pages/store/Shop.tsx').includes("{ state: { keepScroll: true } })\n      return") || src('pages/store/Shop.tsx').includes("{ state: { keepScroll: true } })\r\n      return"), 'another category from a category page keeps the scroll too');
 });
 
 test('shop: a grid (2 / 3 / 4 a row) or long rows with the specs, remembered on this device', () => {

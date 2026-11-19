@@ -44,7 +44,8 @@
   } else if (page === 'shop' && plain) {
     urls = ['settings', 'products?page=1&limit=12&sort=mixed', 'categories', 'brands']
   } else if (page === 'category' && plain) {
-    urls = ['categories/' + slug, 'products?category=' + slug + '&limit=24&sort=newest', 'categories']
+    // (src/pages/store/CategoryPage.tsx → the shop with that category: same order and size)
+    urls = ['categories/' + slug, 'settings', 'products?page=1&limit=12&sort=mixed&category=' + slug, 'categories', 'brands']
   } else if (page === 'product') {
     urls = ['products/' + slug]
   }

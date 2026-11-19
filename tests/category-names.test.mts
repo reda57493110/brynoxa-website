@@ -104,6 +104,5 @@ test('every suggested sub-category has a photo of its own (480 / 960 / 1200 copi
   assert.equal(photos.categoryThumb({ slug: 'ram' }), '/categories/sub/ram-480.webp');
   assert.equal(photos.categoryThumb({ slug: 'mice' }), '/categories/mice-480.webp');
   assert.ok(photos.categoryThumb({ slug: 'ram', image: 'https://res.cloudinary.com/x/image/upload/own.jpg' }).includes('w_160'), 'admin photo resized');
-  assert.ok(fs.readFileSync(path.join(root, 'frontend/src/pages/store/CategoryPage.tsx'), 'utf8').includes('<SubThumb src={categoryThumb('));
   assert.ok(fs.readFileSync(path.join(root, 'frontend/src/components/shop/ShopCategoryStrip.tsx'), 'utf8').includes('const thumb = categoryThumb(c, all)'), 'shop: on the category cards');
 });

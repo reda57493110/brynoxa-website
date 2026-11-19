@@ -7,6 +7,7 @@ import { cn } from '@/lib/cn'
 import { categoryDisplayName } from '@/i18n'
 import { useLocaleStore } from '@/store/localeStore'
 import type { Brand, Category } from '@/types'
+import { sizedImageUrl } from '@/lib/image'
 
 export interface ShopFilterValues {
   category?: string
@@ -205,7 +206,20 @@ export function ShopFilters({
           <div role="radiogroup" aria-label={t('shop.brand')} className="space-y-0.5">
             <Choice round on={!values.brand} label={t('shop.all')} onClick={() => onChange({ ...values, brand: undefined })} />
             {shownBrands.map((b) => (
-              <Choice key={b._id} round on={values.brand === b.slug} label={displayBrand(b.name)} onClick={() => onChange({ ...values, brand: values.brand === b.slug ? undefined : b.slug })} />
+              <Choice
+                key={b._id}
+                round
+                on={values.brand === b.slug}
+                icon={
+                  b.logo ? (
+                    <span className="grid h-6 w-10 shrink-0 place-items-center rounded bg-white px-1">
+                      <img src={sizedImageUrl(b.logo, 80)} alt="" width={36} height={20} loading="lazy" className="max-h-4 w-auto max-w-full object-contain" />
+                    </span>
+                  ) : null
+                }
+                label={displayBrand(b.name)}
+                onClick={() => onChange({ ...values, brand: values.brand === b.slug ? undefined : b.slug })}
+              />
             ))}
           </div>
           {brands.length > BRANDS_SHOWN ? (
