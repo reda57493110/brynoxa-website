@@ -19,19 +19,16 @@ import { ShopFilters, type ShopFilterValues } from '@/components/shop/ShopFilter
 import { ShopListCard } from '@/components/shop/ShopListCard'
 import { cn } from '@/lib/cn'
 import { childrenOf, mainCategories, mainOf, withSubCategories } from '@/lib/categoryTree'
-import { categoryPhoto, categoryPhotoPosition } from '@/lib/categoryPhoto'
+import { categoryPhoto } from '@/lib/categoryPhoto'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
 import { trackSearch } from '@/lib/analytics'
 import { useLocaleStore } from '@/store/localeStore'
 import { categoryDisplayDescription, categoryDisplayName } from '@/i18n'
-import { onePerCategory } from '@/lib/heroProduct'
 import { brandName } from '@/lib/brand'
 import { BUDGETS } from '@/lib/homeRows'
 import { SIGNATURE_BRAND } from '@/hooks/useHomeRows'
 
-/** "All": the Brynoxa desk lit in teal (free Pexels photo, also used on the home page) */
-const SHOP_HERO_IMAGE = 'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop'
 
 type View = 'grid' | 'list'
 const VIEW_KEY = 'brynoxa-shop-view'
@@ -169,15 +166,6 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   const activeCategoryName = activeCategory ? categoryDisplayName(locale, activeCategory.slug, activeCategory.name) : undefined
   const activeCategoryDescription = activeCategory ? categoryDisplayDescription(locale, activeCategory.slug, activeCategory.description) : undefined
 
-  // The "All" banner: one product per main category in turn (computers first), from the best sellers
-  const allPicks = useQuery({
-    queryKey: ['products', 'shop-all-hero'],
-    queryFn: async () => (await productsApi.list({ inStock: true, sort: 'popular', limit: 60 })).data.data,
-    enabled: !activeCategory,
-    staleTime: 5 * 60_000,
-  })
-  const allRotation = activeCategory ? undefined : onePerCategory(allPicks.data ?? [], categoryList)
-
   const shopTitle = activeCategoryName
     ? `${activeCategoryName} — ${t('shop.title')} · ${brandName()}`
     : filters.q
@@ -227,12 +215,7 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
   if (filters.q) crumbs.push({ label: `“${filters.q}”` })
 
   const bannerTitle = filters.q ? `${t('shop.searchTitle')} “${filters.q}”` : (activeCategoryName ?? `${t('shop.heroTitleLead')} ${t('shop.heroTitleAccent')}`)
-  const bannerText = filters.q
-    ? `${t('shop.resultsFor', { q: filters.q })}${activeCategoryName ? t('shop.resultsIn', { name: activeCategoryName }) : ''}`
-    : activeCategoryDescription || t('shop.body')
-  const bannerCount = productsLoading ? t('ui.loadingProducts') : total === 1 ? t('shop.productCountOne', { count: total }) : t('shop.productCount', { count: total })
-
-  // Cards under the banner: sub-categories inside a category that has some, else the main ones
+  // Round photos under the search bar: sub-categories inside a category that has some, else the main ones
   const stripInside = Boolean(activeMain && (subList.length || soonOf(activeMain._id).length))
   // "All": every main category followed by its sub-categories (Accessories, Mice, Headphones…)
   const stripItems = stripInside ? [...subList, ...soonOf(activeMain!._id)] : withSubCategories(mainList, categoryList)
@@ -266,12 +249,6 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
         <ShopBanner
           crumbs={crumbs}
           title={bannerTitle}
-          description={bannerText}
-          count={bannerCount}
-          photo={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}
-          photoPosition={activeCategory ? categoryPhotoPosition(activeCategory) : undefined}
-          category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}
-          rotate={allRotation}
           search={filters.q ?? ''}
           onSearch={(q) => update({ q: q || undefined })}
         />

@@ -74,21 +74,14 @@ test('home, category and product pages (also in French / Arabic) ask for what th
 
 const cloud = 'https://res.cloudinary.com/demo/image/upload/v1/brynoxa/p.jpg';
 
-test('shop ("All"): the product picked for All and its photo follow the settings, with the page’s exact photo address', async () => {
+test('shop: no header product any more (only the search bar), so nothing extra is fetched or started early', async () => {
   const id = 'a'.repeat(24);
   const r = await run('/shop', {
     '/api/v1/settings': { data: { categoryHeroes: { all: id } } },
-    [`/api/v1/products/compare?ids=${id}`]: { data: [{ stock: 3, images: [{ url: 'x' }, { url: cloud, isPrimary: true }] }] },
+    [`/api/v1/products/compare?ids=${id}`]: { data: [{ stock: 3, images: [{ url: cloud, isPrimary: true }] }] },
   });
-  assert.ok(r.fetched.includes(`/api/v1/products/compare?ids=${id}`));
-  const p = r.links.find((l) => l.as === 'image')!;
-  assert.equal(p.href, image.sizedImageUrl(cloud, 320), 'the small photo the banner shows');
-  assert.equal(p.referrerPolicy, 'no-referrer');
-  const sold = await run('/shop', {
-    '/api/v1/settings': { data: { categoryHeroes: { all: id } } },
-    [`/api/v1/products/compare?ids=${id}`]: { data: [{ stock: 0, images: [{ url: cloud }] }] },
-  });
-  assert.equal(sold.links.filter((l) => l.as === 'image').length, 0, 'a sold-out pick is replaced by the page, so no photo');
+  assert.ok(!r.fetched.includes(`/api/v1/products/compare?ids=${id}`));
+  assert.equal(r.links.filter((l) => l.as === 'image').length, 0);
 });
 
 test('product: its first photo, same addresses as the gallery for every kind of photo', async () => {

@@ -28,16 +28,12 @@ test('server: a product id or "none" per category address; "" = automatic; other
 
 test('shop: the header follows the category; admin tab "Shop page header"', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
-  assert.ok(src('pages/store/Shop.tsx').includes('category={activeCategory ? { slug: activeCategory.slug, main: activeMain?.slug } : undefined}'));
   assert.ok(src('components/layout/StoreHero.tsx').includes('const hero = useHeroProduct(page, category)'));
   const hook = src('hooks/useHeroProduct.ts');
   assert.ok(hook.includes("productsApi.list({ category: cat!.slug, inStock: true, sort: 'popular', limit: 12 })"), 'in stock, from that category');
   assert.ok(hook.includes("const own = cat && !categoryChoice ? '' : pick.value"), 'the shop header choice never hides the category product');
   assert.ok(hook.includes("const needAuto = Boolean(page) && page !== 'shop' && !cat && settings.isSuccess"), 'a category never borrows the shop product (no laptop on Cameras)');
   assert.ok(hook.includes("? 'empty-category'"), 'nothing in stock: the category photo');
-  const shop = src('pages/store/Shop.tsx');
-  assert.ok(shop.includes('photo={(activeCategory && categoryPhoto(activeCategory, categoryList)) || SHOP_HERO_IMAGE}'), 'the category photo in the banner');
-  assert.ok(src('components/shop/ShopBanner.tsx').includes("const hero = useHeroProduct('shop', category)"), 'the product chosen for the shop / category in the banner');
   assert.ok(src('components/layout/StoreHero.tsx').includes("!photoCard && 'md:dark:hidden!'"), 'framed in dark mode too');
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("{ id: 'shop', label: 'Shop header', icon: 'cart', href: '/shop' }"));
@@ -50,10 +46,7 @@ test('shop: the header follows the category; admin tab "Shop page header"', () =
 
 test('shop "All": one product per category in turn, not always the same laptop; one product only if chosen for All', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
-  const shop = src('pages/store/Shop.tsx');
-  assert.ok(shop.includes('const allRotation = activeCategory ? undefined : onePerCategory(allPicks.data ?? [], categoryList)'));
-  assert.ok(shop.includes("productsApi.list({ inStock: true, sort: 'popular', limit: 60 })"), 'in stock, best sellers');
-  assert.ok(shop.includes('rotate={allRotation}'));
+  // (The shop page itself no longer shows a header product: only the search bar — Nov 2026)
   const hero = src('components/layout/StoreHero.tsx');
   assert.ok(hero.includes('<RotatingHeroCard products={rotate!} />'));
   assert.ok(hero.includes('export const HERO_ROTATE_MS = 5000'));
@@ -65,7 +58,7 @@ test('shop "All": one product per category in turn, not always the same laptop; 
   assert.ok(src('components/admin/ProductPlacementDialog.tsx').includes('updateSettings.mutate({ categoryHeroes: { all: p._id } })'));
   assert.ok(src('components/admin/ShopHeaderBoard.tsx').includes('save={saveFor(SHOP_ALL)}'));
   assert.ok(!src('pages/admin/Settings.tsx').includes('<PageHeaderProducts'), 'Settings points to Products → Shop page header');
-  assert.ok(fs.readFileSync(path.join(ROOT, 'frontend/public/preload.js'), 'utf8').includes('s.data.categoryHeroes && s.data.categoryHeroes.all'));
+  assert.ok(!fs.readFileSync(path.join(ROOT, 'frontend/public/preload.js'), 'utf8').includes('s.data.categoryHeroes && s.data.categoryHeroes.all'), 'nothing to start early for it');
 });
 
 test('admin Shop page header: reads the shop settings (not the owner-only copy); All shows its products in turn', () => {

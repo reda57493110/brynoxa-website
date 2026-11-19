@@ -101,22 +101,6 @@
     return imgs[0] && imgs[0].url
   }
 
-  // Shop ("All"): the product picked for the top of the page (Admin → Products → Shop page header), then its photo
-  // (src/components/shop/ShopBanner.tsx)
-  if (page === 'shop' && plain) {
-    early['/api/v1/settings'].response.then(function (s) {
-      var id = s && s.data && s.data.categoryHeroes && s.data.categoryHeroes.all
-      if (!id || !/^[a-f0-9]{24}$/i.test(id)) return
-      get('/api/v1/products/compare?ids=' + id).then(function (r) {
-        var p = r && r.data && r.data[0]
-        // The banner shows it small (src/components/shop/ShopBanner.tsx: sizedImageUrl(image, 320))
-        if (p && p.stock > 0 && primary(p)) {
-          var l = link('preload', sized(primary(p), 320), 'image')
-          l.referrerPolicy = 'no-referrer'
-        }
-      })
-    })
-  }
   // Product: its first photo (src/components/product/ImageGallery.tsx)
   if (page === 'product') {
     early['/api/v1/products/' + slug].response.then(function (r) {

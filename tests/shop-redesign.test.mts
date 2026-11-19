@@ -38,10 +38,19 @@ test('list view: specs, price, stock, cash on delivery, delivery (free when the 
   for (const k of ['keySpecs(product, locale, 5)', '<StockLine', "t('home.trustCodTitle')", "free ? t('home.freeDelivery') : t('home.trustDeliveryTitle')", "t('common.addToCart')", 'useAddToCart(product)']) assert.ok(c.includes(k), k);
 });
 
-test('banner product: the one chosen in admin, else one per category in turn; stops on hover and for less motion', () => {
+test('top of the shop: the path and the search bar only (no banner card, no header product); the title stays for Google', () => {
   const b = src('components/shop/ShopBanner.tsx');
-  assert.ok(b.includes('const products = hero.product ? [hero.product] : (rotate ?? [])'));
-  assert.ok(b.includes("prefers-reduced-motion: reduce") && b.includes('onMouseEnter={() => setPaused(true)}'));
+  assert.ok(b.includes('role="search"'));
+  assert.ok(b.includes('<h1 id="shop-heading" className="sr-only">'), 'title for Google and screen readers');
+  assert.doesNotMatch(b, /useHeroProduct|BannerProduct|<img/, 'no photo, no product card');
+  const shop = src('pages/store/Shop.tsx');
+  assert.doesNotMatch(shop, /allPicks|onePerCategory|shop-all-hero/, 'no request for a banner product any more');
+});
+
+test('categories under the search: round photos with the name under them, like the home page', () => {
+  const s = src('components/shop/ShopCategoryStrip.tsx');
+  assert.ok(s.includes("'relative grid size-16 place-items-center overflow-hidden rounded-full border-2"));
+  assert.ok(s.includes('loading="eager"') && s.includes('disabled={c.empty}'));
 });
 
 test('texts in the three languages', () => {
@@ -143,10 +152,6 @@ test('empty sub-categories: listed as "Coming soon" on the shop (not clickable);
 });
 
 test('photos sit well on the dark page: shop banner photo on the right, softened; category card photo not squeezed', () => {
-  const banner = src('components/shop/ShopBanner.tsx');
-  assert.ok(banner.includes('sm:[mask-image:linear-gradient(to_left,black_45%,transparent)]'), 'fades into the text side');
-  assert.ok(banner.includes("style={{ objectPosition: photoPosition ?? '60% 45%' }}"));
-  assert.ok(src('pages/store/Shop.tsx').includes('pexels-photo-6942359'), '"All": the Brynoxa teal desk, not the purple laptop');
   const blocks = src('components/home/HomeBlocks.tsx');
   assert.ok(blocks.includes('<span className="relative block aspect-[4/3] overflow-hidden">'), 'the category photo in its own landscape frame, the text under it');
 });
@@ -162,9 +167,6 @@ test('phones: compact banner, cards and texts (computers keep their sizes)', () 
   const grid = src('components/home/HomeShelf.tsx');
   assert.ok(grid.includes('-mx-2.5 flex snap-x snap-mandatory') && grid.includes('sm:grid sm:grid-cols-3'), 'Our selection: a row you swipe on phones, a grid from tablets up');
   assert.ok(grid.includes('w-[44%] shrink-0 snap-start sm:w-auto'), 'a bit of the third card shows, so the row clearly moves');
-  const banner = src('components/shop/ShopBanner.tsx');
-  assert.ok(banner.includes('<div className="max-sm:hidden">\n              <BannerProduct') || banner.includes('<div className="max-sm:hidden">\r\n              <BannerProduct'), 'shop: no product card in the banner on phones');
-  assert.ok(banner.includes('<div className="mt-2 max-w-2xl max-sm:hidden sm:mt-3">'), 'shop: no long sentence on phones');
   const list = src('components/shop/ShopListCard.tsx');
   assert.ok(list.includes('grid-cols-[6.5rem_minmax(0,1fr)]'), 'list view: photo beside the text on phones');
   assert.ok(list.includes('col-start-2 row-span-2 row-start-1'), 'list view: Add to cart beside the price on phones');
