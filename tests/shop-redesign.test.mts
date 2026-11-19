@@ -79,3 +79,21 @@ test('products per page: 12 (default, as preload asks), 24 or 48; quick choices;
     for (const k of ['perPage', 'quickFilters']) assert.ok(t.includes(`    ${k}: '`), `${l}: ${k}`);
   }
 });
+
+test('category photos show at once; sub-categories are visible on the shop, in its filters and on the home page', async () => {
+  const strip = src('components/shop/ShopCategoryStrip.tsx');
+  assert.ok(strip.includes('loading="eager"'), 'the cards are at the top: their photos load at once');
+  assert.ok(strip.indexOf('<SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />') < strip.indexOf('src={thumb}'), 'the icon shows under the photo while it loads');
+  assert.ok(src('pages/store/Shop.tsx').includes('withSubCategories(mainList, categoryList)'), '"All": main categories and their sub-categories');
+  assert.ok(src('components/shop/ShopFilters.tsx').includes('{subs.length ? ('), 'filters: sub-categories always listed');
+  const home = src('pages/store/Home.tsx');
+  assert.ok(home.includes('const homeWithSubs = withSubCategories(homeCategories, shownCategories)'));
+  assert.ok(home.includes('categories={homeWithSubs}') && home.includes('<HomeIntro categories={homeWithSubs}'));
+  assert.ok(src('components/home/HomeHero.tsx').includes('const sub = isSubCategory(c, categories)'), 'menu: sub-categories indented');
+  const { pathToFileURL } = await import('node:url');
+  const tree = await import(pathToFileURL(path.join(root, 'frontend/src/lib/categoryTree.ts')).href);
+  const cats = [{ _id: 'a', slug: 'accessories' }, { _id: 'l', slug: 'laptops' }, { _id: 'm', slug: 'mice', parent: 'a' }, { _id: 'h', slug: 'headphones', parent: 'a' }] as never[];
+  assert.deepEqual(tree.withSubCategories(tree.mainCategories(cats), cats).map((c: { slug: string }) => c.slug), ['accessories', 'mice', 'headphones', 'laptops']);
+  assert.equal(tree.isSubCategory(cats[2], cats), true);
+  assert.equal(tree.isSubCategory(cats[0], cats), false);
+});

@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useT } from '@/hooks/useT'
 import { categoryIcon } from '@/lib/categoryIcon'
-import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
+import { childrenOf, mainCategories } from '@/lib/categoryTree'
 import { cn } from '@/lib/cn'
 import { categoryDisplayName } from '@/i18n'
 import { useLocaleStore } from '@/store/localeStore'
@@ -110,7 +110,6 @@ export function ShopFilters({
     setMax(values.maxPrice ?? '')
   }, [values.minPrice, values.maxPrice])
 
-  const activeMain = mainOf(categories, categories.find((c) => c.slug === values.category))
   const amount = (n: string) => Number(n).toLocaleString('fr-MA')
   const presetOn = (p: { min?: string; max?: string }) => (p.min || '') === (values.minPrice || '') && (p.max || '') === (values.maxPrice || '')
   const applyRange = (e: FormEvent) => {
@@ -141,7 +140,6 @@ export function ShopFilters({
           <Choice round on={!values.category} label={t('shop.allCategories')} onClick={() => onChange({ ...values, category: undefined })} />
           {mainCategories(categories).map((c) => {
             const subs = childrenOf(categories, c._id)
-            const open = activeMain?._id === c._id
             return (
               <div key={c._id}>
                 <Choice
@@ -151,7 +149,7 @@ export function ShopFilters({
                   label={categoryDisplayName(locale, c.slug, c.name)}
                   onClick={() => onChange({ ...values, category: c.slug })}
                 />
-                {open && subs.length ? (
+                {subs.length ? (
                   <div className="ms-3 border-s-2 border-[rgb(0_194_255/0.3)] ps-2">
                     {subs.map((s) => (
                       <Choice key={s._id} round on={values.category === s.slug} label={categoryDisplayName(locale, s.slug, s.name)} onClick={() => onChange({ ...values, category: s.slug })} />

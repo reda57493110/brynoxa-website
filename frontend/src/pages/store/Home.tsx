@@ -18,7 +18,7 @@ import {
   HomeSignatureBanner,
   SIGNATURE_PHOTO,
 } from '@/components/home/HomeBlocks'
-import { mainCategories } from '@/lib/categoryTree'
+import { mainCategories, withSubCategories } from '@/lib/categoryTree'
 import { canonicalCategorySlug } from '@/lib/categorySlug'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -86,6 +86,9 @@ export function Home() {
     (c): c is (typeof categoryList)[number] => Boolean(c)
   )
   const homeCategories = [...chosen, ...categoryList.filter((c) => !c.parent && !chosen.includes(c))].slice(0, HOME_CATEGORY_MAX)
+  // The menu and the round photos also show the sub-categories, under their main one
+  const shownCategories = (categories.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking')
+  const homeWithSubs = withSubCategories(homeCategories, shownCategories)
 
   // Sections further down rise in as they scroll into view (not on screens that ask for less
   // motion). Only those below the screen at the start wait; nothing above ever hides.
@@ -123,7 +126,7 @@ export function Home() {
       <HomeHero
         deals={deals.products}
         dealsPending={deals.pending}
-        categories={homeCategories}
+        categories={homeWithSubs}
         categoriesLoading={categories.isLoading}
         onSale={rows.deals}
       />
@@ -131,7 +134,7 @@ export function Home() {
       <HomeTrustBar />
 
       {/* Categories: the page title, then the categories as round photos */}
-      <HomeIntro categories={homeCategories} loading={categories.isLoading} error={categories.isError} onRetry={() => categories.refetch()} />
+      <HomeIntro categories={homeWithSubs} loading={categories.isLoading} error={categories.isError} onRetry={() => categories.refetch()} />
 
       <HomeDealsBlock products={rows.deals} />
 

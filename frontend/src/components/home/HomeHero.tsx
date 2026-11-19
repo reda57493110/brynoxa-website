@@ -4,6 +4,8 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useT } from '@/hooks/useT'
 import { categoryIcon } from '@/lib/categoryIcon'
+import { isSubCategory } from '@/lib/categoryTree'
+import { cn } from '@/lib/cn'
 import { categoryDisplayName } from '@/i18n'
 import { bestDiscount } from '@/lib/homeRows'
 import { useLocaleStore } from '@/store/localeStore'
@@ -90,20 +92,31 @@ export function HomeHero({
                       <Skeleton className="h-6 rounded-md" />
                     </li>
                   ))
-                : categories.map((c) => (
+                : categories.map((c) => {
+                    const sub = isSubCategory(c, categories)
+                    return (
                     <li key={c._id}>
                       <Link
                         to={`/category/${c.slug}`}
-                        className="group flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-[var(--fg)] transition hover:bg-[var(--bg-muted)] hover:text-[var(--brand-text)]"
+                        className={cn(
+                          'group flex items-center gap-3 px-4 text-[var(--fg)] transition hover:bg-[var(--bg-muted)] hover:text-[var(--brand-text)]',
+                          sub ? 'py-1.5 ps-9 text-[13px] font-medium text-[var(--fg-muted)]' : 'py-2.5 text-sm font-semibold'
+                        )}
                       >
-                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)]">
-                          <SiteIcon name={categoryIcon(c.slug, c.name)} size={16} />
+                        <span
+                          className={cn(
+                            'grid shrink-0 place-items-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)]',
+                            sub ? 'size-6' : 'size-8'
+                          )}
+                        >
+                          <SiteIcon name={categoryIcon(c.slug, c.name)} size={sub ? 13 : 16} />
                         </span>
                         <span className="min-w-0 flex-1 truncate">{categoryDisplayName(locale, c.slug, c.name)}</span>
                         <SiteIcon name="chevron-right" size={14} className="text-[var(--fg-muted)] rtl:rotate-180" />
                       </Link>
                     </li>
-                  ))}
+                    )
+                  })}
             </ul>
             <Link to="/shop" className="flex items-center justify-between border-t border-[var(--border)] px-4 py-3 text-sm font-bold text-[var(--brand-text)] hover:bg-[var(--bg-muted)]">
               {t('home.seeMoreCategories')}

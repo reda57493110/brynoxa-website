@@ -148,8 +148,8 @@ export function ShopBanner({
       </nav>
 
       <section aria-labelledby="shop-heading" className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#05080b] text-white sm:rounded-[2rem]">
-        <img src={photo} alt="" width={1600} height={600} fetchPriority="high" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[60%_45%] opacity-70" />
-        <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.45)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.9)_45%,rgb(5_8_11/0.45)_100%)]" aria-hidden="true" />
+        <img src={photo} alt="" width={1600} height={600} fetchPriority="high" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[60%_45%]" />
+        <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.82)_38%,rgb(5_8_11/0.25)_75%,rgb(5_8_11/0.1)_100%)] rtl:bg-[linear-gradient(270deg,rgb(5_8_11/0.96)_0%,rgb(5_8_11/0.82)_38%,rgb(5_8_11/0.25)_75%,rgb(5_8_11/0.1)_100%)]" aria-hidden="true" />
         <span className="absolute inset-x-0 bottom-0 -z-10 h-1 bg-[linear-gradient(90deg,var(--brand),transparent)]" aria-hidden="true" />
         <div className="grid gap-5 p-4 sm:p-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-10 lg:p-10">
           <div className="min-w-0">

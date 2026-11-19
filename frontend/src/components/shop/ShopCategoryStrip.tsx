@@ -63,11 +63,20 @@ export function ShopCategoryStrip({
             <li key={c._id} className="w-[11rem] shrink-0 snap-start sm:w-[14rem]">
               <button type="button" onClick={() => onPick(c.slug)} aria-pressed={on} className={card(on)}>
                 <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[var(--bg-muted)] text-[var(--brand-text)] sm:size-14">
+                  {/* The icon shows until the photo arrives (and stays if there is none) */}
+                  <SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />
                   {thumb ? (
-                    <img src={thumb} alt="" width={56} height={56} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
-                  ) : (
-                    <SiteIcon name={categoryIcon(c.slug, c.name)} size={20} />
-                  )}
+                    <img
+                      src={thumb}
+                      alt=""
+                      width={56}
+                      height={56}
+                      // At the top of the page: loaded at once, not after the product photos
+                      loading="eager"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                    />
+                  ) : null}
                 </span>
                 <span className="min-w-0 text-[12.5px] font-extrabold uppercase leading-tight sm:text-sm">
                   <span className="line-clamp-2">{categoryDisplayName(locale, c.slug, c.name)}</span>

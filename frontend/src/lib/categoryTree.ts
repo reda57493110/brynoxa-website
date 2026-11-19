@@ -33,3 +33,14 @@ export function categoryTree<T extends Category>(list: T[]): { category: T; dept
     ...childrenOf(list, m._id).map((c) => ({ category: c, depth: 1 as const })),
   ])
 }
+
+/** Each main category followed by its sub-categories (Accessories, Mice, Headphones, Components…) */
+export function withSubCategories<T extends Category>(mains: T[], all: T[]): T[] {
+  return mains.flatMap((m) => [m, ...childrenOf(all, m._id)])
+}
+
+/** True for a sub-category (its parent is in the list) */
+export function isSubCategory<T extends Category>(c: T, all: T[]): boolean {
+  const p = parentIdOf(c)
+  return Boolean(p && all.some((x) => x._id === p))
+}

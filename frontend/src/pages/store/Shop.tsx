@@ -18,7 +18,7 @@ import { ShopCategoryStrip } from '@/components/shop/ShopCategoryStrip'
 import { ShopFilters, type ShopFilterValues } from '@/components/shop/ShopFilters'
 import { ShopListCard } from '@/components/shop/ShopListCard'
 import { cn } from '@/lib/cn'
-import { childrenOf, mainCategories, mainOf } from '@/lib/categoryTree'
+import { childrenOf, mainCategories, mainOf, withSubCategories } from '@/lib/categoryTree'
 import { categoryPhoto } from '@/lib/categoryPhoto'
 import { useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
@@ -224,7 +224,8 @@ export function Shop({ categorySlug }: { categorySlug?: string } = {}) {
 
   // Cards under the banner: sub-categories inside a category that has some, else the main ones
   const stripInside = Boolean(activeMain && subList.length)
-  const stripItems = stripInside ? subList : mainList
+  // "All": every main category followed by its sub-categories (Accessories, Mice, Headphones…)
+  const stripItems = stripInside ? subList : withSubCategories(mainList, categoryList)
   const stripActive = stripInside ? (filters.category === activeMain!.slug ? undefined : filters.category) : filters.category
 
   // Quick choices above the products (each a toggle): deals, in stock, the budget bands, Brynoxa
