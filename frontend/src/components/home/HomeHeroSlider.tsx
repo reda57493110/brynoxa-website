@@ -21,16 +21,12 @@ function primaryImage(p: Product) {
   return p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url || undefined
 }
 
-/** The dark Brynoxa frame of the banner: cyan glow and a faint grid, the same in both themes */
+/** The Brynoxa frame of the banner: a soft cyan glow (dark; light in light mode, see .ink) */
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative isolate flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#070a0d] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.55)] sm:rounded-[2rem]">
+    <div className="relative isolate flex h-full flex-col ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#070a0d] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.55)] sm:rounded-[2rem]">
       <div
         className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_80%_at_85%_40%,rgb(0_194_255/0.22),transparent_65%),radial-gradient(50%_70%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:44px_44px] [mask-image:radial-gradient(80%_80%_at_70%_40%,black,transparent)]"
         aria-hidden="true"
       />
       {children}
@@ -110,7 +106,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         </div>
 
         <h2 className="text-white mt-1.5 line-clamp-2 font-display text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl lg:text-[2.2rem] lg:leading-[1.1]">
-          <Link to={href} className="hover:text-[#9be8ff] focus-visible:outline-none focus-visible:underline">
+          <Link to={href} className="hover:text-[var(--brand-text)] focus-visible:outline-none focus-visible:underline">
             {product.name}
           </Link>
           {product.variantLabel ? <span className="font-medium text-white/60"> · {product.variantLabel}</span> : null}
@@ -140,7 +136,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] sm:mt-2 sm:gap-x-3 sm:text-xs">
           {d ? (
-            <span className="inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 font-semibold text-[#9be8ff]">
+            <span className="inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 font-semibold text-[var(--brand-text)]">
               {t('home.spotlightSave', { amount: formatCurrency(d.saved) })}
             </span>
           ) : null}

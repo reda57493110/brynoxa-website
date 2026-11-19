@@ -17,10 +17,10 @@ function PromoTile({ to, photo, kicker, title, cta }: { to: string; photo: strin
   return (
     <Link
       to={to}
-      className="group relative isolate flex min-h-[6.5rem] flex-col justify-end overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.2)] bg-[#05080b] p-2.5 text-white sm:min-h-[11rem] sm:p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+      className="group relative isolate flex min-h-[6.5rem] flex-col justify-end ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.2)] bg-[#05080b] p-2.5 text-white sm:min-h-[11rem] sm:p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
     >
       <img src={photo} alt="" width={480} height={300} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
-      <span className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.05)_0%,rgb(5_8_11/0.6)_55%,rgb(5_8_11/0.95)_100%)]" aria-hidden="true" />
+      <span className="ink-shade-y absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.05)_0%,rgb(5_8_11/0.6)_55%,rgb(5_8_11/0.95)_100%)]" aria-hidden="true" />
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{kicker}</span>
       <span className="mt-0.5 font-display text-[13px] font-extrabold uppercase leading-tight sm:text-xl">{title}</span>
       <span className="mt-1 inline-flex items-center gap-1 text-[10.5px] font-semibold text-white/80 transition group-hover:text-[var(--brand)] sm:text-sm">
@@ -133,10 +133,10 @@ export function HomeHero({
             ) : (
               <Link
                 to="/shop"
-                className="relative isolate flex h-full min-h-[14rem] flex-col justify-end overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#05080b] p-6 text-white sm:rounded-[2rem] sm:p-10"
+                className="relative isolate flex h-full min-h-[14rem] flex-col justify-end ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.28)] bg-[#05080b] p-6 text-white sm:rounded-[2rem] sm:p-10"
               >
                 <img src="/categories/gaming-pcs.webp" alt="" width={960} height={600} className="absolute inset-0 -z-20 h-full w-full object-cover" />
-                <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(5_8_11/0.95),rgb(5_8_11/0.3))] rtl:bg-[linear-gradient(270deg,rgb(5_8_11/0.95),rgb(5_8_11/0.3))]" aria-hidden="true" />
+                <span className="ink-shade-x absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgb(5_8_11/0.95),rgb(5_8_11/0.3))] rtl:bg-[linear-gradient(270deg,rgb(5_8_11/0.95),rgb(5_8_11/0.3))]" aria-hidden="true" />
                 <span className="font-display text-2xl font-extrabold uppercase sm:text-4xl">{t('home.featuredTitle')}</span>
                 <span className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-[var(--brand-fg)]">
                   {t('home.browseShop')}

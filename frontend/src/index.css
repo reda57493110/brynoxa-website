@@ -521,3 +521,36 @@ html[lang="ar"] {
     transition: transform 0.7s ease;
   }
 }
+
+/* Brynoxa "ink" cards (deals banner, photo tiles, Signature, setups band…): dark in dark mode; in
+   light mode a light cyan-tinted card with dark text, so they match the rest of the page.
+   Inside them "white" means "the card's text colour". */
+.ink {
+  --ink-base: #05080b;
+}
+html:not(.dark) .ink {
+  --color-white: #0c1218;
+  --ink-base: #ffffff;
+  background-color: #f3fbff;
+  background-image: linear-gradient(150deg, #ffffff 0%, #f1faff 55%, #e2f6fe 100%);
+  box-shadow: 0 24px 60px -40px rgb(0 140 190 / 0.45);
+}
+html:not(.dark) .ink .text-\[var\(--brand\)\] {
+  color: #0089b8;
+}
+html:not(.dark) .ink .text-\[\#3dd68c\] {
+  color: var(--success);
+}
+html:not(.dark) .ink .text-\[\#ffc53d\] {
+  color: var(--warning);
+}
+/* The shade over a photo turns light, so dark text stays readable on it */
+html:not(.dark) .ink .ink-shade-x {
+  background-image: linear-gradient(90deg, rgb(248 252 255 / 0.97) 0%, rgb(248 252 255 / 0.9) 38%, rgb(248 252 255 / 0.35) 75%, rgb(248 252 255 / 0.1) 100%);
+}
+html:not(.dark)[dir="rtl"] .ink .ink-shade-x {
+  background-image: linear-gradient(270deg, rgb(248 252 255 / 0.97) 0%, rgb(248 252 255 / 0.9) 38%, rgb(248 252 255 / 0.35) 75%, rgb(248 252 255 / 0.1) 100%);
+}
+html:not(.dark) .ink .ink-shade-y {
+  background-image: linear-gradient(180deg, rgb(244 251 255 / 0) 35%, rgb(244 251 255 / 0.8) 65%, rgb(244 251 255 / 0.98) 100%);
+}

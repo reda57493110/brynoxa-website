@@ -145,10 +145,9 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
   const lead = (
     <Link
       to="/shop?onSale=true"
-      className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
+      className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
     >
       <span className="absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
-      <SiteIcon name="tag" size={130} className="absolute -bottom-6 -end-6 -z-10 rotate-[-14deg] text-[rgb(0_194_255/0.12)]" />
       <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-fg)] sm:text-[11px]">
         <SiteIcon name="tag" size={12} />
         {t('home.dealsKicker')}
@@ -160,10 +159,10 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
         <span className="mt-1.5 block font-display text-[13px] font-extrabold uppercase leading-tight sm:mt-2 sm:text-xl">{t('home.dealsTitle')}</span>
         <span className="mt-1 block text-[11.5px] text-white/65 sm:text-[13px]">{t('home.dealsCount', { count: products.length })}</span>
         {saved > 0 ? (
-          <span className="mt-2 inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 text-[11px] font-bold text-[#9be8ff] sm:text-xs">{t('home.dealsSaveUpTo', { amount: formatCurrency(saved) })}</span>
+          <span className="mt-2 inline-flex rounded-md bg-[rgb(0_194_255/0.16)] px-2 py-0.5 text-[11px] font-bold text-[var(--brand-text)] sm:text-xs">{t('home.dealsSaveUpTo', { amount: formatCurrency(saved) })}</span>
         ) : null}
       </span>
-      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#05080b] transition group-hover:bg-[var(--brand)] sm:text-sm">
+      <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[var(--ink-base)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:text-sm">
         {t('home.seeAllDeals')}
         <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
       </span>
@@ -296,9 +295,9 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
   return (
     <section id="signature" data-reveal="" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
-        <div className="relative isolate overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
+        <div className="relative isolate ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
           <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[70%_50%] opacity-80" />
-          <span className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
+          <span className="ink-shade-x absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
           <div className="flex min-h-[11rem] flex-col justify-center p-4 sm:min-h-[19rem] sm:p-10 lg:p-12">
             <div className="flex items-center gap-3">
               <span className="inline-flex size-9 overflow-hidden rounded-xl ring-1 ring-[rgb(0_194_255/0.5)] shadow-[0_0_24px_-4px_rgb(0_194_255/0.8)] sm:size-14 sm:rounded-2xl">
@@ -351,17 +350,17 @@ export function HomeCategoryTabs({ categories }: { categories: Category[] }) {
   const lead = (
     <Link
       to={`/category/${active.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.3)] bg-[#05080b] text-white transition hover:border-[var(--brand)]"
+      className="group flex h-full flex-col ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.3)] bg-[#05080b] text-white transition hover:border-[var(--brand)]"
     >
       {/* The photo in its own landscape frame (a wide photo is never squeezed into a tall card) */}
       <span className="relative block aspect-[4/3] overflow-hidden">
         <CategoryPhoto category={active} sizes="(min-width: 1024px) 18rem, 46vw" className="brightness-[0.85] saturate-[0.9]" />
-        <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#05080b)]" aria-hidden="true" />
+        <span className="ink-shade-y absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#05080b)]" aria-hidden="true" />
       </span>
       <span className="flex flex-1 flex-col justify-end p-4 pt-1 sm:p-5 sm:pt-1">
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{t('home.categoriesKicker')}</span>
       <span className="mt-1 font-display text-lg font-black uppercase leading-tight sm:text-2xl">{name}</span>
-      <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#05080b] transition group-hover:bg-[var(--brand)] sm:text-sm">
+      <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[var(--ink-base)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:text-sm">
         {t('home.catSeeAll')}
         <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
       </span>
@@ -513,12 +512,8 @@ export function HomeSetupsBand() {
   return (
     <section id="setups" data-reveal="" aria-labelledby="home-setups-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
-        <div className="relative isolate overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
+        <div className="relative isolate ink overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
           <span className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
-          <span
-            className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:40px_40px]"
-            aria-hidden="true"
-          />
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.setupsBandKicker')}</p>
           <h2 id="home-setups-heading" className="text-white mt-1 font-display text-base font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('home.setupsBandTitle')}

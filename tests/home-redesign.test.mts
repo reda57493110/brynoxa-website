@@ -133,3 +133,26 @@ test('banner: a small photo and the price of each deal under it (computers)', ()
   assert.ok(s.includes("sizedImageUrl(primaryImage(p), 120)"));
   assert.ok(s.includes('{formatCurrency(p.price)}</span>'));
 });
+
+test('light mode: the Brynoxa cards turn light with dark text, no grid squares or shapes inside', () => {
+  const read = (p: string) => fs.readFileSync(path.join(root, 'frontend/src', p), 'utf8')
+  const css = read('index.css')
+  assert.match(css, /html:not\(\.dark\) \.ink \{[^}]*--color-white: #0c1218;[^}]*background-image: linear-gradient/, 'light card, "white" text becomes dark')
+  assert.ok(css.includes(String.raw`html:not(.dark) .ink .text-\[var\(--brand\)\]`), 'a darker cyan stays readable on the light card')
+  assert.match(css, /html:not\(\.dark\) \.ink \.ink-shade-x/)
+  assert.match(css, /html:not\(\.dark\) \.ink \.ink-shade-y/)
+  const files = ['components/home/HomeBlocks.tsx', 'components/home/HomeHero.tsx', 'components/home/HomeHeroSlider.tsx', 'pages/store/Setups.tsx']
+  let cards = 0
+  for (const f of files) {
+    const s = read(f)
+    for (const m of s.matchAll(/className="([^"]*bg-\[#0[57]0[8a]0[bd]\][^"]*)"/g)) {
+      if (/\babsolute\b/.test(m[1]) && !/\binset-0\b/.test(m[1])) continue
+      assert.match(m[1], /(^|\s)ink(\s|$)/, `${f}: every dark card follows light mode`)
+      cards++
+    }
+    assert.doesNotMatch(s, /background-size:4[04]px/, `${f}: no grid squares`)
+    assert.doesNotMatch(s, /text-\[#9be8ff\]/,`${f}: no pale cyan text`)
+  }
+  assert.ok(cards >= 8, String(cards))
+  assert.doesNotMatch(read('components/home/HomeBlocks.tsx'), /name="tag" size=\{130\}/, 'no big tag shape in the deals card')
+})

@@ -77,12 +77,8 @@ export function Setups() {
         </nav>
 
         {/* The band: title and the four setups (same look as the home "Find your next setup") */}
-        <section aria-labelledby="setups-heading" className="relative isolate overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
+        <section aria-labelledby="setups-heading" className="relative isolate ink overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10">
           <span className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
-          <span
-            className="absolute inset-0 -z-10 opacity-[0.06] [background-image:linear-gradient(rgb(255_255_255)_1px,transparent_1px),linear-gradient(90deg,rgb(255_255_255)_1px,transparent_1px)] [background-size:40px_40px]"
-            aria-hidden="true"
-          />
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('home.setupsBandKicker')}</p>
           <h1 id="setups-heading" className="text-white mt-1 font-display text-lg font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
             {t('setups.title')}
