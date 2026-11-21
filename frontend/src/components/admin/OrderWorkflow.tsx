@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Textarea } from '@/components/ui/Textarea'
 import { Panel } from '@/components/admin/Panel'
-import { SiteIcon } from '@/components/ui/SiteIcon'
 import { formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import {
@@ -47,22 +46,22 @@ const WHEN: Record<string, AdminKey> = {
 }
 
 /**
- * Every status of the workflow, grouped: the current one highlighted, the ones reachable now
- * clickable, the rest greyed out with when they become available.
+ * Every status of the workflow, grouped, all clickable: the current one highlighted ("Now"), the
+ * usual next steps marked. Partly returned / returned open the "Returned items" section (they come
+ * from registering what came back).
  */
 function StatusMap({
   current,
   next,
   onPick,
-  blocked,
 }: {
   current: OrderStatus
   next: OrderStatus[]
   onPick: (s: OrderStatus) => void
-  blocked: (s: OrderStatus) => string
+  blocked?: (s: OrderStatus) => string
 }) {
   const tr = useAdminT()
-  const when = (s: OrderStatus) => (WHEN[s] ? tr(WHEN[s]) : '')
+  void WHEN
   return (
     <div className="mt-4 grid gap-3 border-t border-[var(--border)] pt-3 sm:grid-cols-2 xl:grid-cols-5">
       {ORDER_GROUPS.map((g) => (
@@ -73,25 +72,27 @@ function StatusMap({
           <ul className="space-y-1">
             {statusesInGroup(g.id).map((s) => {
               const isCurrent = s === current
-              const reachable = !isCurrent && next.includes(s) && !blocked(s)
+              const suggested = !isCurrent && next.includes(s)
               const viaReturns = s === 'returned' || s === 'partially_returned'
               return (
                 <li key={s}>
                   <button
                     type="button"
-                    disabled={!reachable}
+                    disabled={isCurrent}
+                    aria-current={isCurrent ? 'step' : undefined}
                     onClick={() => onPick(s)}
-                    title={isCurrent ? tr('order.currentStatus') : reachable ? tr('order.moveTo', { status: orderStatusLabel(s) }) : blocked(s) || when(s)}
+                    title={isCurrent ? tr('order.currentStatus') : tr('order.moveTo', { status: orderStatusLabel(s) })}
                     className={cn(
-                      'flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-start text-xs',
-                      isCurrent && 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_14%,transparent)] font-semibold',
-                      reachable && 'border-[var(--border)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
-                      !isCurrent && !reachable && 'cursor-not-allowed border-dashed border-[var(--border)] text-[var(--fg-muted)] opacity-70'
+                      'flex w-full min-w-0 items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-start text-xs transition',
+                      isCurrent
+                        ? 'cursor-default border-[var(--brand)] bg-[var(--brand)] font-bold text-[var(--brand-fg)] shadow-glow'
+                        : 'border-[var(--border)] bg-[var(--bg)] font-medium text-[var(--fg)] hover:border-[var(--brand)] hover:text-[var(--brand-text)]',
+                      suggested && 'border-[color-mix(in_srgb,var(--brand)_55%,var(--border))]'
                     )}
                   >
                     <span className="truncate">{orderStatusLabel(s)}</span>
-                    <span className="shrink-0 text-[10px] font-normal">
-                      {isCurrent ? tr('order.now') : reachable ? tr('order.available') : viaReturns ? tr('order.viaReturns') : blocked(s) ? tr('order.depositFirst') : when(s)}
+                    <span className={cn('shrink-0 text-[10px]', isCurrent ? 'font-bold' : 'font-normal text-[var(--fg-muted)]')}>
+                      {isCurrent ? tr('order.now') : viaReturns ? tr('order.viaReturns') : suggested ? tr('order.nextStep') : ''}
                     </span>
                   </button>
                 </li>
@@ -139,13 +140,18 @@ export function OrderStatusActions({ order }: { order: Order }) {
   const [note, setNote] = useState('')
   const [staffNote, setStaffNote] = useState('')
   const [touched, setTouched] = useState(false)
-  // Phones: the map of every status is long, so it opens on demand
-  const [showMap, setShowMap] = useState(false)
-
   const awaitingDeposit = order.deposit?.status === 'pending'
-  const blocked = (s: OrderStatus) => (s === 'confirmed' && awaitingDeposit ? tr('order.depositBlock') : '')
+  // The stock already left the store (shipped or later)
+  const stockOut = Boolean(order.stockDispatched)
 
   const open = (s: OrderStatus) => {
+    // Partly returned / returned come from registering the items that came back
+    if (s === 'returned' || s === 'partially_returned') {
+      const panel = document.getElementById('order-returns')
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      else toast.info(tr('order.returnsAfterShip'))
+      return
+    }
     setTarget(s)
     setReason('')
     setDate(s === 'rescheduled' && order.rescheduledFor ? order.rescheduledFor.slice(0, 10) : '')
@@ -155,7 +161,8 @@ export function OrderStatusActions({ order }: { order: Order }) {
   }
 
   const errors = {
-    reason: target === 'delivery_failed' && !reason ? tr('order.chooseReason') : undefined,
+    // The reason is optional (nothing has to be written to change a status)
+    reason: undefined as string | undefined,
     date: target === 'rescheduled' && !date ? tr('order.chooseDate') : target === 'rescheduled' && date < todayInput() ? tr('order.todayOrLater') : undefined,
   }
 
@@ -168,6 +175,7 @@ export function OrderStatusActions({ order }: { order: Order }) {
           ...(staffNote.trim() ? { staffNote: staffNote.trim() } : {}),
           ...(reason ? { reason } : {}),
           ...(date ? { rescheduledFor: date } : {}),
+          ...(target === 'confirmed' && awaitingDeposit ? { depositOverride: true } : {}),
         })
       ).data.data,
     onSuccess: (o) => {
@@ -196,8 +204,6 @@ export function OrderStatusActions({ order }: { order: Order }) {
               key={s}
               size="sm"
               variant={target === s ? 'primary' : DANGER.includes(s) ? 'danger' : 'secondary'}
-              disabled={Boolean(blocked(s))}
-              title={blocked(s) || undefined}
               onClick={() => (target === s ? setTarget(null) : open(s))}
             >
               {s === current ? tr('order.changeDate') : (TRANSITION_LABEL[s] ?? orderStatusLabel(s))}
@@ -219,22 +225,9 @@ export function OrderStatusActions({ order }: { order: Order }) {
       {returnable && current !== 'return_in_transit' ? (
         <p className="mt-2 text-xs text-[var(--fg-muted)]">{tr('order.parcelBack')}</p>
       ) : null}
-      <button
-        type="button"
-        onClick={() => setShowMap((v) => !v)}
-        aria-expanded={showMap}
-        className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-text)] sm:hidden"
-      >
-        {showMap ? tr('order.hideStatuses') : tr('order.showStatuses')}
-        <SiteIcon name="chevron-down" size={13} className={cn('transition', showMap && 'rotate-180')} />
-      </button>
-      <div className={cn(!showMap && 'max-sm:hidden')}>
-        <StatusMap current={current} next={next} blocked={blocked} onPick={(s) => open(s)} />
-      </div>
-
-      {awaitingDeposit && next.includes('confirmed') ? (
-        <p className="mt-2 text-xs text-[var(--warning)]">{tr('order.confirmNeedsDeposit')}</p>
-      ) : null}
+      {/* Every status, all clickable (also on phones) */}
+      <StatusMap current={current} next={next} onPick={(s) => (target === s ? setTarget(null) : open(s))} />
+      <p className="mt-2 text-[11px] text-[var(--fg-muted)]">{tr('order.pickAny')}</p>
 
       {target ? (
         <form
@@ -284,6 +277,13 @@ export function OrderStatusActions({ order }: { order: Order }) {
             value={staffNote}
             onChange={(e) => setStaffNote(e.target.value)}
           />
+          {target === 'confirmed' && awaitingDeposit ? <p className="text-xs text-[var(--warning)]">{tr('order.depositOverride')}</p> : null}
+          {current === 'delivered' && target !== 'return_requested' && target !== 'return_in_transit' ? (
+            <p className="text-xs text-[var(--warning)]">{tr('order.backFromDelivered')}</p>
+          ) : null}
+          {stockOut && ['pending', 'no_answer', 'confirmed', 'cancelled'].includes(target) ? (
+            <p className="text-xs text-[var(--warning)]">{tr('order.stockOut')}</p>
+          ) : null}
           {target === 'cancelled' && order.deposit?.status === 'received' ? (
             <p className="text-xs text-[var(--warning)]">{tr('order.depositReceivedCancel')}</p>
           ) : null}

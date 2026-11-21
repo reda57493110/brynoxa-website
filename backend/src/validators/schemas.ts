@@ -275,6 +275,8 @@ export const updateOrderStatusSchema = z.object({
   staffNote: z.string().max(1000).optional(),
   reason: z.enum(DELIVERY_ISSUES).optional(),
   rescheduledFor: z.string().max(40).optional(),
+  /** Confirm although the deposit is not received yet (the order page asks first) */
+  depositOverride: z.boolean().optional(),
 });
 
 /** Staff log a call / message to the customer. */

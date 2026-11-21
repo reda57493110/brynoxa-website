@@ -325,6 +325,7 @@ async function handleOrderRoutes(req, res, route, query) {
       reason: body.reason,
       rescheduledFor: body.rescheduledFor,
       staffNote: body.staffNote,
+      depositOverride: body.depositOverride,
       by: String(user._id),
     });
     resetDashboardCaches();

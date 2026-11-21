@@ -235,6 +235,8 @@ export const adminApi = {
         staffNote?: string
         reason?: string
         rescheduledFor?: string
+        /** Confirm although the deposit is not received yet */
+        depositOverride?: boolean
       }
     ) => api.patch<ApiResponse<Order>>(`/admin/orders/${id}/status`, payload),
     logContact: (id: string, payload: Pick<OrderContactAttempt, 'channel' | 'outcome' | 'note'>) =>

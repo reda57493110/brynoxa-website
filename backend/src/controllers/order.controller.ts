@@ -139,7 +139,7 @@ export const updateOrderStatus = asyncHandler(async (req: AuthRequest, res: Resp
     req.body.orderStatus,
     req.body.note,
     req.body.adminNote,
-    { reason: req.body.reason, rescheduledFor: req.body.rescheduledFor, staffNote: req.body.staffNote, by: req.user?.userId }
+    { reason: req.body.reason, rescheduledFor: req.body.rescheduledFor, staffNote: req.body.staffNote, depositOverride: req.body.depositOverride, by: req.user?.userId }
   );
   sendSuccess(res, await orderService.getOrderById(String(order._id)), 'Order updated');
 });

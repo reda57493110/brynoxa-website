@@ -716,6 +716,8 @@ export interface StatusChangeExtra {
   by?: string;
   /** No message to the customer (steps of an order entered by staff). */
   silent?: boolean;
+  /** Staff chose to confirm although the deposit is not received yet (asked on the order page). */
+  depositOverride?: boolean;
 }
 
 const DELIVERY_ISSUE_LABEL: Record<DeliveryIssue, string> = {
@@ -743,14 +745,21 @@ function storeDayLabel(date: Date) {
   return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Casablanca', weekday: 'short', day: 'numeric', month: 'short' }).format(date);
 }
 
+/** Statuses where the parcel has left the store (its stock is out) */
+const AFTER_SHIPPING: OrderStatus[] = ['shipped', 'delivery_failed', 'rescheduled', 'delivered', 'return_requested', 'return_in_transit'];
+
 /**
- * Staff (or the customer cancelling) move an order to its next status. Only moves listed in
- * ORDER_TRANSITIONS are accepted. Side effects, each at most once per order:
- * - confirmed: stock reserved (available → reserved)
- * - shipped: stock leaves the store (reserved → out)
+ * Staff move an order to ANY status (forwards, or back to correct a mistake); the customer's own
+ * cancel is checked before (cancelUserOrder: pending only). Stock and payment follow, each at
+ * most once per order:
+ * - confirmed or later: stock reserved (available → reserved)
+ * - shipped or later: stock leaves the store (reserved → out)
+ * - back to pending / no answer before shipping: reservation released
  * - cancelled (before shipping): reservation released, coupon use given back
  * - delivered: cash collected (paymentStatus paid, deliveredAt)
- * Refunds and returned units are never touched here: they have their own records.
+ * - back from delivered (a correction): cash no longer counted as collected
+ * Partly returned / returned come only from registering the items (their own records, restock).
+ * Refunds and returned units are never touched here.
  */
 export async function updateOrderStatus(
   orderId: string,
@@ -780,13 +789,13 @@ export async function updateOrderStatus(
   if (RECEIPT_STATUSES.includes(orderStatus)) {
     throw new ApiError(400, 'Register the items that came back under "Returned items"; the status updates itself');
   }
-  if (prev !== orderStatus && !ORDER_TRANSITIONS[prev].includes(orderStatus)) {
-    throw new ApiError(400, `Cannot move an order from ${prev.replace(/_/g, ' ')} to ${orderStatus.replace(/_/g, ' ')}`);
-  }
+  // Any other status is allowed (staff choose freely; ORDER_TRANSITIONS only suggests the next steps)
+  void ORDER_TRANSITIONS;
   if (prev === 'partially_returned' && orderStatus === 'delivered' && wasDelivered(order)) {
     throw new ApiError(400, 'This order was already delivered');
   }
-  if (orderStatus === 'delivery_failed' && !(extra.reason && DELIVERY_ISSUES.includes(extra.reason))) {
+  // The reason is optional; when given it must be one of the known ones
+  if (orderStatus === 'delivery_failed' && extra.reason && !DELIVERY_ISSUES.includes(extra.reason)) {
     throw new ApiError(400, 'Choose why the delivery failed');
   }
   if (orderStatus === 'rescheduled') {
@@ -796,20 +805,42 @@ export async function updateOrderStatus(
     }
   }
 
-  if (orderStatus === 'confirmed' && order.deposit && order.deposit.status !== 'received') {
+  // Confirming before the deposit arrived: only when staff said so (the order page asks first)
+  const confirmWithoutDeposit = orderStatus === 'confirmed' && Boolean(order.deposit) && order.deposit!.status !== 'received';
+  if (confirmWithoutDeposit && !extra.depositOverride) {
     throw new ApiError(400, 'Mark the deposit as received before confirming this order');
   }
 
   backfillDeliveredAt(order);
   const now = new Date();
 
-  if (orderStatus === 'confirmed' && !order.stockReserved) {
+  // Confirmed or further on: the stock is reserved (also when jumping straight to shipped / delivered)
+  if ((orderStatus === 'confirmed' || AFTER_SHIPPING.includes(orderStatus)) && !order.stockReserved && !order.stockDispatched) {
     await reserveOrderStock(order, extra.by);
     order.stockReserved = true;
   }
 
-  if (orderStatus === 'shipped' && order.stockReserved) {
+  // Shipped or further on: the stock has left the store
+  if (AFTER_SHIPPING.includes(orderStatus) && order.stockReserved) {
     await dispatchOrderStock(order, extra.by);
+  }
+
+  // Back to pending / no answer before it left: the reservation is given back
+  if ((orderStatus === 'pending' || orderStatus === 'no_answer') && order.stockReserved && !order.stockDispatched) {
+    await releaseOrderStock(order, 'status corrected', extra.by);
+    order.stockReserved = false;
+  }
+
+  // Back from delivered (a correction): the cash is no longer counted as collected
+  if (prev === 'delivered' && orderStatus !== 'return_requested' && orderStatus !== 'return_in_transit') {
+    order.deliveredAt = undefined;
+    order.uncollected = undefined;
+    if (order.paymentStatus === 'paid') order.paymentStatus = 'pending';
+  }
+
+  // Out of cancelled again: the payment is expected again
+  if (prev === 'cancelled' && orderStatus !== 'cancelled' && order.paymentStatus === 'failed') {
+    order.paymentStatus = 'pending';
   }
 
   if (orderStatus === 'cancelled' && order.stockReserved) {
@@ -843,7 +874,7 @@ export async function updateOrderStatus(
   }
 
   if (orderStatus === 'delivery_failed') {
-    order.deliveryIssue = { reason: extra.reason!, note: staffNote, at: now };
+    order.deliveryIssue = { reason: extra.reason || 'other', note: staffNote, at: now };
     order.deliveryAttempts = (order.deliveryAttempts || 0) + 1;
     order.rescheduledFor = undefined;
   }
@@ -852,10 +883,16 @@ export async function updateOrderStatus(
     order.rescheduledFor = rescheduledFor!;
   }
 
+  if (confirmWithoutDeposit) {
+    order.timeline.push({ status: orderStatus, note: 'Confirmed without the deposit (chosen by staff)', internal: true, at: now, by: extra.by as never });
+  }
+
   const dayLabel = rescheduledFor ? storeDayLabel(rescheduledFor) : '';
   const defaultNote =
     orderStatus === 'delivery_failed'
-      ? `Delivery attempt failed: ${DELIVERY_ISSUE_LABEL[extra.reason!]}`
+      ? extra.reason
+        ? `Delivery attempt failed: ${DELIVERY_ISSUE_LABEL[extra.reason]}`
+        : 'Delivery attempt failed'
       : orderStatus === 'rescheduled'
         ? `Delivery rescheduled to ${dayLabel}`
         : `Status changed to ${orderStatus.replace(/_/g, ' ')}`;
