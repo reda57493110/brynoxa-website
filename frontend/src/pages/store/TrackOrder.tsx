@@ -11,7 +11,9 @@ import { DepositNotice } from '@/components/order/DepositNotice'
 import { OrderProgress } from '@/components/order/OrderProgress'
 import { useStatusLine } from '@/lib/orderProgress'
 import { dueOnDelivery } from '@/lib/deposit'
-import { PageHero } from '@/components/layout/PageHero'
+import { PageBand, pagePanel } from '@/components/layout/PageBand'
+import { HomeHelpBand } from '@/components/home/HomeBlocks'
+import { CUSTOMER_SERVICES, SERVICE_ICON } from '@/lib/site'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
@@ -19,7 +21,7 @@ import { imageFit, sizedImageUrl } from '@/lib/image'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { whatsappHref } from '@/lib/whatsapp'
 import { useSeo } from '@/hooks/useSeo'
-import { useT } from '@/hooks/useT'
+import { useMessages, useT } from '@/hooks/useT'
 import { orderStatusKey } from '@/i18n'
 import { formatDeliveryDay, orderStatusVariant } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
@@ -222,10 +224,13 @@ export function TrackOrder() {
 
   return (
     <>
-      <PageHero title={t('orders.trackHeading')} description={t('orders.trackBody')} />
-      <Container className="py-5 sm:py-10">
-        <div className="mx-auto max-w-2xl space-y-5">
-          <form className={cn(surfaceCard, 'space-y-4 p-4 sm:p-6')} onSubmit={onSubmit}>
+      <div className="pt-2 sm:pt-4">
+        <PageBand crumbs={[{ label: t('orders.trackOrder') }]} titleId="page-heading" title={t('orders.trackHeading')} body={t('orders.trackBody')} />
+      </div>
+      <Container className="pt-3 sm:pt-5">
+        <div className="grid items-start gap-3 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-3 sm:space-y-5">
+          <form className={cn(pagePanel, 'space-y-4')} onSubmit={onSubmit}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
                 label={t('orders.trackPhone')}
@@ -276,7 +281,45 @@ export function TrackOrder() {
             {order ? <FullOrder order={order} /> : matches ? <PhoneMatches matches={matches} /> : null}
           </div>
         </div>
+          <TrackSide />
+        </div>
       </Container>
+      <HomeHelpBand />
     </>
+  )
+}
+
+/** Beside the form: the services a tracked order is about (delivery, paying at the door, returns, warranty) */
+function TrackSide() {
+  const t = useT()
+  const copy = useMessages()
+  const ids = ['delivery', 'cod', 'returns', 'warranty'] as const
+  return (
+    <aside aria-labelledby="track-side-title" className={cn(pagePanel, 'lg:sticky lg:top-24')}>
+      <h2 id="track-side-title" className="mb-2 font-display text-[13px] font-extrabold uppercase tracking-tight text-[var(--fg)] sm:mb-3 sm:text-base">
+        {t('common.services')}
+      </h2>
+      <ul className="grid grid-cols-2 gap-1.5 lg:grid-cols-1 lg:gap-2">
+        {ids.map((id) => {
+          const s = CUSTOMER_SERVICES.find((x) => x.id === id)!
+          return (
+            <li key={id}>
+              <Link
+                to={`/services/${s.slug}`}
+                className="group flex min-w-0 items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 transition hover:border-[var(--brand)] sm:p-2.5"
+              >
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--bg-muted)] text-[var(--brand-text)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-9">
+                  <SiteIcon name={SERVICE_ICON[id]} size={17} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[12px] font-bold uppercase text-[var(--fg)] sm:text-[13px]">{copy.services.items[id].title}</span>
+                  <span className="block truncate text-[10.5px] text-[var(--fg-muted)] sm:text-xs">{copy.services.items[id].highlight}</span>
+                </span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </aside>
   )
 }

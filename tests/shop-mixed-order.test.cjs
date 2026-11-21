@@ -41,7 +41,7 @@ test('launch clean-up: no repeated promises or titles that repeat the title', ()
   const contact = src('pages/store/Contact.tsx');
   assert.ok(!contact.includes('HERO_PROOF') && !contact.includes("t('contact.messageKicker')"), 'contact: no chips, no repeat heading');
   assert.ok(!contact.includes('contact-faq-heading') && contact.includes("{t('contact.helpLine')}"), 'contact: questions are in the Help Center');
-  assert.ok(src('pages/store/TrackOrder.tsx').includes("<PageHero title={t('orders.trackHeading')}"), 'track: no "Cash on delivery" heading');
+  assert.ok(src('pages/store/TrackOrder.tsx').includes("titleId=\"page-heading\" title={t('orders.trackHeading')}"), 'track: no "Cash on delivery" heading');
   assert.ok(!src('pages/store/Home.tsx').includes("t('home.categoriesKicker')"));
   assert.ok(!src('components/home/HomeBlocks.tsx').includes("t('home.budgetKicker')"));
 });

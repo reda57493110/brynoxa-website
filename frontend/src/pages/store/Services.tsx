@@ -5,15 +5,19 @@ import { SiteIcon } from '@/components/ui/SiteIcon'
 import { SafeImage } from '@/components/ui/SafeImage'
 import { HomeSectionHead } from '@/components/home/HomeShelf'
 import { HomeHelpBand } from '@/components/home/HomeBlocks'
+import { PageBand, bandGhostPill, bandPrimaryPill } from '@/components/layout/PageBand'
 import { CUSTOMER_SERVICES, SERVICE_ICON } from '@/lib/site'
 import { useMessages, useT } from '@/hooks/useT'
 import { useSeo } from '@/hooks/useSeo'
+
+const SERVICES_HERO_IMAGE =
+  'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=2560&q=80'
 
 const panel = 'rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)] p-2.5 sm:rounded-[2rem] sm:p-6 lg:p-7'
 
 /**
  * Services (/services), in the same look as the home page, the shop and the setups: the path, the
- * Brynoxa band with the title and the six services as big buttons, then each service as a photo
+ * Brynoxa band (the services photo on top, the title on it, then the six services as big buttons), then each service as a photo
  * card in a panel, and the WhatsApp help band. Each opens its own page (ServiceDetail).
  */
 export function Services() {
@@ -36,60 +40,52 @@ export function Services() {
 
   return (
     <div className="pb-6 pt-2 sm:pb-8 sm:pt-4">
+      <PageBand
+        crumbs={[{ label: t('common.services') }]}
+        titleId="services-hero-title"
+        image={SERVICES_HERO_IMAGE}
+        imagePosition="object-[50%_55%]"
+        kicker={t('services.bandKicker')}
+        title={copy.services.heroTitle}
+        accent={copy.services.heroTitleAccent}
+        body={copy.services.heroBody}
+        below={
+              <ul className="grid grid-cols-2 gap-1.5 sm:gap-3 lg:grid-cols-3">
+                {CUSTOMER_SERVICES.map((s) => {
+                  const item = copy.services.items[s.id]
+                  return (
+                    <li key={s.id}>
+                      <Link
+                        to={`/services/${s.slug}`}
+                        className="group flex h-full min-w-0 items-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.04] p-2.5 transition hover:border-[var(--brand)] hover:bg-[rgb(0_194_255/0.12)] sm:gap-3.5 sm:rounded-2xl sm:p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
+                      >
+                        <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[rgb(0_194_255/0.16)] text-[var(--brand)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12 sm:rounded-xl">
+                          <SiteIcon name={SERVICE_ICON[s.id]} size={20} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="line-clamp-2 block break-words text-[11px] font-extrabold uppercase leading-tight sm:text-base">{item.title}</span>
+                          <span className="block truncate text-[10px] text-white/60 sm:text-xs">{item.highlight}</span>
+                        </span>
+                        <SiteIcon name="chevron-right" size={16} className="ms-auto hidden shrink-0 text-white/50 group-hover:text-[var(--brand)] sm:block rtl:rotate-180" />
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+        }
+      >
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Link to="/shop" className={bandPrimaryPill}>
+            {t('common.shopNow')}
+            <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
+          </Link>
+          <Link to="/contact" className={bandGhostPill}>
+            {t('common.contact')}
+          </Link>
+        </div>
+      </PageBand>
+
       <Container>
-        {/* Path: Home › Services */}
-        <nav aria-label={t('shop.breadcrumb')} className="mb-2.5 sm:mb-3">
-          <ol className="flex flex-wrap items-center gap-1 text-xs text-[var(--fg-muted)] sm:text-[13px]">
-            <li>
-              <Link to="/" className="hover:text-[var(--brand-text)]">
-                {t('common.home')}
-              </Link>
-            </li>
-            <li className="inline-flex items-center gap-1">
-              <SiteIcon name="chevron-right" size={12} className="opacity-60 rtl:rotate-180" />
-              <span aria-current="page" className="font-semibold uppercase text-[var(--fg)]">
-                {t('common.services')}
-              </span>
-            </li>
-          </ol>
-        </nav>
-
-        {/* The band: title and the six services */}
-        <section
-          aria-labelledby="services-hero-title"
-          className="ink relative isolate overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[#05080b] p-3.5 text-white sm:rounded-[2rem] sm:p-8 lg:p-10"
-        >
-          <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand)] sm:text-xs">{t('services.bandKicker')}</p>
-          <h1 id="services-hero-title" className="text-white mt-1 font-display text-lg font-black uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-4xl">
-            {copy.services.heroTitle} <span className="text-[var(--brand)]">{copy.services.heroTitleAccent}</span>
-          </h1>
-          <p className="mt-1 max-w-xl text-[12px] text-white/70 sm:mt-1.5 sm:text-base">{copy.services.heroBody}</p>
-
-          <ul className="mt-3 grid grid-cols-2 gap-1.5 sm:mt-7 sm:gap-3 lg:grid-cols-3">
-            {CUSTOMER_SERVICES.map((s) => {
-              const item = copy.services.items[s.id]
-              return (
-                <li key={s.id}>
-                  <Link
-                    to={`/services/${s.slug}`}
-                    className="group flex h-full min-w-0 items-center gap-2.5 rounded-xl border border-white/12 bg-white/[0.04] p-2.5 transition hover:border-[var(--brand)] hover:bg-[rgb(0_194_255/0.12)] sm:gap-3.5 sm:rounded-2xl sm:p-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
-                  >
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[rgb(0_194_255/0.16)] text-[var(--brand)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:size-12 sm:rounded-xl">
-                      <SiteIcon name={SERVICE_ICON[s.id]} size={20} />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="line-clamp-2 block break-words text-[11px] font-extrabold uppercase leading-tight sm:text-base">{item.title}</span>
-                      <span className="block truncate text-[10px] text-white/60 sm:text-xs">{item.highlight}</span>
-                    </span>
-                    <SiteIcon name="chevron-right" size={16} className="ms-auto hidden shrink-0 text-white/50 group-hover:text-[var(--brand)] sm:block rtl:rotate-180" />
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-
         {/* Each service: a photo card (the photo on top, the text under it — never written over it) */}
         <section aria-labelledby="services-grid-heading" className={`${panel} mt-3 sm:mt-5`}>
           <HomeSectionHead id="services-grid-heading" title={t('services.howHandled')} />

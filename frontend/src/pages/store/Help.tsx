@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type Keyboard
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Container } from '@/components/ui/Container'
-import { PageHero } from '@/components/layout/PageHero'
+import { PageBand } from '@/components/layout/PageBand'
 import { surfaceCard } from '@/components/layout/pageStyles'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -251,7 +251,8 @@ export function Help() {
 
   return (
     <>
-      <PageHero kicker={t('help.kicker')} title={t('help.heading')} description={t('help.body')}>
+      <div className="pt-2 sm:pt-4">
+      <PageBand crumbs={[{ label: t('help.kicker') }]} titleId="page-heading" title={t('help.heading')} body={t('help.body')}>
         <form role="search" onSubmit={(e) => e.preventDefault()} className="relative max-w-xl">
           <label htmlFor="help-search" className="sr-only">
             {t('help.searchLabel')}
@@ -282,9 +283,10 @@ export function Help() {
             </button>
           ) : null}
         </form>
-      </PageHero>
+      </PageBand>
+      </div>
 
-      <Container className="pb-12 pt-5 sm:pb-16 sm:pt-8">
+      <Container className="pb-12 pt-4 sm:pb-16 sm:pt-6">
         {content.isPending ? (
           <HelpSkeleton />
         ) : content.isError ? (
@@ -298,7 +300,7 @@ export function Help() {
           </>
         )}
 
-        <div className="mx-auto mt-10 max-w-5xl sm:mt-14">
+        <div className="mt-6 sm:mt-10">
           <StillNeedHelp />
         </div>
       </Container>
@@ -327,7 +329,7 @@ function GuideTabs({ data, selected, onSelect }: { data: HelpGuide; selected: He
   }
 
   return (
-    <section id="guides" aria-labelledby="help-guides-title" className={cn(scrollMargin, 'mx-auto max-w-5xl')}>
+    <section id="guides" aria-labelledby="help-guides-title" className={scrollMargin}>
       <h2 id="help-guides-title" className="font-display text-lg font-semibold text-[var(--fg)] sm:text-xl">
         {t('help.quickTitle')}
       </h2>
@@ -386,7 +388,7 @@ function GuideTabs({ data, selected, onSelect }: { data: HelpGuide; selected: He
 function Answers({ data, open, toggle }: { data: HelpGuide; open: Set<string>; toggle: (id: string) => void }) {
   const t = useT()
   return (
-    <div className="mx-auto mt-10 max-w-5xl space-y-10 sm:mt-14">
+    <div className="mt-6 space-y-8 sm:mt-10 sm:space-y-10">
       <section id="faq" aria-labelledby="faq-title" className={scrollMargin}>
         <h2 id="faq-title" className="font-display text-lg font-semibold text-[var(--fg)] sm:text-xl">
           {t('help.popularTitle')}

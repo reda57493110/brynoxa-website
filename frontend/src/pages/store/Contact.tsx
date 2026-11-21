@@ -17,7 +17,8 @@ import { useSeo } from '@/hooks/useSeo'
 import { toast } from '@/store/toastStore'
 import { useWhatsAppStore } from '@/store/whatsappStore'
 import { cn } from '@/lib/cn'
-import { StoreHero, heroPrimaryPill } from '@/components/layout/StoreHero'
+import { PageBand, bandPrimaryPill, pagePanel } from '@/components/layout/PageBand'
+import { HomeSectionHead } from '@/components/home/HomeShelf'
 
 const CONTACT_HERO_IMAGE =
   'https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=2560&q=80'
@@ -122,63 +123,44 @@ export function Contact() {
 
   return (
     <>
-      <StoreHero
-        titleId="contact-hero-title"
-        image={CONTACT_HERO_IMAGE}
-        imagePosition="object-[50%_45%]"
-        framePosition="object-[50%_40%]"
-        kicker={t('contact.heroKicker')}
-        titleLead={t('contact.heroTitle')}
-        titleAccent={t('contact.heroTitleAccent')}
-        description={t('contact.heroBody')}
-        frameOverlay={
-          <>
-            <div className="absolute end-2.5 top-2.5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md sm:end-4 sm:top-4 sm:px-3 sm:py-1.5 sm:text-xs">
+      <div className="pt-2 sm:pt-4">
+        <PageBand
+          crumbs={[{ label: t('common.contact') }]}
+          titleId="contact-hero-title"
+          image={CONTACT_HERO_IMAGE}
+          imagePosition="object-[50%_45%]"
+          kicker={t('contact.heroKicker')}
+          title={t('contact.heroTitle')}
+          accent={t('contact.heroTitleAccent')}
+          body={t('contact.heroBody')}
+        >
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <button type="button" onClick={() => openWhatsAppPicker()} className={bandPrimaryPill}>
+              <SiteIcon name="chat" size={17} />
+              {t('contact.whatsapp')}
+            </button>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[11px] font-semibold text-white/85 sm:text-xs">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--brand)] opacity-60 motion-reduce:hidden" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--brand)]" />
               </span>
               {contact.heroSupportChip}
-            </div>
-            <div className="absolute bottom-2.5 start-2.5 flex max-w-[15rem] items-center gap-2.5 rounded-xl border border-white/60 bg-white/90 p-2 text-[#0c1218] shadow-soft backdrop-blur-md sm:bottom-4 sm:start-4 sm:max-w-[17rem] sm:gap-3 sm:rounded-2xl sm:p-3 dark:border-white/10 dark:bg-[#0e1419]/85 dark:text-white">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--brand)] text-[var(--brand-fg)] sm:h-10 sm:w-10 sm:rounded-xl">
-                <SiteIcon name="chat" size={18} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs font-semibold leading-tight sm:text-sm">{contact.heroSupportTitle}</span>
-                <span className="mt-0.5 block text-[11px] text-[#3d4d5c] sm:text-xs dark:text-white/65">{contact.heroSupportBody}</span>
-              </span>
-            </div>
-          </>
-        }
-      >
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <button type="button" onClick={() => openWhatsAppPicker()} className={heroPrimaryPill}>
-            {t('contact.whatsapp')}
-            <SiteIcon name="arrow-right" size={16} className="rtl:rotate-180" />
-          </button>
-        </div>
-      </StoreHero>
+            </span>
+          </div>
+        </PageBand>
+      </div>
 
       <section
         id="message"
         aria-labelledby="contact-form-heading"
-        className="scroll-mt-[calc(var(--nav-height)+1rem)] pb-4 pt-6 sm:pb-5 sm:pt-8"
+        className="scroll-mt-[calc(var(--nav-height)+1rem)] pt-3 sm:pt-5"
       >
         <Container>
-          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-10 xl:gap-12">
-            <div>
-              <h2
-                id="contact-form-heading"
-                className="font-display text-xl font-semibold tracking-tight sm:text-3xl"
-              >
-                {t('contact.sendMessage')}
-              </h2>
-              <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-base">
-                {t('contact.formBody')}
-              </p>
+          <div className="grid items-start gap-3 sm:gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)]">
+            <div className={pagePanel}>
+              <HomeSectionHead id="contact-form-heading" title={t('contact.sendMessage')} body={t('contact.formBody')} />
 
-              <div className="mt-4 sm:mt-5">
+              <div>
                 {sent ? (
                   <m.div
                     initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
@@ -202,7 +184,7 @@ export function Contact() {
                   </m.div>
                 ) : (
                   <form
-                    className="space-y-3.5 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 shadow-soft sm:space-y-4 sm:rounded-[1.35rem] sm:p-6"
+                    className="space-y-3.5 sm:space-y-4"
                     onSubmit={onSubmit}
                     noValidate
                   >
@@ -279,18 +261,10 @@ export function Contact() {
               </div>
             </div>
 
-            <aside className="space-y-4 lg:pt-1" aria-labelledby="contact-info-heading">
+            <aside className={cn(pagePanel, 'space-y-3 sm:space-y-4 lg:sticky lg:top-24')} aria-labelledby="contact-info-heading">
               <div>
-                <p className="kicker">{t('contact.hoursChannels')}</p>
-                <h2
-                  id="contact-info-heading"
-                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-2xl"
-                >
-                  {t('contact.channelsTitle')}
-                </h2>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--fg-muted)]">
-                  {t('contact.noShop')}
-                </p>
+                <HomeSectionHead id="contact-info-heading" title={t('contact.channelsTitle')} className="mb-1 sm:mb-2" />
+                <p className="text-[13px] leading-relaxed text-[var(--fg-muted)] sm:text-sm">{t('contact.noShop')}</p>
               </div>
 
               <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
@@ -319,7 +293,7 @@ export function Contact() {
                 />
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
                 <p className="text-sm font-semibold text-[var(--fg)]">{t('contact.social')}</p>
                 <div className="flex flex-wrap gap-2">
                   {SOCIAL_LINKS.map((s) =>
@@ -354,11 +328,11 @@ export function Contact() {
       </section>
 
       {/* Common questions live in the Help Center (no second FAQ here) */}
-      <section aria-label={t('help.kicker')} className="py-2 sm:py-3">
+      <section aria-label={t('help.kicker')} className="pt-3 sm:pt-5">
         <Container>
           <Link
             to="/help"
-            className="group flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3.5 text-sm font-medium transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:px-5"
+            className="group flex items-center justify-between gap-3 rounded-[1.25rem] border border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-3.5 text-sm font-bold transition hover:border-[var(--brand)] hover:text-[var(--brand-text)] sm:rounded-2xl sm:px-6 sm:py-4"
           >
             <span className="inline-flex items-center gap-2.5">
               <SiteIcon name="help" size={17} className="text-[var(--brand-text)]" />
@@ -369,10 +343,10 @@ export function Contact() {
         </Container>
       </section>
 
-      <section aria-labelledby="newsletter-heading" className="pb-10 pt-4 sm:pb-12 sm:pt-5">
+      <section aria-labelledby="newsletter-heading" className="pb-8 pt-3 sm:pb-12 sm:pt-5">
         <Container>
           <m.div
-            className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--bg)] px-5 py-6 shadow-soft sm:px-8 sm:py-8 lg:px-10"
+            className="relative overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[linear-gradient(110deg,rgb(0_194_255/0.16),rgb(0_194_255/0.04)_55%,transparent)] px-4 py-5 sm:rounded-[2rem] sm:px-8 sm:py-8 lg:px-10"
             initial={reduceMotion ? false : { opacity: 0, y: 16 }}
             whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
@@ -380,10 +354,10 @@ export function Contact() {
           >
             <div className="relative grid items-center gap-5 lg:grid-cols-[minmax(0,1fr)_min(26rem,100%)] lg:gap-10">
               <div>
-                <p className="kicker">{t('contact.newsletter')}</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--brand-text)] sm:text-xs">{t('contact.newsletter')}</p>
                 <h2
                   id="newsletter-heading"
-                  className="mt-2 font-display text-xl font-semibold tracking-tight sm:text-3xl"
+                  className="mt-1 font-display text-[15px] font-extrabold uppercase leading-tight tracking-tight sm:mt-1.5 sm:text-2xl"
                 >
                   {t('contact.newsTitle')}
                 </h2>
