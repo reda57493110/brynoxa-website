@@ -83,7 +83,7 @@ export function PageBand({
         {title}
         {accent ? <span className="text-[var(--brand)]"> {accent}</span> : null}
       </h1>
-      {body ? <p className="mt-1.5 max-w-xl text-[12.5px] leading-relaxed text-white/75 sm:mt-3 sm:text-base">{body}</p> : null}
+      {body ? <div className="mt-1.5 max-w-xl text-[12.5px] leading-relaxed text-white/75 sm:mt-3 sm:text-base">{body}</div> : null}
       {children ? <div className="mt-3 sm:mt-6">{children}</div> : null}
     </>
   )

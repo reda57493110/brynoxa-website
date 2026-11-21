@@ -71,3 +71,15 @@ test('information pages share the band: path, Brynoxa band (photo kept where the
   assert.match(help, /role="search"/, 'the search stays in the band')
   assert.doesNotMatch(help, /max-w-5xl/, 'content as wide as the band')
 })
+
+test('cart, checkout, compare, legal pages, order confirmation and the WhatsApp window: the same look', () => {
+  const hero = src('components/layout/PageHero.tsx')
+  assert.match(hero, /<PageBand crumbs=\{\[\{ label: crumb \?\? \(typeof title === 'string' \? title : ''\) \}\]\}/, 'path and Brynoxa band on every page using the page header')
+  for (const p of ['Cart', 'Compare', 'Legal', 'OrderConfirmation', 'Checkout']) assert.match(src(`pages/store/${p}.tsx`), /<PageHero/, p)
+  assert.match(src('pages/store/Checkout.tsx'), /<h1 id="page-heading" className="[^"]*font-black uppercase/, 'checkout keeps its compact header, in the same style')
+  const wa = src('components/contact/WhatsAppHost.tsx')
+  assert.match(wa, /className="ink relative isolate flex items-center/, 'the reply line in the Brynoxa band look')
+  assert.match(wa, /btn-shine h-11 w-full rounded-full bg-\[var\(--brand\)\]/, 'the Brynoxa cyan button')
+  assert.doesNotMatch(wa, /h-11 w-full rounded-full bg-\[#25D366\]/, 'no more green button')
+  assert.match(wa, /shadow-\[inset_0_-3px_0_var\(--brand\)\]/, 'the chosen topic marked like the setups buttons')
+})

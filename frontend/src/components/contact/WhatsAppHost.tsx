@@ -191,14 +191,15 @@ export function WhatsAppHost() {
   return (
     <Modal open={isOpen} onClose={close} title={t('contact.waTitle')} size="sm" presentation="sheet">
         <div className="flex min-h-0 flex-col gap-3 sm:gap-4">
-          <div className="flex items-center gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-2.5 py-2 sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3">
+          <div className="ink relative isolate flex items-center gap-2.5 overflow-hidden rounded-xl border border-[rgb(0_194_255/0.3)] bg-[#05080b] px-2.5 py-2.5 text-white sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5">
+            <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(70%_120%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%)]" aria-hidden="true" />
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white sm:h-11 sm:w-11">
               <WhatsAppIcon size={16} className="sm:hidden" />
               <WhatsAppIcon size={22} className="hidden sm:block" />
             </span>
             <span className="min-w-0">
-              <span className="block text-xs font-semibold text-[var(--fg)] sm:text-sm">{t('contact.waReplyHint')}</span>
-              <span className="mt-0.5 block text-[11px] leading-snug text-[var(--fg-muted)] sm:text-xs sm:leading-relaxed">
+              <span className="block font-display text-[12px] font-extrabold uppercase leading-tight tracking-tight sm:text-[15px]">{t('contact.waReplyHint')}</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-white/65 sm:text-xs sm:leading-relaxed">
                 <span className="sm:hidden">
                   <PhoneText>{CONTACT.whatsapp.value}</PhoneText>
                 </span>
@@ -302,7 +303,7 @@ export function WhatsAppHost() {
               onClick={startChat}
               disabled={!selected}
               size="md"
-              className="h-11 w-full rounded-full bg-[#25D366] text-white shadow-none hover:brightness-110 disabled:opacity-50 sm:h-12"
+              className="btn-shine h-11 w-full rounded-full bg-[var(--brand)] font-bold text-[var(--brand-fg)] shadow-glow hover:brightness-110 disabled:opacity-45 disabled:shadow-none sm:h-12 sm:text-base"
             >
               <WhatsAppIcon size={16} />
               {t('contact.waContinue')}
@@ -332,23 +333,24 @@ function TopicButton({
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        'flex h-full w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-start transition sm:items-start sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3',
+        'group flex h-full w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-start transition sm:gap-3 sm:rounded-2xl sm:px-3.5 sm:py-3',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]',
         selected
-          ? 'border-[var(--brand)] bg-[color-mix(in_srgb,var(--brand)_10%,var(--bg))] shadow-soft'
+          ? 'border-[var(--brand)] bg-[var(--bg-elevated)] shadow-[inset_0_-3px_0_var(--brand)]'
           : 'border-[var(--border)] bg-[var(--bg)] hover:border-[var(--brand)]'
       )}
     >
       <span
         className={cn(
           'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl',
-          selected ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'bg-[var(--bg-muted)] text-[var(--brand-text)]'
+          selected ? 'bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow' : 'bg-[var(--bg-muted)] text-[var(--brand-text)] group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)]'
         )}
       >
         <SiteIcon name={icon} size={15} className="sm:hidden" />
         <SiteIcon name={icon} size={18} className="hidden sm:block" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[13px] font-semibold leading-tight text-[var(--fg)] sm:text-sm">{title}</span>
+        <span className="block text-[12px] font-extrabold uppercase leading-tight text-[var(--fg)] sm:text-[13px]">{title}</span>
         <span className="mt-0.5 line-clamp-1 block text-[11px] leading-snug text-[var(--fg-muted)] sm:line-clamp-2 sm:text-xs">
           {hint}
         </span>

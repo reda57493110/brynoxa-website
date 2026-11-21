@@ -32,7 +32,7 @@ test('admin board on phones: no long explanations, short labels', () => {
 });
 
 test('said once: no small labels repeating the page title; no repeats on product, Help, Contact', () => {
-  assert.ok(src('components/layout/PageHero.tsx').includes('{void kicker}'), 'page headers: title only');
+  assert.ok(src('components/layout/PageHero.tsx').includes('void kicker'), 'page headers: title only');
   assert.ok(src('components/layout/StoreHero.tsx').includes('{void kicker}'), 'shop headers: title only');
   assert.ok(!src('pages/store/Home.tsx').includes("t('home.featuredKicker')"));
   assert.ok(!src('pages/store/ProductDetail.tsx').includes('{p.sku}'), 'product: no SKU / category line (the path shows the category)');

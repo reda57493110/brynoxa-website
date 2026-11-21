@@ -509,7 +509,10 @@ export function Checkout() {
               <SiteIcon name="arrow-left" size={13} className="rtl:rotate-180" />
               {t('checkout.backToCart')}
             </Link>
-            <h1 className="mt-1 font-display text-2xl font-semibold sm:text-4xl">{t('checkout.heading')}</h1>
+            <h1 id="page-heading" className="mt-1.5 flex items-center gap-2 font-display text-xl font-black uppercase tracking-tight sm:gap-2.5 sm:text-4xl">
+              <span className="h-5 w-1 shrink-0 -skew-x-12 rounded-sm bg-[var(--brand)] shadow-[0_0_12px_rgb(0_194_255/0.7)] sm:h-8 sm:w-2" aria-hidden="true" />
+              {t('checkout.heading')}
+            </h1>
             <p className="mt-1 hidden text-sm text-[var(--fg-muted)] sm:block">{t('checkout.heroBody')}</p>
           </div>
           <ol className="flex items-center gap-2 text-[11px] font-medium sm:text-xs" aria-label={t('checkout.heading')}>
