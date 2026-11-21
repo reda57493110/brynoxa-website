@@ -32,14 +32,31 @@ import type { User } from '@/types'
 import { customerWhatsAppHref, telHref } from '@/lib/customerContact'
 import { cn } from '@/lib/cn'
 import { PhoneRiskCard } from '@/components/admin/PhoneRiskCard'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 
-const PAYMENT_LABEL: Record<string, string> = { pending: 'Unpaid', paid: 'Paid', failed: 'Not collected', refunded: 'Refunded' }
+const PAYMENT_LABEL: Record<string, AdminKey> = { pending: 'pay.pending', paid: 'pay.paid', failed: 'pay.failed', refunded: 'pay.refunded' }
+
+/** The "needs attention" reasons from lib/orderStatus (English) → texts in the admin language */
+const ATTENTION_KEY: Record<string, AdminKey> = {
+  'Waiting over 24 h': 'order.attWaiting',
+  'Call the customer again': 'order.attCallAgain',
+  'Arrange a new delivery': 'order.attNewDelivery',
+  'Delivery due': 'order.attDeliveryDue',
+  'Arrange the return': 'order.attArrangeReturn',
+  'Return not received after 7 days': 'order.attReturnLate',
+  'Refund due': 'order.attRefundDue',
+}
+
+/** Order sources that are words (the others are brand names) */
+const ORIGIN_KEY: Partial<Record<string, AdminKey>> = { phone: 'order.originPhone', store: 'order.originStore', other: 'order.other' }
 
 export function OrderDetail() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const tr = useAdminT()
 
   const order = useQuery({
     queryKey: ['admin-order', id],
@@ -52,7 +69,7 @@ export function OrderDetail() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-orders'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      toast.success('Order deleted')
+      toast.success(tr('order.deleted'))
       navigate('/admin/orders', { replace: true })
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -70,7 +87,7 @@ export function OrderDetail() {
     return <QueryErrorState onRetry={() => order.refetch()} />
   }
 
-  if (!order.data) return <p>Order not found</p>
+  if (!order.data) return <p>{tr('order.notFound')}</p>
 
   const o = order.data
   const user = o.user as User
@@ -86,7 +103,7 @@ export function OrderDetail() {
 
   const itemsCard = (
         <div className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
-          <h2 className="font-semibold">Items</h2>
+          <h2 className="font-semibold">{tr('order.items')}</h2>
           <ul className="mt-3 space-y-3 text-sm">
             {o.items.map((item, i) => (
               <li key={i} className="flex min-w-0 items-center justify-between gap-3">
@@ -101,7 +118,7 @@ export function OrderDetail() {
                         </span>
                         <span className="block truncate text-xs text-[var(--fg-muted)]">
                           {item.sku}
-                          {item.returnedQty ? ` · ${item.returnedQty} returned` : ''}
+                          {item.returnedQty ? ` · ${tr('order.returnedCount', { count: item.returnedQty })}` : ''}
                         </span>
                       </span>
                     </>
@@ -131,29 +148,29 @@ export function OrderDetail() {
           </ul>
           <dl className="mt-4 space-y-1 border-t border-[var(--border)] pt-3 text-sm">
             <div className="flex justify-between text-[var(--fg-muted)]">
-              <dt>Subtotal</dt>
+              <dt>{tr('order.subtotal')}</dt>
               <dd className="tabular-nums">{formatCurrency(o.pricing.subtotal)}</dd>
             </div>
             {o.pricing.discount > 0 ? (
               <div className="flex justify-between text-[var(--fg-muted)]">
-                <dt>Discount {o.coupon?.code ? `(${o.coupon.code})` : ''}</dt>
+                <dt>{tr('order.discount')} {o.coupon?.code ? `(${o.coupon.code})` : ''}</dt>
                 <dd className="tabular-nums">-{formatCurrency(o.pricing.discount)}</dd>
               </div>
             ) : null}
             {o.pricing.shipping > 0 ? (
               <div className="flex justify-between text-[var(--fg-muted)]">
-                <dt>Shipping</dt>
+                <dt>{tr('order.shipping')}</dt>
                 <dd className="tabular-nums">{formatCurrency(o.pricing.shipping)}</dd>
               </div>
             ) : null}
             <div className="flex justify-between font-semibold">
-              <dt>Total COD</dt>
+              <dt>{tr('order.totalCod')}</dt>
               <dd className="tabular-nums">{formatCurrency(o.pricing.total)}</dd>
             </div>
           </dl>
           {o.customerNote ? (
             <p className="mt-3 break-words text-sm text-[var(--fg-muted)]">
-              Note: {o.customerNote}
+              {tr('order.customerNote', { note: o.customerNote })}
             </p>
           ) : null}
         </div>
@@ -161,7 +178,7 @@ export function OrderDetail() {
 
   const shippingCard = (
           <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 text-sm sm:rounded-2xl sm:p-5">
-            <h2 className="font-semibold">Shipping</h2>
+            <h2 className="font-semibold">{tr('order.shipping')}</h2>
             <p className="mt-2 break-words font-medium">{o.shippingAddress.fullName}</p>
             <p className="break-words text-[var(--fg-muted)]">
               {o.shippingAddress.line1}
@@ -183,7 +200,7 @@ export function OrderDetail() {
       <div className="min-w-0">
         <div className="flex items-center justify-between gap-2">
           <Link to="/admin/orders" className="text-sm text-[var(--brand-text)]">
-            Back to orders
+            {tr('order.back')}
           </Link>
           <div className="flex flex-wrap items-center justify-end gap-2">
             {/* Delivered sale undone in one step (products back, money back, stock) */}
@@ -192,34 +209,34 @@ export function OrderDetail() {
               to={`/admin-print/slips?ids=${o._id}`}
               className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)] hover:text-[var(--brand-text)]"
             >
-              <SiteIcon name="package" size={14} /> Delivery slip
+              <SiteIcon name="package" size={14} /> {tr('order.slip')}
             </Link>
           </div>
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
           <h1 className="min-w-0 break-all font-display text-base font-semibold sm:text-2xl">
-            #{o.orderNumber}
+            <bdi dir="ltr">#{o.orderNumber}</bdi>
           </h1>
           <span className="font-display text-base font-semibold tabular-nums text-[var(--brand-text)] sm:text-xl">{formatCurrency(o.pricing.total)}</span>
           <Badge variant={orderStatusVariant(o.orderStatus)}>{orderStatusLabel(o.orderStatus)}</Badge>
           <Badge variant={o.paymentStatus === 'paid' ? 'success' : o.paymentStatus === 'failed' ? 'muted' : 'default'} className="normal-case">
-            Payment: {PAYMENT_LABEL[o.paymentStatus] ?? o.paymentStatus}
+            {tr('order.paymentBadge', { status: PAYMENT_LABEL[o.paymentStatus] ? tr(PAYMENT_LABEL[o.paymentStatus]) : o.paymentStatus })}
           </Badge>
           {refund === 'due' ? (
-            <Badge variant="danger" className="normal-case">Refund pending</Badge>
+            <Badge variant="danger" className="normal-case">{tr('order.refundPending')}</Badge>
           ) : refund === 'partial' ? (
-            <Badge variant="warning" className="normal-case">Refunded {formatCurrency(refunded)}</Badge>
+            <Badge variant="warning" className="normal-case">{tr('order.refundedAmount', { amount: formatCurrency(refunded) })}</Badge>
           ) : refund === 'refunded' ? (
-            <Badge variant="muted" className="normal-case">Fully refunded</Badge>
+            <Badge variant="muted" className="normal-case">{tr('order.fullyRefunded')}</Badge>
           ) : null}
           {originOf(o) !== 'website' ? (
             <Badge variant="brand" className="normal-case">
-              From {ORDER_ORIGIN_LABEL[originOf(o)]}
+              {tr('order.from', { origin: ORIGIN_KEY[originOf(o)] ? tr(ORIGIN_KEY[originOf(o)]!) : ORDER_ORIGIN_LABEL[originOf(o)] })}
             </Badge>
           ) : null}
           {o.channel === 'wholesale' ? (
             <Badge variant="brand" className="normal-case">
-              Wholesale
+              {tr('order.wholesale')}
               {o.wholesaleTier
                 ? ` · ${o.wholesaleTier.name} −${o.wholesaleTier.discountPercent}%`
                 : ''}
@@ -228,14 +245,14 @@ export function OrderDetail() {
         </div>
         <div className="mt-2 min-w-0 space-y-0.5 overflow-hidden text-sm text-[var(--fg-muted)]">
           {user?._id ? (
-            <Link to={`/admin/customers/${user._id}`} className="block truncate font-medium text-[var(--fg)] hover:text-[var(--brand-text)]" title="Customer history">
+            <Link to={`/admin/customers/${user._id}`} className="block truncate font-medium text-[var(--fg)] hover:text-[var(--brand-text)]" title={tr('order.customerHistory')}>
               {customerLabel(user)}
             </Link>
           ) : (
             <p className="truncate font-medium text-[var(--fg)]">{user?.name || '—'}</p>
           )}
           <p className="break-all">{shownEmail(user?.email)}</p>
-          <p>{phone || 'No phone'} · COD</p>
+          <p>{phone || tr('order.noPhone')} · {tr('order.cod')}</p>
           {shownEmail(user?.email) ? (
             <StaffLink
               to={`/admin/emails?order=${o._id}&to=${encodeURIComponent(user.email)}`}
@@ -243,7 +260,7 @@ export function OrderDetail() {
               fallback={null}
             >
               <SiteIcon name="mail" size={15} />
-              Email customer
+              {tr('order.emailCustomer')}
             </StaffLink>
           ) : null}
           <p className="text-xs">{formatDateTime(o.createdAt)}</p>
@@ -252,7 +269,7 @@ export function OrderDetail() {
           <div className="mt-3 flex gap-2">
             {tel ? (
               <a href={tel} className={contactBtn}>
-                <SiteIcon name="phone" size={15} /> Call
+                <SiteIcon name="phone" size={15} /> {tr('order.call')}
               </a>
             ) : null}
             {wa ? (
@@ -266,21 +283,21 @@ export function OrderDetail() {
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             {attention.map((a) => (
               <span key={a} className="inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] px-2.5 py-1 font-medium text-[var(--warning)]">
-                <SiteIcon name="alert" size={12} /> {a}
+                <SiteIcon name="alert" size={12} /> {ATTENTION_KEY[a] ? tr(ATTENTION_KEY[a]) : a}
               </span>
             ))}
             {o.orderStatus === 'rescheduled' && o.rescheduledFor ? (
-              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">Delivery on {formatDeliveryDay(o.rescheduledFor)}</span>
+              <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">{tr('order.deliveryOn', { date: formatDeliveryDay(o.rescheduledFor) })}</span>
             ) : null}
             {o.deliveryIssue && ['delivery_failed', 'rescheduled', 'return_in_transit'].includes(o.orderStatus) ? (
               <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
-                Last failed attempt: {deliveryIssueLabel(o.deliveryIssue.reason)}
+                {tr('order.lastFailed', { reason: deliveryIssueLabel(o.deliveryIssue.reason) })}
                 {o.deliveryIssue.note ? ` — ${o.deliveryIssue.note}` : ''}
               </span>
             ) : null}
             {o.deliveryAttempts ? (
               <span className="rounded-full bg-[var(--bg-muted)] px-2.5 py-1">
-                {o.deliveryAttempts} failed attempt{o.deliveryAttempts === 1 ? '' : 's'}
+                {o.deliveryAttempts === 1 ? tr('order.failedAttemptOne') : tr('order.failedAttempts', { count: o.deliveryAttempts })}
               </span>
             ) : null}
           </div>
@@ -314,7 +331,7 @@ export function OrderDetail() {
           <div className="space-y-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
             <OrderInternalNote key={o.adminNote || ''} order={o} />
             <Button size="sm" variant="danger" onClick={() => setConfirmDelete(true)}>
-              Delete order
+              {tr('order.deleteOrder')}
             </Button>
           </div>
         </div>
@@ -323,12 +340,12 @@ export function OrderDetail() {
       {/* Phones: the main actions stay at hand */}
       <div className="fixed inset-x-0 bottom-0 z-30 flex gap-2 border-t border-[var(--border)] bg-[var(--bg-elevated)]/95 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden">
         {tel ? (
-          <a href={tel} className={contactBtn} aria-label="Call the customer">
-            <SiteIcon name="phone" size={15} /> Call
+          <a href={tel} className={contactBtn} aria-label={tr('order.callCustomer')}>
+            <SiteIcon name="phone" size={15} /> {tr('order.call')}
           </a>
         ) : null}
         {wa ? (
-          <a href={wa} target="_blank" rel="noopener noreferrer" className={contactBtn} aria-label="WhatsApp the customer">
+          <a href={wa} target="_blank" rel="noopener noreferrer" className={contactBtn} aria-label={tr('order.waCustomer')}>
             <SiteIcon name="chat" size={15} /> WhatsApp
           </a>
         ) : null}
@@ -337,15 +354,15 @@ export function OrderDetail() {
           onClick={() => document.getElementById('order-status')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           className={cn(contactBtn, 'border-transparent bg-[var(--brand)] font-semibold text-[var(--brand-fg)]')}
         >
-          <SiteIcon name="check" size={15} /> Next step
+          <SiteIcon name="check" size={15} /> {tr('order.nextStep')}
         </button>
       </div>
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete order?"
-        description="This permanently removes the order. Reserved stock is restored when needed."
-        confirmLabel="Delete"
+        title={tr('order.deleteTitle')}
+        description={tr('order.deleteDesc')}
+        confirmLabel={tr('order.delete')}
         loading={remove.isPending}
         onClose={() => setConfirmDelete(false)}
         onConfirm={() => remove.mutate()}

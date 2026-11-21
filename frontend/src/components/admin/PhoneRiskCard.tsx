@@ -11,13 +11,15 @@ import { toast } from '@/store/toastStore'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { orderStatusLabel } from '@/lib/orderStatus'
 import { cn } from '@/lib/cn'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 
-const LOOK: Record<PhoneHistory['risk'], { title: string; tone: string; icon: 'alert' | 'check' | 'user' | 'shield' }> = {
-  blocked: { title: 'Blocked number', tone: 'border-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] text-[var(--danger)]', icon: 'shield' },
-  high: { title: 'Refused or sent back before', tone: 'border-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] text-[var(--danger)]', icon: 'alert' },
-  watch: { title: 'Check before shipping', tone: 'border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)] text-[var(--warning)]', icon: 'alert' },
-  good: { title: 'Good customer', tone: 'border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_8%,transparent)] text-[var(--success)]', icon: 'check' },
-  new: { title: 'First order from this number', tone: 'border-[var(--border)] bg-[var(--bg-muted)] text-[var(--fg-muted)]', icon: 'user' },
+const LOOK: Record<PhoneHistory['risk'], { title: AdminKey; tone: string; icon: 'alert' | 'check' | 'user' | 'shield' }> = {
+  blocked: { title: 'order.riskBlocked', tone: 'border-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_10%,transparent)] text-[var(--danger)]', icon: 'shield' },
+  high: { title: 'order.riskHigh', tone: 'border-[var(--danger)] bg-[color-mix(in_srgb,var(--danger)_8%,transparent)] text-[var(--danger)]', icon: 'alert' },
+  watch: { title: 'order.riskWatch', tone: 'border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)] text-[var(--warning)]', icon: 'alert' },
+  good: { title: 'order.riskGood', tone: 'border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_8%,transparent)] text-[var(--success)]', icon: 'check' },
+  new: { title: 'order.riskNew', tone: 'border-[var(--border)] bg-[var(--bg-muted)] text-[var(--fg-muted)]', icon: 'user' },
 }
 
 /**
@@ -25,6 +27,7 @@ const LOOK: Record<PhoneHistory['risk'], { title: string; tone: string; icon: 'a
  * cancelled), and Block / Unblock, so fake cash-on-delivery orders are caught before shipping.
  */
 export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: string }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const [asking, setAsking] = useState(false)
   const [reason, setReason] = useState('')
@@ -44,7 +47,7 @@ export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: str
     onSuccess: () => {
       done()
       setAsking(false)
-      toast.success('Number blocked: it can no longer order on the website')
+      toast.success(tr('order.numberBlocked'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -52,7 +55,7 @@ export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: str
     mutationFn: () => adminApi.phoneGuard.unblock(history.data?.blocked?._id ?? phone!),
     onSuccess: () => {
       done()
-      toast.success('Number unblocked')
+      toast.success(tr('order.numberUnblocked'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -61,10 +64,10 @@ export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: str
   const h = history.data
   const look = LOOK[h.risk]
   const parts = [
-    h.delivered ? `${h.delivered} delivered` : null,
-    h.refused ? `${h.refused} refused / sent back` : null,
-    h.cancelled ? `${h.cancelled} cancelled` : null,
-    h.failedAttempts ? `${h.failedAttempts} failed delivery attempt${h.failedAttempts === 1 ? '' : 's'}` : null,
+    h.delivered ? tr('order.riskDelivered', { count: h.delivered }) : null,
+    h.refused ? tr('order.riskRefused', { count: h.refused }) : null,
+    h.cancelled ? tr('order.riskCancelled', { count: h.cancelled }) : null,
+    h.failedAttempts ? (h.failedAttempts === 1 ? tr('order.riskFailedOne') : tr('order.riskFailed', { count: h.failedAttempts })) : null,
   ].filter(Boolean)
 
   return (
@@ -72,22 +75,22 @@ export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: str
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 font-semibold">
-            <SiteIcon name={look.icon} size={15} /> {look.title}
+            <SiteIcon name={look.icon} size={15} /> {tr(look.title)}
           </p>
           <p className="mt-0.5 text-xs text-[var(--fg-muted)]">
             {h.orders
-              ? `Other orders from this number: ${h.orders}${parts.length ? ` · ${parts.join(' · ')}` : ''}`
-              : 'No other order from this number.'}
-            {h.blocked?.reason ? ` · Blocked: ${h.blocked.reason}` : ''}
+              ? `${tr('order.otherOrders', { count: h.orders })}${parts.length ? ` · ${parts.join(' · ')}` : ''}`
+              : tr('order.noOtherOrders')}
+            {h.blocked?.reason ? tr('order.blockedReason', { reason: h.blocked.reason }) : ''}
           </p>
         </div>
         {h.blocked ? (
           <Button size="sm" variant="outline" loading={unblock.isPending} onClick={() => unblock.mutate()}>
-            Unblock
+            {tr('order.unblock')}
           </Button>
         ) : (
           <Button size="sm" variant={h.risk === 'high' ? 'danger' : 'ghost'} onClick={() => setAsking(true)}>
-            <SiteIcon name="shield" size={13} /> Block this number
+            <SiteIcon name="shield" size={13} /> {tr('order.blockNumber')}
           </Button>
         )}
       </div>
@@ -107,19 +110,19 @@ export function PhoneRiskCard({ phone, orderId }: { phone?: string; orderId: str
         </ul>
       ) : null}
 
-      <Modal open={asking} onClose={() => setAsking(false)} title="Block this number?" size="sm">
+      <Modal open={asking} onClose={() => setAsking(false)} title={tr('order.blockTitle')} size="sm">
         <div className="space-y-3 text-sm">
           <p className="text-[var(--fg-muted)]">
-            <span dir="ltr" className="font-medium text-[var(--fg)]">{phone}</span> will no longer be able to order on the website (any way it is written). It is
-            asked to contact you on WhatsApp instead. You can still enter an order for it yourself, and unblock it any time.
+            <span dir="ltr" className="font-medium text-[var(--fg)]">{phone}</span>
+            {tr('order.blockBody')}
           </p>
-          <Input label="Why (optional, only staff see it)" value={reason} maxLength={300} placeholder="e.g. refused 2 parcels" onChange={(e) => setReason(e.target.value)} />
+          <Input label={tr('order.blockWhy')} value={reason} maxLength={300} placeholder={tr('order.blockPh')} onChange={(e) => setReason(e.target.value)} />
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setAsking(false)}>
-              Cancel
+              {tr('order.cancel')}
             </Button>
             <Button variant="danger" loading={block.isPending} onClick={() => block.mutate()}>
-              Block
+              {tr('order.block')}
             </Button>
           </div>
         </div>

@@ -67,7 +67,7 @@ test('D: no reviews leftovers; plain wording; labels instead of raw codes', () =
   assert.doesNotMatch(src('pages/admin/CustomerProfile.tsx'), /wishlist and reviews/);
   assert.doesNotMatch(src('pages/admin/PushNotifications.tsx'), /VAPID_PUBLIC_KEY/);
   assert.doesNotMatch(src('components/admin/OrderReturnPanel.tsx'), /The server won't accept/);
-  assert.match(src('pages/admin/Dashboard.tsx'), /\{PAYMENT_LABEL\[o\.paymentStatus\] \?\? o\.paymentStatus\}/);
+  assert.match(src('pages/admin/Dashboard.tsx'), /\{PAYMENT_LABEL\[o\.paymentStatus\] \? tr\(PAYMENT_LABEL\[o\.paymentStatus\]\) : o\.paymentStatus\}/, 'payment as a label, in the admin language');
   assert.match(src('components/admin/inventory/ReceiveProductPicker.tsx'), /CONDITION_LABEL\[p\.condition\]/);
   assert.ok(src('components/layout/AdminTopbar.tsx').includes("stats.data.todayOrders === 1 ? a('top.orderToday') : a('top.ordersToday', { count: stats.data.todayOrders })"), '1 order / N orders, in the admin language');
   assert.match(src('app/layouts/AdminLayout.tsx'), /required for the owner account/);

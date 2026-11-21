@@ -1,6 +1,15 @@
+import * as common from './adminText/common'
+import * as dashboard from './adminText/dashboard'
+import * as orders from './adminText/orders'
+import * as orderDetail from './adminText/orderDetail'
+import * as products from './adminText/products'
+import * as customers from './adminText/customers'
+
 /**
- * Admin texts in English, French and Arabic (Moroccan staff). Step by step: the menu and the top
- * bar first; screens not translated yet stay in English. A key missing in FR / AR shows the English.
+ * Admin texts in English, French and Arabic (Moroccan Darija for the staff). The menu and top bar
+ * are here; each screen has its own file in ./adminText (en, fr, ar — the same keys, prefixed by the
+ * screen: "dash.", "orders."…), merged below. A key missing in FR / AR shows the English.
+ * Screens not translated yet stay in English.
  */
 export const ADMIN_LANGS = [
   { id: 'en', label: 'EN', name: 'English', dir: 'ltr' },
@@ -9,7 +18,7 @@ export const ADMIN_LANGS = [
 ] as const
 export type AdminLang = (typeof ADMIN_LANGS)[number]['id']
 
-const en = {
+const core = {
   // Menu groups
   'group.daily': 'Daily work',
   'group.catalog': 'Catalog',
@@ -57,9 +66,17 @@ const en = {
   'top.language': 'Language',
 } as const
 
+const en = { ...core, ...common.en, ...dashboard.en, ...orders.en, ...orderDetail.en, ...products.en, ...customers.en }
+
 export type AdminKey = keyof typeof en
 
 const fr: Partial<Record<AdminKey, string>> = {
+  ...common.fr,
+  ...dashboard.fr,
+  ...orders.fr,
+  ...orderDetail.fr,
+  ...products.fr,
+  ...customers.fr,
   'group.daily': 'Au quotidien',
   'group.catalog': 'Catalogue',
   'group.money': 'Argent',
@@ -104,6 +121,12 @@ const fr: Partial<Record<AdminKey, string>> = {
 }
 
 const ar: Partial<Record<AdminKey, string>> = {
+  ...common.ar,
+  ...dashboard.ar,
+  ...orders.ar,
+  ...orderDetail.ar,
+  ...products.ar,
+  ...customers.ar,
   'group.daily': 'الخدمة اليومية',
   'group.catalog': 'الكتالوج',
   'group.money': 'الفلوس',
@@ -151,7 +174,20 @@ export const ADMIN_TEXT: Record<AdminLang, Partial<Record<AdminKey, string>>> = 
 
 /** One admin text in a language (English when that language does not have it yet) */
 export function adminText(lang: AdminLang, key: AdminKey, vars?: Record<string, string | number>) {
-  let s = ADMIN_TEXT[lang][key] ?? en[key]
+  let s: string = ADMIN_TEXT[lang][key] ?? en[key]
   if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(String(v))
   return s
+}
+
+/** The admin language right now (kept by store/adminLangStore), for plain functions outside components */
+let currentLang: AdminLang = 'en'
+export function setCurrentAdminLang(lang: AdminLang) {
+  currentLang = lang
+}
+export function currentAdminLang() {
+  return currentLang
+}
+/** An admin text in the current admin language, for plain functions (status labels…). In components use useAdminT(). */
+export function at(key: AdminKey, vars?: Record<string, string | number>) {
+  return adminText(currentLang, key, vars)
 }

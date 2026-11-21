@@ -36,6 +36,8 @@ test('shop: own section, after the top picks and before the budgets; Brynoxa pro
 test('admin board: Brynoxa Signature after Our selection, before Shop by budget (as on the home page)', () => {
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("store={{ kind: 'homeRows', key: 'signature' }}"));
-  const order = ['title="Our selection · New arrivals"', 'title="Brynoxa Signature"', 'title={`Shop by budget · '].map((m) => board.indexOf(m));
+  // Section names in the admin language (i18n/adminText/products.ts)
+  const order = ["title={tr('products.board.newArrivals')}", "title={tr('products.signature')}", "title={tr('products.board.budget'"].map((m) => board.indexOf(m));
+  assert.ok(src('i18n/adminText/products.ts').includes("'products.signature': 'Brynoxa Signature'"));
   assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), order.join(','));
 });

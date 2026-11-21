@@ -16,20 +16,22 @@ import { toast } from '@/store/toastStore'
 import type { Order } from '@/types'
 import { AskToPay } from '@/components/admin/AskToPay'
 import { dueOnDelivery, feesCovered } from '@/lib/deposit'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 
 const MAX_PROOFS = 6
 
+/** Brand names stay as they are; the others are words in the admin language */
 const METHOD_TYPE_LABEL: Record<string, string> = {
-  bank: 'Bank transfer',
   cashplus: 'Cash Plus',
   wafacash: 'Wafacash',
   barid: 'Barid Cash',
-  atm: 'ATM',
-  other: 'Other',
 }
+const METHOD_TYPE_KEY: Record<string, AdminKey> = { bank: 'order.methodBank', atm: 'order.methodAtm', other: 'order.other' }
 
 /** Which of your payment options this customer sees on their order (saved right away). */
 function SharedOptions({ order }: { order: Order }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const all = useDepositMethods()
   const visible = (all.data?.depositMethods ?? []).filter((m) => m.visible !== false)
@@ -39,7 +41,7 @@ function SharedOptions({ order }: { order: Order }) {
     mutationFn: (methodIds: string[]) => adminApi.orders.setDeposit(order._id, { methodIds }),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
-      toast.success('Saved — the customer sees these options')
+      toast.success(tr('order.optionsSaved'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -49,7 +51,7 @@ function SharedOptions({ order }: { order: Order }) {
     const on = visible.filter((m) => isOn(m.id)).map((m) => m.id)
     const next = on.includes(id) ? on.filter((x) => x !== id) : [...on, id]
     if (!next.length) {
-      toast.error('Keep at least one option')
+      toast.error(tr('order.keepOne'))
       return
     }
     // All of them = the default (empty), so new options also show
@@ -58,7 +60,7 @@ function SharedOptions({ order }: { order: Order }) {
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-1.5 border-b border-[var(--border)] pb-3">
-      <span className="me-1 text-xs text-[var(--fg-muted)]">Shown to this customer:</span>
+      <span className="me-1 text-xs text-[var(--fg-muted)]">{tr('order.shownTo')}</span>
       {visible.map((m) => (
         <button
           key={m.id}
@@ -90,6 +92,7 @@ function PaymentRecorder({
   onDone: () => void
   onCancel?: () => void
 }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const current = order.deposit?.payment
   const allMethods = useDepositMethods()
@@ -115,15 +118,18 @@ function PaymentRecorder({
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['admin-order', order._id] })
       void qc.invalidateQueries({ queryKey: ['admin-orders'] })
-      toast.success(markReceived && editable ? 'Payment recorded and deposit marked as received' : 'Payment recorded')
+      toast.success(markReceived && editable ? tr('order.paymentRecordedReceived') : tr('order.paymentRecorded'))
       onDone()
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
 
   const options = [
-    ...methods.map((m) => ({ id: m.id, label: m.name || METHOD_TYPE_LABEL[m.type] || 'Other' })),
-    { id: 'other', label: 'Other' },
+    ...methods.map((m) => ({
+      id: m.id,
+      label: m.name || METHOD_TYPE_LABEL[m.type] || (METHOD_TYPE_KEY[m.type] ? tr(METHOD_TYPE_KEY[m.type]) : tr('order.other')),
+    })),
+    { id: 'other', label: tr('order.other') },
   ]
 
   return (
@@ -146,22 +152,22 @@ function PaymentRecorder({
         ))}
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
-        <Input label="Paid by (name on the transfer)" value={payerName} maxLength={120} onChange={(e) => setPayerName(e.target.value)} />
-        <Input label="Reference (optional)" value={reference} maxLength={80} dir="ltr" onChange={(e) => setReference(e.target.value)} />
+        <Input label={tr('order.paidByName')} value={payerName} maxLength={120} onChange={(e) => setPayerName(e.target.value)} />
+        <Input label={tr('order.referenceOptional')} value={reference} maxLength={80} dir="ltr" onChange={(e) => setReference(e.target.value)} />
       </div>
       {editable && order.deposit?.status !== 'received' ? (
         <label className="flex cursor-pointer items-center gap-2 text-xs">
           <input type="checkbox" className="accent-[var(--brand)]" checked={markReceived} onChange={(e) => setMarkReceived(e.target.checked)} />
-          Money received — mark the deposit as received
+          {tr('order.moneyReceived')}
         </label>
       ) : null}
       <div className="flex gap-2">
         <Button size="sm" loading={save.isPending} onClick={() => save.mutate()}>
-          <SiteIcon name="check" size={13} /> Save payment
+          <SiteIcon name="check" size={13} /> {tr('order.savePayment')}
         </Button>
         {onCancel ? (
           <Button size="sm" variant="ghost" onClick={onCancel}>
-            Cancel
+            {tr('order.cancel')}
           </Button>
         ) : null}
       </div>
@@ -187,6 +193,7 @@ function Block({ icon, title, aside, children }: { icon: SiteIconName; title: st
  * (add from phone camera/gallery or PC, drag & drop or paste) and the "Mark as received" action.
  */
 export function OrderDepositPanel({ order }: { order: Order }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const deposit = order.deposit
   const editable = order.orderStatus === 'pending' || order.orderStatus === 'no_answer'
@@ -208,7 +215,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
     mutationFn: (feeCredit: number) => adminApi.orders.setDeposit(order._id, { feeCredit }),
     onSuccess: () => {
       refresh()
-      toast.success('Collect on delivery updated')
+      toast.success(tr('order.feesUpdated'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -227,7 +234,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
     mutationFn: (payload: { amount?: number; received?: boolean }) => adminApi.orders.setDeposit(order._id, payload),
     onSuccess: (_res, payload) => {
       refresh()
-      toast.success(payload.received === true ? 'Deposit marked as received' : 'Deposit updated')
+      toast.success(payload.received === true ? tr('order.depositReceivedToast') : tr('order.depositUpdated'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -243,11 +250,11 @@ export function OrderDepositPanel({ order }: { order: Order }) {
     },
     onSuccess: (count) => {
       refresh()
-      toast.success(count === 1 ? 'Photo added' : `${count} photos added`)
+      toast.success(count === 1 ? tr('order.photoAdded') : tr('order.photosAdded', { count }))
     },
     onError: (e) => {
       refresh()
-      toast.error(e instanceof Error && e.message === 'not-image' ? 'That file is not a photo' : getErrorMessage(e))
+      toast.error(e instanceof Error && e.message === 'not-image' ? tr('order.notPhoto') : getErrorMessage(e))
     },
   })
 
@@ -255,7 +262,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
     mutationFn: (proofId: string) => adminApi.orders.removeDepositProof(order._id, proofId),
     onSuccess: () => {
       refresh()
-      toast.success('Photo deleted')
+      toast.success(tr('order.photoDeleted'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -264,7 +271,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
     const files = Array.from(list ?? []).filter((f) => f.type.startsWith('image/'))
     if (!files.length || upload.isPending) return
     if (proofs.length >= MAX_PROOFS) {
-      toast.error(`Up to ${MAX_PROOFS} photos. Delete one first.`)
+      toast.error(tr('order.maxPhotos', { max: MAX_PROOFS }))
       return
     }
     upload.mutate(files)
@@ -277,11 +284,11 @@ export function OrderDepositPanel({ order }: { order: Order }) {
   if (!deposit && !editable) return null
 
   const statusBadge = !deposit ? (
-    <Badge variant="muted">None</Badge>
+    <Badge variant="muted">{tr('order.none')}</Badge>
   ) : deposit.status === 'received' ? (
-    <Badge variant="success">Received</Badge>
+    <Badge variant="success">{tr('order.received')}</Badge>
   ) : (
-    <Badge variant={payment ? 'brand' : 'warning'}>{payment ? 'Customer says paid' : 'Awaiting deposit'}</Badge>
+    <Badge variant={payment ? 'brand' : 'warning'}>{payment ? tr('order.customerSaysPaid') : tr('order.awaitingDeposit')}</Badge>
   )
 
   return (
@@ -290,30 +297,30 @@ export function OrderDepositPanel({ order }: { order: Order }) {
       onPaste={(e) => deposit && addFiles(e.clipboardData.files)}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-semibold">Deposit</h2>
+        <h2 className="font-semibold">{tr('order.deposit')}</h2>
         {statusBadge}
         {deposit ? (
-          <span className="text-xs text-[var(--fg-muted)]">{deposit.source === 'products' ? 'From product rules' : 'Set by staff'}</span>
+          <span className="text-xs text-[var(--fg-muted)]">{deposit.source === 'products' ? tr('order.fromRules') : tr('order.setByStaff')}</span>
         ) : null}
       </div>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-2">
         {/* 1 · Amount */}
-        <Block icon="banknote" title="Amount">
+        <Block icon="banknote" title={tr('order.amount')}>
           {deposit ? (
             <dl className="space-y-1 text-sm">
               <div className="flex justify-between gap-3">
-                <dt className="text-[var(--fg-muted)]">Deposit</dt>
+                <dt className="text-[var(--fg-muted)]">{tr('order.deposit')}</dt>
                 <dd className="font-semibold tabular-nums">{formatCurrency(deposit.amount)}</dd>
               </div>
               {feesCovered(order) > 0 ? (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">Transfer fees we cover</dt>
+                  <dt className="text-[var(--fg-muted)]">{tr('order.feesWeCover')}</dt>
                   <dd className="tabular-nums text-[var(--success)]">-{formatCurrency(feesCovered(order))}</dd>
                 </div>
               ) : null}
               <div className="flex justify-between gap-3 border-t border-[var(--border)] pt-1">
-                <dt className="font-medium">Collect on delivery</dt>
+                <dt className="font-medium">{tr('order.collectOnDelivery')}</dt>
                 <dd className="font-semibold tabular-nums">{formatCurrency(dueOnDelivery(order))}</dd>
               </div>
               <p
@@ -324,34 +331,33 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                     : 'text-[var(--fg-muted)]'
                 )}
               >
-                Customer pays {formatCurrency(deposit.amount + (deposit.feeCredit ?? 0) + dueOnDelivery(order))} in total
-                {deposit.feeCredit ? ` (incl. ${formatCurrency(deposit.feeCredit)} transfer fees we cover)` : ''} · order {formatCurrency(order.pricing.total)}
-                {payment?.fee && typeof deposit.feeCredit !== 'number'
-                  ? ` · The customer says they paid ${formatCurrency(payment.fee)} in fees: check it, then Save below to take it off.`
-                  : ''}
+                {tr('order.customerPaysTotal', { amount: formatCurrency(deposit.amount + (deposit.feeCredit ?? 0) + dueOnDelivery(order)) })}
+                {deposit.feeCredit ? tr('order.inclFees', { amount: formatCurrency(deposit.feeCredit) }) : ''}
+                {tr('order.orderTotal', { amount: formatCurrency(order.pricing.total) })}
+                {payment?.fee && typeof deposit.feeCredit !== 'number' ? tr('order.customerSaysFees', { amount: formatCurrency(payment.fee) }) : ''}
               </p>
               {deposit.receivedAt ? (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">Received</dt>
+                  <dt className="text-[var(--fg-muted)]">{tr('order.received')}</dt>
                   <dd className="text-xs">{formatDateTime(deposit.receivedAt)}</dd>
                 </div>
               ) : null}
             </dl>
           ) : (
-            <p className="text-xs text-[var(--fg-muted)]">No deposit on this order.</p>
+            <p className="text-xs text-[var(--fg-muted)]">{tr('order.noDeposit')}</p>
           )}
           {deposit ? (
             <div className="mt-3 flex items-end gap-2">
               <Input
-                label="Transfer fees we cover (DH)"
+                label={tr('order.feesInput')}
                 type="number"
                 inputMode="decimal"
                 min={0}
                 step="any"
-                placeholder={payment?.fee ? `Customer paid ${payment.fee}` : '0'}
+                placeholder={payment?.fee ? tr('order.customerPaid', { amount: payment.fee }) : '0'}
                 value={feeInput}
                 onChange={(e) => setFeeInput(e.target.value)}
-                error={feeInvalid ? 'Enter 0 or more' : undefined}
+                error={feeInvalid ? tr('order.enterZeroOrMore') : undefined}
               />
               <Button
                 variant="outline"
@@ -360,23 +366,23 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 loading={saveFee.isPending}
                 onClick={() => saveFee.mutate(feeParsed)}
               >
-                Save
+                {tr('order.save')}
               </Button>
             </div>
           ) : null}
           {editable ? (
             <div className="mt-3 flex items-end gap-2">
               <Input
-                label="Change amount (DH)"
+                label={tr('order.changeAmount')}
                 type="number"
                 inputMode="decimal"
                 min={0}
                 max={order.pricing.total}
                 step="any"
-                placeholder="0 = no deposit"
+                placeholder={tr('order.zeroNoDeposit')}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                error={invalid ? `Between 0 and ${formatCurrency(order.pricing.total)}` : undefined}
+                error={invalid ? tr('order.between', { max: formatCurrency(order.pricing.total) }) : undefined}
               />
               <Button
                 variant="outline"
@@ -385,7 +391,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 loading={save.isPending && save.variables?.amount !== undefined}
                 onClick={() => save.mutate({ amount: parsed })}
               >
-                {parsed === 0 && deposit ? 'Remove' : 'Save'}
+                {parsed === 0 && deposit ? tr('order.remove') : tr('order.save')}
               </Button>
             </div>
           ) : null}
@@ -395,11 +401,11 @@ export function OrderDepositPanel({ order }: { order: Order }) {
         {deposit ? (
           <Block
             icon="user"
-            title="Payment"
+            title={tr('common.payment')}
             aside={
               payment && !recording ? (
                 <button type="button" onClick={() => setRecording(true)} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
-                  Edit
+                  {tr('order.edit')}
                 </button>
               ) : null
             }
@@ -409,33 +415,33 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 <PaymentRecorder order={order} onDone={() => setRecording(false)} onCancel={() => setRecording(false)} />
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-[var(--fg-muted)]">No payment details yet.</p>
+                  <p className="text-xs text-[var(--fg-muted)]">{tr('order.noPaymentYet')}</p>
                   <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
-                    <SiteIcon name="plus" size={13} /> Record payment
+                    <SiteIcon name="plus" size={13} /> {tr('order.recordPayment')}
                   </Button>
                 </div>
               )
             ) : (
               <dl className="space-y-1 text-sm">
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">Paid with</dt>
+                  <dt className="text-[var(--fg-muted)]">{tr('order.paidWith')}</dt>
                   <dd className="font-medium">{payment.methodName}</dd>
                 </div>
                 {payment.payerName ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Paid by</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.paidBy')}</dt>
                     <dd className="text-end font-medium">{payment.payerName}</dd>
                   </div>
                 ) : null}
                 {payment.senderPhone ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Sender phone</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.senderPhone')}</dt>
                     <dd className="text-end font-mono text-xs" dir="ltr">{payment.senderPhone}</dd>
                   </div>
                 ) : null}
                 {typeof payment.amountSent === 'number' ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Amount sent</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.amountSent')}</dt>
                     <dd
                       className={cn(
                         'text-end font-semibold tabular-nums',
@@ -444,32 +450,32 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                     >
                       {formatCurrency(payment.amountSent)}
                       {deposit && payment.amountSent < deposit.amount ? (
-                        <span className="block text-[10px] font-medium">{formatCurrency(deposit.amount - payment.amountSent)} missing</span>
+                        <span className="block text-[10px] font-medium">{tr('order.missing', { amount: formatCurrency(deposit.amount - payment.amountSent) })}</span>
                       ) : null}
                     </dd>
                   </div>
                 ) : null}
                 {typeof payment.fee === 'number' ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Fees paid</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.feesPaid')}</dt>
                     <dd className="tabular-nums">{formatCurrency(payment.fee)}</dd>
                   </div>
                 ) : null}
                 {payment.paidOn ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Paid on</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.paidOn')}</dt>
                     <dd className="text-xs">{payment.paidOn.includes('T') ? formatDateTime(payment.paidOn) : formatDate(payment.paidOn)}</dd>
                   </div>
                 ) : null}
                 {payment.place ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Where</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.where')}</dt>
                     <dd className="text-end text-xs">{payment.place}</dd>
                   </div>
                 ) : null}
                 {payment.codes?.length ? (
                   <div className="space-y-1 rounded-lg bg-[var(--bg-muted)] p-2">
-                    <p className="text-[11px] font-medium text-[var(--fg-muted)]">ATM codes</p>
+                    <p className="text-[11px] font-medium text-[var(--fg-muted)]">{tr('order.atmCodes')}</p>
                     {payment.codes.map((c) => (
                       <div key={c.label} className="flex items-center justify-between gap-3">
                         <dt className="text-xs text-[var(--fg-muted)]">{c.label}</dt>
@@ -477,8 +483,8 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                           <span className="font-mono text-sm font-bold tracking-widest" dir="ltr">{c.value}</span>
                           <button
                             type="button"
-                            onClick={() => void navigator.clipboard?.writeText(c.value).then(() => toast.success('Copied'))}
-                            aria-label={`Copy ${c.label}`}
+                            onClick={() => void navigator.clipboard?.writeText(c.value).then(() => toast.success(tr('order.copied')))}
+                            aria-label={tr('order.copyLabel', { label: c.label })}
                             className="flex h-6 w-6 items-center justify-center rounded text-[var(--fg-muted)] hover:text-[var(--brand-text)]"
                           >
                             <SiteIcon name="layers" size={12} />
@@ -490,18 +496,18 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 ) : null}
                 {payment.reference ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Reference</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.reference')}</dt>
                     <dd className="break-all font-mono text-xs font-semibold">{payment.reference}</dd>
                   </div>
                 ) : null}
                 {payment.note ? (
                   <div className="flex justify-between gap-3">
-                    <dt className="text-[var(--fg-muted)]">Note</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('order.note')}</dt>
                     <dd className="text-end text-xs">{payment.note}</dd>
                   </div>
                 ) : null}
                 <div className="flex justify-between gap-3">
-                  <dt className="text-[var(--fg-muted)]">{payment.source === 'staff' ? 'Recorded' : 'Sent by customer'}</dt>
+                  <dt className="text-[var(--fg-muted)]">{payment.source === 'staff' ? tr('order.recorded') : tr('order.sentByCustomer')}</dt>
                   <dd className="text-xs">{formatDateTime(payment.reportedAt)}</dd>
                 </div>
               </dl>
@@ -512,7 +518,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
         {/* Ask the customer to pay: ready message with their name, the amount and the steps */}
         {deposit && deposit.status === 'pending' && editable ? (
           <div className="lg:col-span-2">
-            <Block icon="send" title="Ask to pay">
+            <Block icon="send" title={tr('order.askToPay')}>
               <SharedOptions order={order} />
               <AskToPay order={order} />
             </Block>
@@ -524,8 +530,8 @@ export function OrderDepositPanel({ order }: { order: Order }) {
           <div className="lg:col-span-2">
             <Block
               icon="package-check"
-              title="Payment proof"
-              aside={<span className="text-[11px] text-[var(--fg-muted)]">The customer sees your photos on their order</span>}
+              title={tr('order.paymentProof')}
+              aside={<span className="text-[11px] text-[var(--fg-muted)]">{tr('order.proofSeen')}</span>}
             >
               <div
                 onDragOver={(e) => {
@@ -547,9 +553,9 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                   <PhotoTile
                     photoKey={['deposit-receipt', order._id, payment.reportedAt]}
                     load={() => adminApi.orders.depositReceipt(order._id)}
-                    label="From customer"
+                    label={tr('order.fromCustomer')}
                     sublabel={formatDate(payment.reportedAt)}
-                    onOpen={(url) => setViewing({ url, title: 'Receipt sent by the customer' })}
+                    onOpen={(url) => setViewing({ url, title: tr('order.receiptByCustomer') })}
                   />
                 ) : null}
                 {proofs.map((p) => (
@@ -557,11 +563,11 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                     key={p.id}
                     photoKey={['deposit-proof', p.id]}
                     load={() => adminApi.orders.depositProofImage(order._id, p.id)}
-                    label={p.addedByName || 'Staff'}
+                    label={p.addedByName || tr('order.staff')}
                     sublabel={formatDate(p.addedAt)}
-                    onOpen={(url) => setViewing({ url, title: 'Deposit proof' })}
+                    onOpen={(url) => setViewing({ url, title: tr('order.depositProof') })}
                     onDelete={() => {
-                      if (window.confirm('Delete this photo? The customer will no longer see it.')) remove.mutate(p.id)
+                      if (window.confirm(tr('order.deletePhotoConfirm'))) remove.mutate(p.id)
                     }}
                     deleting={remove.isPending && remove.variables === p.id}
                   />
@@ -578,8 +584,8 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                     ) : (
                       <>
                         <SiteIcon name="plus" size={20} />
-                        <span className="text-xs font-medium">Add photo</span>
-                        <span className="hidden text-[10px] sm:block">or drop / paste</span>
+                        <span className="text-xs font-medium">{tr('order.addPhoto')}</span>
+                        <span className="hidden text-[10px] sm:block">{tr('order.dropPaste')}</span>
                       </>
                     )}
                   </button>
@@ -597,7 +603,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
                 }}
               />
               <p className="mt-2 text-[11px] text-[var(--fg-muted)]">
-                Screenshot of the transfer, Cash Plus / Wafacash slip… From a phone you can take a photo or pick one from the gallery. Up to {MAX_PROOFS}.
+                {tr('order.proofHint', { max: MAX_PROOFS })}
               </p>
             </Block>
           </div>
@@ -610,12 +616,12 @@ export function OrderDepositPanel({ order }: { order: Order }) {
           {deposit.status === 'pending' ? (
             <p className="min-w-0 flex-1 basis-56 text-xs text-[var(--fg-muted)]">
               {editable
-                ? "Check the money arrived, then mark it received. The order can't be confirmed before."
-                : 'This order is no longer pending.'}
+                ? tr('order.checkMoney')
+                : tr('order.noLongerPending')}
             </p>
           ) : (
             <p className="min-w-0 flex-1 basis-56 text-xs text-[var(--success)]">
-              Received{deposit.receivedAt ? ` on ${formatDateTime(deposit.receivedAt)}` : ''}. The customer was told by email.
+              {deposit.receivedAt ? tr('order.receivedOn', { date: formatDateTime(deposit.receivedAt) }) : tr('order.receivedDone')}
             </p>
           )}
           {editable ? (
@@ -626,7 +632,7 @@ export function OrderDepositPanel({ order }: { order: Order }) {
               onClick={() => save.mutate({ received: deposit.status !== 'received' })}
             >
               <SiteIcon name={deposit.status === 'received' ? 'refresh' : 'check'} size={15} />
-              {deposit.status === 'received' ? 'Mark as not received' : 'Mark as received'}
+              {deposit.status === 'received' ? tr('order.markNotReceived') : tr('order.markReceived')}
             </Button>
           ) : null}
         </div>

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { customerLabel, shownEmail } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/format'
+import { useAdminT } from '@/store/adminLangStore'
 import type { CustomerRow } from '@/types'
 import { GuestBadge, ProfitText, StatusBadge, TypeBadge, cardClass } from './shared'
 import { money } from './utils'
@@ -22,10 +23,11 @@ export function CustomerTable({
   onToggle?: (row: CustomerRow) => void
   togglingId: string | null
 }) {
+  const tr = useAdminT()
   if (!rows.length) {
     return (
       <p className={`${cardClass} px-4 py-10 text-center text-sm text-[var(--fg-muted)]`}>
-        No customers match these filters.
+        {tr('cust.noMatch')}
       </p>
     )
   }
@@ -57,23 +59,23 @@ export function CustomerTable({
                 </div>
                 <dl className="mt-1.5 grid grid-cols-3 gap-2 text-[11px]">
                   <div className="min-w-0">
-                    <dt className="text-[var(--fg-muted)]">Orders</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('common.orders')}</dt>
                     <dd className="font-medium tabular-nums">
                       {m.orders.completed}/{m.orders.total}
                     </dd>
                   </div>
                   <div className="min-w-0">
-                    <dt className="text-[var(--fg-muted)]">Paid</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('cust.paid')}</dt>
                     <dd className="truncate font-medium tabular-nums">{money(m.payments.totalPaid)}</dd>
                   </div>
                   <div className="min-w-0 text-end">
-                    <dt className="text-[var(--fg-muted)]">Last order</dt>
+                    <dt className="text-[var(--fg-muted)]">{tr('cust.lastOrder')}</dt>
                     <dd className="truncate font-medium">{dateOr(m.dates.lastOrder)}</dd>
                   </div>
                 </dl>
                 {profitVisible && m.sales.completedOrders ? (
                   <p className="mt-1 text-[11px] text-[var(--fg-muted)]">
-                    Net {money(m.sales.netSales)} · profit{' '}
+                    {tr('cust.netProfitLine', { value: money(m.sales.netSales) })}{' '}
                     <ProfitText value={m.sales.grossProfit} missing={m.sales.ordersMissingCost} className="text-[11px]" />
                   </p>
                 ) : null}
@@ -81,7 +83,7 @@ export function CustomerTable({
               {onToggle ? (
                 <div className="flex justify-end px-3 pb-2">
                   <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" loading={togglingId === c._id} onClick={() => onToggle(c)}>
-                    {isDisabled(c) ? 'Enable account' : 'Disable account'}
+                    {isDisabled(c) ? tr('cust.enableAccount') : tr('cust.disableAccount')}
                   </Button>
                 </div>
               ) : null}
@@ -92,23 +94,23 @@ export function CustomerTable({
 
       {/* Desktop: table scrolls inside its card */}
       <div className={`${cardClass} hidden min-w-0 overflow-x-auto md:block`}>
-        <table className="w-full min-w-[1280px] text-left text-sm">
+        <table className="w-full min-w-[1280px] text-start text-sm">
           <thead className="bg-[var(--bg-muted)] text-xs text-[var(--fg-muted)]">
             <tr>
-              <th className="px-3 py-3 font-medium">Customer</th>
-              <th className="px-3 py-3 font-medium">Contact</th>
-              <th className="px-3 py-3 font-medium">Type</th>
-              <th className="px-3 py-3 font-medium">Status</th>
-              <th className="px-3 py-3 text-right font-medium">Orders</th>
-              <th className="px-3 py-3 text-right font-medium">Amount paid</th>
-              <th className="px-3 py-3 text-right font-medium">Net sales</th>
-              {profitVisible ? <th className="px-3 py-3 text-right font-medium">Gross profit</th> : null}
-              <th className="px-3 py-3 text-right font-medium">Avg order</th>
-              <th className="px-3 py-3 font-medium">First order</th>
-              <th className="px-3 py-3 font-medium">Last order</th>
-              <th className="px-3 py-3 font-medium">Registered</th>
+              <th className="px-3 py-3 font-medium">{tr('common.customer')}</th>
+              <th className="px-3 py-3 font-medium">{tr('cust.th.contact')}</th>
+              <th className="px-3 py-3 font-medium">{tr('cust.th.type')}</th>
+              <th className="px-3 py-3 font-medium">{tr('common.status')}</th>
+              <th className="px-3 py-3 text-end font-medium">{tr('common.orders')}</th>
+              <th className="px-3 py-3 text-end font-medium">{tr('cust.calc.amountPaid')}</th>
+              <th className="px-3 py-3 text-end font-medium">{tr('cust.netSales')}</th>
+              {profitVisible ? <th className="px-3 py-3 text-end font-medium">{tr('cust.grossProfit')}</th> : null}
+              <th className="px-3 py-3 text-end font-medium">{tr('cust.th.avgOrder')}</th>
+              <th className="px-3 py-3 font-medium">{tr('cust.th.firstOrder')}</th>
+              <th className="px-3 py-3 font-medium">{tr('cust.lastOrder')}</th>
+              <th className="px-3 py-3 font-medium">{tr('cust.th.registered')}</th>
               <th className="px-3 py-3">
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">{tr('cust.th.actions')}</span>
               </th>
             </tr>
           </thead>
@@ -126,7 +128,7 @@ export function CustomerTable({
                   </td>
                   <td className="max-w-[14rem] px-3 py-3">
                     <p className="truncate">{shownEmail(c.email)}</p>
-                    <p className="truncate text-xs text-[var(--fg-muted)]">{c.phone || '—'}</p>
+                    <p className="truncate text-xs text-[var(--fg-muted)]" dir="ltr">{c.phone || '—'}</p>
                   </td>
                   <td className="px-3 py-3">
                     <TypeBadge type={c.customerType} tierName={c.tierName} />
@@ -137,17 +139,17 @@ export function CustomerTable({
                       <StatusBadge status={c.status} />
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-right whitespace-nowrap">
+                  <td className="px-3 py-3 text-end whitespace-nowrap">
                     {m.orders.completed}/{m.orders.total}
                   </td>
-                  <td className="px-3 py-3 text-right whitespace-nowrap">{money(m.payments.totalPaid)}</td>
-                  <td className="px-3 py-3 text-right whitespace-nowrap">{money(m.sales.netSales)}</td>
+                  <td className="px-3 py-3 text-end whitespace-nowrap">{money(m.payments.totalPaid)}</td>
+                  <td className="px-3 py-3 text-end whitespace-nowrap">{money(m.sales.netSales)}</td>
                   {profitVisible ? (
-                    <td className="px-3 py-3 text-right whitespace-nowrap">
+                    <td className="px-3 py-3 text-end whitespace-nowrap">
                       <ProfitText value={m.sales.grossProfit} missing={m.sales.ordersMissingCost} />
                     </td>
                   ) : null}
-                  <td className="px-3 py-3 text-right whitespace-nowrap">{money(m.sales.averageOrderValue)}</td>
+                  <td className="px-3 py-3 text-end whitespace-nowrap">{money(m.sales.averageOrderValue)}</td>
                   <td className="px-3 py-3 whitespace-nowrap">{dateOr(m.dates.firstOrder)}</td>
                   <td className="px-3 py-3 whitespace-nowrap">{dateOr(m.dates.lastOrder)}</td>
                   <td className="px-3 py-3 whitespace-nowrap">{dateOr(c.registeredAt)}</td>
@@ -156,9 +158,9 @@ export function CustomerTable({
                       <Link
                         to={`/admin/customers/${c._id}`}
                         className="inline-flex h-9 items-center rounded-full border border-[var(--border)] px-3 text-sm hover:border-[var(--brand)]"
-                        aria-label={`View ${c.name}`}
+                        aria-label={tr('cust.viewName', { name: c.name })}
                       >
-                        View
+                        {tr('cust.view')}
                       </Link>
                       {onToggle ? (
                         <Button
@@ -166,9 +168,9 @@ export function CustomerTable({
                           variant="outline"
                           loading={togglingId === c._id}
                           onClick={() => onToggle(c)}
-                          aria-label={`${isDisabled(c) ? 'Enable' : 'Disable'} ${c.name}`}
+                          aria-label={tr(isDisabled(c) ? 'cust.enableName' : 'cust.disableName', { name: c.name })}
                         >
-                          {isDisabled(c) ? 'Enable' : 'Disable'}
+                          {isDisabled(c) ? tr('cust.enable') : tr('cust.disable')}
                         </Button>
                       ) : null}
                     </div>

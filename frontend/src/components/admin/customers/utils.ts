@@ -1,22 +1,24 @@
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
+import { at } from '@/i18n/admin'
 import type { CustomerType, SegmentKey } from '@/types'
 
+/** In the admin language: getters read the text when shown, never copied at load. */
 export const SEGMENT_LABELS: Record<SegmentKey, string> = {
-  new: 'New',
-  repeat: 'Repeat',
-  'high-spend': 'High-spending',
-  'high-profit': 'High-profit',
-  inactive: 'Inactive',
-  wholesale: 'Wholesale',
-  'wholesale-pending': 'Pending wholesale',
-  outstanding: 'Outstanding balance',
+  get new() { return at('cust.seg.new') },
+  get repeat() { return at('cust.seg.repeat') },
+  get 'high-spend'() { return at('cust.seg.high-spend') },
+  get 'high-profit'() { return at('cust.seg.high-profit') },
+  get inactive() { return at('cust.seg.inactive') },
+  get wholesale() { return at('cust.seg.wholesale') },
+  get 'wholesale-pending'() { return at('cust.seg.wholesale-pending') },
+  get outstanding() { return at('cust.seg.outstanding') },
 }
 
 export const TYPE_LABELS: Record<CustomerType, string> = {
-  retail: 'Retail',
-  wholesale: 'Wholesale',
-  business: 'Business',
+  get retail() { return at('cust.type.retail') },
+  get wholesale() { return at('cust.type.wholesale') },
+  get business() { return at('cust.type.business') },
 }
 
 export function money(v: number | null | undefined) {

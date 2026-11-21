@@ -130,7 +130,8 @@ export function AdminLayout() {
                 ) : null}
               </div>
             ) : null}
-            <Outlet />
+            {/* key: the screen redraws in the new language (labels from plain functions too) */}
+            <Outlet key={adminLang} />
           </div>
         </main>
       </div>

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
 import { formatCurrency, formatDateTime } from '@/lib/format'
 import { toast } from '@/store/toastStore'
+import { useAdminT } from '@/store/adminLangStore'
 import type { Order } from '@/types'
 
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -18,6 +19,7 @@ const orderPaidAmount = amountPaid
 
 /** Staff view of an order's refunds: history, total, and a form to record a new one. */
 export function OrderRefundsPanel({ order }: { order: Order }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
@@ -44,7 +46,7 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
       setReason('')
       setItemsReturned(false)
       setTouched(false)
-      toast.success('Refund recorded')
+      toast.success(tr('order.refundRecorded'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -52,40 +54,40 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
   const parsed = Number(amount)
   const amountError =
     amount.trim() === '' || !Number.isFinite(parsed) || parsed <= 0
-      ? 'Enter an amount above 0'
+      ? tr('order.amountAbove0')
       : parsed > refundable
-        ? `At most ${formatCurrency(refundable)}`
+        ? tr('order.atMost', { amount: formatCurrency(refundable) })
         : undefined
   const reasonError =
-    reason.trim().length < 3 ? 'At least 3 characters' : reason.length > 300 ? 'At most 300 characters' : undefined
+    reason.trim().length < 3 ? tr('order.min3') : reason.length > 300 ? tr('order.max300') : undefined
 
   return (
     <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-semibold">Refunds</h2>
+        <h2 className="font-semibold">{tr('order.refunds')}</h2>
         {totalRefunded > 0 ? (
           <Badge variant={refundable <= 0 ? 'danger' : 'warning'}>
-            {refundable <= 0 ? 'Fully refunded' : 'Partly refunded'}
+            {refundable <= 0 ? tr('order.fullyRefunded') : tr('order.partlyRefunded')}
           </Badge>
         ) : (
-          <Badge variant="muted">None</Badge>
+          <Badge variant="muted">{tr('order.none')}</Badge>
         )}
       </div>
 
       <dl className="mt-3 space-y-1 text-sm">
         <div className="flex justify-between gap-3">
-          <dt className="text-[var(--fg-muted)]">Paid so far</dt>
+          <dt className="text-[var(--fg-muted)]">{tr('order.paidSoFar')}</dt>
           <dd className="tabular-nums">{formatCurrency(paid)}</dd>
         </div>
         <div className="flex justify-between gap-3">
-          <dt className="text-[var(--fg-muted)]">Refunded</dt>
+          <dt className="text-[var(--fg-muted)]">{tr('order.refunded')}</dt>
           <dd className="tabular-nums font-semibold">
             {totalRefunded > 0 ? `−${formatCurrency(totalRefunded)}` : formatCurrency(0)}
           </dd>
         </div>
         {paid > 0 ? (
           <div className="flex justify-between gap-3">
-            <dt className="text-[var(--fg-muted)]">Can still refund</dt>
+            <dt className="text-[var(--fg-muted)]">{tr('order.canStillRefund')}</dt>
             <dd className="tabular-nums">{formatCurrency(refundable)}</dd>
           </div>
         ) : null}
@@ -105,7 +107,7 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
               <p className="mt-0.5 break-words text-[var(--fg-muted)]">{r.reason}</p>
               {r.itemsReturned ? (
                 <Badge variant="brand" className="mt-1">
-                  Items returned
+                  {tr('order.itemsReturned')}
                 </Badge>
               ) : null}
             </li>
@@ -116,8 +118,8 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
       {refundable <= 0 ? (
         <p className="mt-3 text-xs text-[var(--fg-muted)]">
           {paid <= 0
-            ? 'Nothing has been paid on this order yet — refunds can be recorded once a deposit is received or the order is delivered.'
-            : 'Fully refunded — nothing left to refund on this order.'}
+            ? tr('order.nothingPaid')
+            : tr('order.nothingLeft')}
         </p>
       ) : (
         <form
@@ -128,26 +130,26 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
             if (!amountError && !reasonError) record.mutate()
           }}
         >
-          <h3 className="text-sm font-semibold">Record a refund</h3>
+          <h3 className="text-sm font-semibold">{tr('order.recordRefundTitle')}</h3>
           <Input
-            label="Amount (DH)"
+            label={tr('order.amountDh')}
             type="number"
             inputMode="decimal"
             min={0}
             max={refundable}
             step="any"
-            placeholder={`Up to ${refundable}`}
+            placeholder={tr('order.upTo', { amount: refundable })}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             error={touched || amount ? amountError : undefined}
           />
           <Textarea
-            label="Reason"
+            label={tr('order.reason')}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             rows={2}
             maxLength={300}
-            placeholder="e.g. Customer returned the mouse (defective)"
+            placeholder={tr('order.refundReasonPh')}
             error={touched ? reasonError : undefined}
           />
           <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -156,14 +158,13 @@ export function OrderRefundsPanel({ order }: { order: Order }) {
               checked={itemsReturned}
               onChange={(e) => setItemsReturned(e.target.checked)}
             />
-            Items were returned
+            {tr('order.itemsWereReturned')}
           </label>
           <Button type="submit" className="w-full sm:w-auto" loading={record.isPending}>
-            Record refund
+            {tr('order.recordRefund')}
           </Button>
           <p className="text-xs text-[var(--fg-muted)]">
-            Refunds are subtracted from net sales in customer reports. Stock is not changed
-            automatically — adjust inventory if items come back.
+            {tr('order.refundsHint')}
           </p>
         </form>
       )}

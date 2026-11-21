@@ -29,7 +29,10 @@ test('server: setups are saved like the home rows, 48 products each; home rows s
 
 test('admin board: two tabs (Home page, Grab your setup page); a card per setup with its groups', () => {
   const board = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
-  for (const t of ["label: 'Home page'", "label: 'Setups page'", 'role="tablist"', 'const lists = useSetupLists()', "store={{ kind: 'setup', key, all }}", '<SiteIcon name="plus" size={12} /> Add', 'Back to automatic', 'title="Place on the page"']) {
+  // Labels in the admin language (i18n/adminText/products.ts)
+  const texts = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/adminText/products.ts'), 'utf8');
+  for (const t of ["'products.homePage': 'Home page'", "'products.board.setupsPage': 'Setups page'", "'products.board.backAuto': 'Back to automatic'", "'products.board.placeOnPage': 'Place on the page'"]) assert.ok(texts.includes(t), t);
+  for (const t of ["label: tr('products.homePage')", "label: tr('products.board.setupsPage')", 'role="tablist"', 'const lists = useSetupLists()', "store={{ kind: 'setup', key, all }}", "<SiteIcon name=\"plus\" size={12} /> {tr('products.add')}", "tr('products.board.backAuto')", "title={tr('products.board.placeOnPage')}"]) {
     assert.ok(board.includes(t), t);
   }
   assert.ok(board.includes('const list = reset ? [] : setupListAfter(store.all, ids, next).slice(0, MAX_SETUP_ROW)'), 'a group change saves the whole setup');
@@ -49,7 +52,8 @@ test('admin board: one section per line (Home page sections, setups and their gr
 test('Complete your setup is a tab of Admin → Products (not its own menu entry); old links still work', () => {
   const read = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   const board = read('components/admin/HomeLayoutBoard.tsx');
-  assert.ok(board.includes("{ id: 'setup', label: 'Complete your setup', icon: 'plus', href: '/shop' },"));
+  assert.ok(board.includes("{ id: 'setup', label: tr('products.board.completeSetup'), icon: 'plus', href: '/shop' },"));
+  assert.ok(read('i18n/adminText/products.ts').includes("'products.board.completeSetup': 'Complete your setup'"));
   assert.ok(board.includes('<CompleteSetupAdmin embedded />'));
   assert.ok(board.includes("const asked = params.get('board') as BoardTab | null"), '?board=setup opens the tab');
   assert.ok(!read('components/layout/AdminSidebar.tsx').includes("'/admin/setup'"), 'no sidebar entry');

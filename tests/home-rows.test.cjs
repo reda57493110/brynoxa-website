@@ -46,7 +46,10 @@ test('home: two rows, deduplicated, Deals hidden under 2 products; shop understa
   // Admin → Products shows the same rows (same hook), with "hidden" when under 4
   const board = src('components/admin/HomeLayoutBoard.tsx');
   assert.ok(board.includes("useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])"), "useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])");
-  for (const t of ['title="Deals of the moment"', 'title="Our selection · New arrivals"', 'Shop by budget · ', 'hidden (needs']) assert.ok(board.includes(t), t);
+  // Names in the admin language (i18n/adminText/products.ts)
+  for (const t of ["title={tr('products.dealsMoment')}", "title={tr('products.board.newArrivals')}", "tr('products.board.budget', { band: budgetLabel(b) })", "tr('products.board.hiddenNeeds', { count: HOME_ROW_MIN })"]) assert.ok(board.includes(t), t);
+  const texts = src('i18n/adminText/products.ts');
+  for (const t of ["'products.dealsMoment': 'Deals of the moment'", "'products.board.newArrivals': 'Our selection · New arrivals'", "'products.board.budget': 'Shop by budget · {band}'", "'products.board.hiddenNeeds': 'hidden (needs {count})'"]) assert.ok(texts.includes(t), t);
   const row = src('components/home/HomeBlocks.tsx');
   assert.match(row, /export const HOME_ROW_MIN = 2/, 'Deals of the moment shows from 2 products (the deals card fills the row)');
   assert.match(row, /if \(products\.length < HOME_ROW_MIN\) return null/);
@@ -75,7 +78,9 @@ test('home sections chosen in admin: known sections, valid products, 12 at most,
 
 test('admin board: rank, move, edit, remove and add on every section; no Manage button', () => {
   const board = fs.readFileSync(path.join(ROOT, 'frontend/src/components/admin/HomeLayoutBoard.tsx'), 'utf8');
-  for (const t of ['aria-label="Move left"', 'aria-label="Move right"', 'aria-label="Edit the product"', 'aria-label="Remove from this section"', "full ? `Full (${max})` : 'Add'", 'Back to automatic']) assert.ok(board.includes(t), t);
+  for (const t of ["aria-label={tr('products.board.moveLeft')}", "aria-label={tr('products.board.moveRight')}", "aria-label={tr('products.board.editProduct')}", "aria-label={tr('products.board.removeLabel')}", "full ? tr('products.board.full', { max }) : tr('products.add')", "tr('products.board.backAuto')"]) assert.ok(board.includes(t), t);
+  const texts = fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/adminText/products.ts'), 'utf8');
+  for (const t of ["'products.board.moveLeft': 'Move left'", "'products.board.moveRight': 'Move right'", "'products.board.editProduct': 'Edit the product'", "'products.board.removeLabel': 'Remove from this section'", "'products.board.full': 'Full ({max})'", "'products.board.backAuto': 'Back to automatic'"]) assert.ok(texts.includes(t), t);
   assert.ok(!board.includes('/> Manage'), 'no Manage button');
   for (const key of ["key: 'deals'", "key: 'new'", 'key: b.key', "kind: 'homeDeals'", "flag: 'isFeatured'", "flag: 'isCarousel'"]) assert.ok(board.includes(key), key);
 });

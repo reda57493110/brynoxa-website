@@ -3,6 +3,8 @@ import { MANUAL_ORDER_ORIGINS, ORDER_ORIGIN_LABEL } from '@/lib/orderOrigin'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { cn } from '@/lib/cn'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 import { cardClass } from './shared'
 import { FILTER_KEYS, type FilterKey, type FilterValues } from './utils'
 
@@ -35,6 +37,10 @@ export function CustomerFilters({
   saving: boolean
   profitVisible: boolean
 }) {
+  const tr = useAdminT()
+  /** Phone / shop / other in the admin language; Facebook, Instagram, WhatsApp, TikTok are names */
+  const originLabel = (o: (typeof MANUAL_ORDER_ORIGINS)[number]) =>
+    o === 'phone' || o === 'store' || o === 'other' ? tr(`cust.origin.${o}` as AdminKey) : ORDER_ORIGIN_LABEL[o]
   const activeCount = FILTER_KEYS.filter((k) => values[k]).length
   const [open, setOpen] = useState(activeCount > 0)
   const [naming, setNaming] = useState(false)
@@ -57,13 +63,13 @@ export function CustomerFilters({
     <div className={cn(cardClass, 'min-w-0')}>
       <button
         type="button"
-        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm font-medium"
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start text-sm font-medium"
         aria-expanded={open}
         aria-controls="customer-filters-panel"
         onClick={() => setOpen((o) => !o)}
       >
         <span className="inline-flex items-center gap-2">
-          <SiteIcon name="sliders" size={16} /> Filters
+          <SiteIcon name="sliders" size={16} /> {tr('cust.filters')}
           {activeCount ? (
             <span className="rounded-full bg-[var(--bg-muted)] px-2 text-xs text-[var(--brand-text)]">
               {activeCount}
@@ -75,38 +81,38 @@ export function CustomerFilters({
       {open ? (
         <div id="customer-filters-panel" className="border-t border-[var(--border)] p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="Customer type">
+            <Field label={tr('cust.f.type')}>
               <select className={fieldCls} value={values.type} onChange={(e) => onChange({ type: e.target.value })}>
-                <option value="">Any</option>
-                <option value="retail">Retail</option>
-                <option value="wholesale">Wholesale</option>
-                <option value="business">Business</option>
+                <option value="">{tr('cust.f.any')}</option>
+                <option value="retail">{tr('cust.type.retail')}</option>
+                <option value="wholesale">{tr('cust.type.wholesale')}</option>
+                <option value="business">{tr('cust.type.business')}</option>
               </select>
             </Field>
-            <Field label="Came from">
+            <Field label={tr('cust.f.source')}>
               <select className={fieldCls} value={values.source} onChange={(e) => onChange({ source: e.target.value })}>
-                <option value="">Anywhere</option>
-                <option value="website">Website</option>
-                <option value="other_channels">Social media, phone & shop</option>
+                <option value="">{tr('cust.f.anywhere')}</option>
+                <option value="website">{tr('cust.f.website')}</option>
+                <option value="other_channels">{tr('cust.f.otherChannels')}</option>
                 {MANUAL_ORDER_ORIGINS.map((o) => (
                   <option key={o} value={o}>
-                    {ORDER_ORIGIN_LABEL[o]}
+                    {originLabel(o)}
                   </option>
                 ))}
               </select>
             </Field>
-            <Field label="Account status">
+            <Field label={tr('cust.f.status')}>
               <select className={fieldCls} value={values.status} onChange={(e) => onChange({ status: e.target.value })}>
-                <option value="">Any</option>
-                <option value="active">Active</option>
-                <option value="disabled">Disabled</option>
-                <option value="unverified">Unverified</option>
-                <option value="wholesale-pending">Wholesale pending</option>
-                <option value="guest">Guests (no account)</option>
-                <option value="account">With an account</option>
+                <option value="">{tr('cust.f.any')}</option>
+                <option value="active">{tr('cust.st.active')}</option>
+                <option value="disabled">{tr('cust.st.disabled')}</option>
+                <option value="unverified">{tr('cust.st.unverified')}</option>
+                <option value="wholesale-pending">{tr('cust.st.wholesale-pending')}</option>
+                <option value="guest">{tr('cust.f.guests')}</option>
+                <option value="account">{tr('cust.f.withAccount')}</option>
               </select>
             </Field>
-            <Field label="Registered from">
+            <Field label={tr('cust.f.regFrom')}>
               <input
                 type="date"
                 className={fieldCls}
@@ -114,7 +120,7 @@ export function CustomerFilters({
                 onChange={(e) => onChange({ registeredFrom: e.target.value })}
               />
             </Field>
-            <Field label="Registered to">
+            <Field label={tr('cust.f.regTo')}>
               <input
                 type="date"
                 className={fieldCls}
@@ -122,20 +128,20 @@ export function CustomerFilters({
                 onChange={(e) => onChange({ registeredTo: e.target.value })}
               />
             </Field>
-            <Field label="Order activity">
+            <Field label={tr('cust.f.activity')}>
               <select className={fieldCls} value={values.activity} onChange={(e) => onChange({ activity: e.target.value })}>
-                <option value="">Any</option>
-                <option value="ordered">Has ordered</option>
-                <option value="never">Never ordered</option>
-                <option value="active">Active buyers</option>
-                <option value="inactive">Inactive buyers</option>
+                <option value="">{tr('cust.f.any')}</option>
+                <option value="ordered">{tr('cust.f.hasOrdered')}</option>
+                <option value="never">{tr('cust.f.neverOrdered')}</option>
+                <option value="active">{tr('cust.f.activeBuyers')}</option>
+                <option value="inactive">{tr('cust.f.inactiveBuyers')}</option>
               </select>
             </Field>
-            {num('minNet', 'Min net sales (DH)')}
-            {num('maxNet', 'Max net sales (DH)')}
-            {num('minOrders', 'Min completed orders')}
-            {num('maxOrders', 'Max completed orders')}
-            {profitVisible ? num('minProfit', 'Min gross profit (DH)') : null}
+            {num('minNet', tr('cust.f.minNet'))}
+            {num('maxNet', tr('cust.f.maxNet'))}
+            {num('minOrders', tr('cust.f.minOrders'))}
+            {num('maxOrders', tr('cust.f.maxOrders'))}
+            {profitVisible ? num('minProfit', tr('cust.f.minProfit')) : null}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -152,27 +158,27 @@ export function CustomerFilters({
               >
                 <input
                   autoFocus
-                  aria-label="Segment name"
-                  placeholder="Segment name"
+                  aria-label={tr('cust.f.segName')}
+                  placeholder={tr('cust.f.segName')}
                   maxLength={40}
                   className={cn(fieldCls, 'h-9 sm:w-56')}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
                 <Button type="submit" size="sm" loading={saving} disabled={!name.trim()}>
-                  Save
+                  {tr('cust.f.save')}
                 </Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => setNaming(false)}>
-                  Cancel
+                  {tr('cust.f.cancel')}
                 </Button>
               </form>
             ) : (
               <Button type="button" size="sm" variant="outline" onClick={() => setNaming(true)}>
-                <SiteIcon name="plus" size={14} /> Save as segment
+                <SiteIcon name="plus" size={14} /> {tr('cust.f.saveAsSegment')}
               </Button>
             )}
             <Button type="button" size="sm" variant="ghost" onClick={onClear} disabled={!activeCount}>
-              Clear filters
+              {tr('cust.f.clear')}
             </Button>
           </div>
         </div>

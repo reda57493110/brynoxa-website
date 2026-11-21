@@ -174,16 +174,19 @@ test('phones: compact banner, cards and texts (computers keep their sizes)', () 
 
 test('Admin → Products follows the new site: names and order of the home page, Top picks wording, categories with their sub-categories', () => {
   const placements = src('hooks/useStorefrontPlacements.ts');
-  for (const k of ["'Home · Deals banner'", "'Home · Top picks (first)'", "'Home · Top picks (then)'"]) assert.ok(placements.includes(k), k);
+  // Labels in the admin language (i18n/adminText/products.ts)
+  const texts = src('i18n/adminText/products.ts');
+  for (const k of ["'products.place.deals': 'Home · Deals banner'", "'products.place.topFirst': 'Home · Top picks (first)'", "'products.place.topThen': 'Home · Top picks (then)'", "'products.short.deals': 'Deals banner'", "'products.dlg.topFirst': 'Top picks (first)'"]) assert.ok(texts.includes(k), k);
+  for (const k of ["at('products.place.deals')", "at('products.place.topFirst')", "at('products.place.topThen')"]) assert.ok(placements.includes(k), k);
   const list = src('pages/admin/Products.tsx');
-  assert.ok(list.includes("deals: 'Deals banner'") && !list.includes("shopHeader: 'Shop header'"));
+  assert.ok(list.includes("deals: at('products.short.deals')") && !list.includes("shopHeader: 'Shop header'"));
   assert.ok(list.includes('withSubCategories(mainCategories('), 'category filter: main categories then their sub-categories');
   const form = src('pages/admin/ProductForm.tsx');
   assert.ok(form.includes('options={withSubCategories(mainCategories(categoryList), categoryList).map('));
   assert.ok(form.includes('Tip: put it in a sub-category so customers find it there too'), 'one click to move a product into a sub-category');
   assert.ok(form.includes('Home · Top picks (first)') && form.includes('Home · Top picks (then)'));
   const dialog = src('components/admin/ProductPlacementDialog.tsx');
-  assert.ok(dialog.includes('<Row title="Deals banner"') && dialog.includes('<Row title="Top picks (first)"'));
+  assert.ok(dialog.includes("<Row title={tr('products.short.deals')}") && dialog.includes("<Row title={tr('products.dlg.topFirst')}"));
 });
 
 test('phones: bigger photos in the deals banner and the list view; your own budget the whole width (readable); a short footer', () => {
@@ -196,7 +199,9 @@ test('phones: bigger photos in the deals banner and the list view; your own budg
 
 test('Admin board shows every home section with products, also the automatic ones', () => {
   const b = src('components/admin/HomeLayoutBoard.tsx');
-  for (const k of ['title="Our selection · Best sellers"', 'title="Browse by category"', 'Our brands</p>']) assert.ok(b.includes(k), k);
+  for (const k of ["title={tr('products.board.best')}", "title={tr('products.board.browse')}", "{tr('products.board.brands')}</p>"]) assert.ok(b.includes(k), k);
+  const texts = src('i18n/adminText/products.ts');
+  for (const k of ["'products.board.best': 'Our selection · Best sellers'", "'products.board.browse': 'Browse by category'", "'products.board.brands': 'Our brands'"]) assert.ok(texts.includes(k), k);
   assert.ok(b.includes("queryKey: ['products', 'home-best']") && b.includes("queryKey: ['products', 'home-category', active?.slug]"), 'the same requests as the home page');
   assert.ok(b.includes('readOnly'), 'automatic sections: products can be opened, not moved or removed');
 });
@@ -208,7 +213,9 @@ test('new product: the list opens its placement window, which says where it show
   assert.ok(list.includes('const placeNew = (location.state as { placeNew?: string } | null)?.placeNew'));
   assert.ok(list.includes("navigateTo(location.pathname + location.search, { replace: true, state: null })"), 'only once (not again on reload)');
   const auto = src('components/admin/ProductAutoPlaces.tsx');
-  for (const k of ["title: 'Stock 0'", "'No · needs an old price above the price'", "'No · this list was chosen by hand'", "fix: { label: 'Add stock', to: `/admin/inventory/products/${p._id}` }", 'setupsFor(p as never)', 'BUDGETS.find((b) => inBudget(p.price, b))']) assert.ok(auto.includes(k), k);
+  for (const k of ["title: at('products.auto.stock0')", "at('products.auto.needsOldPrice')", "at('products.auto.byHand')", "fix: { label: at('products.auto.addStock'), to: `/admin/inventory/products/${p._id}` }", 'setupsFor(p as never)', 'BUDGETS.find((b) => inBudget(p.price, b))']) assert.ok(auto.includes(k), k);
+  const autoTexts = src('i18n/adminText/products.ts');
+  for (const k of ["'products.auto.stock0': 'Stock 0'", "'products.auto.needsOldPrice': 'No · needs an old price above the price'", "'products.auto.byHand': 'No · this list was chosen by hand'", "'products.auto.addStock': 'Add stock'"]) assert.ok(autoTexts.includes(k), k);
   assert.ok(src('components/admin/ProductPlacementDialog.tsx').includes('<ProductAutoPlaces product={p} />'));
 });
 

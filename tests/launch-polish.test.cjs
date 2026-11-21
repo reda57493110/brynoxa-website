@@ -22,7 +22,7 @@ test('dashboard: a period with nothing (all refunded) is a plain note, not a red
   const kit = src('components/admin/analytics/Kit.tsx');
   const i = kit.indexOf('if (now === 0)');
   assert.ok(i > 0 && i < kit.indexOf("text-[var(--danger)]"), 'checked before the red arrow');
-  assert.ok(kit.includes('None this period'));
+  assert.ok(kit.includes("at('kit.noneThis')") && src('i18n/adminText/common.ts').includes("'kit.noneThis': 'None this period'"), 'a plain note, in the admin language');
 });
 
 test('admin board on phones: no long explanations, short labels', () => {

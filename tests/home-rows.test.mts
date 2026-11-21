@@ -70,7 +70,12 @@ test('a short footer (warranty and returns are in Help)', () => {
 
 test('admin board lists the home lists in the order and with the names of the home page', () => {
   const board = src('components/admin/HomeLayoutBoard.tsx');
-  const order = ['title="Deals banner (top of the page)"', 'title="Deals of the moment"', 'title="Our selection · Top picks (first)"', 'title="Our selection · Top picks (then)"', 'title="Our selection · New arrivals"', 'title="Brynoxa Signature"', 'title={`Shop by budget · '].map((m) => board.indexOf(m));
+  // Section names are in the admin language: the keys in board order, their English names in products.ts
+  const keys = ['products.board.dealsBanner', 'products.dealsMoment', 'products.board.topFirst', 'products.board.topThen', 'products.board.newArrivals', 'products.signature', 'products.board.budget'];
+  const order = keys.map((k) => board.indexOf(`title={tr('${k}'`));
+  const texts = src('i18n/adminText/products.ts');
+  const names = ['Deals banner (top of the page)', 'Deals of the moment', 'Our selection · Top picks (first)', 'Our selection · Top picks (then)', 'Our selection · New arrivals', 'Brynoxa Signature', 'Shop by budget · {band}'];
+  keys.forEach((k, i) => assert.ok(texts.includes(`'${k}': '${names[i]}'`), k));
   assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), 'board order: ' + order.join(','));
   assert.ok(board.includes("import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'"));
 });

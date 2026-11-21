@@ -8,6 +8,7 @@ import { hasPermission } from '@/lib/permissions'
 import { canReturnAndRefund } from '@/lib/returnRefund'
 import { useAuthStore } from '@/store/authStore'
 import type { Order } from '@/types'
+import { useAdminT } from '@/store/adminLangStore'
 
 /**
  * "Return & refund" on a delivered order, for staff who handle orders. Pass the order when the
@@ -24,6 +25,7 @@ export function ReturnRefundButton({
   size?: 'sm' | 'md'
   className?: string
 }) {
+  const tr = useAdminT()
   const role = useAuthStore((s) => s.user?.role)
   const [open, setOpen] = useState(false)
   const id = order?._id ?? orderId ?? ''
@@ -40,7 +42,7 @@ export function ReturnRefundButton({
   return (
     <>
       <Button type="button" size={size} variant="outline" className={className} loading={open && !full} onClick={() => setOpen(true)}>
-        <SiteIcon name="refresh" size={14} /> Return &amp; refund
+        <SiteIcon name="refresh" size={14} /> {tr('order.returnRefund')}
       </Button>
       {full ? (
         canReturnAndRefund(full) ? (
@@ -55,12 +57,13 @@ export function ReturnRefundButton({
 
 /** Loaded from the customer profile, the order turned out to be fully returned / refunded already. */
 function NothingLeft({ onClose }: { onClose: () => void }) {
+  const tr = useAdminT()
   return (
     <div role="alertdialog" className="fixed inset-x-4 bottom-4 z-[70] mx-auto max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] p-4 text-sm shadow-soft-lg">
-      Nothing left to return or refund on this order.
+      {tr('order.nothingLeftReturn')}
       <div className="mt-3 text-end">
         <Button size="sm" variant="ghost" onClick={onClose}>
-          OK
+          {tr('order.ok')}
         </Button>
       </div>
     </div>

@@ -25,6 +25,8 @@ import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
 import { useAuthStore } from '@/store/authStore'
 import { hasPermission } from '@/lib/permissions'
+import { useAdminT } from '@/store/adminLangStore'
+import { at } from '@/i18n/admin'
 import type { Category, Product, ProductCondition } from '@/types'
 import { mainCategories, withSubCategories } from '@/lib/categoryTree'
 
@@ -32,20 +34,21 @@ type PlacementFilter = '' | 'home' | 'deals' | 'featured' | 'carousel' | 'none'
 
 const control = 'h-9 min-w-0 rounded-lg border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
 
-const SHORT: Record<string, string> = {
-  deals: 'Deals banner',
-  spotlight: 'Top picks',
-  row: 'Top picks',
-  featuredWaiting: 'Featured flag · not shown',
-  carouselWaiting: 'Carousel · not shown',
-}
+/** Short badge names, in the admin language (read when rendering) */
+const short = (): Record<string, string> => ({
+  deals: at('products.short.deals'),
+  spotlight: at('products.short.topPicks'),
+  row: at('products.short.topPicks'),
+  featuredWaiting: at('products.short.featuredWaiting'),
+  carouselWaiting: at('products.short.carouselWaiting'),
+})
 
 function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: string } {
-  const text = `${SHORT[pl.key] ?? pl.label}${pl.detail && !pl.waiting ? ` ${pl.detail}` : ''}`
+  const text = `${short()[pl.key] ?? pl.label}${pl.detail && !pl.waiting ? ` ${pl.detail}` : ''}`
   return {
     text,
     variant: pl.waiting ? 'warning' : 'brand',
-    title: `${pl.label}${pl.detail ? ` — ${pl.detail}` : ''}${pl.auto ? ' (automatic)' : ''}`,
+    title: `${pl.label}${pl.detail ? ` — ${pl.detail}` : ''}${pl.auto ? ` (${at('products.automatic')})` : ''}`,
   }
 }
 
@@ -53,7 +56,7 @@ function badgeFor(pl: Placement): { text: string; variant: BadgeVariant; title: 
 function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placement[]; onMore: () => void; max?: number }) {
   const list = placements.filter((p) => p.key !== 'category' && p.key !== 'hidden')
   if (placements.some((p) => p.key === 'hidden')) return <span className="text-xs text-[var(--fg-muted)]">—</span>
-  if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">Shop</span>
+  if (!list.length) return <span className="text-xs text-[var(--fg-muted)]">{at('products.shop')}</span>
   const shown = list.slice(0, max)
   return (
     <span className="flex flex-wrap items-center gap-1">
@@ -79,11 +82,7 @@ function PlacementBadges({ placements, onMore, max = 3 }: { placements: Placemen
 /** Table groups, in storefront order (the board above shows each home section in full). */
 type Group = 'home' | 'shop' | 'hidden'
 
-const GROUP_LABEL: Record<Group, string> = {
-  home: 'Home page',
-  shop: 'Shop',
-  hidden: 'Hidden',
-}
+const groupLabel = (g: Group) => at(g === 'home' ? 'products.homePage' : g === 'shop' ? 'products.shop' : 'products.hidden')
 
 function groupOf(placements: Placement[]): Group {
   const shown = (key: string) => placements.some((p) => p.key === key && !p.waiting)
@@ -94,6 +93,7 @@ function groupOf(placements: Placement[]): Group {
 
 export function Products() {
   const role = useAuthStore((s) => s.user?.role)
+  const tr = useAdminT()
   const qc = useQueryClient()
   // ?q= from the admin search ("See all products matching…")
   const [q, setQ] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '')
@@ -160,7 +160,7 @@ export function Products() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-products'] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      toast.success('Product deleted')
+      toast.success(tr('products.deleted'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -179,7 +179,7 @@ export function Products() {
   const groups = items.map((p) => groupOf(place.placementsOf(p)))
   const groupHeading = (i: number) =>
     sort === 'placement' && place.ready && (i === 0 || groups[i] !== groups[i - 1]) ? (
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{GROUP_LABEL[groups[i]]}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{groupLabel(groups[i])}</span>
     ) : null
 
   const canSeeCosts = hasPermission(role, 'reports')
@@ -190,18 +190,18 @@ export function Products() {
   return (
     <div className="min-w-0 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">Products</h1>
+        <h1 className="font-display text-lg font-semibold tracking-tight sm:text-xl">{tr('products.title')}</h1>
         <div className="flex shrink-0 gap-2">
           {canSeeCosts ? (
             <Link to="/admin/profit">
               <Button size="sm" variant="outline">
-                <SiteIcon name="banknote" size={15} /> Costs & profit
+                <SiteIcon name="banknote" size={15} /> {tr('products.costsProfit')}
               </Button>
             </Link>
           ) : null}
           <Link to="/admin/products/new">
             <Button size="sm">
-              <SiteIcon name="plus" size={15} /> Add product
+              <SiteIcon name="plus" size={15} /> {tr('products.addProduct')}
             </Button>
           </Link>
         </div>
@@ -219,15 +219,15 @@ export function Products() {
           <SiteIcon name="search" size={15} className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-muted)]" />
           <input
             type="search"
-            aria-label="Search products"
-            placeholder="Name or SKU"
+            aria-label={tr('products.searchLabel')}
+            placeholder={tr('products.searchPlaceholder')}
             value={q}
             onChange={(e) => setFilter(() => setQ(e.target.value))}
             className={cn(control, 'w-full ps-8')}
           />
         </div>
-        <select aria-label="Category" value={category} onChange={(e) => setFilter(() => setCategory(e.target.value))} className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}>
-          <option value="">All categories</option>
+        <select aria-label={tr('products.category')} value={category} onChange={(e) => setFilter(() => setCategory(e.target.value))} className={cn(control, 'flex-[1_1_8rem] sm:flex-none')}>
+          <option value="">{tr('products.allCategories')}</option>
           {/* Each main category, then its sub-categories (indented) */}
           {withSubCategories(mainCategories((cats.data as Category[] | undefined) ?? []), (cats.data as Category[] | undefined) ?? []).map((c) => (
             <option key={c._id} value={c._id}>
@@ -235,41 +235,41 @@ export function Products() {
             </option>
           ))}
         </select>
-        <select aria-label="Status" value={active} onChange={(e) => setFilter(() => setActive(e.target.value as typeof active))} className={cn(control, 'flex-[1_1_7rem] sm:flex-none')}>
-          <option value="all">Any status</option>
-          <option value="true">Published</option>
-          <option value="false">Hidden</option>
+        <select aria-label={tr('common.status')} value={active} onChange={(e) => setFilter(() => setActive(e.target.value as typeof active))} className={cn(control, 'flex-[1_1_7rem] sm:flex-none')}>
+          <option value="all">{tr('products.anyStatus')}</option>
+          <option value="true">{tr('products.published')}</option>
+          <option value="false">{tr('products.hidden')}</option>
         </select>
         <select
-          aria-label="Placement"
+          aria-label={tr('products.placement')}
           value={placement}
           onChange={(e) => setFilter(() => setPlacement(e.target.value as PlacementFilter))}
           className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}
         >
-          <option value="">Any placement</option>
-          <option value="home">Home page</option>
-          <option value="deals">Hero</option>
-          <option value="featured">Featured</option>
-          <option value="carousel">Carousel</option>
-          <option value="none">Not on home page</option>
+          <option value="">{tr('products.anyPlacement')}</option>
+          <option value="home">{tr('products.homePage')}</option>
+          <option value="deals">{tr('products.hero')}</option>
+          <option value="featured">{tr('products.featured')}</option>
+          <option value="carousel">{tr('products.carousel')}</option>
+          <option value="none">{tr('products.notOnHome')}</option>
         </select>
         <select
-          aria-label="Condition"
+          aria-label={tr('products.condition')}
           value={condition}
           onChange={(e) => setFilter(() => setCondition(e.target.value as typeof condition))}
           className={cn(control, 'flex-[1_1_7rem] sm:flex-none')}
         >
-          <option value="">Any condition</option>
-          <option value="new">New</option>
-          <option value="refurbished">Refurbished</option>
-          <option value="used">Used</option>
+          <option value="">{tr('products.anyCondition')}</option>
+          <option value="new">{tr('products.condNew')}</option>
+          <option value="refurbished">{tr('products.condRefurbished')}</option>
+          <option value="used">{tr('products.condUsed')}</option>
         </select>
-        <select aria-label="Sort" value={sort} onChange={(e) => setFilter(() => setSort(e.target.value as typeof sort))} className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}>
-          <option value="placement">Storefront order</option>
-          <option value="newest">Newest</option>
-          <option value="name">Name A–Z</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
+        <select aria-label={tr('products.sort')} value={sort} onChange={(e) => setFilter(() => setSort(e.target.value as typeof sort))} className={cn(control, 'flex-[1_1_9rem] sm:flex-none')}>
+          <option value="placement">{tr('products.sortStorefront')}</option>
+          <option value="newest">{tr('products.sortNewest')}</option>
+          <option value="name">{tr('products.sortName')}</option>
+          <option value="price_asc">{tr('products.sortPriceAsc')}</option>
+          <option value="price_desc">{tr('products.sortPriceDesc')}</option>
         </select>
         {filtered ? (
           <button
@@ -285,7 +285,7 @@ export function Products() {
               })
             }
           >
-            Clear
+            {tr('products.clear')}
           </button>
         ) : null}
       </div>
@@ -298,10 +298,10 @@ export function Products() {
         <QueryErrorState onRetry={() => products.refetch()} />
       ) : !items.length ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] px-4 py-6 text-center">
-          <p className="text-sm text-[var(--fg-muted)]">{filtered ? 'No products match these filters.' : 'No products yet.'}</p>
+          <p className="text-sm text-[var(--fg-muted)]">{filtered ? tr('products.noMatch') : tr('products.noProducts')}</p>
           {!filtered ? (
             <Link to="/admin/products/new" className="mt-3 inline-block text-sm font-medium text-[var(--brand-text)] hover:underline">
-              Add your first product
+              {tr('products.addFirst')}
             </Link>
           ) : null}
         </div>
@@ -341,15 +341,15 @@ export function Products() {
                       <PlacementBadges placements={placements} onMore={() => setPlacing(p)} />
                     </div>
                     <div className="mt-1.5 flex items-center gap-1">
-                      <Button size="sm" variant="ghost" className="h-7 w-8 !px-0" aria-label="Placement" onClick={() => setPlacing(p)}>
+                      <Button size="sm" variant="ghost" className="h-7 w-8 !px-0" aria-label={tr('products.placement')} onClick={() => setPlacing(p)}>
                         <SiteIcon name="layers" size={14} />
                       </Button>
-                      <Link to={`/admin/products/${p._id}/edit`} aria-label="Edit">
+                      <Link to={`/admin/products/${p._id}/edit`} aria-label={tr('products.edit')}>
                         <Button size="sm" variant="ghost" className="h-7 w-8 !px-0">
                           <SiteIcon name="pencil" size={14} />
                         </Button>
                       </Link>
-                      <Button size="sm" variant="ghost" className="ms-auto h-7 px-2" aria-label="Delete product" onClick={() => setDeleteId(p._id)}>
+                      <Button size="sm" variant="ghost" className="ms-auto h-7 px-2" aria-label={tr('products.deleteProduct')} onClick={() => setDeleteId(p._id)}>
                         <SiteIcon name="trash" size={14} />
                       </Button>
                     </div>
@@ -362,16 +362,16 @@ export function Products() {
 
           {/* Tablet / desktop */}
           <div className="hidden min-w-0 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] md:block">
-            <table className="w-full min-w-[820px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-start text-sm">
               <thead className="border-b border-[var(--border)] text-xs text-[var(--fg-muted)]">
                 <tr>
-                  <th className="px-3 py-2 font-medium">Product</th>
-                  <th className="px-3 py-2 font-medium">Category</th>
-                  <th className="px-3 py-2 text-right font-medium">Price</th>
-                  <th className="px-3 py-2 font-medium">Status</th>
-                  <th className="px-3 py-2 font-medium">Storefront</th>
-                  <th className="whitespace-nowrap px-3 py-2 text-right font-normal">
-                    {total} product{total === 1 ? '' : 's'}
+                  <th className="px-3 py-2 font-medium">{tr('products.colProduct')}</th>
+                  <th className="px-3 py-2 font-medium">{tr('products.category')}</th>
+                  <th className="px-3 py-2 text-end font-medium">{tr('products.colPrice')}</th>
+                  <th className="px-3 py-2 font-medium">{tr('common.status')}</th>
+                  <th className="px-3 py-2 font-medium">{tr('products.colStorefront')}</th>
+                  <th className="whitespace-nowrap px-3 py-2 text-end font-normal">
+                    {total === 1 ? tr('products.countOne') : tr('products.count', { count: total })}
                   </th>
                 </tr>
               </thead>
@@ -403,17 +403,17 @@ export function Products() {
                             </p>
                             <p className="truncate text-[11px] text-[var(--fg-muted)]">
                               {p.sku}
-                              {p.condition && p.condition !== 'new' ? ` · ${p.condition === 'used' ? 'Used' : 'Refurbished'}` : ''}
+                              {p.condition && p.condition !== 'new' ? ` · ${p.condition === 'used' ? tr('products.condUsed') : tr('products.condRefurbished')}` : ''}
                             </p>
                           </div>
                         </Link>
                       </td>
                       <td className="max-w-[10rem] px-3 py-2">
-                        <span className={cn('block truncate', cat?.isActive === false && 'text-[var(--warning)]')} title={cat?.isActive === false ? 'Category is hidden' : undefined}>
+                        <span className={cn('block truncate', cat?.isActive === false && 'text-[var(--warning)]')} title={cat?.isActive === false ? tr('products.categoryHidden') : undefined}>
                           {cat?.name ?? '—'}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <td className="whitespace-nowrap px-3 py-2 text-end">
                         <span className="font-medium tabular-nums">{formatCurrency(p.price)}</span>
                         {p.compareAtPrice && p.compareAtPrice > p.price ? (
                           <span className="block text-[11px] text-[var(--fg-muted)] line-through tabular-nums">{formatCurrency(p.compareAtPrice)}</span>
@@ -423,8 +423,8 @@ export function Products() {
                         <div className="flex flex-wrap items-center gap-1">
                           <ActiveToggle product={p} size="sm" />
                           {p.stock <= 0 ? (
-                            <Link to={`/admin/inventory/products/${p._id}`} title="Manage stock in Inventory">
-                              <Badge variant="muted" className="normal-case">Out of stock</Badge>
+                            <Link to={`/admin/inventory/products/${p._id}`} title={tr('products.manageStock')}>
+                              <Badge variant="muted" className="normal-case">{tr('products.outOfStock')}</Badge>
                             </Link>
                           ) : null}
                         </div>
@@ -434,11 +434,11 @@ export function Products() {
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex justify-end">
-                          <Button variant="ghost" size="sm" aria-label="Storefront placement" title="Storefront placement" onClick={() => setPlacing(p)}>
+                          <Button variant="ghost" size="sm" aria-label={tr('products.storefrontPlacement')} title={tr('products.storefrontPlacement')} onClick={() => setPlacing(p)}>
                             <SiteIcon name="layers" size={15} />
                           </Button>
                           <Link to={`/admin/products/${p._id}/edit`}>
-                            <Button variant="ghost" size="sm" aria-label="Edit" title="Edit">
+                            <Button variant="ghost" size="sm" aria-label={tr('products.edit')} title={tr('products.edit')}>
                               <SiteIcon name="pencil" size={15} />
                             </Button>
                           </Link>
@@ -446,13 +446,13 @@ export function Products() {
                             href={`/product/${p.slug}`}
                             target="_blank"
                             rel="noreferrer"
-                            aria-label="View on store"
-                            title="View on store"
+                            aria-label={tr('products.viewOnStore')}
+                            title={tr('products.viewOnStore')}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:bg-[var(--bg-muted)] hover:text-[var(--fg)]"
                           >
                             <SiteIcon name="external" size={14} />
                           </a>
-                          <Button variant="ghost" size="sm" aria-label="Delete" title="Delete" onClick={() => setDeleteId(p._id)}>
+                          <Button variant="ghost" size="sm" aria-label={tr('products.delete')} title={tr('products.delete')} onClick={() => setDeleteId(p._id)}>
                             <SiteIcon name="trash" size={15} />
                           </Button>
                         </div>
@@ -473,9 +473,9 @@ export function Products() {
 
       <ConfirmDialog
         open={Boolean(deleteId)}
-        title="Delete product?"
-        description="This permanently removes the product from the catalog."
-        confirmLabel="Delete"
+        title={tr('products.deleteTitle')}
+        description={tr('products.deleteDesc')}
+        confirmLabel={tr('products.delete')}
         loading={remove.isPending}
         onClose={() => setDeleteId(null)}
         onConfirm={() => {

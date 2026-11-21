@@ -7,6 +7,7 @@ import { invalidateInventory, todayInput } from '@/components/admin/inventory/Mo
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { toast } from '@/store/toastStore'
+import { useAdminT } from '@/store/adminLangStore'
 import { RETURNABLE_STATUSES, wasDelivered } from '@/lib/orderStatus'
 import type { CustomerReturn, Order, ReturnPayload } from '@/types'
 
@@ -24,6 +25,7 @@ const emptyRow = (): RowState => ({ qty: '0', serials: [], reason: '', condition
  * back. The order becomes Returned / Partially returned. Money goes through Refunds.
  */
 export function OrderReturnPanel({ order }: { order: Order }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const [returnedAt, setReturnedAt] = useState(todayInput())
   const [rows, setRows] = useState<RowState[]>(() => order.items.map(emptyRow))
@@ -41,9 +43,9 @@ export function OrderReturnPanel({ order }: { order: Order }) {
   const analysed = rows.map((r, i) => {
     const left = leftOf(i)
     const n = Number(r.qty)
-    const qtyError = !Number.isInteger(n) || n < 0 || n > left ? `0 to ${left}` : undefined
-    const reasonError = n > 0 && r.reason.trim().length < 3 ? 'Reason required (3+ chars)' : undefined
-    const serialError = r.serials.length && r.serials.length !== n ? `Pick ${n} serial${n === 1 ? '' : 's'} or none` : undefined
+    const qtyError = !Number.isInteger(n) || n < 0 || n > left ? tr('order.qtyRange', { max: left }) : undefined
+    const reasonError = n > 0 && r.reason.trim().length < 3 ? tr('order.reasonRequired') : undefined
+    const serialError = r.serials.length && r.serials.length !== n ? (n === 1 ? tr('order.pickSerialOne') : tr('order.pickSerials', { count: n })) : undefined
     return { n: qtyError ? 0 : n, qtyError, reasonError, serialError }
   })
   const selected = analysed.filter((a) => a.n > 0).length
@@ -76,7 +78,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
       setCreated(ret)
       setRows(order.items.map(emptyRow))
       setTouched(false)
-      toast.success('Return registered — assess it to restock')
+      toast.success(tr('order.returnRegisteredToast'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -99,28 +101,27 @@ export function OrderReturnPanel({ order }: { order: Order }) {
     <section className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3 sm:rounded-2xl sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-semibold">Returned items</h2>
+          <h2 className="font-semibold">{tr('order.returnedItems')}</h2>
           <p className="mt-1 text-xs text-[var(--fg-muted)]">
-            Register only what physically arrived back{delivered ? '' : ' (a failed delivery included)'}. The order becomes Returned or
-            Partially returned. Units stay unsellable until assessed; record any money given back with Refunds.
+            {delivered ? tr('order.returnHint') : tr('order.returnHintFailed')}
           </p>
         </div>
         <Button type="button" size="sm" variant="secondary" onClick={fillAll}>
-          Everything came back
+          {tr('order.everythingBack')}
         </Button>
       </div>
 
       {created ? (
         <p className="mt-3 rounded-lg bg-[var(--bg-muted)] px-3 py-2 text-sm">
-          Return registered.{' '}
+          {tr('order.returnRegistered')}{' '}
           <StaffLink
             to={`/admin/inventory/returns/${created._id}`}
             className="font-medium text-[var(--brand-text)] hover:underline"
-            fallback="Stock staff assess it in Inventory → Returns"
+            fallback={tr('order.assessFallback')}
           >
-            Assess it
+            {tr('order.assessIt')}
           </StaffLink>{' '}
-          — units stay unsellable until then.
+          {tr('order.untilThen')}
         </p>
       ) : null}
 
@@ -131,14 +132,14 @@ export function OrderReturnPanel({ order }: { order: Order }) {
           e.preventDefault()
           setTouched(true)
           if (!selected) {
-            toast.error('Enter a quantity for at least one item')
+            toast.error(tr('order.enterQty'))
             return
           }
           if (!hasError) submit.mutate()
         }}
       >
         <div className="sm:w-56">
-          <Input label="Date returned" type="date" max={todayInput()} value={returnedAt} onChange={(e) => setReturnedAt(e.target.value)} />
+          <Input label={tr('order.dateReturned')} type="date" max={todayInput()} value={returnedAt} onChange={(e) => setReturnedAt(e.target.value)} />
         </div>
 
         <ul className="space-y-3">
@@ -152,13 +153,13 @@ export function OrderReturnPanel({ order }: { order: Order }) {
                   <div className="min-w-0">
                     <p className="break-words text-sm font-medium">{item.name}</p>
                     <p className="text-xs text-[var(--fg-muted)]">
-                      {item.sku} · {item.qty} ordered
-                      {item.returnedQty ? ` · ${item.returnedQty} already returned` : ''}
+                      {item.sku} · {tr('order.orderedCount', { count: item.qty })}
+                      {item.returnedQty ? ` · ${tr('order.alreadyReturned', { count: item.returnedQty })}` : ''}
                     </p>
                   </div>
                   <div className="w-24 shrink-0">
                     <Input
-                      aria-label={`Quantity returned of ${item.name}`}
+                      aria-label={tr('order.qtyReturnedOf', { name: item.name })}
                       type="number"
                       inputMode="numeric"
                       min={0}
@@ -174,7 +175,7 @@ export function OrderReturnPanel({ order }: { order: Order }) {
                   <>
                     {item.serials?.length ? (
                       <fieldset className="space-y-1">
-                        <legend className="text-xs font-medium">Serials</legend>
+                        <legend className="text-xs font-medium">{tr('order.serials')}</legend>
                         <div className="flex flex-wrap gap-2">
                           {item.serials.map((s) => (
                             <label key={s} className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-2 py-1 font-mono text-xs">
@@ -193,17 +194,17 @@ export function OrderReturnPanel({ order }: { order: Order }) {
                       </fieldset>
                     ) : null}
                     <Input
-                      label="Reason"
+                      label={tr('order.reason')}
                       maxLength={300}
-                      placeholder="e.g. Not working, changed mind"
+                      placeholder={tr('order.returnReasonPh')}
                       value={r.reason}
                       onChange={(e) => update(i, { reason: e.target.value })}
                       error={touched ? a.reasonError : undefined}
                     />
                     <Input
-                      label="Condition note"
+                      label={tr('order.conditionNote')}
                       maxLength={500}
-                      placeholder="Optional — box opened, scratches…"
+                      placeholder={tr('order.conditionPh')}
                       value={r.conditionNote}
                       onChange={(e) => update(i, { conditionNote: e.target.value })}
                     />
@@ -213,9 +214,9 @@ export function OrderReturnPanel({ order }: { order: Order }) {
             )
           })}
         </ul>
-        <p className="text-xs text-[var(--fg-muted)]">You can return at most what was sent, minus what already came back.</p>
+        <p className="text-xs text-[var(--fg-muted)]">{tr('order.returnMax')}</p>
         <Button type="submit" className="w-full sm:w-auto" loading={submit.isPending} disabled={!selected}>
-          Register return
+          {tr('order.registerReturn')}
         </Button>
       </form>
     </section>

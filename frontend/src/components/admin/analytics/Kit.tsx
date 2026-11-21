@@ -6,6 +6,7 @@ import { formatCurrencyRounded } from '@/lib/format'
 import { dayLabel } from '@/lib/salesBuckets'
 import { cn } from '@/lib/cn'
 import type { SalesAnalytics } from '@/types'
+import { at } from '@/i18n/admin'
 
 export const analyticsCard = 'min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]'
 const card = analyticsCard
@@ -15,8 +16,8 @@ export function Change({ now, before, days, money }: { now: number | null; befor
   if (now === null || before === null || (now === 0 && before === 0)) {
     return (
       <span className="text-[var(--fg-muted)]">
-        <span className="sm:hidden">No earlier data</span>
-        <span className="max-sm:hidden">Nothing in the previous {days} days</span>
+        <span className="sm:hidden">{at('kit.noEarlier')}</span>
+        <span className="max-sm:hidden">{at('kit.nothingBefore', { days })}</span>
       </span>
     )
   }
@@ -24,14 +25,14 @@ export function Change({ now, before, days, money }: { now: number | null; befor
   if (now === 0)
     return (
       <span className="text-[var(--fg-muted)]">
-        <span className="sm:hidden">None this period</span>
-        <span className="max-sm:hidden">None this period (was {money ? formatCurrencyRounded(before) : before})</span>
+        <span className="sm:hidden">{at('kit.noneThis')}</span>
+        <span className="max-sm:hidden">{at('kit.noneWas', { value: money ? formatCurrencyRounded(before) : before })}</span>
       </span>
     )
   if (before === 0)
     return (
       <span className="text-[var(--success)]">
-        New<span className="max-sm:hidden"> vs previous {days} days</span>
+        {at('kit.new')}<span className="max-sm:hidden">{at('kit.newVs', { days })}</span>
       </span>
     )
   const pct = ((now - before) / Math.abs(before)) * 100
@@ -41,7 +42,7 @@ export function Change({ now, before, days, money }: { now: number | null; befor
       {up ? '▲' : '▼'} {Math.abs(pct).toFixed(Math.abs(pct) < 10 ? 1 : 0)}%{' '}
       {/* Phones: just the change; the comparison base shows from sm up */}
       <span className="text-[var(--fg-muted)] max-sm:hidden">
-        vs {money ? formatCurrencyRounded(before) : before} prev. {days} days
+        {at('kit.vs', { value: money ? formatCurrencyRounded(before) : before, days })}
       </span>
     </span>
   )
@@ -102,24 +103,24 @@ export function SalesStats({ analytics, metric }: { analytics: SalesAnalytics; m
 
   const stats: { label: string; value: string; hint?: string }[] = [
     {
-      label: metric === 'revenue' ? 'Average per day' : 'Orders per day',
+      label: metric === 'revenue' ? at('kit.avgDay') : at('kit.ordersDay'),
       value: metric === 'revenue' ? money(perDay) : perDay.toFixed(perDay < 10 ? 1 : 0),
-      hint: `over ${range} days`,
+      hint: at('kit.overDays', { days: range }),
     },
     {
-      label: 'Best day',
+      label: at('kit.bestDay'),
       value: best ? (metric === 'revenue' ? money(best.revenue) : String(best.orders)) : '—',
-      hint: best ? dayLabel(best.date) : 'No sales yet',
+      hint: best ? dayLabel(best.date) : at('kit.noSales'),
     },
     {
-      label: metric === 'revenue' ? 'Days with sales' : 'Days with orders',
+      label: metric === 'revenue' ? at('kit.daysSales') : at('kit.daysOrders'),
       value: `${activeDays}/${series.length}`,
-      hint: `${Math.round((activeDays / (series.length || 1)) * 100)}% of days`,
+      hint: at('kit.pctDays', { pct: Math.round((activeDays / (series.length || 1)) * 100) }),
     },
     {
-      label: 'Delivered',
+      label: at('kit.delivered'),
       value: deliveryRate === null ? '—' : `${deliveryRate}%`,
-      hint: `${t.completedOrders} of ${t.orders} orders placed`,
+      hint: at('kit.deliveredOf', { done: t.completedOrders, orders: t.orders }),
     },
   ]
 
@@ -153,7 +154,7 @@ export function SectionTitle({ title, link }: { title: string; link?: { to: stri
 /** Ranked horizontal bars: label, value and a bar sized against the largest row. */
 export function BarList({
   rows,
-  empty = 'No data in this period.',
+  empty = at('kit.noData'),
 }: {
   rows: { key: string; label: ReactNode; value: number; display: string; sub?: string; to?: string }[]
   empty?: string

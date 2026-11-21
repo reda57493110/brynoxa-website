@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { at } from '@/i18n/admin'
 import { formatCurrency } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import type { SalesAnalytics } from '@/types'
@@ -130,7 +131,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
               }}
             >
               <p className="font-semibold">
-                {point.from === point.to ? fmt(point.from, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : `Week ${bucketLabel(point)}`}
+                {point.from === point.to ? fmt(point.from, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : at('chart.week', { label: bucketLabel(point) })}
               </p>
               <dl className="mt-1 space-y-0.5">
                 <div className="flex justify-between gap-2">
@@ -160,7 +161,7 @@ export function SalesChart({ series, metric }: { series: Day[]; metric: SalesMet
         {avg > 0 ? (
           <span className="inline-flex items-center gap-1">
             <span className="w-3 border-t border-dashed border-[var(--warning)]" aria-hidden />
-            Average {metric === 'revenue' ? `${compact(avg)} DH` : avg.toFixed(avg < 10 ? 1 : 0)}
+            {at('chart.average', { value: metric === 'revenue' ? `${compact(avg)} DH` : avg.toFixed(avg < 10 ? 1 : 0) })}
             {weekly ? ' / week' : ' / day'}
           </span>
         ) : null}

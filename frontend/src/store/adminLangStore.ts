@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { adminText, type AdminKey, type AdminLang } from '@/i18n/admin'
+import { adminText, setCurrentAdminLang, type AdminKey, type AdminLang } from '@/i18n/admin'
 
 interface AdminLangState {
   lang: AdminLang
@@ -17,6 +17,10 @@ export const useAdminLangStore = create<AdminLangState>()(
     { name: 'brynoxa-admin-lang' }
   )
 )
+
+// Plain functions (status labels…) read the language from i18n/admin: keep it in step
+setCurrentAdminLang(useAdminLangStore.getState().lang)
+useAdminLangStore.subscribe((s) => setCurrentAdminLang(s.lang))
 
 /** Admin texts in the chosen language: const a = useAdminT(); a('nav.orders') */
 export function useAdminT() {

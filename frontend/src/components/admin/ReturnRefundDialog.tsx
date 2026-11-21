@@ -13,21 +13,23 @@ import { cn } from '@/lib/cn'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
 import type { Order } from '@/types'
+import { useAdminT } from '@/store/adminLangStore'
+import type { AdminKey } from '@/i18n/admin'
 
 /** The shop's return period (Terms of sale); later returns are warranty cases. */
 const RETURN_DAYS = 14
 const DAY_MS = 24 * 60 * 60 * 1000
 const round2 = (n: number) => Math.round(n * 100) / 100
 
-const REASONS: { value: ReturnRefundPayload['reason']; label: string }[] = [
-  { value: 'defective', label: 'Defective / problem' },
-  { value: 'wrong-item', label: 'Wrong item' },
-  { value: 'changed-mind', label: 'Changed mind' },
+const REASONS: { value: ReturnRefundPayload['reason']; label: AdminKey }[] = [
+  { value: 'defective', label: 'order.rrDefective' },
+  { value: 'wrong-item', label: 'order.rrWrongItem' },
+  { value: 'changed-mind', label: 'order.rrChangedMind' },
 ]
-const METHODS: { value: ReturnRefundPayload['method']; label: string }[] = [
-  { value: 'cash', label: 'Cash' },
-  { value: 'transfer', label: 'Bank transfer' },
-  { value: 'other', label: 'Other' },
+const METHODS: { value: ReturnRefundPayload['method']; label: AdminKey }[] = [
+  { value: 'cash', label: 'order.rrCash' },
+  { value: 'transfer', label: 'order.methodBank' },
+  { value: 'other', label: 'order.other' },
 ]
 
 /**
@@ -36,6 +38,7 @@ const METHODS: { value: ReturnRefundPayload['method']; label: string }[] = [
  * refund and the stock move together (POST /admin/orders/:id/return-refund).
  */
 export function ReturnRefundDialog({ order, open, onClose }: { order: Order; open: boolean; onClose: () => void }) {
+  const tr = useAdminT()
   const qc = useQueryClient()
   const role = useAuthStore((s) => s.user?.role)
   const canWriteOff = hasPermission(role, 'inventory:approve')
@@ -89,9 +92,9 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
   const parsed = Number(amount)
   const amountError =
     amount.trim() === '' || !Number.isFinite(parsed) || parsed < 0
-      ? 'Enter 0 or more'
+      ? tr('order.enterZeroOrMore')
       : parsed > refundable + 0.005
-        ? `At most ${formatCurrency(refundable)} (what is left of what the customer paid)`
+        ? tr('order.rrAtMost', { amount: formatCurrency(refundable) })
         : undefined
 
   const submit = useMutation({
@@ -115,7 +118,7 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
       qc.invalidateQueries({ queryKey: ['admin-customer'] })
       qc.invalidateQueries({ queryKey: ['admin-inventory'] })
       qc.invalidateQueries({ queryKey: ['admin-profit'] })
-      toast.success(parsed > 0 ? `Returned · ${formatCurrency(parsed)} refunded` : 'Return recorded')
+      toast.success(parsed > 0 ? tr('order.rrDone', { amount: formatCurrency(parsed) }) : tr('order.rrRecorded'))
       onClose()
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -129,7 +132,7 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
   const customer = typeof order.user === 'object' && order.user ? order.user.name : order.shippingAddress?.fullName
 
   return (
-    <Modal open={open} onClose={onClose} title="Return & refund" size="lg">
+    <Modal open={open} onClose={onClose} title={tr('order.returnRefund')} size="lg">
       <form
         className="space-y-5"
         onSubmit={(e) => {
@@ -139,20 +142,20 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
         }}
       >
         <p className="text-sm text-[var(--fg-muted)]">
-          Order <span className="font-medium text-[var(--fg)]">#{order.orderNumber}</span>
+          {tr('common.order')} <span className="font-medium text-[var(--fg)]">#{order.orderNumber}</span>
           {customer ? <> · {customer}</> : null}
-          {deliveredAt ? <> · delivered {formatDate(order.deliveredAt!)}</> : null}
+          {deliveredAt ? <> · {tr('order.rrDelivered', { date: formatDate(order.deliveredAt!) })}</> : null}
         </p>
 
         {lateReturn ? (
           <p className="flex gap-2 rounded-xl bg-[color-mix(in_srgb,var(--warning)_14%,transparent)] px-3 py-2.5 text-sm text-[var(--warning)]">
             <SiteIcon name="alert" size={16} className="mt-0.5 shrink-0" />
-            Delivered {daysSince} days ago — past the {RETURN_DAYS}-day return period. You can still continue for a warranty case.
+            {tr('order.rrLate', { days: daysSince ?? 0, limit: RETURN_DAYS })}
           </p>
         ) : null}
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold">Products that come back</legend>
+          <legend className="mb-2 text-sm font-semibold">{tr('order.rrProducts')}</legend>
           <ul className="space-y-2">
             {lines.map((l) => (
               <li key={l.id} className="rounded-xl border border-[var(--border)] p-3">
@@ -169,12 +172,12 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
                     />
                     <span className="min-w-0">
                       <span className="block truncate font-medium">{l.item.name}</span>
-                      <span className="text-xs text-[var(--fg-muted)]">{formatCurrency(l.item.price)} each</span>
+                      <span className="text-xs text-[var(--fg-muted)]">{tr('order.rrEach', { price: formatCurrency(l.item.price) })}</span>
                     </span>
                   </label>
                   {hasSerials(l) ? null : (
                     <label className="flex items-center gap-2 text-xs text-[var(--fg-muted)]">
-                      Qty
+                      {tr('order.rrQty')}
                       <select
                         className="h-9 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-2 text-sm text-[var(--fg)]"
                         value={qty[l.id] ?? 0}
@@ -182,7 +185,7 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
                       >
                         {Array.from({ length: l.left + 1 }, (_, n) => (
                           <option key={n} value={n}>
-                            {n} of {l.left}
+                            {tr('order.rrOf', { n, max: l.left })}
                           </option>
                         ))}
                       </select>
@@ -190,7 +193,7 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
                   )}
                 </div>
                 {hasSerials(l) ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`Serial numbers of ${l.item.name}`}>
+                  <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={tr('order.rrSerialsOf', { name: l.item.name })}>
                     {(l.item.serials ?? []).map((sn) => {
                       const on = serials[l.id]?.includes(sn) ?? false
                       return (
@@ -218,29 +221,29 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
         </fieldset>
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold">Why?</legend>
+          <legend className="mb-2 text-sm font-semibold">{tr('order.rrWhy')}</legend>
           <div className="grid gap-2 sm:grid-cols-3">
             {REASONS.map((r) => (
               <label key={r.value} className={radio(reason === r.value)}>
                 <input type="radio" name="rr-reason" className="accent-[var(--brand)]" checked={reason === r.value} onChange={() => setReason(r.value)} />
-                {r.label}
+                {tr(r.label)}
               </label>
             ))}
           </div>
           <input
             className="mt-2 h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 text-sm"
-            placeholder="Note (optional), e.g. screen flickers after 2 months"
+            placeholder={tr('order.rrNotePh')}
             maxLength={250}
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            aria-label="Note"
+            aria-label={tr('order.note')}
           />
         </fieldset>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="rr-amount" className="mb-2 block text-sm font-semibold">
-              Money back
+              {tr('order.rrMoneyBack')}
             </label>
             <div className="flex items-center gap-2">
               <input
@@ -256,16 +259,16 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
               <span className="text-sm text-[var(--fg-muted)]">DH</span>
             </div>
             <p className={cn('mt-1 text-xs', amountError ? 'text-[var(--danger)]' : 'text-[var(--fg-muted)]')}>
-              {amountError ?? `What the customer paid for these products: ${formatCurrency(suggested)}. Change it if needed (0 = exchange or repair, no money back).`}
+              {amountError ?? tr('order.rrSuggested', { amount: formatCurrency(suggested) })}
             </p>
           </div>
           <fieldset>
-            <legend className="mb-2 text-sm font-semibold">Paid back by</legend>
+            <legend className="mb-2 text-sm font-semibold">{tr('order.rrPaidBackBy')}</legend>
             <div className="grid grid-cols-3 gap-2">
               {METHODS.map((m) => (
                 <label key={m.value} className={radio(method === m.value)}>
                   <input type="radio" name="rr-method" className="accent-[var(--brand)]" checked={method === m.value} onChange={() => setMethod(m.value)} />
-                  {m.label}
+                  {tr(m.label)}
                 </label>
               ))}
             </div>
@@ -273,20 +276,20 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
         </div>
 
         <fieldset>
-          <legend className="mb-2 text-sm font-semibold">The product</legend>
+          <legend className="mb-2 text-sm font-semibold">{tr('order.rrProduct')}</legend>
           <div className="grid gap-2 sm:grid-cols-3">
             <label className={radio(outcome === 'inspect')}>
               <input type="radio" name="rr-outcome" className="accent-[var(--brand)]" checked={outcome === 'inspect'} onChange={() => setOutcome('inspect')} />
               <span>
-                Check it first
-                <span className="block text-[11px] font-normal text-[var(--fg-muted)]">Waits in Inventory → Returns</span>
+                {tr('order.rrInspect')}
+                <span className="block text-[11px] font-normal text-[var(--fg-muted)]">{tr('order.rrInspectHint')}</span>
               </span>
             </label>
             <label className={radio(outcome === 'restock')}>
               <input type="radio" name="rr-outcome" className="accent-[var(--brand)]" checked={outcome === 'restock'} onChange={() => setOutcome('restock')} />
               <span>
-                Back on sale
-                <span className="block text-[11px] font-normal text-[var(--fg-muted)]">It works and is as sold</span>
+                {tr('order.rrRestock')}
+                <span className="block text-[11px] font-normal text-[var(--fg-muted)]">{tr('order.rrRestockHint')}</span>
               </span>
             </label>
             <label className={cn(radio(outcome === 'write-off'), !canWriteOff && 'cursor-not-allowed opacity-50')}>
@@ -299,9 +302,9 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
                 onChange={() => setOutcome('write-off')}
               />
               <span>
-                Broken – write it off
+                {tr('order.rrWriteOff')}
                 <span className="block text-[11px] font-normal text-[var(--fg-muted)]">
-                  {canWriteOff ? 'Counted as a loss in Profit' : 'Needs the owner (approvals)'}
+                  {canWriteOff ? tr('order.rrWriteOffHint') : tr('order.rrNeedsOwner')}
                 </span>
               </span>
             </label>
@@ -309,16 +312,15 @@ export function ReturnRefundDialog({ order, open, onClose }: { order: Order; ope
         </fieldset>
 
         <p className="rounded-xl bg-[var(--bg-muted)] px-3 py-2.5 text-xs leading-relaxed text-[var(--fg-muted)]">
-          In Profit and the dashboard the sale stays on the day it was made; the money back is taken off today
-          {outcome === 'write-off' ? ', and the product’s cost counts as a loss today' : ''}. Past months do not change.
+          {outcome === 'write-off' ? tr('order.rrProfitNoteLoss') : tr('order.rrProfitNote')}
         </p>
 
         <div className="flex flex-wrap justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
+            {tr('order.cancel')}
           </Button>
           <Button type="submit" loading={submit.isPending} disabled={!chosen.length || Boolean(amountError)}>
-            Confirm return & refund{parsed > 0 && !amountError ? ` · ${formatCurrency(parsed)}` : ''}
+            {tr('order.rrConfirm')}{parsed > 0 && !amountError ? ` · ${formatCurrency(parsed)}` : ''}
           </Button>
         </div>
       </form>

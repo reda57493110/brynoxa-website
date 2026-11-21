@@ -2,27 +2,31 @@ import type { ReactNode } from 'react'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { TYPE_LABELS, chipClass, money, presetPeriod, type Period } from './utils'
 import { cn } from '@/lib/cn'
+import { at } from '@/i18n/admin'
+import { useAdminT } from '@/store/adminLangStore'
 import type { CustomerAccountStatus, CustomerType, WholesaleStatus } from '@/types'
 
 export const cardClass = 'rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)]'
 
+// Labels are read when shown (getters), so they follow the admin language
 const STATUS_META: Record<CustomerAccountStatus, { label: string; variant: BadgeVariant }> = {
-  active: { label: 'Active', variant: 'success' },
-  disabled: { label: 'Disabled', variant: 'danger' },
-  unverified: { label: 'Unverified', variant: 'warning' },
-  'wholesale-pending': { label: 'Wholesale pending', variant: 'warning' },
+  active: { get label() { return at('cust.st.active') }, variant: 'success' },
+  disabled: { get label() { return at('cust.st.disabled') }, variant: 'danger' },
+  unverified: { get label() { return at('cust.st.unverified') }, variant: 'warning' },
+  'wholesale-pending': { get label() { return at('cust.st.wholesale-pending') }, variant: 'warning' },
 }
 
 const WHOLESALE_META: Record<WholesaleStatus, { label: string; variant: BadgeVariant }> = {
-  none: { label: 'Not applied', variant: 'muted' },
-  pending: { label: 'Pending', variant: 'warning' },
-  approved: { label: 'Approved', variant: 'success' },
-  rejected: { label: 'Rejected', variant: 'danger' },
+  none: { get label() { return at('cust.ws.none') }, variant: 'muted' },
+  pending: { get label() { return at('cust.ws.pending') }, variant: 'warning' },
+  approved: { get label() { return at('cust.ws.approved') }, variant: 'success' },
+  rejected: { get label() { return at('cust.ws.rejected') }, variant: 'danger' },
 }
 
 /** Ordered without an account (often with the phone only, no email) */
 export function GuestBadge() {
-  return <Badge variant="muted">Guest</Badge>
+  const tr = useAdminT()
+  return <Badge variant="muted">{tr('cust.guest')}</Badge>
 }
 
 export function TypeBadge({ type, tierName }: { type?: CustomerType; tierName?: string }) {
@@ -60,7 +64,7 @@ export function ProfitText({
   if (value === null) {
     return (
       <span className={cn('text-xs text-[var(--warning)]', className)}>
-        {missing > 0 ? `No cost · ${missing} order${missing === 1 ? '' : 's'}` : '—'}
+        {missing > 0 ? (missing === 1 ? at('cust.noCostOne') : at('cust.noCost', { count: missing })) : '—'}
       </span>
     )
   }
@@ -87,7 +91,7 @@ export function StatCard({
       {hint ? <div className="mt-1 text-[11px] text-[var(--fg-muted)]">{hint}</div> : null}
     </>
   )
-  const cls = cn(cardClass, 'min-w-0 rounded-xl p-2.5 text-left sm:rounded-2xl sm:p-4', active && 'border-[var(--brand)]')
+  const cls = cn(cardClass, 'min-w-0 rounded-xl p-2.5 text-start sm:rounded-2xl sm:p-4', active && 'border-[var(--brand)]')
   if (onClick) {
     return (
       <button type="button" onClick={onClick} className={cn(cls, 'transition hover:border-[var(--brand)] ring-brand')}>
@@ -124,16 +128,17 @@ export function KV({ label, children }: { label: string; children: ReactNode }) 
   return (
     <div className="flex min-w-0 items-start justify-between gap-3 py-1.5 text-sm">
       <dt className="shrink-0 text-[var(--fg-muted)]">{label}</dt>
-      <dd className="min-w-0 text-right break-words">{children}</dd>
+      <dd className="min-w-0 text-end break-words">{children}</dd>
     </div>
   )
 }
 
 export function PeriodFilter({ value, onChange }: { value: Period; onChange: (p: Period) => void }) {
+  const tr = useAdminT()
   const presets: { id: 'all' | '30d' | 'year'; label: string }[] = [
-    { id: 'all', label: 'All time' },
-    { id: '30d', label: 'Last 30 days' },
-    { id: 'year', label: 'This year' },
+    { id: 'all', label: tr('cust.allTime') },
+    { id: '30d', label: tr('cust.last30') },
+    { id: 'year', label: tr('cust.thisYear') },
   ]
   const isActive = (id: 'all' | '30d' | 'year') => {
     const p = presetPeriod(id)
@@ -143,7 +148,7 @@ export function PeriodFilter({ value, onChange }: { value: Period; onChange: (p:
     'h-9 w-full min-w-0 rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-2.5 text-sm text-[var(--fg)] outline-none ring-brand'
   return (
     <div className={cn(cardClass, 'flex min-w-0 flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-end sm:p-4')}>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Period presets">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={tr('cust.periodAria')}>
         {presets.map((p) => (
           <button
             key={p.id}
@@ -158,7 +163,7 @@ export function PeriodFilter({ value, onChange }: { value: Period; onChange: (p:
       </div>
       <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:items-end">
         <label className="flex min-w-0 flex-col gap-1 text-xs text-[var(--fg-muted)]">
-          From
+          {tr('cust.from')}
           <input
             type="date"
             className={dateCls}
@@ -168,7 +173,7 @@ export function PeriodFilter({ value, onChange }: { value: Period; onChange: (p:
           />
         </label>
         <label className="flex min-w-0 flex-col gap-1 text-xs text-[var(--fg-muted)]">
-          To
+          {tr('cust.to')}
           <input
             type="date"
             className={dateCls}
@@ -178,43 +183,34 @@ export function PeriodFilter({ value, onChange }: { value: Period; onChange: (p:
           />
         </label>
       </div>
-      <p className="text-xs text-[var(--fg-muted)] sm:ml-auto sm:self-center">
+      <p className="text-xs text-[var(--fg-muted)] sm:ms-auto sm:self-center">
         {value.from || value.to
-          ? `Selected period: ${value.from || 'start'} → ${value.to || 'today'}`
-          : 'Showing lifetime figures'}
+          ? tr('cust.selectedPeriod', { from: value.from || tr('cust.start'), to: value.to || tr('cust.today') })
+          : tr('cust.lifetimeFigures')}
       </p>
     </div>
   )
 }
 
 export function CalculationNote() {
+  const tr = useAdminT()
+  const rows: [string, string][] = [
+    [tr('cust.calc.completedSale'), tr('cust.calc.completedDef')],
+    [tr('cust.netSales'), tr('cust.calc.netDef')],
+    [tr('cust.grossProfit'), tr('cust.calc.profitDef')],
+    [tr('cust.calc.margin'), tr('cust.calc.marginDef')],
+    [tr('cust.calc.amountPaid'), tr('cust.calc.amountPaidDef')],
+    [tr('cust.calc.toCollect'), tr('cust.calc.toCollectDef')],
+  ]
   return (
     <details className={cn(cardClass, 'p-4 text-sm')}>
-      <summary className="cursor-pointer font-medium">How these numbers are calculated</summary>
-      <ul className="mt-3 list-disc space-y-1.5 pl-5 text-[var(--fg-muted)]">
-        <li>
-          <strong className="text-[var(--fg)]">Completed sale</strong> = delivered order not fully refunded.
-          Cancelled orders never count.
-        </li>
-        <li>
-          <strong className="text-[var(--fg)]">Net sales</strong> = gross sales − wholesale discounts − coupons −
-          refunds (shipping excluded).
-        </li>
-        <li>
-          <strong className="text-[var(--fg)]">Gross profit</strong> = net sales − cost of goods (only shown when
-          every completed order has cost data).
-        </li>
-        <li>
-          <strong className="text-[var(--fg)]">Margin</strong> = gross profit ÷ net sales.
-        </li>
-        <li>
-          <strong className="text-[var(--fg)]">Amount paid</strong> = delivered totals + deposits received −
-          refunds.
-        </li>
-        <li>
-          <strong className="text-[var(--fg)]">To collect</strong> = open orders&apos; total − deposits already
-          received.
-        </li>
+      <summary className="cursor-pointer font-medium">{tr('cust.howCalc')}</summary>
+      <ul className="mt-3 list-disc space-y-1.5 ps-5 text-[var(--fg-muted)]">
+        {rows.map(([term, def]) => (
+          <li key={term}>
+            <strong className="text-[var(--fg)]">{term}</strong> = {def}
+          </li>
+        ))}
       </ul>
     </details>
   )

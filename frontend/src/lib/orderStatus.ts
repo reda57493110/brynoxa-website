@@ -1,5 +1,6 @@
 import type { BadgeVariant } from '@/components/ui/Badge'
 import type { Order, OrderStatus } from '@/types'
+import { at, type AdminKey } from '../i18n/admin'
 
 /**
  * Order status workflow — mirror of backend/src/utils/orderStatus.ts (keep both in sync).
@@ -40,11 +41,11 @@ export const ORDER_STATUS_GROUP: Record<OrderStatus, OrderStatusGroup> = {
 }
 
 export const ORDER_GROUPS: { id: OrderStatusGroup; label: string }[] = [
-  { id: 'processing', label: 'Processing' },
-  { id: 'delivery', label: 'Delivery' },
-  { id: 'completed', label: 'Completed' },
-  { id: 'returns', label: 'Returns' },
-  { id: 'closed', label: 'Cancelled' },
+  { id: 'processing', get label() { return at('group.processing') } },
+  { id: 'delivery', get label() { return at('group.delivery') } },
+  { id: 'completed', get label() { return at('group.completed') } },
+  { id: 'returns', get label() { return at('group.returns') } },
+  { id: 'closed', get label() { return at('group.closed') } },
 ]
 
 export function statusesInGroup(group: OrderStatusGroup) {
@@ -67,8 +68,9 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: 'Cancelled',
 }
 
+/** The status in the admin language (an unknown status shows as written) */
 export function orderStatusLabel(status: string) {
-  return ORDER_STATUS_LABEL[status as OrderStatus] ?? status.replace(/_/g, ' ')
+  return status in ORDER_STATUS_LABEL ? at(`status.${status}` as AdminKey) : status.replace(/_/g, ' ')
 }
 
 /** Badge colour: processing = neutral/amber, delivery issues = amber/red, returns = violet-ish (brand), done = green. */
@@ -104,16 +106,16 @@ export const GROUP_DOT: Record<OrderStatusGroup, string> = {
 }
 
 export const DELIVERY_ISSUES = [
-  { value: 'customer_unavailable', label: 'Customer unavailable' },
-  { value: 'no_answer', label: 'Customer did not answer' },
-  { value: 'address_issue', label: 'Address problem' },
-  { value: 'refused', label: 'Customer refused the parcel' },
-  { value: 'other', label: 'Other' },
+  { value: 'customer_unavailable', get label() { return at('issue.customer_unavailable') } },
+  { value: 'no_answer', get label() { return at('issue.no_answer') } },
+  { value: 'address_issue', get label() { return at('issue.address_issue') } },
+  { value: 'refused', get label() { return at('issue.refused') } },
+  { value: 'other', get label() { return at('issue.other') } },
 ] as const
 
 
 export function deliveryIssueLabel(reason?: string) {
-  return DELIVERY_ISSUES.find((d) => d.value === reason)?.label ?? reason ?? ''
+  return DELIVERY_ISSUES.some((d) => d.value === reason) ? at(`issue.${reason}` as AdminKey) : reason ?? ''
 }
 
 /** Allowed next statuses. Returned / partially returned come from registering returned items. */
@@ -147,15 +149,33 @@ export const RETURNABLE_STATUSES: OrderStatus[] = [
 
 /** Label of the action button that moves an order to `status`. */
 export const TRANSITION_LABEL: Partial<Record<OrderStatus, string>> = {
-  confirmed: 'Confirm',
-  no_answer: 'No answer',
-  cancelled: 'Cancel order',
-  shipped: 'Mark shipped',
-  delivered: 'Mark delivered',
-  delivery_failed: 'Delivery failed',
-  rescheduled: 'Reschedule',
-  return_requested: 'Return requested',
-  return_in_transit: 'Return in transit',
+  get confirmed() {
+    return at('move.confirmed')
+  },
+  get no_answer() {
+    return at('move.no_answer')
+  },
+  get cancelled() {
+    return at('move.cancelled')
+  },
+  get shipped() {
+    return at('move.shipped')
+  },
+  get delivered() {
+    return at('move.delivered')
+  },
+  get delivery_failed() {
+    return at('move.delivery_failed')
+  },
+  get rescheduled() {
+    return at('move.rescheduled')
+  },
+  get return_requested() {
+    return at('move.return_requested')
+  },
+  get return_in_transit() {
+    return at('move.return_in_transit')
+  },
 }
 
 export function wasDelivered(o: Pick<Order, 'orderStatus' | 'deliveredAt'>) {

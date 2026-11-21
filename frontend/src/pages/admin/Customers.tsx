@@ -26,18 +26,21 @@ import { toast } from '@/store/toastStore'
 import { useAuthStore } from '@/store/authStore'
 import { hasPermission } from '@/lib/permissions'
 import { cn } from '@/lib/cn'
+import { useAdminT } from '@/store/adminLangStore'
+import { at, type AdminKey } from '@/i18n/admin'
 import type { CustomerListParams, CustomerRow, SavedSegment, SegmentKey, SummaryBlock } from '@/types'
 
 type SortKey = NonNullable<CustomerListParams['sort']>
 
-const SORTS: { value: SortKey; label: string; profit?: boolean }[] = [
-  { value: 'registered', label: 'Last registered' },
-  { value: 'spent', label: 'Total spent' },
-  { value: 'net', label: 'Net sales' },
-  { value: 'profit', label: 'Gross profit', profit: true },
-  { value: 'orders', label: 'Completed orders' },
-  { value: 'lastOrder', label: 'Last purchase' },
-  { value: 'name', label: 'Name' },
+/** Labels are text keys, shown in the admin language when rendering */
+const SORTS: { value: SortKey; label: AdminKey; profit?: boolean }[] = [
+  { value: 'registered', label: 'cust.sort.registered' },
+  { value: 'spent', label: 'cust.sort.spent' },
+  { value: 'net', label: 'cust.netSales' },
+  { value: 'profit', label: 'cust.grossProfit', profit: true },
+  { value: 'orders', label: 'cust.sort.orders' },
+  { value: 'lastOrder', label: 'cust.sort.lastOrder' },
+  { value: 'name', label: 'cust.sort.name' },
 ]
 
 const BUILTIN_SEGMENTS: SegmentKey[] = [
@@ -54,6 +57,7 @@ const BUILTIN_SEGMENTS: SegmentKey[] = [
 const PAGE_SIZE = 20
 
 export function Customers() {
+  const tr = useAdminT()
   // Order / support staff look customers up; changing them or saving segments is for other roles
   const role = useAuthStore((s) => s.user?.role)
   const canEdit = hasPermission(role, 'customers:write')
@@ -156,7 +160,7 @@ export function Customers() {
       qc.invalidateQueries({ queryKey: ['admin-customer-summary'] })
       qc.invalidateQueries({ queryKey: ['admin-customer', row._id] })
       qc.invalidateQueries({ queryKey: ['admin-dashboard'] })
-      toast.success(row.status === 'disabled' ? 'Customer enabled' : 'Customer disabled')
+      toast.success(row.status === 'disabled' ? at('cust.enabled') : at('cust.disabled'))
       setToggleRow(null)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
@@ -164,7 +168,7 @@ export function Customers() {
 
   const saveSegments = useMutation({
     mutationFn: async (next: SavedSegment[]) => {
-      if (!segmentSettings) throw new Error('Segment settings are not loaded yet')
+      if (!segmentSettings) throw new Error(at('cust.segNotLoaded'))
       return adminApi.settings.update({ customerSegments: { ...segmentSettings, saved: next } })
     },
     onSuccess: () => {
@@ -188,17 +192,17 @@ export function Customers() {
   const onSaveSegment = (name: string) => {
     const filterObj = currentFilterObject()
     if (!Object.keys(filterObj).length) {
-      toast.error('Set at least one filter before saving a segment')
+      toast.error(tr('cust.segNeedFilter'))
       return
     }
     if (saved.length >= 20) {
-      toast.error('You can save up to 20 segments')
+      toast.error(tr('cust.segMax'))
       return
     }
     const id = `seg-${Date.now().toString(36)}`
     saveSegments.mutate([...saved, { id, name, filters: filterObj }], {
       onSuccess: () => {
-        toast.success(`Segment "${name}" saved`)
+        toast.success(at('cust.segSaved', { name }))
         update({ segment: id })
       },
     })
@@ -209,7 +213,7 @@ export function Customers() {
       saved.filter((x) => x.id !== s.id),
       {
         onSuccess: () => {
-          toast.success(`Segment "${s.name}" removed`)
+          toast.success(at('cust.segRemoved', { name: s.name }))
           if (segment === s.id) update({ segment: undefined })
         },
       }
@@ -242,10 +246,10 @@ export function Customers() {
   const hasPeriod = Boolean(period.from || period.to)
   const block: SummaryBlock | undefined = hasPeriod ? (s?.period ?? undefined) : s?.lifetime
   const lifetimeHint = (render: (b: SummaryBlock) => ReactNode) =>
-    hasPeriod && s ? <>All time: {render(s.lifetime)}</> : null
+    hasPeriod && s ? <>{tr('cust.allTimeHint')} {render(s.lifetime)}</> : null
 
   const segmentChips: { id: string; label: string; saved?: SavedSegment }[] = [
-    { id: '', label: 'All' },
+    { id: '', label: tr('cust.all') },
     ...BUILTIN_SEGMENTS.filter((k) => k !== 'high-profit' || profitVisible).map((k) => ({
       id: k,
       label: SEGMENT_LABELS[k],
@@ -259,12 +263,12 @@ export function Customers() {
   return (
     <div className="min-w-0 space-y-4 sm:space-y-6">
       <AdminHeader
-        title="Customers"
-        description="Accounts, spending, profitability and wholesale status."
+        title={tr('cust.title')}
+        description={tr('cust.desc')}
         actions={
           canExport ? (
             <Button variant="outline" size="sm" onClick={exportPdf}>
-              <SiteIcon name="arrow-up" size={14} className="rotate-180" /> Export PDF
+              <SiteIcon name="arrow-up" size={14} className="rotate-180" /> {tr('cust.exportPdf')}
             </Button>
           ) : undefined
         }
@@ -274,32 +278,32 @@ export function Customers() {
 
       {/* Summary cards */}
       {summary.isError ? (
-        <QueryErrorState title="Could not load the summary" onRetry={() => summary.refetch()} />
+        <QueryErrorState title={tr('cust.summaryError')} onRetry={() => summary.refetch()} />
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
-          <StatCard label="Customers" value={s ? s.counts.total : '—'} hint={hasPeriod && s?.counts.newInPeriod != null ? `+${s.counts.newInPeriod} new` : undefined} />
-          <StatCard label="Active" value={s ? s.counts.active : '—'} />
-          <StatCard label="Retail" value={s ? s.counts.retail : '—'} />
+          <StatCard label={tr('cust.title')} value={s ? s.counts.total : '—'} hint={hasPeriod && s?.counts.newInPeriod != null ? tr('cust.newCount', { count: s.counts.newInPeriod }) : undefined} />
+          <StatCard label={tr('cust.active')} value={s ? s.counts.active : '—'} />
+          <StatCard label={tr('cust.retail')} value={s ? s.counts.retail : '—'} />
           <StatCard
-            label="Wholesale"
+            label={tr('cust.wholesale')}
             value={s ? s.counts.wholesaleApproved : '—'}
             onClick={() => update({ segment: 'wholesale' })}
             active={segment === 'wholesale'}
           />
           <StatCard
-            label="Applications"
+            label={tr('cust.applications')}
             value={s ? s.counts.wholesalePending : '—'}
             onClick={() => update({ segment: 'wholesale-pending' })}
             active={segment === 'wholesale-pending'}
           />
           <StatCard
-            label="Net sales"
+            label={tr('cust.netSales')}
             value={block ? money(block.netSales) : '—'}
             hint={lifetimeHint((b) => money(b.netSales))}
           />
           {profitVisible ? (
             <StatCard
-              label="Gross profit"
+              label={tr('cust.grossProfit')}
               value={
                 block ? (
                   <ProfitText value={block.grossProfit} missing={block.ordersMissingCost} className="font-display" />
@@ -313,7 +317,7 @@ export function Customers() {
             />
           ) : null}
           <StatCard
-            label="Avg. order"
+            label={tr('cust.avgOrder')}
             value={block ? money(block.averageOrderValue) : '—'}
             hint={lifetimeHint((b) => money(b.averageOrderValue))}
           />
@@ -324,11 +328,11 @@ export function Customers() {
       <div
         className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden"
         role="group"
-        aria-label="Customer segments"
+        aria-label={tr('cust.segmentsAria')}
       >
         {segmentChips.map((c) =>
           c.saved ? (
-            <span key={c.id} className={cn(chipClass(segment === c.id), 'inline-flex items-center gap-1 pr-1')}>
+            <span key={c.id} className={cn(chipClass(segment === c.id), 'inline-flex items-center gap-1 pe-1')}>
               <button type="button" aria-pressed={segment === c.id} onClick={() => selectSaved(c.saved!)}>
                 {c.label}
               </button>
@@ -336,7 +340,7 @@ export function Customers() {
                 <button
                   type="button"
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-[var(--bg-muted)]"
-                  aria-label={`Remove saved segment ${c.label}`}
+                  aria-label={tr('cust.removeSegment', { name: c.label })}
                   disabled={saveSegments.isPending}
                   onClick={() => removeSegment(c.saved!)}
                 >
@@ -363,15 +367,15 @@ export function Customers() {
         <div className="min-w-0 flex-1">
           <Input
             type="search"
-            aria-label="Search customers"
-            placeholder="Search name, email, phone, company or ID (C-1A2B3C)"
+            aria-label={tr('cust.searchAria')}
+            placeholder={tr('cust.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex min-w-0 gap-2">
           <label className="min-w-0 flex-1 sm:w-48 sm:flex-none">
-            <span className="sr-only">Sort by</span>
+            <span className="sr-only">{tr('cust.sortBy')}</span>
             <select
               className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 text-sm text-[var(--fg)] outline-none ring-brand"
               value={sort}
@@ -379,7 +383,7 @@ export function Customers() {
             >
               {SORTS.filter((o) => !o.profit || profitVisible).map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {tr(o.label)}
                 </option>
               ))}
             </select>
@@ -388,11 +392,11 @@ export function Customers() {
             type="button"
             variant="outline"
             className="h-11 shrink-0"
-            aria-label={dir === 'desc' ? 'Sorted descending, switch to ascending' : 'Sorted ascending, switch to descending'}
+            aria-label={dir === 'desc' ? tr('cust.sortDescAria') : tr('cust.sortAscAria')}
             onClick={() => update({ dir: dir === 'desc' ? 'asc' : undefined })}
           >
             <SiteIcon name="arrow-up" size={14} className={cn('transition', dir === 'desc' && 'rotate-180')} />
-            {dir === 'desc' ? 'Desc' : 'Asc'}
+            {dir === 'desc' ? tr('cust.desc.short') : tr('cust.asc.short')}
           </Button>
         </div>
       </div>
@@ -418,9 +422,9 @@ export function Customers() {
       ) : (
         <div className="space-y-3">
           <p className="text-xs text-[var(--fg-muted)]" aria-live="polite">
-            {total !== undefined ? `${total} customer${total === 1 ? '' : 's'}` : ''}
-            {hasPeriod ? ' · metrics for the selected period' : ' · lifetime metrics'}
-            {customers.isFetching ? ' · updating…' : ''}
+            {total !== undefined ? (total === 1 ? tr('cust.countOne') : tr('cust.count', { count: total })) : ''}
+            {hasPeriod ? tr('cust.periodMetrics') : tr('cust.lifetimeMetrics')}
+            {customers.isFetching ? tr('cust.updating') : ''}
           </p>
           <CustomerTable
             rows={items}
@@ -440,13 +444,13 @@ export function Customers() {
 
       <ConfirmDialog
         open={Boolean(toggleRow)}
-        title={toggleRow?.status === 'disabled' ? 'Enable this customer?' : 'Disable this customer?'}
+        title={toggleRow?.status === 'disabled' ? tr('cust.enableTitle') : tr('cust.disableTitle')}
         description={
           toggleRow?.status === 'disabled'
-            ? `${toggleRow?.name} will be able to sign in and order again.`
-            : `${toggleRow?.name ?? 'This customer'} will be signed out and unable to sign in. Orders are not affected.`
+            ? tr('cust.enableDesc', { name: toggleRow?.name ?? '' })
+            : tr('cust.disableDesc', { name: toggleRow?.name ?? tr('cust.thisCustomer') })
         }
-        confirmLabel={toggleRow?.status === 'disabled' ? 'Enable' : 'Disable'}
+        confirmLabel={toggleRow?.status === 'disabled' ? tr('cust.enable') : tr('cust.disable')}
         loading={toggle.isPending}
         onClose={() => setToggleRow(null)}
         onConfirm={() => {

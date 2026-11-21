@@ -62,7 +62,9 @@ test('export: Excel by default, a table for the printable list, CSV on request; 
   const page = fs.readFileSync(path.join(ROOT, 'frontend/src/pages/admin/Customers.tsx'), 'utf8');
   // Only the printable list in the admin (the owner asked for PDF only)
   assert.match(page, /onClick={exportPdf}>/);
-  assert.match(page, /> Export PDF/);
+  // The button text is translated (admin languages); in English it still reads "Export PDF"
+  assert.ok(page.includes("/> {tr('cust.exportPdf')}"));
+  assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/i18n/adminText/customers.ts'), 'utf8'), /'cust\.exportPdf': 'Export PDF'/);
   assert.doesNotMatch(page, /Excel file|exportFile/);
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/app/router.tsx'), 'utf8'), /path="admin-print\/customers"/);
   assert.match(fs.readFileSync(path.join(ROOT, 'frontend/src/pages/admin/CustomersPrint.tsx'), 'utf8'), /size: A4 landscape/);

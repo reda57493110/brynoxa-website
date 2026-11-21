@@ -8,6 +8,7 @@ import { cn } from '@/lib/cn'
 import type { Locale } from '@/i18n'
 import type { Order } from '@/types'
 import { withBrand } from '@/lib/brand'
+import { useAdminT } from '@/store/adminLangStore'
 
 const LANGS: { id: Locale; label: string }[] = [
   { id: 'fr', label: 'Français' },
@@ -50,6 +51,7 @@ function whatsappNumber(phone?: string) {
  * the steps of the chosen payment option — sent on WhatsApp or copied.
  */
 export function AskToPay({ order }: { order: Order }) {
+  const tr = useAdminT()
   const all = useDepositMethods()
   const shared = order.deposit?.methodIds ?? []
   const methods = useMemo(
@@ -90,7 +92,7 @@ export function AskToPay({ order }: { order: Order }) {
   if (!methods.length) {
     return (
       <p className="text-xs text-[var(--fg-muted)]">
-        Add your payment options (RIB, Cash Plus…) in Orders → Deposits & payments to send ready messages.
+        {tr('order.addOptions')}
       </p>
     )
   }
@@ -122,7 +124,7 @@ export function AskToPay({ order }: { order: Order }) {
         onChange={(e) => setText(e.target.value)}
         rows={9}
         dir={lang === 'ar' ? 'rtl' : 'ltr'}
-        aria-label="Message to the customer"
+        aria-label={tr('order.messageToCustomer')}
         className="w-full rounded-xl border border-[var(--border)] bg-[var(--bg-input)] px-3 py-2 text-sm leading-relaxed outline-none ring-brand"
       />
       <div className="flex flex-wrap gap-2">
@@ -149,7 +151,7 @@ export function AskToPay({ order }: { order: Order }) {
           }}
           className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[var(--border)] px-4 text-sm font-medium hover:border-[var(--brand)]"
         >
-          <SiteIcon name={copied ? 'check' : 'layers'} size={14} /> {copied ? 'Copied' : 'Copy message'}
+          <SiteIcon name={copied ? 'check' : 'layers'} size={14} /> {copied ? tr('order.copied') : tr('order.copyMessage')}
         </button>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { useToastStore } from '@/store/toastStore'
 import { HERO_NONE, useHeroProduct } from '@/hooks/useHeroProduct'
 import { formatCurrency } from '@/lib/format'
 import { optimizedImageUrl } from '@/lib/image'
+import { useAdminT } from '@/store/adminLangStore'
 import type { HeroPage, Product } from '@/types'
 
 const PAGES: { page: HeroPage; label: string; path: string }[] = [
@@ -196,7 +197,7 @@ function PageRow({
 export function ProductSearch({
   currentId,
   chosenIds = [],
-  actionLabel = 'Use this',
+  actionLabel,
   saving,
   onSelect,
 }: {
@@ -207,6 +208,7 @@ export function ProductSearch({
   saving: boolean
   onSelect: (id: string) => void
 }) {
+  const tr = useAdminT()
   const [q, setQ] = useState('')
   const results = useQuery({
     queryKey: ['admin-products', 'hero-picker', q],
@@ -218,7 +220,7 @@ export function ProductSearch({
   return (
     <div className="mt-4 space-y-3 border-t border-[var(--border)] pt-4">
       <Input
-        placeholder="Search your products by name or SKU"
+        placeholder={tr('products.search.placeholder')}
         value={q}
         onChange={(e) => setQ(e.target.value)}
         autoFocus
@@ -240,7 +242,7 @@ export function ProductSearch({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{p.name}</p>
                   <p className="text-xs text-[var(--fg-muted)] tabular-nums">
-                    {formatCurrency(p.price)} · {p.stock > 0 ? `${p.stock} in stock` : 'Out of stock'}
+                    {formatCurrency(p.price)} · {p.stock > 0 ? tr('products.search.inStock', { count: p.stock }) : tr('products.outOfStock')}
                   </p>
                 </div>
                 <Button
@@ -249,14 +251,14 @@ export function ProductSearch({
                   disabled={selected || saving}
                   onClick={() => onSelect(p._id)}
                 >
-                  {selected ? (chosenIds.includes(p._id) ? 'Added' : 'Current') : actionLabel}
+                  {selected ? (chosenIds.includes(p._id) ? tr('products.search.added') : tr('products.search.current')) : (actionLabel ?? tr('products.search.useThis'))}
                 </Button>
               </li>
             )
           })}
         </ul>
       ) : (
-        <p className="py-2 text-sm text-[var(--fg-muted)]">No active products match “{q}”.</p>
+        <p className="py-2 text-sm text-[var(--fg-muted)]">{tr('products.search.noMatch', { q })}</p>
       )}
     </div>
   )

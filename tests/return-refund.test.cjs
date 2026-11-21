@@ -110,7 +110,9 @@ test('route, activity log, dashboard dating, buttons', () => {
   const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
   assert.match(src('pages/admin/OrderDetail.tsx'), /<ReturnRefundButton order=\{o\}/);
   assert.equal((src('components/admin/customers/ProfileOrders.tsx').match(/<ReturnRefundButton orderId=\{ord\._id\} \/>/g) || []).length, 2, 'phones and computers');
-  assert.match(src('components/admin/ReturnRefundDialog.tsx'), /past the \{RETURN_DAYS\}-day return period/);
+  // Late-return warning: the text lives in the admin texts (en / fr / ar), the dialog passes the 14-day limit
+  assert.match(src('components/admin/ReturnRefundDialog.tsx'), /tr\('order\.rrLate', \{ days: daysSince \?\? 0, limit: RETURN_DAYS \}\)/);
+  assert.match(src('i18n/adminText/orderDetail.ts'), /past the \{limit\}-day return period/);
   assert.ok(fs.existsSync(api('v1/admin.js')));
 });
 

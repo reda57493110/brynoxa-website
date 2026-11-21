@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { settingsApi } from '@/api/settingsApi'
 import { MAX_HOME_DEALS, useHomeDeals } from '@/hooks/useHomeDeals'
+import { at } from '@/i18n/admin'
 import type { Product } from '@/types'
 
 /** Same limits as the home page (pages/store/Home.tsx). */
@@ -12,6 +13,7 @@ export type PlacementKey = 'deals' | 'spotlight' | 'row' | 'shopHeader' | 'categ
 
 export interface Placement {
   key: PlacementKey
+  /** In the admin language (computed when placementsOf runs, i.e. at render) */
   label: string
   /** Position inside the section, e.g. "#2" */
   detail?: string
@@ -53,35 +55,35 @@ export function useStorefrontPlacements() {
 
   const placementsOf = (p: Product): Placement[] => {
     const out: Placement[] = []
-    if (!p.isActive) return [{ key: 'hidden', label: 'Hidden — not on the storefront' }]
+    if (!p.isActive) return [{ key: 'hidden', label: at('products.place.hidden') }]
 
     const dealIndex = deals.products.findIndex((d) => d._id === p._id)
     if (dealIndex >= 0) {
-      out.push({ key: 'deals', label: 'Home · Deals banner', detail: `#${dealIndex + 1}`, auto: !deals.pinned, href: '/' })
+      out.push({ key: 'deals', label: at('products.place.deals'), detail: `#${dealIndex + 1}`, auto: !deals.pinned, href: '/' })
     } else if (pinnedDeals.includes(p._id)) {
-      out.push({ key: 'deals', label: 'Home · Deals banner', detail: 'skipped (sold out)', waiting: true, href: '/' })
+      out.push({ key: 'deals', label: at('products.place.deals'), detail: at('products.place.dealsSkipped'), waiting: true, href: '/' })
     }
 
     if (featuredList[0]?._id === p._id) {
-      out.push({ key: 'spotlight', label: 'Home · Top picks (first)', href: '/#featured' })
+      out.push({ key: 'spotlight', label: at('products.place.topFirst'), href: '/#featured' })
     }
     const rowIndex = row.findIndex((r) => r._id === p._id)
-    if (rowIndex >= 0) out.push({ key: 'row', label: 'Home · Top picks (then)', detail: `#${rowIndex + 1}`, href: '/#featured' })
+    if (rowIndex >= 0) out.push({ key: 'row', label: at('products.place.topThen'), detail: `#${rowIndex + 1}`, href: '/#featured' })
 
     // Flagged but not visible: newer featured / carousel products take the limited places
     const shownAsFeatured = featuredList[0]?._id === p._id || (!rowFromCarousel && rowIndex >= 0) || dealIndex >= 0
     if (p.isFeatured && !shownAsFeatured) {
-      out.push({ key: 'featuredWaiting', label: 'Featured flag · not shown', waiting: true })
+      out.push({ key: 'featuredWaiting', label: at('products.short.featuredWaiting'), waiting: true })
     }
     if (p.isCarousel && !(rowFromCarousel && rowIndex >= 0)) {
-      out.push({ key: 'carouselWaiting', label: `Carousel · not shown (over ${HOME_ROW_LIMIT})`, waiting: true })
+      out.push({ key: 'carouselWaiting', label: at('products.place.carouselWaiting', { max: HOME_ROW_LIMIT }), waiting: true })
     }
 
     const cat = typeof p.category === 'object' && p.category ? p.category : null
     if (cat) {
       out.push({
         key: 'category',
-        label: cat.isActive === false ? `Category · ${cat.name} (hidden)` : `Category · ${cat.name}`,
+        label: at(cat.isActive === false ? 'products.place.categoryHidden' : 'products.place.category', { name: cat.name }),
         waiting: cat.isActive === false,
         href: `/category/${cat.slug}`,
       })

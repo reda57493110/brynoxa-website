@@ -20,12 +20,14 @@ import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'
 
 /** The "Complete your setup" editor (its own code, loaded when its tab is opened) */
 const CompleteSetupAdmin = lazy(() => import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin })))
-import { SETUP_ADMIN_LABEL, SETUP_ICON, SETUP_IDS, setupListAfter, type SetupPiece } from '@/lib/setups'
+import { SETUP_ICON, SETUP_IDS, setupListAfter, type SetupPiece } from '@/lib/setups'
+import { budgetLabel, setupLabel } from '@/components/admin/ProductAutoPlaces'
 import { formatCurrency } from '@/lib/format'
 import { imageFit, sizedImageUrl } from '@/lib/image'
 import { cn } from '@/lib/cn'
 import { en } from '@/i18n/en'
 import { toast } from '@/store/toastStore'
+import { useAdminT } from '@/store/adminLangStore'
 import type { Product } from '@/types'
 
 /**
@@ -62,6 +64,7 @@ function Tile({
   readOnly?: boolean
 }) {
   const navigate = useNavigate()
+  const tr = useAdminT()
   const image = product.images?.find((i) => i.isPrimary)?.url || product.images?.[0]?.url
   return (
     <div className="flex w-[8.75rem] shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--bg)] transition hover:border-[var(--brand)]">
@@ -77,7 +80,7 @@ function Tile({
           ) : null}
           <span className="absolute start-1 top-1 rounded-md bg-[var(--brand)] px-1.5 text-[11px] font-bold leading-5 text-[var(--brand-fg)] shadow">#{index + 1}</span>
           {product.stock <= 0 ? (
-            <span className="absolute bottom-1 end-1 rounded bg-[var(--danger)] px-1 text-[9px] font-bold uppercase text-white">Sold out</span>
+            <span className="absolute bottom-1 end-1 rounded bg-[var(--danger)] px-1 text-[9px] font-bold uppercase text-white">{tr('products.board.soldOut')}</span>
           ) : null}
         </span>
         <span className="block px-2 pt-1.5">
@@ -88,26 +91,26 @@ function Tile({
       {/* Rank, edit, remove from this section */}
       {readOnly ? (
         <span className="mt-1 flex items-center justify-end border-t border-[var(--border)] px-0.5 py-0.5">
-          <button type="button" className={iconBtn} title="Edit the product" aria-label="Edit the product" onClick={() => navigate(`/admin/products/${product._id}/edit`)}>
+          <button type="button" className={iconBtn} title={tr('products.board.editProduct')} aria-label={tr('products.board.editProduct')} onClick={() => navigate(`/admin/products/${product._id}/edit`)}>
             <SiteIcon name="pencil" size={13} />
           </button>
         </span>
       ) : (
       <span className="mt-1 flex items-center justify-between border-t border-[var(--border)] px-0.5 py-0.5">
-        <button type="button" className={iconBtn} title="Move left" aria-label="Move left" disabled={busy || index === 0} onClick={() => onMove(index, index - 1)}>
-          <SiteIcon name="chevron-left" size={14} />
+        <button type="button" className={iconBtn} title={tr('products.board.moveLeft')} aria-label={tr('products.board.moveLeft')} disabled={busy || index === 0} onClick={() => onMove(index, index - 1)}>
+          <SiteIcon name="chevron-left" size={14} className="rtl:rotate-180" />
         </button>
-        <button type="button" className={iconBtn} title="Move right" aria-label="Move right" disabled={busy || index === count - 1} onClick={() => onMove(index, index + 1)}>
-          <SiteIcon name="chevron-right" size={14} />
+        <button type="button" className={iconBtn} title={tr('products.board.moveRight')} aria-label={tr('products.board.moveRight')} disabled={busy || index === count - 1} onClick={() => onMove(index, index + 1)}>
+          <SiteIcon name="chevron-right" size={14} className="rtl:rotate-180" />
         </button>
-        <button type="button" className={iconBtn} title="Edit the product" aria-label="Edit the product" onClick={() => navigate(`/admin/products/${product._id}/edit`)}>
+        <button type="button" className={iconBtn} title={tr('products.board.editProduct')} aria-label={tr('products.board.editProduct')} onClick={() => navigate(`/admin/products/${product._id}/edit`)}>
           <SiteIcon name="pencil" size={13} />
         </button>
         <button
           type="button"
           className={cn(iconBtn, 'hover:text-[var(--danger)]')}
-          title="Remove from this section (the product stays in the shop)"
-          aria-label="Remove from this section"
+          title={tr('products.board.removeTitle')}
+          aria-label={tr('products.board.removeLabel')}
           disabled={busy}
           onClick={() => onRemove(product._id)}
         >
@@ -143,10 +146,11 @@ function AutoSection({
   empty: string
   children?: React.ReactNode
 }) {
+  const tr = useAdminT()
   return (
     <div className="min-w-0 max-w-full rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-muted)]/15 p-2.5">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title="Place on the page">
+        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title={tr('products.board.placeOnPage')}>
           {step}
         </span>
         <SiteIcon name={icon} size={14} className="shrink-0 text-[var(--brand-text)]" />
@@ -170,6 +174,7 @@ const HOME_TAB_CATEGORIES = ['desktop-pcs', 'laptops', 'gaming-pcs', 'monitors']
 
 /** "Browse by category": one tab per category, its products in stock (automatic) */
 function CategoryTabsSection({ step, onOpen }: { step: number; onOpen: (p: Product) => void }) {
+  const tr = useAdminT()
   const cats = useQuery({ queryKey: ['categories'], queryFn: async () => (await categoriesApi.list()).data.data })
   const list = mainCategories((cats.data ?? []).filter((c) => c.slug !== 'office' && c.slug !== 'networking'))
   const chosen = HOME_TAB_CATEGORIES.map((slug) => list.find((c) => canonicalCategorySlug(c.slug) === slug)).filter((c): c is (typeof list)[number] => Boolean(c))
@@ -182,7 +187,7 @@ function CategoryTabsSection({ step, onOpen }: { step: number; onOpen: (p: Produ
     enabled: Boolean(active),
   })
   return (
-    <AutoSection step={step} icon="layers" title="Browse by category" how="auto: in stock, by category" products={products.data ?? []} onOpen={onOpen} empty="Nothing in stock in this category.">
+    <AutoSection step={step} icon="layers" title={tr('products.board.browse')} how={tr('products.board.howCat')} products={products.data ?? []} onOpen={onOpen} empty={tr('products.board.emptyCat')}>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {tabs.map((c) => (
           <button
@@ -202,9 +207,11 @@ function CategoryTabsSection({ step, onOpen }: { step: number; onOpen: (p: Produ
   )
 }
 
-function StatusPill({ pinned, note }: { pinned?: boolean; note?: string }) {
-  const text = pinned ? 'your choice' : (note ?? 'auto')
-  const hidden = /hidden/.test(text)
+/** "your choice" / "auto" / a note; `warn` = the section is hidden on the page (shown in orange) */
+function StatusPill({ pinned, note, warn }: { pinned?: boolean; note?: string; warn?: boolean }) {
+  const tr = useAdminT()
+  const text = pinned ? tr('products.board.yourChoice') : (note ?? tr('products.board.auto'))
+  const hidden = !pinned && Boolean(warn)
   return (
     <span
       className={cn(
@@ -227,6 +234,7 @@ function Section({
   icon,
   title,
   note,
+  noteWarn,
   products,
   store,
   max,
@@ -241,6 +249,8 @@ function Section({
   icon: SiteIconName
   title: string
   note?: string
+  /** The note says the section is hidden on the page */
+  noteWarn?: boolean
   products: Product[]
   store: Store
   max: number
@@ -254,6 +264,7 @@ function Section({
   bare?: boolean
 }) {
   const qc = useQueryClient()
+  const tr = useAdminT()
   const [adding, setAdding] = useState(false)
   const ids = products.map((p) => p._id)
 
@@ -273,7 +284,7 @@ function Section({
       for (const key of [['admin-products'], ['products'], ['settings'], ['admin-settings'], ['home-deals'], ['home-deals-auto'], ['hero-product'], ['hero-auto-products']]) {
         qc.invalidateQueries({ queryKey: key })
       }
-      toast.success(store.kind === 'setup' ? 'Setups page updated' : 'Home page updated')
+      toast.success(store.kind === 'setup' ? tr('products.board.setupsUpdated') : tr('products.auto.homeUpdated'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -291,14 +302,14 @@ function Section({
     <div className={cn('min-w-0 max-w-full', !bare && 'rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/25 p-2.5')}>
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         {step ? (
-          <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title="Place on the page">
+          <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title={tr('products.board.placeOnPage')}>
             {step}
           </span>
         ) : null}
         <SiteIcon name={icon} size={14} className="shrink-0 text-[var(--brand-text)]" />
         <p className="truncate text-[13px] font-semibold">{title}</p>
         <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{products.length}</span>
-        {!bare ? <StatusPill pinned={pinned} note={note} /> : null}
+        {!bare ? <StatusPill pinned={pinned} note={note} warn={noteWarn} /> : null}
         {pinned && canReset ? (
           <button
             type="button"
@@ -306,7 +317,7 @@ function Section({
             onClick={() => save.mutate({ next: [], reset: true })}
             className="text-[10px] font-medium text-[var(--brand-text)] hover:underline disabled:opacity-50"
           >
-            Back to automatic
+            {tr('products.board.backAuto')}
           </button>
         ) : null}
         {busy ? <Spinner size="sm" /> : null}
@@ -328,19 +339,19 @@ function Section({
           type="button"
           disabled={busy || full}
           onClick={() => setAdding(true)}
-          title={full ? `Full (${max} at most)` : 'Add a product to this section'}
+          title={full ? tr('products.board.fullTitle', { max }) : tr('products.board.addTitle')}
           className="flex min-h-[8.5rem] w-[8.75rem] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--border)] text-xs font-medium text-[var(--brand-text)] transition hover:border-[var(--brand)] hover:bg-[color-mix(in_srgb,var(--brand)_6%,transparent)] disabled:opacity-40"
         >
           <SiteIcon name="plus" size={18} />
-          {full ? `Full (${max})` : 'Add'}
+          {full ? tr('products.board.full', { max }) : tr('products.add')}
         </button>
       </div>
       {!products.length ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">{empty}</p> : null}
-      <Modal open={adding} onClose={() => setAdding(false)} title={`Add to ${title}`} size="md">
+      <Modal open={adding} onClose={() => setAdding(false)} title={tr('products.board.addTo', { name: title })} size="md">
         <ProductSearch
           currentId=""
           chosenIds={store.kind === 'setup' ? store.all : ids}
-          actionLabel="Add"
+          actionLabel={tr('products.add')}
           saving={busy || full}
           onSelect={(id) => save.mutate({ next: [...ids, id] }, { onSuccess: () => setAdding(false) })}
         />
@@ -351,6 +362,7 @@ function Section({
 
 /** The home page exactly as customers see it, section by section, top to bottom. */
 function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
+  const tr = useAdminT()
   const place = useStorefrontPlacements()
   const rows = useHomeRows([...place.deals.products, ...place.featuredList, ...place.row])
 
@@ -372,11 +384,9 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   }
 
   // Deals of the moment hides with fewer than HOME_ROW_MIN products; the selection tabs show from 1
-  const rowNote = (n: number) => (n < HOME_ROW_MIN ? `hidden (needs ${HOME_ROW_MIN})` : 'auto')
-  const tabNote = (n: number) => (n ? 'auto' : 'tab hidden (empty)')
-  const amount = (n: number) => new Intl.NumberFormat('en-US').format(n)
-  const bandTitle = (b: { min?: number; max?: number }) =>
-    b.min === undefined ? `Under ${amount(b.max!)} DH` : b.max === undefined ? `Over ${amount(b.min)} DH` : `${amount(b.min)} – ${amount(b.max)} DH`
+  const auto = tr('products.board.auto')
+  const rowNote = (n: number) => (n < HOME_ROW_MIN ? tr('products.board.hiddenNeeds', { count: HOME_ROW_MIN }) : auto)
+  const tabNote = (n: number) => (n ? auto : tr('products.board.tabHidden'))
 
   return (
     <>
@@ -385,84 +395,87 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
         <Section
           step={1}
           icon="tag"
-          title="Deals banner (top of the page)"
+          title={tr('products.board.dealsBanner')}
           pinned={place.pinnedDeals.length > 0}
           canReset
           products={place.deals.products}
           store={{ kind: 'homeDeals' }}
           max={MAX_HOME_DEALS}
           onOpen={onOpen}
-          empty="No deals."
+          empty={tr('products.board.noDeals')}
         />
         <Section
           step={2}
           icon="tag"
-          title="Deals of the moment"
+          title={tr('products.dealsMoment')}
           note={rowNote(rows.deals.length)}
+          noteWarn={rows.deals.length < HOME_ROW_MIN}
           pinned={rows.dealsPinned}
           canReset
           products={rows.deals}
           store={{ kind: 'homeRows', key: 'deals' }}
           max={12}
           onOpen={onOpen}
-          empty="No deals yet."
+          empty={tr('products.board.noDealsYet')}
         />
         <Section
           step={3}
           icon="star"
-          title="Our selection · Top picks (first)"
-          note="your choice"
+          title={tr('products.board.topFirst')}
+          note={tr('products.board.yourChoice')}
           products={place.featuredList}
           store={{ kind: 'flag', flag: 'isFeatured' }}
           max={HOME_FEATURED_LIMIT}
           onOpen={onOpen}
-          empty="No featured product."
+          empty={tr('products.board.noFeatured')}
         />
         <Section
           step={3}
           icon="layers"
-          title="Our selection · Top picks (then)"
-          note={place.rowFromCarousel ? 'your choice' : 'auto'}
+          title={tr('products.board.topThen')}
+          note={place.rowFromCarousel ? tr('products.board.yourChoice') : auto}
           products={place.rowFromCarousel ? place.row : []}
           store={{ kind: 'flag', flag: 'isCarousel' }}
           max={HOME_ROW_LIMIT}
           onOpen={onOpen}
-          empty="Empty: shows the next featured products."
+          empty={tr('products.board.emptyThen')}
         />
         <Section
           step={3}
           icon="clock"
-          title="Our selection · New arrivals"
+          title={tr('products.board.newArrivals')}
           note={tabNote(rows.newArrivals.length)}
+          noteWarn={!rows.newArrivals.length}
           pinned={rows.newPinned}
           canReset
           products={rows.newArrivals}
           store={{ kind: 'homeRows', key: 'new' }}
           max={12}
           onOpen={onOpen}
-          empty="Nothing new yet."
+          empty={tr('products.board.nothingNew')}
         />
         <AutoSection
           step={3}
           icon="package-check"
-          title="Our selection · Best sellers"
-          how="auto: most sold, in stock"
+          title={tr('products.board.best')}
+          how={tr('products.board.howBest')}
           products={best.data ?? []}
           onOpen={onOpen}
-          empty="Nothing sold yet."
+          empty={tr('products.board.nothingSold')}
         />
         <Section
           step={4}
           icon="star"
-          title="Brynoxa Signature"
-          note={rows.signature.length < SIGNATURE_MIN ? `hidden (needs ${SIGNATURE_MIN})` : 'auto: Brynoxa products'}
+          title={tr('products.signature')}
+          note={rows.signature.length < SIGNATURE_MIN ? tr('products.board.hiddenNeeds', { count: SIGNATURE_MIN }) : tr('products.board.autoBrynoxa')}
+          noteWarn={rows.signature.length < SIGNATURE_MIN}
           pinned={rows.signaturePinned}
           canReset
           products={rows.signature}
           store={{ kind: 'homeRows', key: 'signature' }}
           max={12}
           onOpen={onOpen}
-          empty="No Brynoxa product in stock."
+          empty={tr('products.board.noBrynoxa')}
         />
         <CategoryTabsSection step={5} onOpen={onOpen} />
         {rows.budgets.map((b) => (
@@ -470,25 +483,26 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             key={b.id}
             step={6}
             icon="banknote"
-            title={`Shop by budget · ${bandTitle(b)}`}
-            note={b.items.length ? 'auto' : 'card hidden (empty)'}
+            title={tr('products.board.budget', { band: budgetLabel(b) })}
+            note={b.items.length ? auto : tr('products.board.cardHidden')}
+            noteWarn={!b.items.length}
             pinned={b.pinned}
             canReset
             products={b.items.slice(0, b.pinned ? 12 : 6)}
             store={{ kind: 'homeRows', key: b.key }}
             max={12}
             onOpen={onOpen}
-            empty="No product at this price."
+            empty={tr('products.board.noAtPrice')}
           />
         ))}
         <div className="min-w-0 rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-muted)]/15 p-2.5">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title="Place on the page">
+            <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[var(--fg)] text-[10px] font-bold text-[var(--bg)]" title={tr('products.board.placeOnPage')}>
               9
             </span>
             <SiteIcon name="tag" size={14} className="shrink-0 text-[var(--brand-text)]" />
-            <p className="truncate text-[13px] font-semibold">Our brands</p>
-            <StatusPill note={brandNames.length < 3 ? 'hidden (needs 3)' : 'auto: brands of the products above'} />
+            <p className="truncate text-[13px] font-semibold">{tr('products.board.brands')}</p>
+            <StatusPill note={brandNames.length < 3 ? tr('products.board.hiddenNeeds', { count: 3 }) : tr('products.board.autoBrands')} warn={brandNames.length < 3} />
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {brandNames.map((n) => (
@@ -519,6 +533,7 @@ const PIECE_ICON: Record<SetupPiece, SiteIconName> = {
 /** One setup of the "Pick your setup" page: its groups as customers see them. */
 function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => void }) {
   const qc = useQueryClient()
+  const tr = useAdminT()
   const [adding, setAdding] = useState(false)
   const key = setupRowKey(list.id)
   const all = list.items.map((p) => p._id)
@@ -526,7 +541,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
     mutationFn: (next: string[]) => adminApi.settings.update({ homeRows: { [key]: next.slice(0, MAX_SETUP_ROW) } }),
     onSuccess: () => {
       for (const k of [['products'], ['settings'], ['admin-settings']]) qc.invalidateQueries({ queryKey: k })
-      toast.success('Setups page updated')
+      toast.success(tr('products.board.setupsUpdated'))
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -538,9 +553,9 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
         <span className="grid size-8 place-items-center rounded-lg bg-[var(--brand)] text-[var(--brand-fg)]">
           <SiteIcon name={SETUP_ICON[list.id]} size={16} />
         </span>
-        <p className="text-sm font-semibold">{SETUP_ADMIN_LABEL[list.id]}</p>
+        <p className="text-sm font-semibold">{setupLabel(list.id)}</p>
         <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{list.items.length}</span>
-        <StatusPill pinned={list.pinned} note="auto" />
+        <StatusPill pinned={list.pinned} note={tr('products.board.auto')} />
         {list.pinned ? (
           <button
             type="button"
@@ -548,7 +563,7 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
             onClick={() => save.mutate([])}
             className="text-[10px] font-medium text-[var(--brand-text)] hover:underline disabled:opacity-50"
           >
-            Back to automatic
+            {tr('products.board.backAuto')}
           </button>
         ) : null}
         {save.isPending ? <Spinner size="sm" /> : null}
@@ -559,10 +574,10 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
             onClick={() => setAdding(true)}
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--brand-text)] hover:underline disabled:opacity-40"
           >
-            <SiteIcon name="plus" size={12} /> Add
+            <SiteIcon name="plus" size={12} /> {tr('products.add')}
           </button>
           <a href={`/setups/${list.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
-            View <SiteIcon name="external" size={11} />
+            {tr('products.board.view')} <SiteIcon name="external" size={11} />
           </a>
         </span>
       </div>
@@ -587,14 +602,14 @@ function SetupCard({ list, onOpen }: { list: SetupList; onOpen: (p: Product) => 
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-[11px] text-[var(--fg-muted)]">No products yet.</p>
+        <p className="mt-2 text-[11px] text-[var(--fg-muted)]">{tr('products.noProducts')}</p>
       )}
-      <Modal open={adding} onClose={() => setAdding(false)} title={`Add to ${SETUP_ADMIN_LABEL[list.id]}`} size="md">
-        <p className="mb-3 text-xs text-[var(--fg-muted)]">The product goes into its group (Gaming mice, Laptops…) by its category.</p>
+      <Modal open={adding} onClose={() => setAdding(false)} title={tr('products.board.addTo', { name: setupLabel(list.id) })} size="md">
+        <p className="mb-3 text-xs text-[var(--fg-muted)]">{tr('products.board.groupHint')}</p>
         <ProductSearch
           currentId=""
           chosenIds={all}
-          actionLabel="Add"
+          actionLabel={tr('products.add')}
           saving={save.isPending}
           onSelect={(id) => save.mutate([...all, id], { onSuccess: () => setAdding(false) })}
         />
@@ -630,6 +645,7 @@ const TAB_KEY = 'brynoxa-admin-board-tab'
  */
 export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Product) => void }) {
   const [params] = useSearchParams()
+  const tr = useAdminT()
   const [tab, setTab] = useState<BoardTab>(() => {
     // A link asking for a tab (?board=setup) wins over the last one used
     const asked = params.get('board') as BoardTab | null
@@ -650,16 +666,16 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
     }
   }
   const tabs: { id: BoardTab; label: string; icon: SiteIconName; href: string }[] = [
-    { id: 'home', label: 'Home page', icon: 'home', href: '/' },
-    { id: 'setups', label: 'Setups page', icon: 'layers', href: '/setups' },
-    { id: 'setup', label: 'Complete your setup', icon: 'plus', href: '/shop' },
+    { id: 'home', label: tr('products.homePage'), icon: 'home', href: '/' },
+    { id: 'setups', label: tr('products.board.setupsPage'), icon: 'layers', href: '/setups' },
+    { id: 'setup', label: tr('products.board.completeSetup'), icon: 'plus', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
 
   return (
     <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div role="tablist" aria-label="Shop pages" className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
+        <div role="tablist" aria-label={tr('products.board.shopPages')} className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           {tabs.map((x) => (
             <button
               key={x.id}
@@ -683,7 +699,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
         {/* Complete your setup is per product: nothing single to view */}
         {tab !== 'setup' ? (
           <a href={current.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
-            View <SiteIcon name="external" size={11} />
+            {tr('products.board.view')} <SiteIcon name="external" size={11} />
           </a>
         ) : null}
       </div>

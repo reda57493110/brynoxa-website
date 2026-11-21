@@ -128,7 +128,7 @@ function OrderLine({ order, onOpen }: { order: CustomerProfileOrder; onOpen: () 
     <li>
       <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 px-1 py-2.5 text-start transition hover:bg-[var(--bg-muted)] sm:px-2">
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold">#{order.orderNumber}</span>
+          <span className="block text-sm font-semibold"><bdi dir="ltr">#{order.orderNumber}</bdi></span>
           <span className="block text-xs text-[var(--fg-muted)]">{formatDate(order.createdAt)}</span>
         </span>
         <Badge variant={orderStatusVariant(order.orderStatus)}>{orderStatusLabel(order.orderStatus)}</Badge>
