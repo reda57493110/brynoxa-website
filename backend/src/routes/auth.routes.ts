@@ -6,6 +6,7 @@ import { authLimiter } from '../middleware/rateLimit';
 import {
   registerSchema,
   loginSchema,
+  googleSignInSchema,
   updateProfileSchema,
   mfaCodeSchema,
   mfaLoginSchema,
@@ -28,6 +29,7 @@ router.post('/password-reset/verify-code', authLimiter, validate(resetCodeSchema
 router.post('/password-reset/confirm', authLimiter, validate(resetPasswordSchema), auth.resetPassword);
 router.post('/register', authLimiter, validate(registerSchema), auth.register);
 router.post('/login', authLimiter, validate(loginSchema), auth.login);
+router.post('/google', authLimiter, validate(googleSignInSchema), auth.googleSignIn);
 router.post('/mfa/login', authLimiter, validate(mfaLoginSchema), auth.completeMfaLogin);
 router.post('/refresh', auth.refresh);
 // Signed in or not: an expired access token must not stop the session from being ended

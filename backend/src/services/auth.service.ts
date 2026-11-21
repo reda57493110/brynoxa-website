@@ -16,6 +16,7 @@ import { checkPasswordEvenTime } from '../utils/passwordTiming';
 import { MAX_CLOCK_SKEW_STEPS, createTotpSecret, createTotpUri, currentTotpStep, totpClockOffsetSeconds, totpStep, verifyTotpCode } from '../utils/totp';
 import type { LoginRequestMeta } from './loginNotify.service';
 import { sendEmail } from './email.service';
+import { randomAccountPassword, verifyGoogleCredential } from './googleAuth.service';
 import { recordStaffSignIn } from './staffActivity.service';
 import { clearLoginFailures, lockRefuses, recordLoginFailure, visitorBlocked } from './loginGuard.service';
 import { accountClaimEmail, notifySecurityEvent, passwordResetEmail, verificationEmail } from './accountEmail.service';
@@ -779,6 +780,42 @@ export async function completeMfaLogin(
     meta
   );
 
+  return { user: sanitizeUser(user), accessToken, refreshToken };
+}
+
+/**
+ * "Continue with Google" (customers only). Google has checked the email, so:
+ * - a new email gets an account at once (name from Google, a random password it never needs);
+ * - a guest who ordered with this email becomes a full account (same proof as the email link);
+ * - an existing customer is signed in.
+ * Staff accounts never sign in this way: they keep the password + 2-step code.
+ */
+export async function signInWithGoogle(credential: string) {
+  const google = await verifyGoogleCredential(credential);
+  let user = await User.findOne({ email: google.email }).select('+password +refreshToken');
+  if (user && isStaffRole(user.role)) {
+    throw new ApiError(403, 'Staff accounts sign in with their email, password and code.');
+  }
+  if (user && !user.isActive) throw new ApiError(403, 'Account is disabled');
+  if (!user) {
+    user = await User.create({
+      name: google.name.length >= 2 ? google.name : `${google.name} `.padEnd(2, '-'),
+      email: google.email,
+      password: randomAccountPassword(),
+      isGuest: false,
+      emailVerified: true,
+    });
+  } else if (user.isGuest) {
+    user.isGuest = false;
+    user.password = randomAccountPassword();
+    if (!user.name || user.name.length < 2) user.name = google.name;
+  }
+  user.emailVerified = true;
+  user.failedLoginAttempts = 0;
+  user.lockedUntil = undefined;
+  const { accessToken, refreshToken } = issueTokens(user);
+  user.refreshToken = hashRefreshToken(refreshToken);
+  await user.save({ validateBeforeSave: false });
   return { user: sanitizeUser(user), accessToken, refreshToken };
 }
 

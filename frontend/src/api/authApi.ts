@@ -5,6 +5,8 @@ export const authApi = {
   register: (payload: { name: string; email: string; password: string; phone?: string }) =>
     api.post<ApiResponse<AuthPayload>>('/auth/register', payload),
 
+  /** "Continue with Google": the token Google's button gives */
+  google: (credential: string) => api.post<ApiResponse<AuthPayload>>('/auth/google', { credential }),
   login: (payload: { email: string; password: string }) =>
     api.post<ApiResponse<AuthPayload>>('/auth/login', payload),
 

@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
 import { Link, useNavigate } from 'react-router-dom'
 import { authApi } from '@/api/authApi'
 import { getErrorMessage } from '@/api/client'
@@ -78,6 +79,14 @@ export function Register() {
       <p className="kicker">{t('auth.kicker')}</p>
       <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight">{t('auth.registerTitle')}</h1>
       <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.registerBody')}</p>
+      <div className="mt-6">
+        <GoogleSignIn
+          onSignedIn={() => {
+            toast.success(t('auth.registerSuccess'))
+            navigate('/', { replace: true })
+          }}
+        />
+      </div>
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
         <Input
           label={t('ui.name')}

@@ -61,6 +61,7 @@ module.exports = async (req, res) => {
 
   const handlers = {
     login: () => require('../_lib/auth-routes/login'),
+    google: () => require('../_lib/auth-routes/google'),
     csrf: () => require('../_lib/auth-routes/csrf'),
     refresh: () => require('../_lib/auth-routes/refresh'),
     me: () => require('../_lib/auth-routes/me'),

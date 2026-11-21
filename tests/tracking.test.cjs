@@ -38,7 +38,7 @@ test('security rules allow only the official Meta / TikTok / Google addresses', 
   const vercel = JSON.parse(read('vercel.json'));
   const csp = vercel.headers.flatMap((h) => h.headers).find((h) => h.key === 'Content-Security-Policy').value;
   const script = csp.split(';').find((d) => d.trim().startsWith('script-src'));
-  assert.equal(script.trim(), "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://analytics.tiktok.com");
+  assert.equal(script.trim(), "script-src 'self' https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://analytics.tiktok.com https://accounts.google.com/gsi/client", "plus Google sign-in (Continue with Google)");
   assert.ok(!script.includes('unsafe'), 'still no inline scripts');
   const connect = csp.split(';').find((d) => d.trim().startsWith('connect-src'));
   for (const host of ['https://www.facebook.com', 'https://analytics.tiktok.com']) assert.ok(connect.includes(host), host);

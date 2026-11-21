@@ -29,6 +29,11 @@ export const registerSchema = z.object({
     .transform((value) => (value ? value : undefined)),
 });
 
+/** "Continue with Google": the ID token Google's button gives */
+export const googleSignInSchema = z.object({
+  credential: z.string().trim().min(20).max(4096),
+});
+
 export const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),

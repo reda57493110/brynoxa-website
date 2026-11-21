@@ -12,6 +12,7 @@ import { useT } from '@/hooks/useT'
 import { isStaffRole } from '@/lib/permissions'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import type { AuthLayoutContext } from '@/app/layouts/AuthLayout'
+import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
 
 function resolvePostLoginPath(role: string, from?: string) {
   if (from?.startsWith('/admin')) return isStaffRole(role) ? from : '/'
@@ -111,6 +112,16 @@ export function Login() {
           <p className="mt-1 text-sm text-[var(--fg-muted)]">{t('auth.signInBody')}</p>
         </>
       )}
+      {!mfaToken ? (
+        <div className="mt-6">
+          <GoogleSignIn
+            onSignedIn={(user) => {
+              toast.success(t('auth.welcomeBack'))
+              navigate(resolvePostLoginPath(user.role, from), { replace: true })
+            }}
+          />
+        </div>
+      ) : null}
       <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
         {mfaToken ? (
           <div>

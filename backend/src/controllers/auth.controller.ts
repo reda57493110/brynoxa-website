@@ -61,6 +61,12 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Logged in');
 });
 
+export const googleSignIn = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.signInWithGoogle(req.body.credential);
+  authService.setRefreshCookie(res, result.refreshToken);
+  sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Logged in');
+});
+
 export const completeMfaLogin = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.completeMfaLogin(
     req.body.mfaToken,
