@@ -59,9 +59,15 @@ test('made-up or wrong tokens are refused', async () => {
   await refused('not-a-token-at-all-xxxxxxxx', 'garbage')
 })
 
-test('no client ID set: Google sign-in is off', async () => {
+test('the shop and the server use the same built-in client ID; a Vercel variable "off" turns it off', async () => {
+  const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8')
+  const id = google.BRYNOXA_GOOGLE_CLIENT_ID
+  assert.match(id, /^\d+-[a-z0-9]+\.apps\.googleusercontent\.com$/)
+  assert.ok(read('frontend/src/components/auth/GoogleSignIn.tsx').includes(`const BRYNOXA_GOOGLE_CLIENT_ID = '${id}'`), 'same ID on both sides')
   const saved = process.env.VITE_GOOGLE_CLIENT_ID
   process.env.VITE_GOOGLE_CLIENT_ID = ''
+  assert.equal(google.googleClientId(), id, 'no variable: the built-in ID')
+  process.env.VITE_GOOGLE_CLIENT_ID = 'off'
   try {
     await assert.rejects(google.verifyGoogleCredential(token()), (e) => e.statusCode === 503)
   } finally {

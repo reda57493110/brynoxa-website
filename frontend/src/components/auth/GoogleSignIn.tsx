@@ -7,8 +7,14 @@ import { useLocaleStore } from '@/store/localeStore'
 import { useThemeStore } from '@/store/themeStore'
 import type { User } from '@/types'
 
-/** The Google Cloud OAuth client ID (Vercel variable VITE_GOOGLE_CLIENT_ID). Not set = no Google button. */
-export const GOOGLE_CLIENT_ID = ((import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) ?? '').trim()
+/**
+ * The OAuth client ID of Google Cloud project "brynoxa" (not secret; only works from the addresses
+ * allowed there). The Vercel variable VITE_GOOGLE_CLIENT_ID replaces it; "off" hides the button.
+ * Same ID as backend services/googleAuth.service.ts.
+ */
+const BRYNOXA_GOOGLE_CLIENT_ID = '450854734072-oqcrbd4snjmicsf1q1v2cdoo334o10sk.apps.googleusercontent.com'
+const configuredId = ((import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) || BRYNOXA_GOOGLE_CLIENT_ID).trim()
+export const GOOGLE_CLIENT_ID = configuredId === 'off' ? '' : configuredId
 
 type GoogleId = {
   initialize: (o: Record<string, unknown>) => void

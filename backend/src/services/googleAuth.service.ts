@@ -7,12 +7,15 @@ import { ApiError } from '../utils/ApiError';
  * ourselves with Google's public keys — signature, issuer, our client ID as audience, not expired,
  * email verified by Google — so nobody can sign in as someone else by sending a made-up token.
  *
- * One setting: the OAuth client ID from Google Cloud (not secret). The same Vercel variable serves
- * the shop's button (VITE_GOOGLE_CLIENT_ID, read at build) and this check (GOOGLE_CLIENT_ID also
- * accepted). No client ID set = Google sign-in is off.
+ * The OAuth client ID of Google Cloud project "brynoxa" (not secret: Google shows it on the page,
+ * and it only works from the addresses listed in Google Cloud → Clients → Authorized JavaScript
+ * origins). A Vercel variable replaces it (GOOGLE_CLIENT_ID or VITE_GOOGLE_CLIENT_ID); "off" turns
+ * Google sign-in off. Same ID as frontend/src/components/auth/GoogleSignIn.tsx.
  */
+export const BRYNOXA_GOOGLE_CLIENT_ID = '450854734072-oqcrbd4snjmicsf1q1v2cdoo334o10sk.apps.googleusercontent.com';
 export function googleClientId() {
-  return (process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+  const id = (process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || BRYNOXA_GOOGLE_CLIENT_ID).trim();
+  return id === 'off' ? '' : id;
 }
 
 const CERTS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
