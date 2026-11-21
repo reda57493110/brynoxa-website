@@ -1131,6 +1131,7 @@ export const fr: Messages = {
   },
   services: {
     heroKicker: 'Services',
+    bandKicker: 'Garantie · Retours · Livraison · Réparation',
     heroTitle: 'Garantie, retours,',
     heroTitleAccent: 'et livraison rapide',
     heroBody: 'Des règles claires, un vrai support et le paiement à la livraison partout au Maroc.',

@@ -1127,6 +1127,7 @@ export const en = {
   },
   services: {
     heroKicker: 'Services',
+    bandKicker: 'Warranty · Returns · Delivery · Repair',
     heroTitle: 'Warranty, returns,',
     heroTitleAccent: 'and fast delivery',
     heroBody: 'Clear policies, real support, and cash on delivery across Morocco.',

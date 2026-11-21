@@ -1129,6 +1129,7 @@ export const ar: Messages = {
   },
   services: {
     heroKicker: 'الخدمات',
+    bandKicker: 'الضمان · الإرجاع · التوصيل · الإصلاح',
     heroTitle: 'الضمان والإرجاع',
     heroTitleAccent: 'والتوصيل السريع',
     heroBody: 'سياسات واضحة ودعم حقيقي والدفع عند الاستلام في كل المغرب.',

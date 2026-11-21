@@ -161,3 +161,13 @@ export const CUSTOMER_SERVICES = [
 ] as const
 
 export type CustomerService = (typeof CUSTOMER_SERVICES)[number]
+
+/** The icon of each service (Services page, its own page) */
+export const SERVICE_ICON: Record<CustomerService['id'], import('@/components/ui/SiteIcon').SiteIconName> = {
+  warranty: 'shield',
+  returns: 'refresh',
+  cod: 'banknote',
+  delivery: 'truck',
+  support: 'headphones',
+  repair: 'wrench',
+}
