@@ -209,6 +209,7 @@ router.delete(
 );
 router.get('/admin/users', requireAuth, requirePermission('users:manage'), misc.users);
 router.get('/admin/team-activity', requireAuth, requirePermission('users:manage'), misc.teamActivity);
+router.get('/admin/team-history', requireAuth, requirePermission('users:manage'), misc.teamHistory);
 router.get('/admin/team-activity/:id', requireAuth, requirePermission('users:manage'), misc.staffActivity);
 router.post(
   '/admin/users',

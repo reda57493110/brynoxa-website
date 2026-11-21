@@ -33,9 +33,49 @@ export interface StaffActivityDetail {
 
 export const ACTIVITY_PERIODS = [7, 30, 90, 365] as const
 
+/** One line of Admin → Team history */
+export interface TeamHistoryItem {
+  at: string
+  action: string
+  kind: string
+  link?: string
+  detail?: string
+  by: string
+  byName: string
+  role: string
+  orderNumber?: string
+  status?: string
+  channel?: string
+  outcome?: string
+}
+
+/** An order a staff member worked on (added, moved or called about) */
+export interface TeamHistoryOrder {
+  _id: string
+  orderNumber: string
+  status: string
+  outcome: 'done' | 'open' | 'returned' | 'cancelled'
+  customer: string
+  total: number
+  createdAt: string
+  updatedAt: string
+  addedBy: { _id: string; name: string } | null
+  staff: { _id: string; name: string; steps: number }[]
+  last: { by: string; byName: string; status: string; at: string } | null
+}
+
+export interface TeamHistory {
+  days: number
+  staff: { _id: string; name: string; role: string; isActive: boolean }[]
+  feed: TeamHistoryItem[]
+  orders: TeamHistoryOrder[]
+}
+
 export const teamActivityApi = {
   team: (days: number) => api.get<ApiResponse<{ days: number; staff: TeamMemberActivity[] }>>('/admin/team-activity', { params: { days } }),
   member: (id: string, days: number) => api.get<ApiResponse<StaffActivityDetail>>(`/admin/team-activity/${id}`, { params: { days } }),
+  /** Admin → Team history: everything the staff did and their orders (one person with `staff`) */
+  history: (days: number, staff?: string) => api.get<ApiResponse<TeamHistory>>('/admin/team-history', { params: { days, ...(staff ? { staff } : {}) } }),
 }
 
 /** "5 min ago", "3 h ago", "2 days ago", or the date. */

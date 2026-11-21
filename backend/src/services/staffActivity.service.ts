@@ -262,3 +262,106 @@ export async function staffActivity(userId: string, days: number) {
     feed: feed.slice(0, 300),
   };
 }
+
+type OrderWithWork = {
+  _id: Types.ObjectId;
+  orderNumber: string;
+  orderStatus: OrderStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy?: Types.ObjectId;
+  pricing: { total: number };
+  shippingAddress?: { fullName?: string };
+  timeline?: { status: OrderStatus; note?: string; at: Date; by?: Types.ObjectId }[];
+  contactAttempts?: { channel: string; outcome: string; note?: string; at: Date; by?: Types.ObjectId }[];
+};
+
+/**
+ * Admin → Team history (owner only): everything the staff did, newest first — order steps, calls,
+ * orders added, and every other change (products, stock, coupons, settings, sign-ins) — and the
+ * orders each one worked on, with where those orders are now. `staffId`: one person only.
+ */
+export async function teamHistory(days: number, staffId?: string) {
+  const since = new Date(Date.now() - days * DAY);
+  const all = await staffUsers();
+  if (staffId && !mongoose.isValidObjectId(staffId)) throw new ApiError(404, 'Staff member not found');
+  const picked = staffId ? all.filter((s) => String(s._id) === staffId) : all;
+  if (staffId && !picked.length) throw new ApiError(404, 'Staff member not found');
+  const ids = picked.map((s) => s._id);
+  const idSet = new Set(ids.map(String));
+  const who = new Map(all.map((s) => [String(s._id), { name: s.name || s.email, role: s.role }]));
+
+  const [actionDocs, orders] = await Promise.all([
+    StaffAction.find({ user: { $in: ids }, at: { $gte: since } }).sort({ at: -1 }).limit(1000).lean(),
+    Order.find({
+      $or: [
+        { timeline: { $elemMatch: { by: { $in: ids }, at: { $gte: since } } } },
+        { contactAttempts: { $elemMatch: { by: { $in: ids }, at: { $gte: since } } } },
+        { createdBy: { $in: ids }, createdAt: { $gte: since } },
+      ],
+    })
+      .select('orderNumber orderStatus createdAt updatedAt createdBy pricing.total shippingAddress.fullName timeline contactAttempts')
+      .sort({ updatedAt: -1 })
+      .limit(500)
+      .lean<OrderWithWork[]>(),
+  ]);
+
+  type Item = { at: Date; action: string; kind: string; link?: string; detail?: string; by: string; byName: string; role: string; orderNumber?: string; status?: OrderStatus; channel?: string; outcome?: string };
+  const feed: Item[] = [];
+  const person = (by: unknown) => {
+    const p = who.get(String(by));
+    return { by: String(by), byName: p?.name ?? '', role: p?.role ?? '' };
+  };
+
+  const orderRows = orders.map((o) => {
+    const link = `/admin/orders/${o._id}`;
+    const work = new Map<string, number>();
+    let last: { by: string; byName: string; status: OrderStatus; at: Date } | null = null;
+    for (const t of o.timeline || []) {
+      if (!t.by || !idSet.has(String(t.by)) || new Date(t.at) < since) continue;
+      feed.push({ at: t.at, kind: 'order-status', link, action: `Order #${o.orderNumber} → ${STATUS_LABEL[t.status] ?? t.status}`, detail: t.note, orderNumber: o.orderNumber, status: t.status, ...person(t.by) });
+      work.set(String(t.by), (work.get(String(t.by)) ?? 0) + 1);
+      if (!last || new Date(t.at) > new Date(last.at)) last = { by: String(t.by), byName: person(t.by).byName, status: t.status, at: t.at };
+    }
+    for (const c of o.contactAttempts || []) {
+      if (!c.by || !idSet.has(String(c.by)) || new Date(c.at) < since) continue;
+      const how = c.channel === 'call' ? 'Called' : c.channel === 'whatsapp' ? 'WhatsApp to' : c.channel === 'sms' ? 'SMS to' : 'Email to';
+      feed.push({ at: c.at, kind: 'order-contact', link, action: `${how} the customer of #${o.orderNumber} — ${CONTACT_OUTCOME[c.outcome] ?? c.outcome}`, detail: c.note, orderNumber: o.orderNumber, channel: c.channel, outcome: c.outcome, ...person(c.by) });
+      work.set(String(c.by), (work.get(String(c.by)) ?? 0) + 1);
+    }
+    const addedBy = o.createdBy && idSet.has(String(o.createdBy)) ? person(o.createdBy) : null;
+    if (addedBy) work.set(addedBy.by, work.get(addedBy.by) ?? 0);
+    return {
+      _id: String(o._id),
+      orderNumber: o.orderNumber,
+      status: o.orderStatus,
+      outcome: outcomeOf(o.orderStatus),
+      customer: o.shippingAddress?.fullName ?? '',
+      total: o.pricing?.total ?? 0,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+      addedBy: addedBy ? { _id: addedBy.by, name: addedBy.byName } : null,
+      staff: [...work.entries()].map(([id, n]) => ({ _id: id, name: who.get(id)?.name ?? '', steps: n })),
+      last,
+    };
+  });
+
+  for (const a of actionDocs) {
+    // Order steps and calls come from the orders above, with their details
+    if (a.kind === 'order-status' || a.kind === 'order-contact') continue;
+    const link =
+      a.targetId && a.kind === 'order' ? `/admin/orders/${a.targetId}`
+        : a.targetId && a.kind === 'product' ? `/admin/products/${a.targetId}/edit`
+          : a.targetId && a.kind === 'customer' ? `/admin/customers/${a.targetId}`
+            : undefined;
+    feed.push({ at: a.at, kind: a.kind, link, action: a.action, ...person(a.user) });
+  }
+  feed.sort((x, y) => new Date(y.at).getTime() - new Date(x.at).getTime());
+
+  return {
+    days,
+    staff: all.map((s) => ({ _id: String(s._id), name: s.name || s.email, role: s.role, isActive: s.isActive })),
+    feed: feed.slice(0, 500),
+    orders: orderRows,
+  };
+}

@@ -42,6 +42,7 @@ const items: {
   { to: '/admin/notifications', label: 'nav.notifications', icon: 'bell', group: 'group.marketing' },
   { to: '/admin/emails', label: 'nav.emails', icon: 'mail', group: 'group.marketing' },
   { to: '/admin/settings', label: 'nav.settings', icon: 'settings', group: 'group.store' },
+  { to: '/admin/history', label: 'nav.history', icon: 'clock', group: 'group.store' },
   { to: '/admin/roles', label: 'nav.roles', icon: 'shield', group: 'group.store' },
   { to: '/admin/security', label: 'nav.security', icon: 'shield', group: 'group.store' },
 ]

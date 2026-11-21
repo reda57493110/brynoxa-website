@@ -614,6 +614,17 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Team history (Admin → Team history), owner only
+    if (route === 'team-history' && req.method === 'GET') {
+      const user = await requireStaff(req, res, ['users:manage']);
+      if (!user) return;
+      const activity = require('../../backend/dist/services/staffActivity.service');
+      const staff = typeof query.staff === 'string' && query.staff ? query.staff : undefined;
+      const data = await activity.teamHistory(activity.periodDays(query.days), staff);
+      sendJson(res, 200, { success: true, message: 'Success', data });
+      return;
+    }
+
     // Staff activity (Admin → Roles), owner only
     const activityMatch = route.match(/^team-activity(?:\/([a-f0-9]{24}))?$/i);
     if (activityMatch && req.method === 'GET') {

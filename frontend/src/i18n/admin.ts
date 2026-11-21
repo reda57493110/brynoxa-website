@@ -4,6 +4,7 @@ import * as orders from './adminText/orders'
 import * as orderDetail from './adminText/orderDetail'
 import * as products from './adminText/products'
 import * as customers from './adminText/customers'
+import * as history from './adminText/history'
 
 /**
  * Admin texts in English, French and Arabic (Moroccan Darija for the staff). The menu and top bar
@@ -41,6 +42,7 @@ const core = {
   'nav.emails': 'Emails',
   'nav.settings': 'Settings',
   'nav.roles': 'Roles',
+  'nav.history': 'Team history',
   'nav.security': 'Security',
   'nav.yourRole': 'Your role',
   'nav.closeMenu': 'Close menu',
@@ -66,7 +68,7 @@ const core = {
   'top.language': 'Language',
 } as const
 
-const en = { ...core, ...common.en, ...dashboard.en, ...orders.en, ...orderDetail.en, ...products.en, ...customers.en }
+const en = { ...core, ...common.en, ...dashboard.en, ...orders.en, ...orderDetail.en, ...products.en, ...customers.en, ...history.en }
 
 export type AdminKey = keyof typeof en
 
@@ -77,6 +79,7 @@ const fr: Partial<Record<AdminKey, string>> = {
   ...orderDetail.fr,
   ...products.fr,
   ...customers.fr,
+  ...history.fr,
   'group.daily': 'Au quotidien',
   'group.catalog': 'Catalogue',
   'group.money': 'Argent',
@@ -97,6 +100,7 @@ const fr: Partial<Record<AdminKey, string>> = {
   'nav.emails': 'E-mails',
   'nav.settings': 'Paramètres',
   'nav.roles': 'Rôles',
+  'nav.history': 'Historique équipe',
   'nav.security': 'Sécurité',
   'nav.yourRole': 'Votre rôle',
   'nav.closeMenu': 'Fermer le menu',
@@ -127,6 +131,7 @@ const ar: Partial<Record<AdminKey, string>> = {
   ...orderDetail.ar,
   ...products.ar,
   ...customers.ar,
+  ...history.ar,
   'group.daily': 'الخدمة اليومية',
   'group.catalog': 'الكتالوج',
   'group.money': 'الفلوس',
@@ -147,6 +152,7 @@ const ar: Partial<Record<AdminKey, string>> = {
   'nav.emails': 'الإيميلات',
   'nav.settings': 'الإعدادات',
   'nav.roles': 'الأدوار',
+  'nav.history': 'تاريخ الفريق',
   'nav.security': 'الأمان',
   'nav.yourRole': 'الدور ديالك',
   'nav.closeMenu': 'سد القائمة',

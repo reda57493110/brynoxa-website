@@ -384,6 +384,12 @@ export const teamActivity = asyncHandler(async (req: Request, res: Response) => 
   sendSuccess(res, await activity.teamActivity(activity.periodDays(req.query.days)));
 });
 
+export const teamHistory = asyncHandler(async (req: Request, res: Response) => {
+  const activity = await import('../services/staffActivity.service');
+  const staff = typeof req.query.staff === 'string' && req.query.staff ? req.query.staff : undefined;
+  sendSuccess(res, await activity.teamHistory(activity.periodDays(req.query.days), staff));
+});
+
 export const staffActivity = asyncHandler(async (req: Request, res: Response) => {
   const activity = await import('../services/staffActivity.service');
   sendSuccess(res, await activity.staffActivity(String(req.params.id), activity.periodDays(req.query.days)));

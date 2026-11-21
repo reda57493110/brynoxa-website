@@ -82,6 +82,8 @@ export const ADMIN_NAV_PERMISSION: Record<string, Permission> = {
   '/admin/setup': 'products:read',
   '/admin/customers': 'customers:read',
   '/admin/roles': 'users:manage',
+  // Team history: what every staff member did (owner only)
+  '/admin/history': 'users:manage',
   // 2-step sign-in and the password: owner only (staff passwords are set in Roles)
   '/admin/security': 'users:manage',
   '/admin/messages': 'messages',
