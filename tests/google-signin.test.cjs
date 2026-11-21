@@ -118,5 +118,7 @@ test('wired everywhere: Express route, Vercel function and address, security hea
   const btn = read('frontend/src/components/auth/GoogleSignIn.tsx')
   assert.match(btn, /if \(!GOOGLE_CLIENT_ID\) return null/, 'no client ID: no button')
   assert.match(btn, /text: 'continue_with'/)
-  for (const p of ['Login', 'Register']) assert.match(read(`frontend/src/pages/store/${p}.tsx`), /<GoogleSignIn/, p)
+  for (const p of ['Login', 'Register', 'Checkout']) assert.match(read(`frontend/src/pages/store/${p}.tsx`), /<GoogleSignIn/, p)
+  // Checkout: signed in with Google, the order goes on there (name filled in when empty)
+  assert.match(read('frontend/src/pages/store/Checkout.tsx'), /setAddress\(\(a\) => \(\{ \.\.\.a, fullName: a\.fullName \|\| u\.name \}\)\)/)
 })

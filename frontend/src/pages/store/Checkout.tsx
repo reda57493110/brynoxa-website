@@ -22,6 +22,7 @@ import { useCartLiveProducts } from '@/hooks/useCartLiveProducts'
 import { useAuthStore } from '@/store/authStore'
 import { useLocaleStore } from '@/store/localeStore'
 import { toast } from '@/store/toastStore'
+import { GoogleSignIn } from '@/components/auth/GoogleSignIn'
 import { saveGuestReceipt } from '@/lib/guestReceipt'
 import { linkPushToOrder } from '@/lib/push'
 import { formatCurrency } from '@/lib/format'
@@ -552,6 +553,15 @@ export function Checkout() {
               <SectionTitle n={1} icon="truck" title={t('checkout.yourInfo')} />
               {!isAuth ? (
                 <>
+                  {/* One click: signed in with Google, the order goes on here (name and email filled in) */}
+                  <div className="mt-4">
+                    <GoogleSignIn
+                      onSignedIn={(u) => {
+                        setAddress((a) => ({ ...a, fullName: a.fullName || u.name }))
+                        toast.success(t('auth.welcomeBack'))
+                      }}
+                    />
+                  </div>
                   <div role="radiogroup" aria-label={t('checkout.yourInfo')} className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-[var(--bg-muted)] p-1">
                     {(['guest', 'account'] as const).map((m) => (
                       <button
