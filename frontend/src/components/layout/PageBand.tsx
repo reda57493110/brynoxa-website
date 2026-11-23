@@ -49,8 +49,8 @@ export function PageCrumbs({ items }: { items: { label: string; to?: string }[] 
 /**
  * The top of the shop's information pages (Services, Contact, Track order, Help), in the home /
  * shop / setups look: the path, then the Brynoxa band (dark; white in light mode). With `image`,
- * the page's photo fills the top of the band and the title sits on it (a shade keeps it readable
- * in both modes). `children`: buttons or a form under the text; `below`: big buttons or tiles
+ * the page's photo sits in its own frame beside the text (above it on phones), sharp, nothing
+ * laid over it. `children`: buttons or a form under the text; `below`: big buttons or tiles
  * under the photo, inside the band.
  */
 export function PageBand({
@@ -100,9 +100,9 @@ export function PageBand({
         <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_100%_0%,rgb(0_194_255/0.25),transparent_60%),radial-gradient(50%_80%_at_0%_100%,rgb(0_194_255/0.12),transparent_60%)]" aria-hidden="true" />
         {image ? (
           <>
-            {/* Phones: the photo as a strip above the text; larger screens: the text on the photo */}
-            <div className="relative isolate flex flex-col justify-center overflow-hidden rounded-[1rem] sm:min-h-[20rem] sm:rounded-[1.6rem] sm:p-8 lg:p-10">
-              <span className="relative block aspect-[16/7] overflow-hidden rounded-[0.85rem] sm:absolute sm:inset-0 sm:-z-20 sm:aspect-auto sm:rounded-none">
+            {/* The photo in its own frame, sharp (nothing laid over it): beside the text on computers, above it on phones */}
+            <div className="grid items-center gap-3 sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <span className="relative block aspect-[16/7] overflow-hidden rounded-[0.85rem] sm:aspect-[16/6] sm:rounded-[1.4rem] lg:order-2 lg:aspect-[4/3]">
                 <img
                   src={image}
                   srcSet={/[?&]w=\d+/.test(image) ? [800, 1400, 2560].map((w) => `${image.replace(/([?&])w=\d+/, `$1w=${w}`)} ${w}w`).join(', ') : undefined}
@@ -114,11 +114,7 @@ export function PageBand({
                   fetchPriority="high"
                   className={cn('absolute inset-0 h-full w-full object-cover', imagePosition)} />
               </span>
-              <span
-                className="ink-shade-x absolute inset-0 -z-10 hidden sm:block bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.88)_40%,rgb(5_8_11/0.3)_80%,rgb(5_8_11/0.1)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.88)_40%,rgb(5_8_11/0.3)_80%,rgb(5_8_11/0.1)_100%)]"
-                aria-hidden="true"
-              />
-              <div className="px-2 pb-1 pt-3 sm:p-0">{text}</div>
+              <div className="px-2 pb-1 sm:px-5 sm:pb-3 lg:px-8 lg:py-6">{text}</div>
             </div>
             {below ? <div className="p-2 pt-2.5 sm:p-5 sm:pt-5 lg:p-7 lg:pt-6">{below}</div> : null}
           </>

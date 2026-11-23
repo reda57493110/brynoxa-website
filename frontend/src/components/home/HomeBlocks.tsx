@@ -145,18 +145,20 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
   const lead = (
     <Link
       to="/shop?onSale=true"
-      className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
+      className="group relative isolate flex h-full min-h-[13rem] flex-col ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] text-white sm:min-h-[16rem]"
     >
-      <img src={DEALS_PHOTO} alt="" width={640} height={900} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" />
-      <span className="ink-shade-y absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.2)_0%,rgb(5_8_11/0.55)_38%,rgb(5_8_11/0.92)_68%,#05080b_100%)]" aria-hidden="true" />
-      <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
-      <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-fg)] sm:text-[11px]">
-        <SiteIcon name="tag" size={12} />
-        {t('home.dealsKicker')}
+      {/* The photo on its own (sharp, nothing laid over it); the text under it */}
+      <span className="relative block aspect-[4/3] shrink-0 overflow-hidden">
+        <img src={DEALS_PHOTO} alt="" width={800} height={600} loading="lazy" decoding="async" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" />
+        <span className="absolute start-2.5 top-2.5 inline-flex w-fit items-center gap-1.5 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-fg)] sm:start-4 sm:top-4 sm:text-[11px]">
+          <SiteIcon name="tag" size={12} />
+          {t('home.dealsKicker')}
+        </span>
       </span>
+      <span className="flex flex-1 flex-col justify-between gap-3 p-3 sm:p-5">
       <span>
         {off > 0 ? (
-          <span className="block font-display text-2xl font-black leading-none tracking-tight text-[var(--brand)] sm:text-5xl">{t('home.upTo', { percent: off })}</span>
+          <span className="block font-display text-2xl font-black leading-none tracking-tight text-[var(--brand)] sm:text-4xl">{t('home.upTo', { percent: off })}</span>
         ) : null}
         <span className="mt-1.5 block font-display text-[13px] font-extrabold uppercase leading-tight sm:mt-2 sm:text-xl">{t('home.dealsTitle')}</span>
         <span className="mt-1 block text-[11.5px] text-white/65 sm:text-[13px]">{t('home.dealsCount', { count: products.length })}</span>
@@ -167,6 +169,7 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
       <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[var(--ink-base)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:text-sm">
         {t('home.seeAllDeals')}
         <SiteIcon name="arrow-right" size={14} className="rtl:rotate-180" />
+      </span>
       </span>
     </Link>
   )
@@ -288,7 +291,7 @@ export function HomeSelection({
 export const SIGNATURE_PHOTO =
   'https://images.pexels.com/photos/30265371/pexels-photo-30265371.jpeg?auto=compress&cs=tinysrgb&w=1400&h=788&fit=crop'
 /** Deals card: a keyboard glowing cyan on a dark desk (free Pexels photo) */
-export const DEALS_PHOTO = 'https://images.pexels.com/photos/28842075/pexels-photo-28842075.jpeg?auto=compress&cs=tinysrgb&w=640&h=900&fit=crop'
+export const DEALS_PHOTO = 'https://images.pexels.com/photos/28842075/pexels-photo-28842075.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop'
 /** "Not sure what to choose?": a smiling advisor with a headset (free Pexels photo) */
 export const HELP_PHOTO = 'https://images.pexels.com/photos/8204402/pexels-photo-8204402.jpeg?auto=compress&cs=tinysrgb&w=320&h=320&fit=crop'
 /** In light mode: a bright white desk with a white PC (free Pexels photo) */
@@ -304,11 +307,13 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
   return (
     <section id="signature" data-reveal="" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
-        <div className="relative isolate ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
-          <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 hidden h-full w-full object-cover object-[70%_50%] opacity-95 dark:block" />
-          <img src={SIGNATURE_PHOTO_LIGHT} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[75%_50%] dark:hidden" />
-          <span className="ink-shade-x absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
-          <div className="flex min-h-[11rem] flex-col justify-center p-4 sm:min-h-[19rem] sm:p-10 lg:p-12">
+        <div className="relative isolate grid ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+          {/* The photo in its own frame, sharp (nothing laid over it): beside the text, on top on phones */}
+          <div className="relative m-2 aspect-[16/9] overflow-hidden rounded-[1.1rem] sm:m-3 sm:rounded-[1.5rem] lg:order-2 lg:aspect-auto lg:min-h-[19rem]">
+            <img src={SIGNATURE_PHOTO} alt="" width={1400} height={788} loading="lazy" decoding="async" className="absolute inset-0 hidden h-full w-full object-cover dark:block" />
+            <img src={SIGNATURE_PHOTO_LIGHT} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover dark:hidden" />
+          </div>
+          <div className="flex flex-col justify-center p-4 pt-2 sm:p-10 lg:p-12">
             <div className="flex items-center gap-3">
               <span className="inline-flex size-9 overflow-hidden rounded-xl ring-1 ring-[rgb(0_194_255/0.5)] shadow-[0_0_24px_-4px_rgb(0_194_255/0.8)] sm:size-14 sm:rounded-2xl">
                 <img src="/brand/brynoxa-mark-128.webp" alt="" width={56} height={56} className="h-full w-full scale-[1.08] object-cover" decoding="async" />
@@ -364,10 +369,9 @@ export function HomeCategoryTabs({ categories }: { categories: Category[] }) {
     >
       {/* The photo in its own landscape frame (a wide photo is never squeezed into a tall card) */}
       <span className="relative block aspect-[4/3] overflow-hidden">
-        <CategoryPhoto category={active} sizes="(min-width: 1024px) 18rem, 46vw" className="brightness-[0.85] saturate-[0.9]" />
-        <span className="ink-shade-y absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#05080b)]" aria-hidden="true" />
+        <CategoryPhoto category={active} sizes="(min-width: 1024px) 18rem, 46vw" />
       </span>
-      <span className="flex flex-1 flex-col justify-end p-4 pt-1 sm:p-5 sm:pt-1">
+      <span className="flex flex-1 flex-col justify-end p-4 sm:p-5">
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{t('home.categoriesKicker')}</span>
       <span className="mt-1 font-display text-lg font-black uppercase leading-tight sm:text-2xl">{name}</span>
       <span className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[var(--ink-base)] transition group-hover:bg-[var(--brand)] group-hover:text-[var(--brand-fg)] sm:text-sm">
