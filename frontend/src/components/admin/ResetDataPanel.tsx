@@ -27,6 +27,32 @@ const GROUPS: { id: Group; title: string; what: string; needs?: Group }[] = [
   { id: 'history', title: 'Team history', what: 'Everything staff did so far (a line saying you emptied the data is kept)' },
 ]
 
+/** One of each ("1 return", not "1 returns") */
+const ONE: Record<string, string> = {
+  products: 'product',
+  wishlists: 'wishlist',
+  reviews: 'review',
+  movements: 'stock movement',
+  units: 'unit',
+  receipts: 'receipt',
+  returns: 'return',
+  repairs: 'repair',
+  orders: 'order',
+  deposits: 'deposit',
+  notifications: 'notification',
+  emails: 'email',
+  customers: 'account',
+  blocked: 'blocked number',
+  pushSubscriptions: 'push subscription',
+  expenses: 'expense',
+  campaigns: 'ad campaign',
+  pushCampaigns: 'push campaign',
+  social: 'social figure',
+  newsletter: 'subscriber',
+  messages: 'message',
+  history: 'history line',
+}
+
 const LABEL: Record<string, string> = {
   products: 'products',
   wishlists: 'wishlists',
@@ -136,13 +162,13 @@ export function ResetDataPanel() {
                     <span className="min-w-0">
                       <span className="flex flex-wrap items-baseline gap-x-2">
                         <span className="text-sm font-semibold">{g.title}</span>
-                        <span className="text-xs tabular-nums text-[var(--fg-muted)]">{total(g.id)} items</span>
+                        <span className="text-xs tabular-nums text-[var(--fg-muted)]">{total(g.id) === 1 ? '1 item' : `${total(g.id)} items`}</span>
                       </span>
                       <span className="mt-0.5 block text-xs text-[var(--fg-muted)]">{g.what}</span>
                       <span className="mt-1 block text-[11px] text-[var(--fg-muted)]">
                         {Object.entries(counts)
                           .filter(([, n]) => n > 0)
-                          .map(([k, n]) => `${n} ${LABEL[k] ?? k}`)
+                          .map(([k, n]) => `${n} ${n === 1 ? ONE[k] ?? k : LABEL[k] ?? k}`)
                           .join(' · ') || 'Nothing in it'}
                       </span>
                       {locked ? <span className="mt-1 block text-[11px] font-medium text-[var(--danger)]">Goes with {g.id === 'inventory' ? 'Products' : 'Customers'}</span> : null}
