@@ -27,9 +27,25 @@ that happens, Actions shows a banner — click **Enable workflow**.
 ## Downloading a backup
 
 GitHub → **Actions** → **Database backup** → pick the night you want → **Artifacts** →
-`brynoxa-db-…` (a zip containing `brynoxa-db-<date>.archive.gz.enc`).
+`brynoxa-db-…`. It is a zip with two files:
 
-## Opening it (decrypt)
+| File | What it is for |
+|---|---|
+| `brynoxa-db-<date>-readable.7z` | **To look at the data on your computer.** One file per collection (`products.json`, `orders.json`, `users.json`…). |
+| `brynoxa-db-<date>.archive.gz.enc` | **To restore the shop** (steps below). Windows cannot open it by double-click — that is normal. |
+
+## Looking at a backup on Windows
+
+1. Install **7-Zip** (free): https://www.7-zip.org
+2. Right-click the downloaded zip → **Extract All**.
+3. Right-click `brynoxa-db-<date>-readable.7z` → **7-Zip** → **Extract here** → type the backup password.
+4. Open any `.json` file with Notepad (or VS Code).
+
+These files are for reading. To put data back into the shop, use the `.enc` file and the restore steps below.
+
+
+
+## Opening the restore file (decrypt)
 
 Needs OpenSSL (built into macOS / Linux; on Windows use Git Bash, which comes with Git):
 

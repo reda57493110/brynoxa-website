@@ -22,7 +22,7 @@ test('encrypted before it is stored; the plain copy is deleted; secrets never pr
   const upload = wf.indexOf('uses: actions/upload-artifact@v7');
   assert.ok(dump > 0 && dump < enc && enc < rm && rm < upload, 'dump → encrypt → delete plain → upload');
   assert.match(wf, /-pass env:BACKUP_PASSPHRASE/, 'the password is read from the environment, not the command line');
-  assert.match(wf, /path: brynoxa-db-\*\.archive\.gz\.enc/, 'only the encrypted file is kept');
+  assert.match(wf, /path: \|\s*\n\s*brynoxa-db-\*\.archive\.gz\.enc\s*\n\s*brynoxa-db-\*-readable\.7z\s*\n\s*retention-days/, 'only the locked files are kept');
   assert.ok(!/echo[^\n]*\$(MONGODB_URI|BACKUP_PASSPHRASE)\b/.test(wf), 'never printed');
   assert.match(wf, /"\$\{#BACKUP_PASSPHRASE\}" -lt 20/, 'a real password is required');
   assert.match(wf, /if \[ "\$size" -lt 1024 \]/, 'an almost empty backup fails the run');
@@ -35,4 +35,15 @@ test('backups are never committed; the restore guide exists', () => {
   const guide = fs.readFileSync(path.join(ROOT, 'docs/BACKUPS.md'), 'utf8');
   assert.ok(guide.includes('openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000'), 'decrypt with the same settings');
   assert.ok(guide.includes("--nsFrom='brynoxa.*' --nsTo='brynoxa_restore.*'"), 'safe restore into a separate database first');
+});
+
+test('a readable 7-Zip copy, locked with the same password, plain copies deleted', () => {
+  const dump = wf.indexOf('mongodump --uri="$MONGODB_URI" --out=plain --quiet');
+  const zip = wf.indexOf('7z a -t7z -mhe=on -mx=9 -p"$BACKUP_PASSPHRASE"');
+  const rm = wf.indexOf('rm -rf plain readable');
+  const upload = wf.indexOf('uses: actions/upload-artifact@v7');
+  assert.ok(dump > 0 && dump < zip && zip < rm && rm < upload, 'dump → lock → delete plain → upload');
+  assert.match(wf, /brynoxa-db-\$stamp-readable\.7z" \.\/readable\/\*/, 'kept with the restore file');
+  const guide = fs.readFileSync(path.join(ROOT, 'docs/BACKUPS.md'), 'utf8');
+  assert.ok(guide.includes('## Looking at a backup on Windows') && guide.includes('7-zip.org'));
 });

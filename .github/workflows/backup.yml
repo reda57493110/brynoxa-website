@@ -1,7 +1,8 @@
 # Nightly database backup (free: MongoDB's own tool + GitHub Actions, no paid Atlas plan needed).
 # A full copy of the database (products, orders, customers, settings…) is made with mongodump,
 # ENCRYPTED with a password only the owner knows (this repository is public), and kept 30 days as
-# a downloadable file of the run (Actions → Database backup → a run → "Artifacts").
+# a downloadable file of the run (Actions → Database backup → a run → "Artifacts"), plus a 7-Zip
+# copy with one readable file per collection, locked with the same password (opens on Windows with 7-Zip).
 # Restore: docs/BACKUPS.md.
 #
 # Needs two repository secrets (Settings → Secrets and variables → Actions):
@@ -59,11 +60,35 @@ jobs:
           if [ "$size" -lt 1024 ]; then echo "::error::The backup is only $size bytes"; exit 1; fi
           echo "Backup ready: brynoxa-db-$stamp.archive.gz.enc ($size bytes, encrypted)"
 
+      - name: A copy you can open on a computer (7-Zip, same password)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          set -euo pipefail
+          umask 077
+          stamp="$(date -u +%Y-%m-%d_%H%M)"
+          command -v 7z >/dev/null || sudo apt-get install -y -qq p7zip-full
+          # One readable text file per collection (products.json, orders.json…)
+          mongodump --uri="$MONGODB_URI" --out=plain --quiet
+          mkdir -p readable
+          for f in plain/*/*.bson; do
+            name="$(basename "$f" .bson)"
+            case "$name" in system.*) continue ;; esac
+            bsondump --quiet --pretty --outFile="readable/$name.json" "$f"
+          done
+          # Locked with the backup password, file names hidden too (-mhe); plain copies deleted at once
+          7z a -t7z -mhe=on -mx=9 -p"$BACKUP_PASSPHRASE" "brynoxa-db-$stamp-readable.7z" ./readable/* >/dev/null
+          rm -rf plain readable
+          echo "Readable copy ready: brynoxa-db-$stamp-readable.7z (open with 7-Zip and the backup password)"
+
       - name: Keep the encrypted backup (30 days)
         uses: actions/upload-artifact@v7
         with:
           name: brynoxa-db-${{ github.run_number }}
-          path: brynoxa-db-*.archive.gz.enc
+          path: |
+            brynoxa-db-*.archive.gz.enc
+            brynoxa-db-*-readable.7z
           retention-days: 30
           if-no-files-found: error
           compression-level: 0
