@@ -19,7 +19,7 @@ test('encrypted before it is stored; the plain copy is deleted; secrets never pr
   const dump = wf.indexOf('mongodump --uri="$MONGODB_URI" --archive=db.archive.gz --gzip --quiet');
   const enc = wf.indexOf('openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt');
   const rm = wf.indexOf('rm -f db.archive.gz');
-  const upload = wf.indexOf('uses: actions/upload-artifact@v4');
+  const upload = wf.indexOf('uses: actions/upload-artifact@v7');
   assert.ok(dump > 0 && dump < enc && enc < rm && rm < upload, 'dump → encrypt → delete plain → upload');
   assert.match(wf, /-pass env:BACKUP_PASSPHRASE/, 'the password is read from the environment, not the command line');
   assert.match(wf, /path: brynoxa-db-\*\.archive\.gz\.enc/, 'only the encrypted file is kept');
