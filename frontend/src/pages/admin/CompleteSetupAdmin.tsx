@@ -153,7 +153,96 @@ function useRemoveSetup(onDone?: (id: string) => void) {
 
 /* ---------- A · Main product ---------- */
 
-/** Small photos of suggestions, with a label (Your picks / Auto) */
+/** Why a product is suggested for the main product */
+const WHY: Record<string, string> = {
+  together: 'Often bought together',
+  compatible: 'Compatible with this product',
+  gaming: 'Matches a gaming product',
+  bestseller: 'Best seller',
+  featured: 'Featured product',
+  fits: 'Completes this product',
+}
+
+/**
+ * Suggestions for the main product (what completes it, compatible, bought together, best
+ * sellers), each with the reason: tick what to keep and approve — they join the list above, then
+ * Save. "Add" takes one; ✕ stops suggesting it for this product.
+ */
+function SuggestionsPanel({
+  items,
+  full,
+  onApprove,
+  onAdd,
+  onHide,
+}: {
+  items: Product[]
+  full: boolean
+  onApprove: (list: Product[]) => void
+  onAdd: (p: Product) => void
+  onHide: (p: Product) => void
+}) {
+  const [skip, setSkip] = useState<Set<string>>(new Set())
+  const kept = items.filter((p) => !skip.has(p._id))
+  const toggle = (id: string) =>
+    setSkip((cur) => {
+      const next = new Set(cur)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  return (
+    <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--brand)_35%,var(--border))] bg-[color-mix(in_srgb,var(--brand)_4%,transparent)] p-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-bold">Suggestions · {items.length}</p>
+        <button type="button" onClick={() => setSkip(skip.size ? new Set() : new Set(items.map((p) => p._id)))} className="text-xs font-medium text-[var(--brand-text)] hover:underline">
+          {skip.size ? 'Tick all' : 'Untick all'}
+        </button>
+      </div>
+      <p className="mt-0.5 text-[11px] text-[var(--fg-muted)]">
+        Picked for this product: what completes it, compatible, bought together, best sellers. Untick what you don’t want, approve, then Save.
+      </p>
+      <ul className="mt-2 space-y-1.5">
+        {items.map((p) => {
+          const on = !skip.has(p._id)
+          return (
+            <li key={p._id} className={cn('flex items-center gap-2 rounded-xl border bg-[var(--bg)] p-2 transition', on ? 'border-[var(--border)]' : 'border-dashed border-[var(--border)] opacity-55')}>
+              <input type="checkbox" checked={on} onChange={() => toggle(p._id)} aria-label={`Keep ${p.name}`} className="size-4 shrink-0 accent-[var(--brand)]" />
+              <Thumb src={toRef(p).image} size="sm" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">{kindLabel(p.setupKind)}</span>
+                <span className="block truncate text-sm">{p.name}</span>
+                <span className="flex flex-wrap items-center gap-x-2 text-[11px]">
+                  <span className="font-semibold text-[var(--brand-text)]">{WHY[p.setupWhy ?? 'fits'] ?? WHY.fits}</span>
+                  <span className="tabular-nums text-[var(--fg-muted)]">{formatCurrency(p.price)}</span>
+                </span>
+              </span>
+              <Button size="sm" variant="outline" className="h-8" disabled={full} onClick={() => onAdd(p)}>
+                <SiteIcon name="plus" size={13} /> Add
+              </Button>
+              <button
+                type="button"
+                onClick={() => onHide(p)}
+                aria-label={`Hide ${p.name}`}
+                title="Don't suggest it for this product"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]"
+              >
+                <SiteIcon name="close" size={14} />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Button size="sm" disabled={!kept.length || full} onClick={() => onApprove(kept)}>
+          <SiteIcon name="check" size={13} /> Approve {kept.length}
+        </Button>
+        <span className="text-[11px] text-[var(--fg-muted)]">Until you save a list, customers see these suggestions automatically.</span>
+      </div>
+    </div>
+  )
+}
+
+/** Small photos of suggestions, with a label (Your picks / Suggested) */
 function SuggestionStrip({ label, tone, items }: { label: string; tone: 'manual' | 'auto'; items: { _id: string; name: string; image?: string }[] }) {
   if (!items.length) return null
   return (
@@ -208,7 +297,7 @@ function OverviewRow({ product, onPick, onRemove, set }: { product: SetupProduct
           ) : (
             <>
               <SuggestionStrip label="Your picks" tone="manual" items={manual} />
-              <SuggestionStrip label="Auto" tone="auto" items={auto} />
+              <SuggestionStrip label="Suggested" tone="auto" items={auto} />
               {!manual.length && !auto.length ? <span className="text-[11px] text-[var(--fg-muted)]">No suggestion</span> : null}
             </>
           )}
@@ -560,6 +649,15 @@ export function CompleteSetupAdmin({ embedded = false }: { embedded?: boolean } 
                   <input type="checkbox" className="accent-[var(--brand)]" checked={fill} onChange={(e) => setFill(e.target.checked)} />
                   Also show automatic suggestions
                 </label>
+                {visibleAutomatic.length && !full ? (
+                  <SuggestionsPanel
+                    items={visibleAutomatic}
+                    full={full}
+                    onApprove={(list) => list.forEach((p) => add(toRef(p)))}
+                    onAdd={(p) => add(toRef(p))}
+                    onHide={(p) => hide(toRef(p))}
+                  />
+                ) : null}
               </>
             ) : (
               <div className="space-y-3">
@@ -572,43 +670,15 @@ export function CompleteSetupAdmin({ embedded = false }: { embedded?: boolean } 
                     Customers see no recommendations on this product.
                   </p>
                 ) : visibleAutomatic.length ? (
-                  <div>
-                    <div className="mb-1.5 flex items-center justify-between gap-2">
-                      <p className="text-xs font-medium text-[var(--fg-muted)]">Automatic for now</p>
-                      <button
-                        type="button"
-                        onClick={() => visibleAutomatic.slice(0, MAX_ITEMS).forEach((p) => add(toRef(p)))}
-                        className="text-xs font-medium text-[var(--brand-text)] hover:underline"
-                      >
-                        Use all
-                      </button>
-                    </div>
-                    <ul className="space-y-1.5">
-                      {visibleAutomatic.map((p) => (
-                        <li key={p._id} className="flex items-center gap-2 rounded-xl border border-[var(--border)] p-2">
-                          <Thumb src={toRef(p).image} size="sm" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[10px] font-semibold uppercase tracking-wide text-[var(--brand-text)]">{kindLabel(p.setupKind)}</span>
-                            <span className="block truncate text-sm">{p.name}</span>
-                          </span>
-                          <Button size="sm" variant="outline" className="h-8" onClick={() => add(toRef(p))}>
-                            <SiteIcon name="plus" size={13} /> Add
-                          </Button>
-                          <button
-                            type="button"
-                            onClick={() => hide(toRef(p))}
-                            aria-label={`Hide ${p.name}`}
-                            title="Don't suggest it for this product"
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--fg-muted)] hover:text-[var(--danger)]"
-                          >
-                            <SiteIcon name="close" size={14} />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <SuggestionsPanel
+                    items={visibleAutomatic}
+                    full={full}
+                    onApprove={(list) => list.slice(0, MAX_ITEMS).forEach((p) => add(toRef(p)))}
+                    onAdd={(p) => add(toRef(p))}
+                    onHide={(p) => hide(toRef(p))}
+                  />
                 ) : (
-                  <p className="text-xs text-[var(--fg-muted)]">No automatic suggestions — add products from the list.</p>
+                  <p className="text-xs text-[var(--fg-muted)]">No suggestion yet — add products from the list.</p>
                 )}
               </div>
             )}

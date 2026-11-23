@@ -168,6 +168,8 @@ export interface Product {
   variantGroup?: string
   /** "Complete your setup" only: what this suggestion is (mouse, usb-hub…) */
   setupKind?: string
+  /** Admin → Complete your setup: why it is suggested (together, compatible, gaming, bestseller, featured, fits) */
+  setupWhy?: string
   /** Spec keys that differ between the variants (e.g. ram_gb, storage). */
   variantAttributes?: string[]
   /** Short option summary, e.g. "16 GB · 512 GB". */

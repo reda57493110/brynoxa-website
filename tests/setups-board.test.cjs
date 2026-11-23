@@ -72,6 +72,6 @@ test('admin board tabs are real buttons; Complete your setup lists every product
   assert.ok(setup.includes('All products and their suggestions'));
   assert.ok(setup.includes("queryKey: ['admin-setup-all', category]"), 'every product, by category');
   assert.ok(setup.includes('<SuggestionStrip label="Your picks" tone="manual" items={manual} />'), 'manual picks');
-  assert.ok(setup.includes('<SuggestionStrip label="Auto" tone="auto" items={auto} />'), 'automatic suggestions');
+  assert.ok(setup.includes('<SuggestionStrip label="Suggested" tone="auto" items={auto} />'), 'the suggestions (approved or not)');
   assert.ok(setup.includes("const autoAll = d && !d.off && (!d.items.length || d.fillWithAutomatic) ? d.automatic.items.map(toRef) : []"), 'automatic only when they really show');
 });

@@ -430,6 +430,9 @@ async function automaticRecommendations(
   return rankRecommendations(product, candidates, limit, paired);
 }
 
+/** The main reason a suggestion was picked, shown to staff (Admin → Complete your setup) */
+export type SetupWhy = 'together' | 'compatible' | 'gaming' | 'bestseller' | 'featured' | 'fits';
+
 /**
  * Orders candidates for `product`: complements in priority order, compatible ones only, bought
  * together / featured / best sellers / gaming-matched first, at most MAX_PER_KIND of each kind.
@@ -441,7 +444,7 @@ export function rankRecommendations<
   candidates: T[],
   limit = DEFAULT_LIMIT,
   paired: Map<string, number> = new Map()
-): (T & { setupKind: Kind })[] {
+): (T & { setupKind: Kind; setupWhy: SetupWhy })[] {
   const current = classifyProduct(product);
   const currentText = profileText(product);
   const targets = COMPLEMENTS[current.kind];
@@ -469,18 +472,20 @@ export function rankRecommendations<
       score += Math.min(Math.log2((candidate.soldCount || 0) + 1), 6); // best sellers
       if (current.gaming && gaming) score += 6;
       if (!current.gaming && gaming) score -= kind === 'monitor' || kind === 'gaming-pc' ? 4 : 2;
-      return { candidate, kind: isFallback ? ('accessory' as Kind) : kind, score };
+      // The strongest reason, for staff: bought together, a real compatibility match, gaming, sales
+      const why: SetupWhy = (paired.get(id) || 0) > 0 ? 'together' : fit > 0 ? 'compatible' : current.gaming && gaming ? 'gaming' : (candidate.soldCount || 0) >= 3 ? 'bestseller' : candidate.isFeatured ? 'featured' : 'fits';
+      return { candidate, kind: isFallback ? ('accessory' as Kind) : kind, score, why };
     })
     .filter((row): row is NonNullable<typeof row> => row !== null)
     .sort((a, b) => b.score - a.score);
 
   const perKind = new Map<Kind, number>();
-  const picked: (T & { setupKind: Kind })[] = [];
+  const picked: (T & { setupKind: Kind; setupWhy: SetupWhy })[] = [];
   for (const row of scored) {
     const count = perKind.get(row.kind) || 0;
     if (count >= MAX_PER_KIND) continue;
     perKind.set(row.kind, count + 1);
-    picked.push({ ...row.candidate, setupKind: row.kind });
+    picked.push({ ...row.candidate, setupKind: row.kind, setupWhy: row.why });
     if (picked.length >= limit) break;
   }
   return picked;
