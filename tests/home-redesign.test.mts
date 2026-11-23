@@ -142,7 +142,7 @@ test('light mode: the Brynoxa cards turn light with dark text, no grid squares o
   assert.ok(css.includes('html:not(.dark) .ink [class*="hover:bg-[rgb(0_194_255"]:hover {\n  background-color: var(--bg-muted);'.replace(/\n/g, css.includes('\r\n') ? '\r\n' : '\n')), 'grey on hover, not light blue')
   const blocks = read('components/home/HomeBlocks.tsx')
   assert.match(blocks, /export const SIGNATURE_PHOTO_LIGHT =\s*'https:\/\/images\.pexels\.com\/photos\/28228017\//, 'Signature: a bright desk photo in light mode')
-  assert.match(blocks, /opacity-80 dark:block" \/>/, 'the teal photo only in dark mode')
+  assert.match(blocks, /opacity-95 dark:block" \/>/, 'the dark setup photo only in dark mode')
   assert.match(blocks, /src=\{SIGNATURE_PHOTO_LIGHT\}[^>]*dark:hidden/)
   const slider = read('components/home/HomeHeroSlider.tsx')
   assert.ok(slider.includes("contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'bg-[#0b1116]'"), 'a photo keeps its own shape (whole, never cut); a packshot keeps its light frame')
@@ -164,4 +164,12 @@ test('light mode: the Brynoxa cards turn light with dark text, no grid squares o
   }
   assert.ok(cards >= 8, String(cards))
   assert.doesNotMatch(read('components/home/HomeBlocks.tsx'), /name="tag" size=\{130\}/, 'no big tag shape in the deals card')
+})
+
+test('section photos: the deals card, Signature and the help band each have their own (free Pexels photos)', () => {
+  const blocks = fs.readFileSync(path.join(root, 'frontend/src/components/home/HomeBlocks.tsx'), 'utf8')
+  for (const id of ['30265371', '28842075', '8204402']) assert.ok(blocks.includes(`images.pexels.com/photos/${id}/`), id)
+  assert.ok(blocks.includes('<img src={DEALS_PHOTO}'), 'deals card photo')
+  assert.ok(blocks.includes('ink-shade-y absolute inset-0 -z-10'), 'a shade keeps the deals text readable (light mode too)')
+  assert.ok(blocks.includes('src={HELP_PHOTO}'), 'the advisor in the help band')
 })

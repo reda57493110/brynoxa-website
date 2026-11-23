@@ -147,6 +147,8 @@ export function HomeDealsBlock({ products }: { products: Product[] }) {
       to="/shop?onSale=true"
       className="group relative isolate flex h-full min-h-[13rem] flex-col justify-between ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.45)] bg-[#05080b] p-3 text-white sm:min-h-[16rem] sm:p-5"
     >
+      <img src={DEALS_PHOTO} alt="" width={640} height={900} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-700 group-hover:scale-[1.05]" />
+      <span className="ink-shade-y absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.2)_0%,rgb(5_8_11/0.55)_38%,rgb(5_8_11/0.92)_68%,#05080b_100%)]" aria-hidden="true" />
       <span className="ink-glow absolute inset-0 -z-10 bg-[radial-gradient(90%_60%_at_0%_0%,rgb(0_194_255/0.45),transparent_65%),radial-gradient(80%_60%_at_100%_100%,rgb(0_194_255/0.22),transparent_60%)]" aria-hidden="true" />
       <span className="inline-flex w-fit items-center gap-1.5 rounded-md bg-[var(--brand)] px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-[var(--brand-fg)] sm:text-[11px]">
         <SiteIcon name="tag" size={12} />
@@ -282,9 +284,13 @@ export function HomeSelection({
 
 /* ------------------------------------------------------------------------------------------ */
 
-/** The teal desk photo of the Signature banner (free Pexels photo) */
+/** Signature banner: a dark teal premium desk with a glowing PC, in Brynoxa's colours (free Pexels photo) */
 export const SIGNATURE_PHOTO =
-  'https://images.pexels.com/photos/6942359/pexels-photo-6942359.jpeg?auto=compress&cs=tinysrgb&w=1200&h=676&fit=crop'
+  'https://images.pexels.com/photos/30265371/pexels-photo-30265371.jpeg?auto=compress&cs=tinysrgb&w=1400&h=788&fit=crop'
+/** Deals card: a keyboard glowing cyan on a dark desk (free Pexels photo) */
+export const DEALS_PHOTO = 'https://images.pexels.com/photos/28842075/pexels-photo-28842075.jpeg?auto=compress&cs=tinysrgb&w=640&h=900&fit=crop'
+/** "Not sure what to choose?": a smiling advisor with a headset (free Pexels photo) */
+export const HELP_PHOTO = 'https://images.pexels.com/photos/8204402/pexels-photo-8204402.jpeg?auto=compress&cs=tinysrgb&w=320&h=320&fit=crop'
 /** In light mode: a bright white desk with a white PC (free Pexels photo) */
 export const SIGNATURE_PHOTO_LIGHT =
   'https://images.pexels.com/photos/28228017/pexels-photo-28228017.jpeg?auto=compress&cs=tinysrgb&w=1200&h=676&fit=crop'
@@ -299,7 +305,7 @@ export function HomeSignatureBanner({ products }: { products: Product[] }) {
     <section id="signature" data-reveal="" aria-labelledby="home-signature-heading" className="scroll-mt-24 py-3 sm:py-5">
       <Container>
         <div className="relative isolate ink overflow-hidden rounded-[1.5rem] border border-[rgb(0_194_255/0.35)] bg-[#05080b] text-white shadow-[0_30px_80px_-40px_rgb(0_194_255/0.6)] sm:rounded-[2rem]">
-          <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 hidden h-full w-full object-cover object-[70%_50%] opacity-80 dark:block" />
+          <img src={SIGNATURE_PHOTO} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 hidden h-full w-full object-cover object-[70%_50%] opacity-95 dark:block" />
           <img src={SIGNATURE_PHOTO_LIGHT} alt="" width={1200} height={676} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover object-[75%_50%] dark:hidden" />
           <span className="ink-shade-x absolute inset-0 -z-10 bg-[linear-gradient(90deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)] rtl:bg-[linear-gradient(270deg,#05080b_0%,rgb(5_8_11/0.92)_38%,rgb(5_8_11/0.35)_75%,rgb(5_8_11/0.15)_100%)]" aria-hidden="true" />
           <div className="flex min-h-[11rem] flex-col justify-center p-4 sm:min-h-[19rem] sm:p-10 lg:p-12">
@@ -603,8 +609,19 @@ export function HomeHelpBand() {
         <div className="relative isolate flex flex-col gap-3 overflow-hidden rounded-[1.25rem] border border-[rgb(0_194_255/0.3)] bg-[linear-gradient(110deg,rgb(0_194_255/0.16),rgb(0_194_255/0.04)_55%,transparent)] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[2rem] sm:p-8">
           <SiteIcon name="chat" size={160} className="absolute -bottom-10 end-24 -z-10 hidden rotate-[-10deg] text-[rgb(0_194_255/0.07)] lg:block" />
           <div className="flex items-start gap-3 sm:gap-4">
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--brand)] text-[var(--brand-fg)] shadow-glow sm:size-14 sm:rounded-2xl">
-              <SiteIcon name="headphones" size={22} />
+            <span className="relative shrink-0">
+              <img
+                src={HELP_PHOTO}
+                alt=""
+                width={160}
+                height={160}
+                loading="lazy"
+                decoding="async"
+                className="size-14 rounded-2xl object-cover object-[45%_35%] ring-2 ring-[var(--brand)] shadow-glow sm:size-24 sm:rounded-3xl"
+              />
+              <span className="absolute -bottom-1 -end-1 inline-flex items-center rounded-full bg-[var(--brand)] p-1 text-[var(--brand-fg)] shadow-glow">
+                <SiteIcon name="headphones" size={12} />
+              </span>
             </span>
             <div className="min-w-0">
               <h2 id="home-help-heading" className="font-display text-[15px] font-extrabold uppercase leading-tight tracking-tight sm:text-2xl">
