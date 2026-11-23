@@ -437,7 +437,8 @@ export const settingsSchema = z.object({
     })
     .optional(),
   notifyStaffLoginEmail: z.boolean().optional(),
-  homeDeals: z.array(z.string().max(24)).max(4).optional(),
+  // Top banner of the home page: up to 8 products (frontend hooks/useHomeDeals.ts MAX_HOME_DEALS)
+  homeDeals: z.array(z.string().max(24)).max(8).optional(),
   homeRows: z.record(z.string().max(20), z.array(z.string().max(24)).max(48)).optional(),
   /** Shop page header product per category: address → product id, 'none' or '' (automatic) */
   categoryHeroes: z.record(z.string().max(80), z.string().max(24)).optional(),

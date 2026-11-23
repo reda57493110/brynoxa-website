@@ -145,7 +145,7 @@ test('light mode: the Brynoxa cards turn light with dark text, no grid squares o
   assert.ok(blocks.includes('className="absolute inset-0 hidden h-full w-full object-cover dark:block"'), 'the dark setup photo only in dark mode, at full strength')
   assert.match(blocks, /src=\{SIGNATURE_PHOTO_LIGHT\}[^>]*dark:hidden/)
   const slider = read('components/home/HomeHeroSlider.tsx')
-  assert.ok(slider.includes("contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'bg-[#0b1116]'"), 'a photo keeps its own shape (whole, never cut); a packshot keeps its light frame')
+  assert.ok(slider.includes("contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'w-fit max-w-full justify-self-center bg-[#0b1116] sm:justify-self-end'"), 'a photo keeps its own shape (whole, never cut); a packshot keeps its light frame')
   assert.match(slider, /@max-\[24rem\]:sr-only/, 'View product becomes an arrow when the text side is narrow')
   assert.ok(css.includes(String.raw`html:not(.dark) .ink .text-\[var\(--brand\)\]`), 'a darker cyan stays readable on the light card')
   assert.match(css, /html:not\(\.dark\) \.ink \.ink-shade-x/)
@@ -176,4 +176,14 @@ test('section photos: the deals card, Signature and the help band each have thei
   const tile = hero.slice(hero.indexOf('function PromoTile'), hero.indexOf('export function HomeHero'))
   assert.ok(!tile.includes('ink-shade'), 'the tiles beside the banner: photo on top, text under it')
   assert.ok(blocks.includes('src={HELP_PHOTO}'), 'the advisor in the help band')
+})
+
+test('top banner: up to 8 products (shop and server agree); the small pictures scroll; the photo never pushes them out', () => {
+  const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8')
+  assert.ok(read('frontend/src/hooks/useHomeDeals.ts').includes('export const MAX_HOME_DEALS = 8'))
+  assert.ok(read('backend/src/validators/schemas.ts').includes('homeDeals: z.array(z.string().max(24)).max(8).optional(),'))
+  const slider = read('frontend/src/components/home/HomeHeroSlider.tsx')
+  assert.ok(slider.includes('flex min-w-0 flex-1 gap-1.5 overflow-x-auto'), 'the row scrolls')
+  assert.ok(slider.includes('row.scrollTo({ left:'), 'the chosen one stays in view')
+  assert.ok(slider.includes('max-h-[15rem] w-auto max-w-full sm:max-h-[19rem] lg:max-h-[21rem]'), 'the photo height is capped (whole photo, sharp)')
 })

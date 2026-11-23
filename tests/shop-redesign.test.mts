@@ -102,7 +102,7 @@ test('category photos show at once; sub-categories are visible on the shop, in i
   assert.ok(hero.includes('Sub-categories (Mice, Headphones…) look exactly like the main ones') && !hero.includes('ps-9'), 'menu: sub-categories listed, same look as the main ones');
   // Banner: a photo is shown whole at its own shape (no blur, nothing cut); the deals tile keeps its own photo
   const slider = src('components/home/HomeHeroSlider.tsx');
-  assert.ok(slider.includes(": 'block h-auto w-full',"), 'photo at full width, its own height');
+  assert.ok(slider.includes(": 'block h-auto max-h-[15rem] w-auto max-w-full sm:max-h-[19rem] lg:max-h-[21rem]',"), 'photo in its own shape, height capped so the small pictures stay visible');
   assert.ok(!slider.includes('blur-2xl'), 'no blurred bands');
   assert.ok(hero.includes('photo="/categories/laptops-v2-480.webp"') && !hero.includes('topDealPhoto'));
   const { pathToFileURL } = await import('node:url');

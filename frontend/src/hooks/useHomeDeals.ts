@@ -4,12 +4,13 @@ import { productsApi } from '@/api/productsApi'
 import { HERO_NONE } from '@/hooks/useHeroProduct'
 import type { Product } from '@/types'
 
-export const MAX_HOME_DEALS = 4
+/** How many products the top banner of the home page can show (same limit on the server) */
+export const MAX_HOME_DEALS = 8
 
 const discount = (p: Product) => (p.compareAtPrice && p.compareAtPrice > p.price ? 1 - p.price / p.compareAtPrice : 0)
 
 /**
- * Products shown at the top of the home page (max 4). Admin → Settings → Home page deals, in that
+ * Products shown at the top of the home page (max 8). Admin → Settings → Home page deals, in that
  * order; sold-out or hidden ones are skipped. With none chosen (or none left), the best in-stock
  * featured products, biggest discounts first. The older single "Home page" header product is
  * used when no deals were chosen yet; "no product" there hides the section.

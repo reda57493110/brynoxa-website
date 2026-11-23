@@ -66,7 +66,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         ref={photo.ref}
         className={cn(
           'group relative block overflow-hidden rounded-xl sm:order-2 sm:rounded-[1.4rem]',
-          contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'bg-[#0b1116]'
+          contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'w-fit max-w-full justify-self-center bg-[#0b1116] sm:justify-self-end'
         )}
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
@@ -86,7 +86,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           className={cn(
             'transition duration-[900ms] ease-out group-hover:scale-[1.04]',
             // Packshot: inside its frame; photo: full width at its own height (the frame follows it)
-            contain ? 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3' : 'block h-auto w-full',
+            contain ? 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3' : 'block h-auto max-h-[15rem] w-auto max-w-full sm:max-h-[19rem] lg:max-h-[21rem]',
             active ? 'scale-100' : 'scale-[1.05]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
@@ -215,6 +215,14 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
   const many = products.length > 1
   const active = Math.min(index, products.length - 1)
   const touch = useRef<{ x: number; y: number } | null>(null)
+  // The row of small pictures: the chosen one is scrolled into view (only the row moves, not the page)
+  const thumbs = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const row = thumbs.current
+    const el = row?.children[active] as HTMLElement | undefined
+    if (!row || !el || row.scrollWidth <= row.clientWidth) return
+    row.scrollTo({ left: el.offsetLeft - row.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: 'smooth' })
+  }, [active])
 
   useEffect(() => {
     if (index >= products.length) setIndex(0)
@@ -270,7 +278,12 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
 
         {many ? (
           <div className="relative z-10 flex items-center gap-3 px-3 pb-3 sm:px-8 sm:pb-6 lg:px-10">
-            <div role="tablist" aria-label={t('home.dealsLabel')} className="flex flex-1 gap-1.5 sm:gap-2">
+            <div
+              ref={thumbs}
+              role="tablist"
+              aria-label={t('home.dealsLabel')}
+              className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] sm:gap-2 [&::-webkit-scrollbar]:hidden"
+            >
               {products.map((p, i) => {
                 const on = i === active
                 return (
@@ -286,7 +299,7 @@ export function HomeHeroSlider({ products }: { products: Product[] }) {
                       setPicked(true)
                     }}
                     className={cn(
-                      'group/bar relative h-6 flex-1 sm:flex sm:h-auto sm:max-w-[10rem] sm:items-center sm:gap-2 sm:overflow-hidden sm:rounded-xl sm:border sm:p-1.5 sm:pe-2.5 sm:text-start sm:transition',
+                      'group/bar relative h-6 min-w-4 flex-1 sm:flex sm:h-auto sm:w-[8.75rem] sm:flex-none sm:shrink-0 sm:items-center sm:gap-2 sm:overflow-hidden sm:rounded-xl sm:border sm:p-1.5 sm:pe-2.5 sm:text-start sm:transition',
                       on ? 'sm:border-[rgb(0_194_255/0.6)] sm:bg-[rgb(0_194_255/0.1)]' : 'sm:border-white/10 sm:bg-white/[0.03] sm:hover:border-white/30'
                     )}
                   >
