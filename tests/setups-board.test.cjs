@@ -8,13 +8,13 @@ const path = require('path');
 const { dist, api, ROOT, setTestEnv } = require('./_helpers.cjs');
 setTestEnv();
 
-test('server: setups are saved like the home rows, 48 products each; home rows stay 12', () => {
+test('server: setups are saved like the home rows, 48 products each; home rows stay 24', () => {
   const { sanitizeHomeRows, HOME_ROW_KEYS } = require(dist('models/Settings.js'));
   for (const k of ['setup-gaming', 'setup-study', 'setup-work', 'setup-creator']) assert.ok(HOME_ROW_KEYS.includes(k), k);
   const ids = Array.from({ length: 60 }, (_, i) => String(i).padStart(24, 'a'));
   const out = sanitizeHomeRows({ 'setup-gaming': ids, new: ids, 'setup-hacker': ids }, { 'setup-work': [ids[0]] });
   assert.equal(out['setup-gaming'].length, 48);
-  assert.equal(out.new.length, 12);
+  assert.equal(out.new.length, 24);
   assert.equal(out['setup-hacker'], undefined);
   assert.deepEqual(out['setup-work'], [ids[0]], 'setups not sent are kept');
   assert.equal(sanitizeHomeRows({ 'setup-gaming': [] }, { 'setup-gaming': [ids[0]] })['setup-gaming'], undefined, 'empty = automatic');

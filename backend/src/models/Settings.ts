@@ -292,7 +292,8 @@ const OBJECT_ID = /^[a-f0-9]{24}$/i;
 /** Stored instead of a product id when the page should show its photo, not a product. */
 export const HERO_NONE = 'none';
 
-export const MAX_HOME_DEALS = 4;
+/** Top banner of the home page (frontend hooks/useHomeDeals.ts MAX_HOME_DEALS) */
+export const MAX_HOME_DEALS = 8;
 
 /** Valid deposit payment methods from admin input (at most MAX_DEPOSIT_METHODS). */
 export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
@@ -326,18 +327,18 @@ export function sanitizeDepositMethods(input: unknown): DepositMethod[] {
   return out.slice(0, MAX_DEPOSIT_METHODS);
 }
 
-/** Unique, valid product ids for the home page deals, in the given order (max 4). */
 /**
  * Sections staff can choose and order (Admin → Products): the home rows, and the four setups of
  * the 'Pick your setup' page (setup-gaming …), which hold more products (all their groups).
  */
 export const HOME_ROW_KEYS = ['deals', 'new', 'signature', 'budget-small', 'budget-mid', 'budget-high', 'setup-gaming', 'setup-study', 'setup-work', 'setup-creator'] as const;
 export type HomeRowKey = (typeof HOME_ROW_KEYS)[number];
-export const MAX_HOME_ROW = 12;
+/** Other home rows (frontend lib/homeRows.ts HOME_ROW_LIMIT) */
+export const MAX_HOME_ROW = 24;
 export const MAX_SETUP_ROW = 48;
 
 /**
- * Keeps known sections with valid product ids (12 at most, no repeats). Only the sections sent
+ * Keeps known sections with valid product ids (24 at most, 48 for a setup, no repeats). Only the sections sent
  * change; an empty list puts a section back to automatic.
  */
 export function sanitizeHomeRows(input: unknown, current: Partial<Record<HomeRowKey, string[]>> = {}) {

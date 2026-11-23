@@ -60,13 +60,13 @@ test('home: two rows, deduplicated, Deals hidden under 2 products; shop understa
   }
 });
 
-test('home sections chosen in admin: known sections, valid products, 12 at most, empty = automatic', () => {
+test('home sections chosen in admin: known sections, valid products, 24 at most, empty = automatic', () => {
   const { sanitizeHomeRows } = require(dist('models/Settings.js'));
   const a = 'a'.repeat(24), b = 'b'.repeat(24);
-  const ids = Array.from({ length: 15 }, (_, i) => String(i).padStart(24, 'c'));
+  const ids = Array.from({ length: 30 }, (_, i) => String(i).padStart(24, 'c'));
   const out = sanitizeHomeRows({ deals: [b, a, a, 'nope'], new: ids, hacker: [a], 'budget-mid': [] }, { 'budget-small': [a] });
   assert.deepEqual(out.deals, [b, a], 'order kept, repeats and bad ids dropped');
-  assert.equal(out.new.length, 12);
+  assert.equal(out.new.length, 24);
   assert.equal(out.hacker, undefined);
   assert.equal(out['budget-mid'], undefined, 'empty list = back to automatic');
   assert.deepEqual(out['budget-small'], [a], 'sections not sent are kept');

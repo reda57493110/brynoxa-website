@@ -17,6 +17,7 @@ import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT, useStorefrontPlacements } from '@/
 import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
 import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'
+import { suggestHome, type Suggestion, type SuggestReason } from '@/lib/homeSuggestions'
 
 /** The "Complete your setup" editor (its own code, loaded when its tab is opened) */
 const CompleteSetupAdmin = lazy(() => import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin })))
@@ -118,6 +119,58 @@ function Tile({
         </button>
       </span>
       )}
+    </div>
+  )
+}
+
+/** Why a product is suggested, in the admin language */
+function useReasonText() {
+  const tr = useAdminT()
+  return (r: SuggestReason) => {
+    switch (r.kind) {
+      case 'deal':
+        return tr('products.sug.rDeal', { pct: r.pct, saved: formatCurrency(r.saved) })
+      case 'sold':
+        return r.count === 1 ? tr('products.sug.rSoldOne') : tr('products.sug.rSold', { count: r.count })
+      case 'new':
+        return r.days === 0 ? tr('products.sug.rToday') : r.days === 1 ? tr('products.sug.rYesterday') : tr('products.sug.rNew', { days: r.days })
+      case 'featured':
+        return tr('products.sug.rFeatured')
+      case 'brynoxa':
+        return r.sold ? tr('products.sug.rBrynoxaSold', { count: r.sold }) : tr('products.sug.rBrynoxa')
+      case 'value':
+        return tr('products.sug.rValue', { price: formatCurrency(r.price) })
+      default:
+        return tr('products.sug.rFlagship', { price: formatCurrency((r as { price: number }).price) })
+    }
+  }
+}
+
+/** A suggested product: tick to keep it, with the reason it fits the section */
+function SuggestTile({ s, index, on, onToggle, onOpen }: { s: Suggestion; index: number; on: boolean; onToggle: () => void; onOpen: (p: Product) => void }) {
+  const reason = useReasonText()
+  const tr = useAdminT()
+  const p = s.product
+  const image = p.images?.find((i) => i.isPrimary)?.url || p.images?.[0]?.url
+  return (
+    <div className={cn('flex w-[8.75rem] shrink-0 flex-col overflow-hidden rounded-xl border bg-[var(--bg)] transition', on ? 'border-[var(--brand)]' : 'border-dashed border-[var(--border)] opacity-60')}>
+      <button type="button" onClick={() => onOpen(p)} title={p.name} className="group text-start">
+        <span className={cn('relative block h-20 w-full overflow-hidden', imageFit(image) === 'contain' ? 'bg-white' : 'bg-[var(--bg-muted)]')}>
+          {image ? (
+            <SafeImage src={sizedImageUrl(image, 280)} alt="" referrerPolicy="no-referrer" className={cn('h-full w-full', imageFit(image) === 'contain' ? 'object-contain p-1 mix-blend-multiply' : 'object-cover')} />
+          ) : null}
+          <span className="absolute start-1 top-1 rounded-md bg-[var(--fg)] px-1.5 text-[11px] font-bold leading-5 text-[var(--bg)] shadow">#{index + 1}</span>
+        </span>
+        <span className="block px-2 pt-1.5">
+          <span className="block truncate text-xs font-medium group-hover:text-[var(--brand-text)]">{p.name}</span>
+          <span className="block text-[11px] tabular-nums text-[var(--fg-muted)]">{formatCurrency(p.price)}</span>
+        </span>
+      </button>
+      <span className="block px-2 pb-1 text-[10px] font-semibold leading-tight text-[var(--brand-text)]">{reason(s.reason)}</span>
+      <label className="mt-auto flex cursor-pointer items-center gap-1.5 border-t border-[var(--border)] px-2 py-1 text-[11px] font-medium">
+        <input type="checkbox" checked={on} onChange={onToggle} className="accent-[var(--brand)]" />
+        {on ? tr('products.sug.keep') : tr('products.sug.skip')}
+      </label>
     </div>
   )
 }
@@ -243,6 +296,7 @@ function Section({
   onOpen,
   empty,
   bare,
+  suggestions,
 }: {
   /** Place on the page (1 = top) */
   step?: number
@@ -262,11 +316,17 @@ function Section({
   empty: string
   /** Inside a setup card: no card of its own, no status */
   bare?: boolean
+  /** Products the analysis suggests for this section (Suggestions | My choice) */
+  suggestions?: Suggestion[]
 }) {
   const qc = useQueryClient()
   const tr = useAdminT()
   const [adding, setAdding] = useState(false)
   const ids = products.map((p) => p._id)
+  // Suggestions first while nothing was chosen; "My choice" once a list is saved
+  const [view, setView] = useState<'suggest' | 'mine'>(suggestions && !pinned ? 'suggest' : 'mine')
+  const [skipped, setSkipped] = useState<Set<string>>(new Set())
+  const kept = (suggestions ?? []).filter((s) => !skipped.has(s.product._id)).slice(0, max)
 
   const save = useMutation({
     mutationFn: async ({ next, removed, reset }: { next: string[]; removed?: string; reset?: boolean }) => {
@@ -277,7 +337,8 @@ function Section({
         return adminApi.settings.update({ homeRows: { [store.key]: list } })
       }
       // Featured / Carousel follow the time each product was (re)added: re-add from last to first
-      if (removed) await adminApi.products.update(removed, { [store.flag]: false })
+      const dropped = removed ? [removed] : ids.filter((id) => !next.includes(id))
+      for (const id of dropped) await adminApi.products.update(id, { [store.flag]: false })
       for (const id of [...next].reverse()) await adminApi.products.update(id, { [store.flag]: true })
     },
     onSuccess: () => {
@@ -310,7 +371,23 @@ function Section({
         <p className="truncate text-[13px] font-semibold">{title}</p>
         <span className="rounded-full bg-[var(--bg-muted)] px-1.5 text-[10px] font-semibold tabular-nums text-[var(--fg-muted)]">{products.length}</span>
         {!bare ? <StatusPill pinned={pinned} note={note} warn={noteWarn} /> : null}
-        {pinned && canReset ? (
+        {suggestions ? (
+          <span role="tablist" className="ms-auto inline-flex rounded-full border border-[var(--border)] bg-[var(--bg)] p-0.5 text-[11px] font-semibold">
+            {(['suggest', 'mine'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={cn('rounded-full px-2.5 py-0.5 transition', view === v ? 'bg-[var(--brand)] text-[var(--brand-fg)]' : 'text-[var(--fg-muted)] hover:text-[var(--fg)]')}
+              >
+                {v === 'suggest' ? tr('products.sug.tab', { count: suggestions.length }) : tr('products.sug.mine')}
+              </button>
+            ))}
+          </span>
+        ) : null}
+        {view === 'mine' && pinned && canReset ? (
           <button
             type="button"
             disabled={busy}
@@ -322,6 +399,57 @@ function Section({
         ) : null}
         {busy ? <Spinner size="sm" /> : null}
       </div>
+      {view === 'suggest' && suggestions ? (
+        <div className="mt-2">
+          <p className="text-[11px] text-[var(--fg-muted)]">{tr('products.sug.intro')}</p>
+          {suggestions.length ? (
+            <>
+              <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+                {suggestions.slice(0, max).map((s, i) => (
+                  <SuggestTile
+                    key={s.product._id}
+                    s={s}
+                    index={i}
+                    on={!skipped.has(s.product._id)}
+                    onOpen={onOpen}
+                    onToggle={() =>
+                      setSkipped((cur) => {
+                        const next = new Set(cur)
+                        if (next.has(s.product._id)) next.delete(s.product._id)
+                        else next.add(s.product._id)
+                        return next
+                      })
+                    }
+                  />
+                ))}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={busy || !kept.length}
+                  onClick={() => save.mutate({ next: kept.map((s) => s.product._id) }, { onSuccess: () => setView('mine') })}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 text-xs font-bold text-[var(--brand-fg)] transition hover:brightness-110 disabled:opacity-50"
+                >
+                  <SiteIcon name="check" size={13} />
+                  {tr('products.sug.approve', { count: kept.length })}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setSkipped(skipped.size ? new Set() : new Set(suggestions.map((s) => s.product._id)))}
+                  className="h-8 rounded-full border border-[var(--border)] px-3 text-xs font-semibold transition hover:border-[var(--brand)]"
+                >
+                  {skipped.size ? tr('products.sug.all') : tr('products.sug.none')}
+                </button>
+                <span className="text-[11px] text-[var(--fg-muted)]">{tr('products.sug.after')}</span>
+              </div>
+            </>
+          ) : (
+            <p className="mt-2 text-[11px] text-[var(--fg-muted)]">{tr('products.sug.empty')}</p>
+          )}
+        </div>
+      ) : (
+      <>
       <div className="-mx-1 mt-2 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
         {products.map((p, i) => (
           <Tile
@@ -347,6 +475,8 @@ function Section({
         </button>
       </div>
       {!products.length ? <p className="mt-1 text-[11px] text-[var(--fg-muted)]">{empty}</p> : null}
+      </>
+      )}
       <Modal open={adding} onClose={() => setAdding(false)} title={tr('products.board.addTo', { name: title })} size="md">
         <ProductSearch
           currentId=""
@@ -373,9 +503,16 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   })
   // Our brands: the brands of the products on the home page (3 at least)
   const pageProducts = [...place.deals.products, ...place.featuredList, ...place.row, ...rows.deals, ...rows.newArrivals, ...rows.budgets.flatMap((b) => b.items)]
+  // The whole catalog, for the suggestions of every section
+  const catalog = useQuery({
+    queryKey: ['admin-products', 'suggest-catalog'],
+    queryFn: async () => (await adminApi.products.list({ limit: 100 })).data.data,
+    staleTime: 60_000,
+  })
+  const sug = catalog.data ? suggestHome(catalog.data, rows.budgets, { banner: MAX_HOME_DEALS, featured: HOME_FEATURED_LIMIT, row: HOME_ROW_LIMIT }) : null
   const brandNames = [...new Set(pageProducts.map((p) => (typeof p.brand === 'object' && p.brand ? p.brand.name : '')).filter(Boolean))].slice(0, 12)
 
-  if (!place.ready || !rows.ready) {
+  if (!place.ready || !rows.ready || catalog.isPending) {
     return (
       <div className="flex justify-center py-6">
         <Spinner />
@@ -401,6 +538,7 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           products={place.deals.products}
           store={{ kind: 'homeDeals' }}
           max={MAX_HOME_DEALS}
+          suggestions={sug?.banner}
           onOpen={onOpen}
           empty={tr('products.board.noDeals')}
         />
@@ -414,7 +552,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           canReset
           products={rows.deals}
           store={{ kind: 'homeRows', key: 'deals' }}
-          max={12}
+          max={HOME_ROW_LIMIT}
+          suggestions={sug?.deals}
           onOpen={onOpen}
           empty={tr('products.board.noDealsYet')}
         />
@@ -426,6 +565,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           products={place.featuredList}
           store={{ kind: 'flag', flag: 'isFeatured' }}
           max={HOME_FEATURED_LIMIT}
+          pinned={place.featuredList.length > 0}
+          suggestions={sug?.featured}
           onOpen={onOpen}
           empty={tr('products.board.noFeatured')}
         />
@@ -437,6 +578,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           products={place.rowFromCarousel ? place.row : []}
           store={{ kind: 'flag', flag: 'isCarousel' }}
           max={HOME_ROW_LIMIT}
+          pinned={place.rowFromCarousel}
+          suggestions={sug?.carousel}
           onOpen={onOpen}
           empty={tr('products.board.emptyThen')}
         />
@@ -450,7 +593,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           canReset
           products={rows.newArrivals}
           store={{ kind: 'homeRows', key: 'new' }}
-          max={12}
+          max={HOME_ROW_LIMIT}
+          suggestions={sug?.new}
           onOpen={onOpen}
           empty={tr('products.board.nothingNew')}
         />
@@ -473,7 +617,8 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
           canReset
           products={rows.signature}
           store={{ kind: 'homeRows', key: 'signature' }}
-          max={12}
+          max={HOME_ROW_LIMIT}
+          suggestions={sug?.signature}
           onOpen={onOpen}
           empty={tr('products.board.noBrynoxa')}
         />
@@ -488,9 +633,10 @@ function HomeBoard({ onOpen }: { onOpen: (p: Product) => void }) {
             noteWarn={!b.items.length}
             pinned={b.pinned}
             canReset
-            products={b.items.slice(0, b.pinned ? 12 : 6)}
+            products={b.items.slice(0, b.pinned ? HOME_ROW_LIMIT : 6)}
             store={{ kind: 'homeRows', key: b.key }}
-            max={12}
+            max={HOME_ROW_LIMIT}
+            suggestions={sug?.budget[b.key]}
             onOpen={onOpen}
             empty={tr('products.board.noAtPrice')}
           />

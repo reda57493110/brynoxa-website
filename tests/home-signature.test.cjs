@@ -9,11 +9,11 @@ const { dist, ROOT, setTestEnv } = require('./_helpers.cjs');
 setTestEnv();
 const src = (p) => fs.readFileSync(path.join(ROOT, 'frontend/src', p), 'utf8');
 
-test('server: the Signature choice is saved like the other home sections (12 at most)', () => {
+test('server: the Signature choice is saved like the other home sections (24 at most)', () => {
   const { sanitizeHomeRows, HOME_ROW_KEYS } = require(dist('models/Settings.js'));
   assert.ok(HOME_ROW_KEYS.includes('signature'));
-  const ids = Array.from({ length: 15 }, (_, i) => String(i).padStart(24, 'a'));
-  assert.equal(sanitizeHomeRows({ signature: ids }).signature.length, 12);
+  const ids = Array.from({ length: 30 }, (_, i) => String(i).padStart(24, 'a'));
+  assert.equal(sanitizeHomeRows({ signature: ids }).signature.length, 24);
   assert.equal(sanitizeHomeRows({ signature: [] }, { signature: [ids[0]] }).signature, undefined, 'empty = back to automatic');
 });
 
