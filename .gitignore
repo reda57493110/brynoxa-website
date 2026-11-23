@@ -14,3 +14,8 @@ coverage/
 *.local
 
 .vercel
+
+# Database backups (never commit a copy of the database, even encrypted)
+*.archive
+*.archive.gz
+*.archive.gz.enc

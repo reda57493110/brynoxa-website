@@ -17,6 +17,7 @@ E-commerce store for computers / gaming PCs / accessories. Cash-on-delivery only
 - `npm run install:all` — install root + backend + frontend
 - Backend: `cd backend && npx tsc --noEmit` (type check), `npm run build` → `backend/dist`
 - Frontend: `cd frontend && npx tsc -b --noEmit`, `npm run lint` (oxlint), `npm run build`
+- Database backups: `.github/workflows/backup.yml` — nightly `mongodump` of `MONGODB_URI`, encrypted with `BACKUP_PASSPHRASE` (both GitHub repository secrets; the repo is public, so never store an unencrypted copy), kept 30 days as run artifacts. Restore: `docs/BACKUPS.md`.
 - `npm test` (root) — builds the backend, then runs `tests/*.test.cjs` (Node test runner, against `backend/dist` and `api/` with faked database calls) and `tests/*.test.mts` (shop vs server money rules, via tsx). Helpers in `tests/_helpers.cjs`. GitHub Actions runs it on every push (`.github/workflows/tests.yml`). Add a test when fixing a bug or changing a rule.
 
 ## Backend (`backend/src`)

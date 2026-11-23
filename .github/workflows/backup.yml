@@ -1,0 +1,69 @@
+# Nightly database backup (free: MongoDB's own tool + GitHub Actions, no paid Atlas plan needed).
+# A full copy of the database (products, orders, customers, settings…) is made with mongodump,
+# ENCRYPTED with a password only the owner knows (this repository is public), and kept 30 days as
+# a downloadable file of the run (Actions → Database backup → a run → "Artifacts").
+# Restore: docs/BACKUPS.md.
+#
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   MONGODB_URI        the same database address as in Vercel
+#   BACKUP_PASSPHRASE  a long password (20+ characters) kept in your password manager —
+#                      without it the backups cannot be opened, by anyone (you included)
+name: Database backup
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # every day at 02:00 UTC = 03:00 in Morocco
+  workflow_dispatch: # "Run workflow" button: a backup now
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Check the two secrets are set
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then echo "::error::Add the MONGODB_URI secret (Settings → Secrets and variables → Actions)"; exit 1; fi
+          if [ "${#BACKUP_PASSPHRASE}" -lt 20 ]; then echo "::error::Add a BACKUP_PASSPHRASE secret of at least 20 characters"; exit 1; fi
+
+      - name: Install the MongoDB tools
+        run: |
+          curl -fsSL https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.10.0.tgz | tar xz
+          echo "$PWD/mongodb-database-tools-ubuntu2204-x86_64-100.10.0/bin" >> "$GITHUB_PATH"
+
+      - name: Copy the database and encrypt it
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          stamp="$(date -u +%Y-%m-%d_%H%M)"
+          # Whole database in one compressed file (never printed)
+          mongodump --uri="$MONGODB_URI" --archive=db.archive.gz --gzip --quiet
+          # Encrypted before it leaves this machine; the plain copy is deleted at once
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+            -in db.archive.gz -out "brynoxa-db-$stamp.archive.gz.enc" -pass env:BACKUP_PASSPHRASE
+          rm -f db.archive.gz
+          # A backup that is suspiciously small means something went wrong
+          size=$(stat -c %s "brynoxa-db-$stamp.archive.gz.enc")
+          if [ "$size" -lt 1024 ]; then echo "::error::The backup is only $size bytes"; exit 1; fi
+          echo "Backup ready: brynoxa-db-$stamp.archive.gz.enc ($size bytes, encrypted)"
+
+      - name: Keep the encrypted backup (30 days)
+        uses: actions/upload-artifact@v4
+        with:
+          name: brynoxa-db-${{ github.run_number }}
+          path: brynoxa-db-*.archive.gz.enc
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0
