@@ -100,9 +100,11 @@ test('category photos show at once; sub-categories are visible on the shop, in i
   assert.ok(home.includes('categories={homeWithSubs}') && home.includes('<HomeIntro categories={homeWithSubs}'));
   const hero = src('components/home/HomeHero.tsx');
   assert.ok(hero.includes('Sub-categories (Mice, Headphones…) look exactly like the main ones') && !hero.includes('ps-9'), 'menu: sub-categories listed, same look as the main ones');
-  // Banner: the whole photo (never cut), a blurred copy fills around it; deals tile shows the deal's photo
-  assert.match(src('components/home/HomeHeroSlider.tsx'), /contain \? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-contain'/);
-  assert.ok(hero.includes('product={topDealPhoto}'));
+  // Banner: a photo is shown whole at its own shape (no blur, nothing cut); the deals tile keeps its own photo
+  const slider = src('components/home/HomeHeroSlider.tsx');
+  assert.ok(slider.includes(": 'block h-auto w-full',"), 'photo at full width, its own height');
+  assert.ok(!slider.includes('blur-2xl'), 'no blurred bands');
+  assert.ok(hero.includes('photo="/categories/laptops-v2-480.webp"') && !hero.includes('topDealPhoto'));
   const { pathToFileURL } = await import('node:url');
   const tree = await import(pathToFileURL(path.join(root, 'frontend/src/lib/categoryTree.ts')).href);
   const cats = [{ _id: 'a', slug: 'accessories' }, { _id: 'l', slug: 'laptops' }, { _id: 'm', slug: 'mice', parent: 'a' }, { _id: 'h', slug: 'headphones', parent: 'a' }] as never[];
@@ -162,7 +164,7 @@ test('photos sit well on the dark page: shop banner photo on the right, softened
 
 test('phones: compact banner, cards and texts (computers keep their sizes)', () => {
   const slider = src('components/home/HomeHeroSlider.tsx');
-  assert.ok(slider.includes("'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]"), 'deals banner: photo beside the text on phones');
+  assert.ok(slider.includes("'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]"), 'deals banner: photo beside the text on phones');
   assert.ok(slider.includes('text-[15px] font-bold leading-tight tracking-tight sm:mt-4 sm:text-3xl'), 'banner title: small on phones, as before on computers');
   const card = src('components/home/HomeShopCard.tsx');
   assert.ok(card.includes("'relative aspect-[6/5] overflow-hidden sm:aspect-square'"), 'card photo: shorter on phones');

@@ -4,7 +4,6 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { SiteIcon } from '@/components/ui/SiteIcon'
 import { useT } from '@/hooks/useT'
 import { categoryIcon } from '@/lib/categoryIcon'
-import { sizedImageUrl } from '@/lib/image'
 import { categoryDisplayName } from '@/i18n'
 import { bestDiscount } from '@/lib/homeRows'
 import { useLocaleStore } from '@/store/localeStore'
@@ -12,31 +11,13 @@ import type { Category, Product } from '@/types'
 import { HomeHeroSlider, HomeHeroSliderSkeleton } from './HomeHeroSlider'
 
 /** A photo tile beside the banner (under it on tablets and phones) */
-/**
- * `product`: a product photo instead of the tile photo — shown whole in the top of the tile (a
- * blurred copy fills around it), so the deals tile shows the deal it talks about.
- */
-function PromoTile({ to, photo, product, kicker, title, cta }: { to: string; photo: string; product?: string; kicker: string; title: string; cta: string }) {
+function PromoTile({ to, photo, kicker, title, cta }: { to: string; photo: string; kicker: string; title: string; cta: string }) {
   return (
     <Link
       to={to}
       className="group relative isolate flex min-h-[6.5rem] flex-col justify-end ink overflow-hidden rounded-2xl border border-[rgb(0_194_255/0.2)] bg-[#05080b] p-2.5 text-white sm:min-h-[11rem] sm:p-5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]"
     >
-      {product ? (
-        <>
-          <img src={product} alt="" aria-hidden="true" referrerPolicy="no-referrer" decoding="async" className="absolute inset-0 -z-20 h-full w-full scale-125 object-cover opacity-50 blur-2xl" />
-          <img
-            src={product}
-            alt=""
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-x-0 top-0 -z-20 h-[68%] w-full object-contain p-3 transition duration-500 group-hover:scale-[1.06]"
-          />
-        </>
-      ) : (
-        <img src={photo} alt="" width={480} height={300} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
-      )}
+      <img src={photo} alt="" width={480} height={300} loading="lazy" decoding="async" className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
       <span className="ink-shade-y absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(5_8_11/0.05)_0%,rgb(5_8_11/0.6)_55%,rgb(5_8_11/0.95)_100%)]" aria-hidden="true" />
       <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--brand)] sm:text-[11px]">{kicker}</span>
       <span className="mt-0.5 font-display text-[13px] font-extrabold uppercase leading-tight sm:text-xl">{title}</span>
@@ -68,13 +49,6 @@ export function HomeHero({
   const t = useT()
   const locale = useLocaleStore((s) => s.locale)
   const off = bestDiscount(onSale)
-  // The deal giving the "Up to −X%": its photo goes on the deals tile
-  const topDeal = onSale.reduce<Product | null>((best, p) => {
-    const pct = p.compareAtPrice && p.compareAtPrice > p.price ? 1 - p.price / p.compareAtPrice : 0
-    const bestPct = best?.compareAtPrice ? 1 - best.price / best.compareAtPrice : 0
-    return pct > bestPct ? p : best
-  }, null)
-  const topDealPhoto = topDeal ? sizedImageUrl(topDeal.images?.find((i) => i.isPrimary)?.url || topDeal.images?.[0]?.url, 640) : undefined
 
   const chips = categoriesLoading
     ? Array.from({ length: 5 }).map((_, i) => (
@@ -167,7 +141,6 @@ export function HomeHero({
             <PromoTile
               to="/shop?onSale=true"
               photo="/categories/laptops-v2-480.webp"
-              product={topDealPhoto}
               kicker={t('home.dealsKicker')}
               title={off > 0 ? t('home.upTo', { percent: off }) : t('home.dealsTitle')}
               cta={t('home.seeAllDeals')}

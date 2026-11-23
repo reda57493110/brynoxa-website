@@ -145,7 +145,7 @@ test('light mode: the Brynoxa cards turn light with dark text, no grid squares o
   assert.match(blocks, /opacity-80 dark:block" \/>/, 'the teal photo only in dark mode')
   assert.match(blocks, /src=\{SIGNATURE_PHOTO_LIGHT\}[^>]*dark:hidden/)
   const slider = read('components/home/HomeHeroSlider.tsx')
-  assert.match(slider, /lg:aspect-auto lg:h-full lg:min-h-\[20rem\]/, 'banner photo fills the banner height on computers')
+  assert.ok(slider.includes("contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'bg-[#0b1116]'"), 'a photo keeps its own shape (whole, never cut); a packshot keeps its light frame')
   assert.match(slider, /@max-\[24rem\]:sr-only/, 'View product becomes an arrow when the text side is narrow')
   assert.ok(css.includes(String.raw`html:not(.dark) .ink .text-\[var\(--brand\)\]`), 'a darker cyan stays readable on the light card')
   assert.match(css, /html:not\(\.dark\) \.ink \.ink-shade-x/)

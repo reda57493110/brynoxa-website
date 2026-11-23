@@ -53,7 +53,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
       inert={!active}
       aria-hidden={!active}
       className={cn(
-        'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] sm:gap-6 sm:p-8 lg:items-stretch lg:gap-6 lg:p-8',
+        'grid h-full grid-cols-[45%_minmax(0,1fr)] items-center gap-3 p-3 [grid-area:1/1] sm:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] sm:gap-6 sm:p-8 lg:gap-6 lg:p-8',
         'transition-opacity ease-[cubic-bezier(0.4,0,0.2,1)]',
         active ? 'z-[1] opacity-100 duration-500' : 'pointer-events-none opacity-0 duration-300'
       )}
@@ -65,22 +65,11 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         aria-hidden="true"
         ref={photo.ref}
         className={cn(
-          'group relative block aspect-square overflow-hidden rounded-xl sm:order-2 sm:aspect-[5/4] sm:rounded-[1.4rem] lg:aspect-auto lg:h-full lg:min-h-[20rem]',
-          contain ? 'photo-stage' : 'bg-[#0b1116]'
+          'group relative block overflow-hidden rounded-xl sm:order-2 sm:rounded-[1.4rem]',
+          contain ? 'photo-stage aspect-square sm:aspect-[5/4]' : 'bg-[#0b1116]'
         )}
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
-        {/* A photo (not a packshot on white): shown whole; a blurred copy fills the frame around it */}
-        {!contain && src ? (
-          <img
-            src={src}
-            alt=""
-            aria-hidden="true"
-            referrerPolicy="no-referrer"
-            decoding="async"
-            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl"
-          />
-        ) : null}
         <SafeImage
           src={src}
           srcSet={imageSrcSet(image, [640, 960, 1280, 1600])}
@@ -95,8 +84,9 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           onLoad={photo.onLoad}
           onError={photo.onError}
           className={cn(
-            'absolute inset-0 h-full w-full transition duration-[900ms] ease-out group-hover:scale-[1.04]',
-            contain ? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-contain',
+            'transition duration-[900ms] ease-out group-hover:scale-[1.04]',
+            // Packshot: inside its frame; photo: full width at its own height (the frame follows it)
+            contain ? 'absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply sm:p-3' : 'block h-auto w-full',
             active ? 'scale-100' : 'scale-[1.05]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
