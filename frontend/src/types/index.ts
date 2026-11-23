@@ -170,6 +170,8 @@ export interface Product {
   setupKind?: string
   /** Admin → Complete your setup: why it is suggested (together, compatible, gaming, bestseller, featured, fits) */
   setupWhy?: string
+  /** "Similar products" chosen in Admin (ids, in order); empty = automatic */
+  similar?: string[]
   /** Spec keys that differ between the variants (e.g. ram_gb, storage). */
   variantAttributes?: string[]
   /** Short option summary, e.g. "16 GB · 512 GB". */

@@ -56,6 +56,8 @@ export interface IProduct extends Document {
   recommendedHidden: Types.ObjectId[];
   /** Picks kept in the list but switched off (Admin → Complete your setup). */
   recommendedDisabled: Types.ObjectId[];
+  /** "Similar products" chosen in Admin → Products → Similar products (empty = automatic). */
+  similar: Types.ObjectId[];
   /** Units for sale on this listing (checkout uses this). */
   stock: number;
   lowStockThreshold: number;
@@ -138,6 +140,7 @@ const productSchema = new Schema<IProduct>(
     },
     deposit: { type: depositRuleSchema, default: undefined },
     recommended: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
+    similar: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     recommendedOnly: { type: Boolean, default: false },
     recommendedHidden: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },
     recommendedDisabled: { type: [{ type: Schema.Types.ObjectId, ref: 'Product' }], default: [] },

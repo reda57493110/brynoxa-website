@@ -9,8 +9,9 @@ import type { Product } from '@/types'
 const MAX_SHOWN = 4
 
 /**
- * "Similar products": other products of the same category, closest in price first (an alternative
- * a little cheaper or a little better). Also links product pages to each other for Google.
+ * "Similar products": the ones chosen in Admin → Products → Similar products (in that order, in
+ * stock), or else other products of the same category, closest in price first (an alternative a
+ * little cheaper or a little better). Also links product pages to each other for Google.
  */
 export function SimilarProducts({ product, categorySlug }: { product: Product; categorySlug?: string }) {
   const t = useT()
@@ -21,7 +22,18 @@ export function SimilarProducts({ product, categorySlug }: { product: Product; c
     staleTime: 5 * 60_000,
   })
 
-  const items = (similar.data ?? [])
+  const pickedIds = (product.similar ?? []).map(String)
+  const picked = useQuery({
+    queryKey: ['products', 'similar-picked', pickedIds.join(',')],
+    queryFn: async () => (await productsApi.compare(pickedIds)).data.data,
+    enabled: pickedIds.length > 0,
+    staleTime: 5 * 60_000,
+  })
+  const chosen = pickedIds
+    .map((id) => picked.data?.find((p) => p._id === id))
+    .filter((p): p is Product => Boolean(p && p.stock > 0 && p._id !== product._id))
+
+  const automatic = (similar.data ?? [])
     // Not the product itself, nor its own variants (other sizes / colours of the same model)
     .filter((p) => p._id !== product._id && !(product.variantGroup && p.variantGroup === product.variantGroup))
     .sort((a, b) => {
@@ -30,6 +42,7 @@ export function SimilarProducts({ product, categorySlug }: { product: Product; c
       return Math.abs(a.price - product.price) - Math.abs(b.price - product.price)
     })
     .slice(0, MAX_SHOWN)
+  const items = chosen.length ? chosen.slice(0, 8) : automatic
 
   if (!items.length) return null
 

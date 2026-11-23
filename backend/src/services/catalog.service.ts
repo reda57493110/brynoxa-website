@@ -832,6 +832,10 @@ export async function updateProduct(id: string, data: Record<string, unknown>) {
   if (data.recommendedOnly !== undefined) {
     product.recommendedOnly = Boolean(data.recommendedOnly);
   }
+  // "Similar products": valid, unique, never the product itself, 8 at most (empty = automatic)
+  if (data.similar !== undefined) {
+    product.similar = sanitizeRecommended(data.similar, String(product._id)).slice(0, 8);
+  }
   if (data.recommendedHidden !== undefined) {
     product.recommendedHidden = sanitizeHidden(data.recommendedHidden, String(product._id));
   }

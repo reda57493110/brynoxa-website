@@ -18,6 +18,7 @@ import { useHomeRows, type HomeRowKey } from '@/hooks/useHomeRows'
 import { MAX_SETUP_ROW, setupRowKey, useSetupLists, type SetupList } from '@/hooks/useSetupLists'
 import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'
 import { suggestHome, type Suggestion, type SuggestReason } from '@/lib/homeSuggestions'
+import { SimilarAdmin } from '@/components/admin/SimilarAdmin'
 
 /** The "Complete your setup" editor (its own code, loaded when its tab is opened) */
 const CompleteSetupAdmin = lazy(() => import('@/pages/admin/CompleteSetupAdmin').then((m) => ({ default: m.CompleteSetupAdmin })))
@@ -778,8 +779,8 @@ function SetupsBoard({ onOpen }: { onOpen: (p: Product) => void }) {
   )
 }
 
-type BoardTab = 'home' | 'setups' | 'setup'
-const BOARD_TABS: BoardTab[] = ['home', 'setups', 'setup']
+type BoardTab = 'home' | 'setups' | 'setup' | 'similar'
+const BOARD_TABS: BoardTab[] = ['home', 'setups', 'setup', 'similar']
 const TAB_KEY = 'brynoxa-admin-board-tab'
 
 /**
@@ -815,6 +816,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
     { id: 'home', label: tr('products.homePage'), icon: 'home', href: '/' },
     { id: 'setups', label: tr('products.board.setupsPage'), icon: 'layers', href: '/setups' },
     { id: 'setup', label: tr('products.board.completeSetup'), icon: 'plus', href: '/shop' },
+    { id: 'similar', label: tr('products.sim.tab'), icon: 'layers', href: '/shop' },
   ]
   const current = tabs.find((x) => x.id === tab)!
 
@@ -843,7 +845,7 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
           ))}
         </div>
         {/* Complete your setup is per product: nothing single to view */}
-        {tab !== 'setup' ? (
+        {tab !== 'setup' && tab !== 'similar' ? (
           <a href={current.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-[var(--brand-text)] hover:underline">
             {tr('products.board.view')} <SiteIcon name="external" size={11} />
           </a>
@@ -853,6 +855,8 @@ export function HomeLayoutBoard({ onOpen }: { onManage?: unknown; onOpen: (p: Pr
         <HomeBoard onOpen={onOpen} />
       ) : tab === 'setups' ? (
         <SetupsBoard onOpen={onOpen} />
+      ) : tab === 'similar' ? (
+        <SimilarAdmin onOpen={onOpen} />
       ) : (
         <Suspense fallback={<div className="flex justify-center py-6"><Spinner /></div>}>
           <CompleteSetupAdmin embedded />

@@ -134,6 +134,9 @@ const productTextSchema = z.object({
   shortDescription: z.string().trim().max(500).optional(),
 });
 
+/** "Similar products" a staff member can choose for one product (frontend SimilarProducts / SimilarAdmin) */
+export const MAX_SIMILAR = 8;
+
 export const productSchema = z.object({
   name: z.string().min(2),
   sku: z.string().min(2),
@@ -165,6 +168,8 @@ export const productSchema = z.object({
     .optional(),
   recommended: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(12).optional(),
   recommendedOnly: z.boolean().optional(),
+  /** "Similar products" shown on the product page, in this order (empty = automatic) */
+  similar: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(MAX_SIMILAR).optional(),
   recommendedHidden: z.array(z.string().regex(/^[a-f0-9]{24}$/i)).max(50).optional(),
   condition: z.enum(['new', 'refurbished', 'used']).optional(),
   conditionNote: z.string().trim().max(500).optional(),
