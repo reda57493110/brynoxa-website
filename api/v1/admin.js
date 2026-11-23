@@ -614,6 +614,16 @@ module.exports = async (req, res) => {
       return;
     }
 
+    // Empty the test data (Admin → Security), owner only: what each group holds now. The delete
+    // itself (POST) goes to the Express route above (delegateToExpress): validation, rate limit
+    if (route === 'reset-data') {
+      const user = await requireStaff(req, res, ['users:manage']);
+      if (!user) return;
+      const reset = require('../../backend/dist/services/resetData.service');
+      sendJson(res, 200, { success: true, message: 'Success', data: await reset.resetPreview() });
+      return;
+    }
+
     // Team history (Admin → Team history), owner only
     if (route === 'team-history' && req.method === 'GET') {
       const user = await requireStaff(req, res, ['users:manage']);

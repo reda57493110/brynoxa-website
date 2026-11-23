@@ -384,6 +384,19 @@ export const teamActivity = asyncHandler(async (req: Request, res: Response) => 
   sendSuccess(res, await activity.teamActivity(activity.periodDays(req.query.days)));
 });
 
+/** Admin → Security → Empty the test data: what each group holds now */
+export const resetDataPreview = asyncHandler(async (_req: Request, res: Response) => {
+  const reset = await import('../services/resetData.service');
+  sendSuccess(res, await reset.resetPreview());
+});
+
+/** Admin → Security → Empty the test data (owner, password, the word EMPTY) */
+export const resetData = asyncHandler(async (req: Request, res: Response) => {
+  const reset = await import('../services/resetData.service');
+  const result = await reset.resetTestData({ ownerId: String((req as AuthRequest).user?.userId || ''), ...req.body });
+  sendSuccess(res, result, 'Test data emptied');
+});
+
 export const teamHistory = asyncHandler(async (req: Request, res: Response) => {
   const activity = await import('../services/staffActivity.service');
   const staff = typeof req.query.staff === 'string' && req.query.staff ? req.query.staff : undefined;

@@ -34,6 +34,7 @@ import {
   staffPasswordSchema,
   forUpdate,
   wishlistSyncSchema,
+  resetDataSchema,
 } from '../validators/schemas';
 import { z } from 'zod';
 import rateLimit from 'express-rate-limit';
@@ -210,6 +211,10 @@ router.delete(
 router.get('/admin/users', requireAuth, requirePermission('users:manage'), misc.users);
 router.get('/admin/team-activity', requireAuth, requirePermission('users:manage'), misc.teamActivity);
 router.get('/admin/team-history', requireAuth, requirePermission('users:manage'), misc.teamHistory);
+// Empty the test data: owner only (checked again in the service), password asked, few tries
+const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false, message: { success: false, message: 'Too many tries, wait a few minutes' } });
+router.get('/admin/reset-data', requireAuth, requirePermission('users:manage'), misc.resetDataPreview);
+router.post('/admin/reset-data', requireAuth, requirePermission('users:manage'), resetLimiter, validate(resetDataSchema), misc.resetData);
 router.get('/admin/team-activity/:id', requireAuth, requirePermission('users:manage'), misc.staffActivity);
 router.post(
   '/admin/users',

@@ -10,7 +10,7 @@ const crud = (thing: string) => (m: string) => (m === 'POST' ? `Added ${thing}` 
 
 // First match wins; the first capture group is the id of what was changed
 const RULES: Rule[] = [
-  { rx: /^admin\/(upload|products\/import-photos|setup-preview|email-test|push\/test)/, action: '', kind: 'skip' },
+  { rx: /^admin\/(upload|products\/import-photos|setup-preview|email-test|push\/test|reset-data)/, action: '', kind: 'skip' },
   { rx: /^admin\/orders\/([^/]+)\/status$/, action: 'Changed an order status', kind: 'order-status' },
   { rx: /^admin\/orders\/([^/]+)\/contacts$/, action: 'Logged a call / message', kind: 'order-contact' },
   { rx: /^admin\/orders\/([^/]+)\/(deposit|deposit-proofs)/, action: 'Updated a deposit', kind: 'order' },

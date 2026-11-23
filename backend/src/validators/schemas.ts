@@ -134,6 +134,13 @@ const productTextSchema = z.object({
   shortDescription: z.string().trim().max(500).optional(),
 });
 
+/** Admin → Security → Empty the test data (owner only): groups, the owner's password, the word EMPTY */
+export const resetDataSchema = z.object({
+  groups: z.array(z.enum(['catalog', 'inventory', 'orders', 'customers', 'money', 'marketing', 'messages', 'history'])).min(1).max(8),
+  password: z.string().min(1).max(200),
+  confirm: z.string().max(20),
+});
+
 /** "Similar products" a staff member can choose for one product (frontend SimilarProducts / SimilarAdmin) */
 export const MAX_SIMILAR = 8;
 

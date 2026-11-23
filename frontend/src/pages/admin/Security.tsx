@@ -9,6 +9,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader'
 import { Panel } from '@/components/admin/Panel'
 import { useAuthStore } from '@/store/authStore'
 import { toast } from '@/store/toastStore'
+import { ResetDataPanel } from '@/components/admin/ResetDataPanel'
 
 const MIN_PASSWORD = 12
 
@@ -231,6 +232,8 @@ export function Security() {
       <AdminHeader title="Security" description={`Signed in as ${user.email}`} />
       <TwoStepPanel />
       <PasswordPanel />
+      {/* Owner only (the server checks it again) */}
+      {user.role === 'admin' ? <ResetDataPanel /> : null}
     </div>
   )
 }
