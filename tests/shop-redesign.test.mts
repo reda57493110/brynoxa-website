@@ -98,7 +98,11 @@ test('category photos show at once; sub-categories are visible on the shop, in i
   const home = src('pages/store/Home.tsx');
   assert.ok(home.includes('const homeWithSubs = withSubCategories(homeCategories, shownCategories)'));
   assert.ok(home.includes('categories={homeWithSubs}') && home.includes('<HomeIntro categories={homeWithSubs}'));
-  assert.ok(src('components/home/HomeHero.tsx').includes('const sub = isSubCategory(c, categories)'), 'menu: sub-categories indented');
+  const hero = src('components/home/HomeHero.tsx');
+  assert.ok(hero.includes('Sub-categories (Mice, Headphones…) look exactly like the main ones') && !hero.includes('ps-9'), 'menu: sub-categories listed, same look as the main ones');
+  // Banner: the whole photo (never cut), a blurred copy fills around it; deals tile shows the deal's photo
+  assert.match(src('components/home/HomeHeroSlider.tsx'), /contain \? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-contain'/);
+  assert.ok(hero.includes('product={topDealPhoto}'));
   const { pathToFileURL } = await import('node:url');
   const tree = await import(pathToFileURL(path.join(root, 'frontend/src/lib/categoryTree.ts')).href);
   const cats = [{ _id: 'a', slug: 'accessories' }, { _id: 'l', slug: 'laptops' }, { _id: 'm', slug: 'mice', parent: 'a' }, { _id: 'h', slug: 'headphones', parent: 'a' }] as never[];

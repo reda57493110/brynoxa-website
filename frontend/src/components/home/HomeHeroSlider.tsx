@@ -70,6 +70,17 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
         )}
       >
         {photo.loaded ? null : <ImageSpinner size="lg" tone={contain ? 'auto' : 'dark'} />}
+        {/* A photo (not a packshot on white): shown whole; a blurred copy fills the frame around it */}
+        {!contain && src ? (
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            referrerPolicy="no-referrer"
+            decoding="async"
+            className="absolute inset-0 h-full w-full scale-125 object-cover opacity-60 blur-2xl"
+          />
+        ) : null}
         <SafeImage
           src={src}
           srcSet={imageSrcSet(image, [640, 960, 1280, 1600])}
@@ -85,7 +96,7 @@ function Slide({ product, active, eager }: { product: Product; active: boolean; 
           onError={photo.onError}
           className={cn(
             'absolute inset-0 h-full w-full transition duration-[900ms] ease-out group-hover:scale-[1.04]',
-            contain ? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-cover',
+            contain ? 'object-contain p-2 mix-blend-multiply sm:p-3' : 'object-contain',
             active ? 'scale-100' : 'scale-[1.05]',
             photo.loaded ? 'opacity-100' : 'opacity-0'
           )}
