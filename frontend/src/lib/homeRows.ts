@@ -17,6 +17,12 @@ export function latestAdded(products: Product[]) {
 /** "Shop by budget" price bands, in DH (min included, max excluded). */
 export type Budget = { id: string; label: 'home.budgetUnder' | 'home.budgetBetween' | 'home.budgetOver'; min?: number; max?: number }
 
+/** Home page "Our selection · Top picks": how many featured products show first */
+export const HOME_FEATURED_LIMIT = 12
+/** Every other home row (new arrivals, deals of the moment, Signature, budgets, top picks after the
+ * featured ones): how many products it shows / an admin can pick (the server accepts up to 48) */
+export const HOME_ROW_LIMIT = 24
+
 export const BUDGETS: readonly Budget[] = [
   { id: 'small', label: 'home.budgetUnder', max: 3000 },
   { id: 'mid', label: 'home.budgetBetween', min: 3000, max: 8000 },

@@ -40,7 +40,7 @@
   // 3. The first data the page needs (filtered views load as usual)
   var urls = []
   if (path === '/') {
-    urls = ['settings', 'products?featured=true&inStock=true&limit=12', 'products?featured=true&limit=4', 'products?carousel=true&limit=12', 'categories']
+    urls = ['settings', 'products?featured=true&inStock=true&limit=12', 'products?featured=true&limit=12', 'products?carousel=true&limit=24', 'categories']
   } else if (page === 'shop' && plain) {
     urls = ['settings', 'products?page=1&limit=12&sort=mixed', 'categories', 'brands']
   } else if (page === 'category' && plain) {

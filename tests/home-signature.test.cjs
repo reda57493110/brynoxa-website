@@ -22,7 +22,7 @@ test('shop: own section, after the top picks and before the budgets; Brynoxa pro
   const pos = ['{/* Featured */}', '<HomeSignatureBanner products={rows.signature} />', '<HomeBudgetCards budgets'].map((m) => home.indexOf(m));
   assert.ok(pos.every((p, i) => p > 0 && (i === 0 || p > pos[i - 1])), pos.join(','));
   const hook = src('hooks/useHomeRows.ts');
-  assert.ok(hook.includes("productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: 12 })"));
+  assert.ok(hook.includes("productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: HOME_ROW_LIMIT })"));
   assert.ok(hook.includes("export const SIGNATURE_BRAND = 'brynoxa'"));
   const section = src('components/home/HomeBlocks.tsx');
   assert.ok(section.includes('{products.length >= SIGNATURE_MIN ? ('), 'the products under the banner need 2');

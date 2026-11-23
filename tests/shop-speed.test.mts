@@ -60,8 +60,8 @@ test('home, category and product pages (also in French / Arabic) ask for what th
   assert.deepEqual((await run('/')).fetched, [
     '/api/v1/settings',
     '/api/v1/products?featured=true&inStock=true&limit=12',
-    '/api/v1/products?featured=true&limit=4',
-    '/api/v1/products?carousel=true&limit=12',
+    '/api/v1/products?featured=true&limit=12',
+    '/api/v1/products?carousel=true&limit=24',
     '/api/v1/categories',
   ]);
   assert.equal((await run('/')).links.filter((l) => l.as === 'image').length, 0, 'home: no big photo to start early (the banner shows the deals)');

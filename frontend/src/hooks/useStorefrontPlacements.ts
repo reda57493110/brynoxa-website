@@ -6,8 +6,8 @@ import { at } from '@/i18n/admin'
 import type { Product } from '@/types'
 
 /** Same limits as the home page (pages/store/Home.tsx). */
-export const HOME_FEATURED_LIMIT = 4
-export const HOME_ROW_LIMIT = 12
+export { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT } from '@/lib/homeRows'
+import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT } from '@/lib/homeRows'
 
 export type PlacementKey = 'deals' | 'spotlight' | 'row' | 'shopHeader' | 'category' | 'featuredWaiting' | 'carouselWaiting' | 'hidden'
 

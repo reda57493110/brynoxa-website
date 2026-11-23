@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { settingsApi } from '@/api/settingsApi'
-import { BUDGETS, inBudget } from '@/lib/homeRows'
+import { BUDGETS, HOME_ROW_LIMIT, inBudget } from '@/lib/homeRows'
 import type { Product } from '@/types'
 
 /** Home sections staff can choose and order (Settings → homeRows); same keys as the server. */
@@ -16,7 +16,7 @@ function usePinned(key: HomeRowKey, ids: string[] | undefined) {
   const list = ids ?? []
   const q = useQuery({
     queryKey: ['products', 'home-rows-pinned', key, list.join(',')],
-    queryFn: async () => (await productsApi.list({ ids: list.join(','), limit: 12 })).data.data,
+    queryFn: async () => (await productsApi.list({ ids: list.join(','), limit: HOME_ROW_LIMIT })).data.data,
     enabled: list.length > 0,
   })
   const byId = new Map((q.data ?? []).map((p) => [p._id, p]))
@@ -53,7 +53,7 @@ export function useHomeRows(shownAbove: Product[]) {
   // Brynoxa Signature: the shop's own Brynoxa products, unless staff chose others
   const signatureAuto = useQuery({
     queryKey: ['products', 'home-signature'],
-    queryFn: async () => (await productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: 12 })).data.data,
+    queryFn: async () => (await productsApi.list({ brand: SIGNATURE_BRAND, inStock: true, sort: 'popular', limit: HOME_ROW_LIMIT })).data.data,
   })
   const budget = useQuery({
     queryKey: ['products', 'home-budget'],
@@ -68,12 +68,12 @@ export function useHomeRows(shownAbove: Product[]) {
   const pinnedBudget = { small: pinnedSmall, mid: pinnedMid, high: pinnedHigh } as Record<string, ReturnType<typeof usePinned>>
 
   const above = new Set(shownAbove.map((p) => p._id))
-  const deals = pinnedDeals.pinned ? pinnedDeals.products : (onSale.data ?? []).filter((p) => !above.has(p._id)).slice(0, 12)
+  const deals = pinnedDeals.pinned ? pinnedDeals.products : (onSale.data ?? []).filter((p) => !above.has(p._id)).slice(0, HOME_ROW_LIMIT)
   const dealIds = new Set(deals.map((p) => p._id))
   const newArrivals = pinnedNew.pinned
     ? pinnedNew.products
-    : (newest.data ?? []).filter((p) => !above.has(p._id) && !dealIds.has(p._id)).slice(0, 12)
-  const signature = pinnedSignature.pinned ? pinnedSignature.products : (signatureAuto.data ?? []).slice(0, 12)
+    : (newest.data ?? []).filter((p) => !above.has(p._id) && !dealIds.has(p._id)).slice(0, HOME_ROW_LIMIT)
+  const signature = pinnedSignature.pinned ? pinnedSignature.products : (signatureAuto.data ?? []).slice(0, HOME_ROW_LIMIT)
   const budgetAll = budget.data ?? []
   const budgets = BUDGETS.map((b) => {
     const mine = pinnedBudget[b.id]

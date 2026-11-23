@@ -6,7 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { SiteIcon, type SiteIconName } from '@/components/ui/SiteIcon'
 import { SIGNATURE_BRAND } from '@/hooks/useHomeRows'
-import { BUDGETS, inBudget } from '@/lib/homeRows'
+import { BUDGETS, HOME_ROW_LIMIT, inBudget } from '@/lib/homeRows'
 import { setupsFor, type SetupId } from '@/lib/setups'
 import { cn } from '@/lib/cn'
 import { toast } from '@/store/toastStore'
@@ -118,7 +118,7 @@ export function ProductAutoPlaces({ product }: { product: Product }) {
   const settings = useQuery({ queryKey: ['settings'], queryFn: async () => (await settingsApi.get()).data.data, staleTime: 60_000 })
   const homeRows = settings.data?.homeRows as Partial<Record<string, string[]>> | undefined
   const add = useMutation({
-    mutationFn: (key: 'new' | 'deals') => adminApi.settings.update({ homeRows: { [key]: [product._id, ...(homeRows?.[key] ?? [])].slice(0, 12) } }),
+    mutationFn: (key: 'new' | 'deals') => adminApi.settings.update({ homeRows: { [key]: [product._id, ...(homeRows?.[key] ?? [])].slice(0, HOME_ROW_LIMIT) } }),
     onSuccess: () => {
       for (const k of [['settings'], ['admin-settings'], ['products'], ['admin-products']]) qc.invalidateQueries({ queryKey: k })
       toast.success(tr('products.auto.homeUpdated'))

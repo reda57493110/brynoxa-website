@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { HOME_FEATURED_LIMIT, HOME_ROW_LIMIT } from '@/lib/homeRows'
 import { useQuery } from '@tanstack/react-query'
 import { productsApi } from '@/api/productsApi'
 import { categoriesApi } from '@/api/categoriesApi'
@@ -49,16 +50,16 @@ const unique = (list: Product[]) => list.filter((p, i, all) => all.findIndex((q)
 export function Home() {
   const t = useT()
 
-  // Admin → Products → Home page deals (up to 4; automatic: best in-stock featured deals)
+  // Admin → Products → Home page deals (up to 8; automatic: best in-stock featured deals)
   const deals = useHomeDeals()
 
   const featured = useQuery({
     queryKey: ['products', 'featured'],
-    queryFn: async () => (await productsApi.list({ featured: true, limit: 4 })).data.data,
+    queryFn: async () => (await productsApi.list({ featured: true, limit: HOME_FEATURED_LIMIT })).data.data,
   })
   const carousel = useQuery({
     queryKey: ['products', 'carousel'],
-    queryFn: async () => (await productsApi.list({ carousel: true, limit: 12 })).data.data,
+    queryFn: async () => (await productsApi.list({ carousel: true, limit: HOME_ROW_LIMIT })).data.data,
   })
 
   // Deals, New arrivals, Signature, budgets: chosen in admin or automatic (same hook as the admin board)

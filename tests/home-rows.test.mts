@@ -79,3 +79,16 @@ test('admin board lists the home lists in the order and with the names of the ho
   assert.ok(order.every((p, i) => p > 0 && (i === 0 || p > order[i - 1])), 'board order: ' + order.join(','));
   assert.ok(board.includes("import { HOME_ROW_MIN, SIGNATURE_MIN } from '@/components/home/HomeBlocks'"));
 });
+
+test('home sections take more products: banner 8, top picks 12 first, every other row 24 (server allows 48)', async () => {
+  const fs = await import('node:fs')
+  const path = await import('node:path')
+  const root = path.resolve(import.meta.dirname, '..')
+  const read = (p: string) => fs.readFileSync(path.join(root, p), 'utf8')
+  const rows = read('frontend/src/lib/homeRows.ts')
+  assert.ok(rows.includes('export const HOME_FEATURED_LIMIT = 12') && rows.includes('export const HOME_ROW_LIMIT = 24'))
+  assert.ok(read('frontend/src/hooks/useHomeDeals.ts').includes('export const MAX_HOME_DEALS = 8'))
+  assert.ok(read('backend/src/validators/schemas.ts').includes('z.array(z.string().max(24)).max(48)'), 'the server accepts the bigger lists')
+  assert.ok(!read('frontend/src/hooks/useHomeRows.ts').includes('.slice(0, 12)'), 'no row cut at 12 any more')
+  assert.ok(read('frontend/public/preload.js').includes("'products?featured=true&limit=12', 'products?carousel=true&limit=24'"), 'early loading asks for the same lists')
+})
